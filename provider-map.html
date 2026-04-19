@@ -114,15 +114,6 @@
   .iw-row{color:#666;font-size:12px}
   .iw-sch{margin-top:4px;padding-top:4px;border-top:1px solid #eee;font-size:11.5px;color:#555}
   .iw-sch div{padding:1px 0}
-  .iw-nav{
-    display:inline-block;margin-top:6px;
-    padding:4px 10px;border-radius:5px;
-    font-size:11px;font-weight:500;
-    text-decoration:none;
-    border:1px solid #3b82f6;color:#3b82f6;
-    transition:all .15s;
-  }
-  .iw-nav:hover{background:#3b82f6;color:#fff}
   .iw-sep{
     margin:8px 0 6px;
     border:none;border-top:1px dashed #ddd;
@@ -131,6 +122,67 @@
     font-size:11px;color:#999;font-weight:600;
     margin-bottom:2px;
   }
+
+  /* 인포윈도우 내 액션 버튼 */
+  .iw-actions{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+  .iw-act{
+    padding:4px 9px;border-radius:5px;
+    font-size:11px;font-weight:500;font-family:inherit;
+    text-decoration:none;cursor:pointer;
+    border:1px solid #ccc;color:#555;background:#fff;
+    transition:all .15s;white-space:nowrap;
+  }
+  .iw-act:hover{background:#f5f5f5}
+  .iw-act.from{border-color:#22c55e;color:#16a34a}
+  .iw-act.from:hover{background:#dcfce7}
+  .iw-act.to{border-color:#ef4444;color:#dc2626}
+  .iw-act.to:hover{background:#fee2e2}
+
+  /* ══ 길찾기 패널 ══ */
+  .route-panel{
+    position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:45;
+    background:rgba(255,255,255,.95);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border-radius:12px;
+    padding:12px 16px;
+    box-shadow:0 4px 20px rgba(0,0,0,.12);
+    display:none;
+    min-width:280px;max-width:380px;
+    width:auto;
+  }
+  .route-panel.show{display:block}
+  .route-row{
+    display:flex;align-items:center;gap:8px;
+    padding:4px 0;font-size:12.5px;
+  }
+  .route-dot{
+    width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  }
+  .route-dot.from{background:#22c55e}
+  .route-dot.to{background:#ef4444}
+  .route-name{flex:1;color:#333;font-weight:500}
+  .route-name.empty{color:#bbb;font-weight:400}
+  .route-clear{
+    font-size:14px;color:#ccc;cursor:pointer;padding:0 4px;
+    transition:color .15s;
+  }
+  .route-clear:hover{color:#999}
+  .route-arrow{
+    text-align:center;color:#ccc;font-size:10px;
+    padding:0 0 0 4px;
+  }
+  .route-go{
+    display:block;width:100%;margin-top:8px;
+    padding:10px;border:none;border-radius:8px;
+    font-size:13.5px;font-weight:600;font-family:inherit;
+    cursor:pointer;text-align:center;
+    text-decoration:none;color:#fff;
+    transition:all .15s;
+  }
+  .route-go.ready{background:#3b82f6}
+  .route-go.ready:hover{background:#2563eb}
+  .route-go.disabled{background:#ddd;color:#aaa;pointer-events:none}
 
   /* ══ 로딩/토스트 ══ */
   .loading-overlay{
@@ -163,6 +215,7 @@
     select{max-width:none}
     .legend{left:8px;bottom:12px;gap:10px;font-size:11px;padding:8px 10px}
     .stats{right:8px;bottom:12px}
+    .route-panel{left:8px;right:8px;transform:none;min-width:auto;bottom:48px}
   }
 </style>
 </head>
@@ -193,6 +246,22 @@
   </div>
 </div>
 
+<!-- ════ 길찾기 패널 ════ -->
+<div class="route-panel" id="routePanel">
+  <div class="route-row">
+    <div class="route-dot from"></div>
+    <div class="route-name" id="routeFromName">출발지를 선택하세요</div>
+    <span class="route-clear" id="routeFromClear" onclick="clearRoute('from')" style="display:none">✕</span>
+  </div>
+  <div class="route-arrow">▼</div>
+  <div class="route-row">
+    <div class="route-dot to"></div>
+    <div class="route-name" id="routeToName">도착지를 선택하세요</div>
+    <span class="route-clear" id="routeToClear" onclick="clearRoute('to')" style="display:none">✕</span>
+  </div>
+  <a class="route-go disabled" id="routeGoBtn" target="_blank">🧭 카카오맵에서 길찾기</a>
+</div>
+
 <div class="loading-overlay" id="loading"><div class="ld-spinner"></div></div>
 <div class="toast" id="toast"></div>
 
@@ -205,12 +274,85 @@ var CONFIG = {
   KAKAO_JS_KEY: '90fa3176ac77c6fc1ae5a165b9f0662c'
 };
 
+
 var map, markers = [], infoWindow;
 var currentData = null;
 var showAssigned = true, showWaiting = true;
 
 // ══════════════════════════════════════════════
-//  Haversine 거리 계산 (km)
+//  길찾기 상태
+// ══════════════════════════════════════════════
+var routeFrom = null;  // { name, lat, lng }
+var routeTo = null;
+
+function setRoute(type, name, lat, lng) {
+  var point = { name: name, lat: lat, lng: lng };
+  if (type === 'from') routeFrom = point;
+  else routeTo = point;
+  updateRoutePanel();
+  infoWindow.close();
+}
+
+function clearRoute(type) {
+  if (type === 'from') routeFrom = null;
+  else routeTo = null;
+  updateRoutePanel();
+}
+
+function updateRoutePanel() {
+  var panel = document.getElementById('routePanel');
+  var fromName = document.getElementById('routeFromName');
+  var toName = document.getElementById('routeToName');
+  var fromClear = document.getElementById('routeFromClear');
+  var toClear = document.getElementById('routeToClear');
+  var goBtn = document.getElementById('routeGoBtn');
+
+  // 패널 표시 여부
+  if (!routeFrom && !routeTo) {
+    panel.classList.remove('show');
+    return;
+  }
+  panel.classList.add('show');
+
+  // 출발지
+  if (routeFrom) {
+    fromName.textContent = routeFrom.name;
+    fromName.classList.remove('empty');
+    fromClear.style.display = '';
+  } else {
+    fromName.textContent = '출발지를 선택하세요';
+    fromName.classList.add('empty');
+    fromClear.style.display = 'none';
+  }
+
+  // 도착지
+  if (routeTo) {
+    toName.textContent = routeTo.name;
+    toName.classList.remove('empty');
+    toClear.style.display = '';
+  } else {
+    toName.textContent = '도착지를 선택하세요';
+    toName.classList.add('empty');
+    toClear.style.display = 'none';
+  }
+
+  // 길찾기 버튼
+  if (routeFrom && routeTo) {
+    var url = 'https://map.kakao.com/link/from/'
+      + encodeURIComponent(routeFrom.name) + ',' + routeFrom.lat + ',' + routeFrom.lng
+      + '/to/'
+      + encodeURIComponent(routeTo.name) + ',' + routeTo.lat + ',' + routeTo.lng;
+    goBtn.href = url;
+    goBtn.className = 'route-go ready';
+  } else {
+    goBtn.href = '#';
+    goBtn.className = 'route-go disabled';
+  }
+}
+
+
+// ══════════════════════════════════════════════
+//  Haversine
 // ══════════════════════════════════════════════
 function haversine(lat1, lng1, lat2, lng2) {
   var R = 6371;
@@ -221,10 +363,7 @@ function haversine(lat1, lng1, lat2, lng2) {
           Math.sin(dLng/2) * Math.sin(dLng/2);
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-
-function fmtDist(km) {
-  return km < 1 ? Math.round(km * 1000) + 'm' : km.toFixed(1) + 'km';
-}
+function fmtDist(km) { return km < 1 ? Math.round(km*1000)+'m' : km.toFixed(1)+'km'; }
 
 // ══════════════════════════════════════════════
 //  카카오맵 초기화
@@ -242,9 +381,7 @@ function initMap() {
 // ── GAS API 호출 ──
 function fetchGAS(action, params) {
   var url = CONFIG.GAS_URL + '?action=' + action;
-  if (params) {
-    for (var k in params) url += '&' + k + '=' + encodeURIComponent(params[k]);
-  }
+  if (params) { for (var k in params) url += '&' + k + '=' + encodeURIComponent(params[k]); }
   return fetch(url, { redirect: 'follow' }).then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
@@ -267,12 +404,13 @@ function loadProviders() {
 
 // ── 선생님 선택 ──
 document.getElementById('providerSelect').addEventListener('change', function() {
-  if (!this.value) { clearMarkers(); document.getElementById('stats').style.display='none'; return; }
+  if (!this.value) { clearMarkers(); document.getElementById('stats').style.display='none'; routeFrom=null; routeTo=null; updateRoutePanel(); return; }
   loadMapData(this.value);
 });
 
 function loadMapData(name) {
   showLoading(true); infoWindow.close();
+  routeFrom = null; routeTo = null; updateRoutePanel();
   fetchGAS('mapdata', { provider: name }).then(function(data) {
     showLoading(false);
     if (data.error) { showToast(data.error); return; }
@@ -291,7 +429,6 @@ function groupByCoord(items) {
   var groups = {};
   items.forEach(function(c) {
     if (!c.lat || !c.lng) return;
-    // 소수점 6자리로 반올림하여 키 생성 (같은 건물 = 같은 키)
     var key = c.lat.toFixed(6) + ',' + c.lng.toFixed(6);
     if (!groups[key]) groups[key] = { lat: c.lat, lng: c.lng, items: [] };
     groups[key].items.push(c);
@@ -300,7 +437,7 @@ function groupByCoord(items) {
 }
 
 // ══════════════════════════════════════════════
-//  마커 렌더링 (그룹핑 적용)
+//  마커 렌더링
 // ══════════════════════════════════════════════
 function clearMarkers() { markers.forEach(function(m){m.setMap(null)}); markers=[]; }
 
@@ -310,25 +447,18 @@ function renderMarkers() {
   var d = currentData;
   var homeLat = d.provider.lat, homeLng = d.provider.lng;
 
-  // ── 선생님 집 마커 ──
   if (homeLat && homeLng)
     addMarker(homeLat, homeLng, 'home', 1, buildHomeIW(d.provider));
 
-  // ── 배정 아동 (그룹핑) ──
   if (showAssigned) {
-    var assignedGroups = groupByCoord(d.assigned);
-    assignedGroups.forEach(function(g) {
-      var iw = buildGroupedAssignedIW(g.items, homeLat, homeLng);
-      addMarker(g.lat, g.lng, 'assigned', g.items.length, iw);
+    groupByCoord(d.assigned).forEach(function(g) {
+      addMarker(g.lat, g.lng, 'assigned', g.items.length, buildGroupedAssignedIW(g.items, homeLat, homeLng));
     });
   }
 
-  // ── 대기 아동 (그룹핑) ──
   if (showWaiting) {
-    var waitingGroups = groupByCoord(d.waiting);
-    waitingGroups.forEach(function(g) {
-      var iw = buildGroupedWaitingIW(g.items, homeLat, homeLng);
-      addMarker(g.lat, g.lng, 'waiting', g.items.length, iw);
+    groupByCoord(d.waiting).forEach(function(g) {
+      addMarker(g.lat, g.lng, 'waiting', g.items.length, buildGroupedWaitingIW(g.items, homeLat, homeLng));
     });
   }
 }
@@ -337,22 +467,12 @@ function addMarker(lat, lng, type, count, iwContent) {
   var pos = new kakao.maps.LatLng(lat, lng);
   var svgStr = (count > 1) ? markerSVGWithCount(type, count) : markerSVG(type);
   var sz, off;
-  if (type === 'home') {
-    sz = new kakao.maps.Size(32, 32); off = new kakao.maps.Point(16, 32);
-  } else if (count > 1) {
-    sz = new kakao.maps.Size(30, 30); off = new kakao.maps.Point(15, 30);
-  } else {
-    sz = new kakao.maps.Size(24, 24); off = new kakao.maps.Point(12, 24);
-  }
-  var img = new kakao.maps.MarkerImage(svgStr, sz, { offset: off });
-  var marker = new kakao.maps.Marker({
-    position: pos, image: img, map: map,
-    zIndex: type==='home' ? 10 : (type==='assigned' ? 5 : 1)
-  });
-  kakao.maps.event.addListener(marker, 'click', function() {
-    infoWindow.setContent(iwContent);
-    infoWindow.open(map, marker);
-  });
+  if (type === 'home') { sz = new kakao.maps.Size(32,32); off = new kakao.maps.Point(16,32); }
+  else if (count > 1) { sz = new kakao.maps.Size(30,30); off = new kakao.maps.Point(15,30); }
+  else { sz = new kakao.maps.Size(24,24); off = new kakao.maps.Point(12,24); }
+  var img = new kakao.maps.MarkerImage(svgStr, sz, {offset:off});
+  var marker = new kakao.maps.Marker({ position:pos, image:img, map:map, zIndex: type==='home'?10:(type==='assigned'?5:1) });
+  kakao.maps.event.addListener(marker, 'click', function() { infoWindow.setContent(iwContent); infoWindow.open(map, marker); });
   markers.push(marker);
 }
 
@@ -360,7 +480,7 @@ function fitBounds() {
   if (!markers.length) return;
   if (markers.length === 1) { map.setCenter(markers[0].getPosition()); map.setLevel(5); return; }
   var b = new kakao.maps.LatLngBounds();
-  markers.forEach(function(m) { b.extend(m.getPosition()); });
+  markers.forEach(function(m){b.extend(m.getPosition())});
   map.setBounds(b, 60);
 }
 
@@ -369,74 +489,58 @@ function fitBounds() {
 // ══════════════════════════════════════════════
 function markerSVG(type) {
   var c = {home:{f:'#3b82f6',s:'#1d4ed8'},assigned:{f:'#22c55e',s:'#15803d'},waiting:{f:'#f59e0b',s:'#d97706'}}[type];
-  var svg;
   if (type==='home') {
-    svg='<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">'
+    return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">'
       +'<path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/>'
       +'<circle cx="16" cy="12" r="5" fill="#fff"/>'
-      +'<path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/>'
-      +'</svg>';
-  } else {
-    svg='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">'
-      +'<path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/>'
-      +'<circle cx="12" cy="9" r="3.5" fill="#fff"/>'
-      +'</svg>';
+      +'<path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>');
   }
-  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">'
+    +'<path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/>'
+    +'<circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>');
 }
 
-// 숫자 배지 포함 마커 (같은 좌표에 여러 명)
 function markerSVGWithCount(type, count) {
   var c = {assigned:{f:'#22c55e',s:'#15803d'},waiting:{f:'#f59e0b',s:'#d97706'}}[type];
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">'
+  return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">'
     +'<path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/>'
     +'<circle cx="15" cy="11" r="7" fill="#fff"/>'
-    +'<text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+count+'</text>'
-    +'</svg>';
-  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+    +'<text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+count+'</text></svg>');
 }
 
-// ══════════════════════════════════════════════
-//  카카오맵 길찾기 URL
-// ══════════════════════════════════════════════
-function kakaoNavUrl(name, lat, lng) {
-  // 카카오맵 길찾기 (도착지만 지정, 출발지는 현위치 or 사용자 선택)
-  return 'https://map.kakao.com/link/to/' + encodeURIComponent(name) + ',' + lat + ',' + lng;
-}
-
-function kakaoNavFromTo(fromName, fromLat, fromLng, toName, toLat, toLng) {
-  // 출발 → 도착 경로
-  return 'https://map.kakao.com/link/from/' + encodeURIComponent(fromName) + ',' + fromLat + ',' + fromLng
-    + '/to/' + encodeURIComponent(toName) + ',' + toLat + ',' + toLng;
-}
+function svgUri(s) { return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s); }
 
 // ══════════════════════════════════════════════
 //  인포윈도우 빌더
 // ══════════════════════════════════════════════
 
-function buildHomeIW(p) {
-  return '<div class="iw">'
-    +'<div class="iw-title">'+esc(p.name)+'<span class="iw-badge home">선생님</span></div>'
-    +'<div class="iw-row">📍 집 위치</div>'
-    +'</div>';
+function routeBtns(name, lat, lng) {
+  if (!lat || !lng) return '';
+  // onclick needs escaped quotes for inline HTML
+  var n = esc(name).replace(/'/g, "\\'");
+  return '<div class="iw-actions">'
+    + '<button class="iw-act from" onclick="setRoute(\'from\',\'' + n + '\',' + lat + ',' + lng + ')">🟢 출발</button>'
+    + '<button class="iw-act to" onclick="setRoute(\'to\',\'' + n + '\',' + lat + ',' + lng + ')">🔴 도착</button>'
+    + '</div>';
 }
 
-// ── 배정 아동 (그룹) ──
+function buildHomeIW(p) {
+  return '<div class="iw">'
+    + '<div class="iw-title">' + esc(p.name) + '<span class="iw-badge home">선생님</span></div>'
+    + '<div class="iw-row">📍 집 위치</div>'
+    + routeBtns(p.name + ' 집', p.lat, p.lng)
+    + '</div>';
+}
+
 function buildGroupedAssignedIW(items, homeLat, homeLng) {
   var h = '<div class="iw">';
-
-  if (items.length > 1) {
-    h += '<div class="iw-group-label">같은 위치 ' + items.length + '명</div>';
-  }
+  if (items.length > 1) h += '<div class="iw-group-label">같은 위치 ' + items.length + '명</div>';
 
   items.forEach(function(c, i) {
     if (i > 0) h += '<hr class="iw-sep">';
-
-    // 거리
     var distLabel = '';
-    if (homeLat && homeLng && c.lat && c.lng) {
+    if (homeLat && homeLng && c.lat && c.lng)
       distLabel = '<span class="iw-badge dist">' + fmtDist(haversine(homeLat, homeLng, c.lat, c.lng)) + '</span>';
-    }
 
     h += '<div class="iw-title">' + esc(c.name) + '<span class="iw-badge assigned">배정</span>' + distLabel + '</div>'
       + '<div class="iw-row">📍 ' + esc(c.address) + '</div>';
@@ -450,58 +554,39 @@ function buildGroupedAssignedIW(items, homeLat, homeLng) {
       if (c.times) h += '<div class="iw-row">🕐 ' + esc(c.times) + '</div>';
     }
 
-    // 길찾기 링크
-    if (c.lat && c.lng) {
-      h += '<a class="iw-nav" href="' + kakaoNavUrl(c.name, c.lat, c.lng) + '" target="_blank">🧭 길찾기</a>';
-    }
+    h += routeBtns(c.name, c.lat, c.lng);
   });
 
-  h += '</div>';
-  return h;
+  return h + '</div>';
 }
 
-// ── 대기 아동 (그룹) ──
 function buildGroupedWaitingIW(items, homeLat, homeLng) {
   var h = '<div class="iw">';
-
-  if (items.length > 1) {
-    h += '<div class="iw-group-label">같은 위치 ' + items.length + '명</div>';
-  }
+  if (items.length > 1) h += '<div class="iw-group-label">같은 위치 ' + items.length + '명</div>';
 
   items.forEach(function(c, i) {
     if (i > 0) h += '<hr class="iw-sep">';
-
     var statusBadge = c.status === '부재1' ? '<span class="iw-badge absent">부재1</span>' : '';
-
-    // 거리
     var distLabel = '';
-    if (homeLat && homeLng && c.lat && c.lng) {
+    if (homeLat && homeLng && c.lat && c.lng)
       distLabel = '<span class="iw-badge dist">' + fmtDist(haversine(homeLat, homeLng, c.lat, c.lng)) + '</span>';
-    }
 
     h += '<div class="iw-title">' + esc(c.name)
-      + '<span class="iw-badge waiting">대기</span>'
-      + statusBadge + distLabel
-      + ' <span style="color:#aaa;font-size:11px;font-weight:400">' + c.row + '행</span>'
-      + '</div>'
+      + '<span class="iw-badge waiting">대기</span>' + statusBadge + distLabel
+      + ' <span style="color:#aaa;font-size:11px;font-weight:400">' + c.row + '행</span></div>'
       + '<div class="iw-row">📍 ' + esc(c.address) + '</div>'
       + '<div class="iw-row">🕐 ' + esc(c.times) + '</div>';
 
-    if (c.sigungu || c.bname) {
+    if (c.sigungu || c.bname)
       h += '<div class="iw-row" style="color:#aaa">' + esc(c.sigungu) + ' ' + esc(c.bname) + '</div>';
-    }
 
-    // 길찾기 링크
-    if (c.lat && c.lng) {
-      h += '<a class="iw-nav" href="' + kakaoNavUrl(c.name, c.lat, c.lng) + '" target="_blank">🧭 길찾기</a>';
-    }
+    h += routeBtns(c.name, c.lat, c.lng);
   });
 
-  h += '</div>';
-  return h;
+  return h + '</div>';
 }
 
-function esc(s) { if(!s) return ''; var d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function esc(s) { if(!s) return ''; var d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
 
 // ── 필터 ──
 function toggleFilter(t) {
