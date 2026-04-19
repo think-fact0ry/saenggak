@@ -77,6 +77,10 @@
   .iw-sep{margin:8px 0 6px;border:none;border-top:1px dashed #ddd}
   .iw-group-label{font-size:11px;color:#999;font-weight:600;margin-bottom:2px}
   .iw-times{margin-top:3px;font-size:11.5px;color:#7c3aed;font-weight:500}
+  .iw-phone{margin-top:2px;font-size:12px}
+  .iw-phone a{color:#3b82f6;text-decoration:none;font-weight:500}
+  .iw-phone a:hover{text-decoration:underline}
+  .iw-notes{margin-top:3px;font-size:11px;color:#7c3aed;background:#f8f5ff;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap}
   .iw-actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
   .iw-act{
     padding:4px 8px;border-radius:5px;font-size:11px;font-weight:500;font-family:inherit;
@@ -198,6 +202,12 @@ var routeFrom = null, routeTo = null;
 // ══ Haversine ══
 function haversine(a,b,c,d){var R=6371,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180,x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 function fmtDist(k){return k<1?Math.round(k*1000)+'m':k.toFixed(1)+'km'}
+
+function fmtPhone(s) {
+  var d = String(s||'').replace(/\D/g,'');
+  if (d.length===11 && /^01/.test(d)) return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+  return s;
+}
 
 // ══ 시간 필터 매칭 ══
 function matchesTimeFilter(timesStr, day, hour) {
@@ -432,6 +442,8 @@ function buildGroupedAssignedIW(items, hLat, hLng) {
       h+='<div class="iw-sch"><div style="color:#bbb">스케줄 미정</div></div>';
     }
     if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
+    if (c.phone) h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
+    if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
     h+=routeBtns(c.name,c.lat,c.lng);
   });
   return h+'</div>';
@@ -448,7 +460,9 @@ function buildGroupedWaitingIW(items, hLat, hLng) {
     h+='<div class="iw-title">'+esc(c.name)+'<span class="iw-badge waiting">대기</span>'+sb+dist
       +' <span style="color:#aaa;font-size:11px;font-weight:400">'+c.row+'행</span></div>'
       +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
+    if (c.phone) h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
     if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
+    if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
     if (c.sigungu||c.bname) h+='<div class="iw-row" style="color:#aaa">'+esc(c.sigungu)+' '+esc(c.bname)+'</div>';
     h+='<div class="iw-actions">'+assignBtn(c.row)
       +'<button class="iw-act from" onclick="setRoute(\'from\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🟢 출발</button>'
