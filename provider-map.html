@@ -98,7 +98,7 @@
     padding:10px 14px;
     font-family:'Pretendard','Noto Sans KR',sans-serif;
     font-size:12.5px;line-height:1.6;
-    min-width:180px;max-width:280px;
+    min-width:200px;max-width:320px;
   }
   .iw-title{font-weight:700;font-size:14px;margin-bottom:4px;color:#1a1a1a}
   .iw-badge{
@@ -110,9 +110,27 @@
   .iw-badge.assigned{background:#dcfce7;color:#16a34a}
   .iw-badge.waiting{background:#fef3c7;color:#d97706}
   .iw-badge.absent{background:#fff3cd;color:#856404}
+  .iw-badge.dist{background:#f0e6f6;color:#7c3aed;font-size:11px}
   .iw-row{color:#666;font-size:12px}
   .iw-sch{margin-top:4px;padding-top:4px;border-top:1px solid #eee;font-size:11.5px;color:#555}
   .iw-sch div{padding:1px 0}
+  .iw-nav{
+    display:inline-block;margin-top:6px;
+    padding:4px 10px;border-radius:5px;
+    font-size:11px;font-weight:500;
+    text-decoration:none;
+    border:1px solid #3b82f6;color:#3b82f6;
+    transition:all .15s;
+  }
+  .iw-nav:hover{background:#3b82f6;color:#fff}
+  .iw-sep{
+    margin:8px 0 6px;
+    border:none;border-top:1px dashed #ddd;
+  }
+  .iw-group-label{
+    font-size:11px;color:#999;font-weight:600;
+    margin-bottom:2px;
+  }
 
   /* ══ 로딩/토스트 ══ */
   .loading-overlay{
@@ -179,7 +197,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-
+// ╔═══════════════════════════════════════════════════╗
+//  ★ 아래 두 값을 실제 값으로 교체 ★
+// ╚═══════════════════════════════════════════════════╝
 var CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec',
   KAKAO_JS_KEY: '90fa3176ac77c6fc1ae5a165b9f0662c'
@@ -189,7 +209,26 @@ var map, markers = [], infoWindow;
 var currentData = null;
 var showAssigned = true, showWaiting = true;
 
-// ── 카카오맵 초기화 ──
+// ══════════════════════════════════════════════
+//  Haversine 거리 계산 (km)
+// ══════════════════════════════════════════════
+function haversine(lat1, lng1, lat2, lng2) {
+  var R = 6371;
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLng = (lng2 - lng1) * Math.PI / 180;
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+          Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function fmtDist(km) {
+  return km < 1 ? Math.round(km * 1000) + 'm' : km.toFixed(1) + 'km';
+}
+
+// ══════════════════════════════════════════════
+//  카카오맵 초기화
+// ══════════════════════════════════════════════
 function initMap() {
   map = new kakao.maps.Map(document.getElementById('map'), {
     center: new kakao.maps.LatLng(37.46, 126.70),
@@ -245,34 +284,70 @@ function loadMapData(name) {
   }).catch(function(e) { showLoading(false); showToast('데이터 로드 실패: ' + e.message); });
 }
 
-// ── 마커 ──
+// ══════════════════════════════════════════════
+//  좌표 기준 그룹핑
+// ══════════════════════════════════════════════
+function groupByCoord(items) {
+  var groups = {};
+  items.forEach(function(c) {
+    if (!c.lat || !c.lng) return;
+    // 소수점 6자리로 반올림하여 키 생성 (같은 건물 = 같은 키)
+    var key = c.lat.toFixed(6) + ',' + c.lng.toFixed(6);
+    if (!groups[key]) groups[key] = { lat: c.lat, lng: c.lng, items: [] };
+    groups[key].items.push(c);
+  });
+  return Object.values(groups);
+}
+
+// ══════════════════════════════════════════════
+//  마커 렌더링 (그룹핑 적용)
+// ══════════════════════════════════════════════
 function clearMarkers() { markers.forEach(function(m){m.setMap(null)}); markers=[]; }
 
 function renderMarkers() {
   clearMarkers();
   if (!currentData) return;
   var d = currentData;
+  var homeLat = d.provider.lat, homeLng = d.provider.lng;
 
-  if (d.provider.lat && d.provider.lng)
-    addMarker(d.provider.lat, d.provider.lng, 'home', buildHomeIW(d.provider));
+  // ── 선생님 집 마커 ──
+  if (homeLat && homeLng)
+    addMarker(homeLat, homeLng, 'home', 1, buildHomeIW(d.provider));
 
-  if (showAssigned) d.assigned.forEach(function(c) {
-    if (c.lat && c.lng) addMarker(c.lat, c.lng, 'assigned', buildAssignedIW(c));
-  });
+  // ── 배정 아동 (그룹핑) ──
+  if (showAssigned) {
+    var assignedGroups = groupByCoord(d.assigned);
+    assignedGroups.forEach(function(g) {
+      var iw = buildGroupedAssignedIW(g.items, homeLat, homeLng);
+      addMarker(g.lat, g.lng, 'assigned', g.items.length, iw);
+    });
+  }
 
-  if (showWaiting) d.waiting.forEach(function(c) {
-    if (c.lat && c.lng) addMarker(c.lat, c.lng, 'waiting', buildWaitingIW(c));
-  });
+  // ── 대기 아동 (그룹핑) ──
+  if (showWaiting) {
+    var waitingGroups = groupByCoord(d.waiting);
+    waitingGroups.forEach(function(g) {
+      var iw = buildGroupedWaitingIW(g.items, homeLat, homeLng);
+      addMarker(g.lat, g.lng, 'waiting', g.items.length, iw);
+    });
+  }
 }
 
-function addMarker(lat, lng, type, iwContent) {
+function addMarker(lat, lng, type, count, iwContent) {
   var pos = new kakao.maps.LatLng(lat, lng);
-  var sz = type==='home' ? new kakao.maps.Size(32,32) : new kakao.maps.Size(24,24);
-  var off = type==='home' ? new kakao.maps.Point(16,32) : new kakao.maps.Point(12,24);
-  var img = new kakao.maps.MarkerImage(markerSVG(type), sz, {offset:off});
+  var svgStr = (count > 1) ? markerSVGWithCount(type, count) : markerSVG(type);
+  var sz, off;
+  if (type === 'home') {
+    sz = new kakao.maps.Size(32, 32); off = new kakao.maps.Point(16, 32);
+  } else if (count > 1) {
+    sz = new kakao.maps.Size(30, 30); off = new kakao.maps.Point(15, 30);
+  } else {
+    sz = new kakao.maps.Size(24, 24); off = new kakao.maps.Point(12, 24);
+  }
+  var img = new kakao.maps.MarkerImage(svgStr, sz, { offset: off });
   var marker = new kakao.maps.Marker({
-    position:pos, image:img, map:map,
-    zIndex: type==='home'?10:(type==='assigned'?5:1)
+    position: pos, image: img, map: map,
+    zIndex: type==='home' ? 10 : (type==='assigned' ? 5 : 1)
   });
   kakao.maps.event.addListener(marker, 'click', function() {
     infoWindow.setContent(iwContent);
@@ -285,11 +360,13 @@ function fitBounds() {
   if (!markers.length) return;
   if (markers.length === 1) { map.setCenter(markers[0].getPosition()); map.setLevel(5); return; }
   var b = new kakao.maps.LatLngBounds();
-  markers.forEach(function(m){b.extend(m.getPosition())});
+  markers.forEach(function(m) { b.extend(m.getPosition()); });
   map.setBounds(b, 60);
 }
 
-// ── 마커 SVG ──
+// ══════════════════════════════════════════════
+//  마커 SVG
+// ══════════════════════════════════════════════
 function markerSVG(type) {
   var c = {home:{f:'#3b82f6',s:'#1d4ed8'},assigned:{f:'#22c55e',s:'#15803d'},waiting:{f:'#f59e0b',s:'#d97706'}}[type];
   var svg;
@@ -308,43 +385,135 @@ function markerSVG(type) {
   return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
 }
 
-// ── 인포윈도우 ──
+// 숫자 배지 포함 마커 (같은 좌표에 여러 명)
+function markerSVGWithCount(type, count) {
+  var c = {assigned:{f:'#22c55e',s:'#15803d'},waiting:{f:'#f59e0b',s:'#d97706'}}[type];
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">'
+    +'<path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/>'
+    +'<circle cx="15" cy="11" r="7" fill="#fff"/>'
+    +'<text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+count+'</text>'
+    +'</svg>';
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+
+// ══════════════════════════════════════════════
+//  카카오맵 길찾기 URL
+// ══════════════════════════════════════════════
+function kakaoNavUrl(name, lat, lng) {
+  // 카카오맵 길찾기 (도착지만 지정, 출발지는 현위치 or 사용자 선택)
+  return 'https://map.kakao.com/link/to/' + encodeURIComponent(name) + ',' + lat + ',' + lng;
+}
+
+function kakaoNavFromTo(fromName, fromLat, fromLng, toName, toLat, toLng) {
+  // 출발 → 도착 경로
+  return 'https://map.kakao.com/link/from/' + encodeURIComponent(fromName) + ',' + fromLat + ',' + fromLng
+    + '/to/' + encodeURIComponent(toName) + ',' + toLat + ',' + toLng;
+}
+
+// ══════════════════════════════════════════════
+//  인포윈도우 빌더
+// ══════════════════════════════════════════════
+
 function buildHomeIW(p) {
-  return '<div class="iw"><div class="iw-title">'+esc(p.name)+'<span class="iw-badge home">선생님</span></div><div class="iw-row">📍 집 위치</div></div>';
-}
-function buildAssignedIW(c) {
-  var h='<div class="iw"><div class="iw-title">'+esc(c.name)+'<span class="iw-badge assigned">배정</span></div>'
-    +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
-  if (c.schedule && c.schedule.length) {
-    h+='<div class="iw-sch">';
-    c.schedule.forEach(function(s){h+='<div>'+esc(s.day)+' '+esc(s.time)+' · '+esc(s.service)+'</div>';});
-    h+='</div>';
-  }
-  return h+'</div>';
-}
-function buildWaitingIW(c) {
-  var sb = c.status==='부재1' ? '<span class="iw-badge absent">부재1</span>' : '';
   return '<div class="iw">'
-    +'<div class="iw-title">'+esc(c.name)+'<span class="iw-badge waiting">대기</span>'+sb
-    +' <span style="color:#aaa;font-size:11px;font-weight:400">'+c.row+'행</span></div>'
-    +'<div class="iw-row">📍 '+esc(c.address)+'</div>'
-    +'<div class="iw-row">🕐 '+esc(c.times)+'</div>'
-    +(c.sigungu||c.bname?'<div class="iw-row" style="color:#aaa">'+esc(c.sigungu)+' '+esc(c.bname)+'</div>':'')
+    +'<div class="iw-title">'+esc(p.name)+'<span class="iw-badge home">선생님</span></div>'
+    +'<div class="iw-row">📍 집 위치</div>'
     +'</div>';
 }
-function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+
+// ── 배정 아동 (그룹) ──
+function buildGroupedAssignedIW(items, homeLat, homeLng) {
+  var h = '<div class="iw">';
+
+  if (items.length > 1) {
+    h += '<div class="iw-group-label">같은 위치 ' + items.length + '명</div>';
+  }
+
+  items.forEach(function(c, i) {
+    if (i > 0) h += '<hr class="iw-sep">';
+
+    // 거리
+    var distLabel = '';
+    if (homeLat && homeLng && c.lat && c.lng) {
+      distLabel = '<span class="iw-badge dist">' + fmtDist(haversine(homeLat, homeLng, c.lat, c.lng)) + '</span>';
+    }
+
+    h += '<div class="iw-title">' + esc(c.name) + '<span class="iw-badge assigned">배정</span>' + distLabel + '</div>'
+      + '<div class="iw-row">📍 ' + esc(c.address) + '</div>';
+
+    if (c.schedule && c.schedule.length) {
+      h += '<div class="iw-sch">';
+      c.schedule.forEach(function(s) { h += '<div>' + esc(s.day) + ' ' + esc(s.time) + ' · ' + esc(s.service) + '</div>'; });
+      h += '</div>';
+    } else {
+      h += '<div class="iw-sch"><div style="color:#bbb">스케줄 미정</div></div>';
+      if (c.times) h += '<div class="iw-row">🕐 ' + esc(c.times) + '</div>';
+    }
+
+    // 길찾기 링크
+    if (c.lat && c.lng) {
+      h += '<a class="iw-nav" href="' + kakaoNavUrl(c.name, c.lat, c.lng) + '" target="_blank">🧭 길찾기</a>';
+    }
+  });
+
+  h += '</div>';
+  return h;
+}
+
+// ── 대기 아동 (그룹) ──
+function buildGroupedWaitingIW(items, homeLat, homeLng) {
+  var h = '<div class="iw">';
+
+  if (items.length > 1) {
+    h += '<div class="iw-group-label">같은 위치 ' + items.length + '명</div>';
+  }
+
+  items.forEach(function(c, i) {
+    if (i > 0) h += '<hr class="iw-sep">';
+
+    var statusBadge = c.status === '부재1' ? '<span class="iw-badge absent">부재1</span>' : '';
+
+    // 거리
+    var distLabel = '';
+    if (homeLat && homeLng && c.lat && c.lng) {
+      distLabel = '<span class="iw-badge dist">' + fmtDist(haversine(homeLat, homeLng, c.lat, c.lng)) + '</span>';
+    }
+
+    h += '<div class="iw-title">' + esc(c.name)
+      + '<span class="iw-badge waiting">대기</span>'
+      + statusBadge + distLabel
+      + ' <span style="color:#aaa;font-size:11px;font-weight:400">' + c.row + '행</span>'
+      + '</div>'
+      + '<div class="iw-row">📍 ' + esc(c.address) + '</div>'
+      + '<div class="iw-row">🕐 ' + esc(c.times) + '</div>';
+
+    if (c.sigungu || c.bname) {
+      h += '<div class="iw-row" style="color:#aaa">' + esc(c.sigungu) + ' ' + esc(c.bname) + '</div>';
+    }
+
+    // 길찾기 링크
+    if (c.lat && c.lng) {
+      h += '<a class="iw-nav" href="' + kakaoNavUrl(c.name, c.lat, c.lng) + '" target="_blank">🧭 길찾기</a>';
+    }
+  });
+
+  h += '</div>';
+  return h;
+}
+
+function esc(s) { if(!s) return ''; var d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
 
 // ── 필터 ──
 function toggleFilter(t) {
-  if(t==='assigned'){showAssigned=!showAssigned;document.getElementById('filterAssigned').classList.toggle('active',showAssigned)}
-  else{showWaiting=!showWaiting;document.getElementById('filterWaiting').classList.toggle('active',showWaiting)}
+  if (t==='assigned') { showAssigned=!showAssigned; document.getElementById('filterAssigned').classList.toggle('active',showAssigned); }
+  else { showWaiting=!showWaiting; document.getElementById('filterWaiting').classList.toggle('active',showWaiting); }
   renderMarkers(); fitBounds();
 }
 
 // ── 유틸 ──
-function showLoading(v){document.getElementById('loading').classList.toggle('show',v)}
+function showLoading(v) { document.getElementById('loading').classList.toggle('show',v); }
 var _tt;
-function showToast(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show')},4000)}
+function showToast(m) { var e=document.getElementById('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(function(){e.classList.remove('show')},4000); }
 </script>
 
 <script>
