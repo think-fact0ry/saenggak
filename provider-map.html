@@ -6,106 +6,66 @@
 <title>오감쑥쑥 제공인력 지도</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
-
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden}
-  body{
-    font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;
-    color:#1a1a1a;
-    background:#f0ebe4;
-  }
+  body{font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;color:#1a1a1a;background:#f0ebe4}
 
-  /* ══ 상단 컨트롤 바 ══ */
+  /* ══ 상단 컨트롤 ══ */
   .controls{
     position:fixed;top:0;left:0;right:0;z-index:50;
-    background:rgba(255,255,255,.92);
-    backdrop-filter:blur(12px);
-    -webkit-backdrop-filter:blur(12px);
+    background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
     border-bottom:1px solid rgba(0,0,0,.06);
-    padding:10px 16px;
-    display:flex;align-items:center;gap:10px;
+    padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   }
-  .logo{
-    font-size:13px;font-weight:700;color:#3a6b4e;
-    white-space:nowrap;letter-spacing:-.3px;
-  }
+  .logo{font-size:13px;font-weight:700;color:#3a6b4e;white-space:nowrap;letter-spacing:-.3px}
   .logo span{font-weight:400;color:#999;margin-left:2px;font-size:11px}
-
+  .divider{width:1px;height:22px;background:#e0dcd5;flex-shrink:0}
   select{
-    flex:1;max-width:240px;
-    padding:9px 32px 9px 12px;
-    border:1.5px solid #d4cfc6;border-radius:8px;
-    font-size:13.5px;font-family:inherit;
-    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;
-    -webkit-appearance:none;appearance:none;
-    outline:none;cursor:pointer;
-    transition:border-color .2s;
+    padding:7px 28px 7px 10px;border:1.5px solid #d4cfc6;border-radius:7px;
+    font-size:12.5px;font-family:inherit;
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 10px center;
+    -webkit-appearance:none;appearance:none;outline:none;cursor:pointer;
   }
   select:focus{border-color:#3a6b4e}
-
-  .divider{width:1px;height:24px;background:#e0dcd5;flex-shrink:0}
-
-  .filter-group{display:flex;gap:4px}
-  .filter-btn{
-    padding:6px 12px;border-radius:6px;
-    font-size:11.5px;font-family:inherit;
-    cursor:pointer;border:1.5px solid #d4cfc6;
-    background:#fff;color:#666;
-    transition:all .15s;
+  #providerSelect{flex:1;max-width:200px}
+  .filter-group{display:flex;gap:3px}
+  .fbtn{
+    padding:5px 10px;border-radius:6px;font-size:11px;font-family:inherit;
+    cursor:pointer;border:1.5px solid #d4cfc6;background:#fff;color:#666;transition:all .15s;
   }
-  .filter-btn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e}
+  .fbtn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e}
+
+  /* ══ 대시보드 바 ══ */
+  .dashboard{
+    position:fixed;top:44px;left:0;right:0;z-index:49;
+    background:rgba(250,250,247,.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(0,0,0,.04);
+    padding:6px 14px;display:none;align-items:center;gap:12px;flex-wrap:wrap;
+    font-size:12px;
+  }
+  .dashboard.show{display:flex}
+  .dash-stat{color:#888}
+  .dash-stat b{color:#3a6b4e;font-weight:700}
+  .dash-filters{display:flex;gap:6px;margin-left:auto}
 
   /* ══ 지도 ══ */
-  #map{position:fixed;top:52px;left:0;right:0;bottom:0}
+  #map{position:fixed;top:76px;left:0;right:0;bottom:0}
 
   /* ══ 범례 ══ */
   .legend{
-    position:fixed;bottom:20px;left:16px;z-index:40;
-    background:rgba(255,255,255,.92);
-    backdrop-filter:blur(8px);
-    -webkit-backdrop-filter:blur(8px);
-    border-radius:10px;
-    padding:10px 14px;
-    box-shadow:0 2px 12px rgba(0,0,0,.1);
-    font-size:12px;
-    display:flex;gap:14px;
-    pointer-events:none;
+    position:fixed;bottom:16px;left:14px;z-index:40;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border-radius:10px;padding:8px 12px;box-shadow:0 2px 12px rgba(0,0,0,.1);
+    font-size:11px;display:flex;gap:12px;pointer-events:none;
   }
-  .legend-item{display:flex;align-items:center;gap:5px;white-space:nowrap}
-  .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-  .legend-dot.home{background:#3b82f6}
-  .legend-dot.assigned{background:#22c55e}
-  .legend-dot.waiting{background:#f59e0b}
-
-  /* ══ 통계 패널 ══ */
-  .stats{
-    position:fixed;bottom:20px;right:16px;z-index:40;
-    background:rgba(255,255,255,.92);
-    backdrop-filter:blur(8px);
-    -webkit-backdrop-filter:blur(8px);
-    border-radius:10px;
-    padding:10px 14px;
-    box-shadow:0 2px 12px rgba(0,0,0,.1);
-    font-size:12px;
-    display:none;
-  }
-  .stats-row{display:flex;gap:16px}
-  .stats-num{font-weight:700;font-size:16px;color:#3a6b4e}
-  .stats-label{color:#888;font-size:11px}
+  .legend-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
+  .ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .ldot.home{background:#3b82f6}.ldot.assigned{background:#22c55e}.ldot.waiting{background:#f59e0b}
 
   /* ══ 인포윈도우 ══ */
-  .iw{
-    padding:10px 14px;
-    font-family:'Pretendard','Noto Sans KR',sans-serif;
-    font-size:12.5px;line-height:1.6;
-    min-width:200px;max-width:320px;
-  }
-  .iw-title{font-weight:700;font-size:14px;margin-bottom:4px;color:#1a1a1a}
-  .iw-badge{
-    display:inline-block;font-size:10px;font-weight:600;
-    padding:2px 7px;border-radius:10px;margin-left:4px;
-    vertical-align:middle;
-  }
+  .iw{padding:10px 14px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:200px;max-width:320px}
+  .iw-title{font-weight:700;font-size:14px;margin-bottom:3px;color:#1a1a1a}
+  .iw-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:4px;vertical-align:middle}
   .iw-badge.home{background:#dbeafe;color:#2563eb}
   .iw-badge.assigned{background:#dcfce7;color:#16a34a}
   .iw-badge.waiting{background:#fef3c7;color:#d97706}
@@ -114,151 +74,110 @@
   .iw-row{color:#666;font-size:12px}
   .iw-sch{margin-top:4px;padding-top:4px;border-top:1px solid #eee;font-size:11.5px;color:#555}
   .iw-sch div{padding:1px 0}
-  .iw-sep{
-    margin:8px 0 6px;
-    border:none;border-top:1px dashed #ddd;
-  }
-  .iw-group-label{
-    font-size:11px;color:#999;font-weight:600;
-    margin-bottom:2px;
-  }
-
-  /* 인포윈도우 내 액션 버튼 */
-  .iw-actions{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+  .iw-sep{margin:8px 0 6px;border:none;border-top:1px dashed #ddd}
+  .iw-group-label{font-size:11px;color:#999;font-weight:600;margin-bottom:2px}
+  .iw-times{margin-top:3px;font-size:11.5px;color:#7c3aed;font-weight:500}
+  .iw-actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
   .iw-act{
-    padding:4px 9px;border-radius:5px;
-    font-size:11px;font-weight:500;font-family:inherit;
-    text-decoration:none;cursor:pointer;
-    border:1px solid #ccc;color:#555;background:#fff;
-    transition:all .15s;white-space:nowrap;
+    padding:4px 8px;border-radius:5px;font-size:11px;font-weight:500;font-family:inherit;
+    cursor:pointer;border:1px solid #ccc;color:#555;background:#fff;transition:all .15s;white-space:nowrap;
   }
   .iw-act:hover{background:#f5f5f5}
-  .iw-act.from{border-color:#22c55e;color:#16a34a}
-  .iw-act.from:hover{background:#dcfce7}
-  .iw-act.to{border-color:#ef4444;color:#dc2626}
-  .iw-act.to:hover{background:#fee2e2}
+  .iw-act.from{border-color:#22c55e;color:#16a34a}.iw-act.from:hover{background:#dcfce7}
+  .iw-act.to{border-color:#ef4444;color:#dc2626}.iw-act.to:hover{background:#fee2e2}
+  .iw-act.assign{border-color:#3a6b4e;color:#3a6b4e;font-weight:600}.iw-act.assign:hover{background:#eef5e9}
 
   /* ══ 길찾기 패널 ══ */
   .route-panel{
-    position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:45;
-    background:rgba(255,255,255,.95);
-    backdrop-filter:blur(12px);
-    -webkit-backdrop-filter:blur(12px);
-    border-radius:12px;
-    padding:12px 16px;
-    box-shadow:0 4px 20px rgba(0,0,0,.12);
-    display:none;
-    min-width:280px;max-width:380px;
-    width:auto;
+    position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:45;
+    background:rgba(255,255,255,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-radius:12px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,.12);
+    display:none;min-width:260px;max-width:360px;
   }
   .route-panel.show{display:block}
-  .route-row{
-    display:flex;align-items:center;gap:8px;
-    padding:4px 0;font-size:12.5px;
-  }
-  .route-dot{
-    width:10px;height:10px;border-radius:50%;flex-shrink:0;
-  }
-  .route-dot.from{background:#22c55e}
-  .route-dot.to{background:#ef4444}
-  .route-name{flex:1;color:#333;font-weight:500}
-  .route-name.empty{color:#bbb;font-weight:400}
-  .route-clear{
-    font-size:14px;color:#ccc;cursor:pointer;padding:0 4px;
-    transition:color .15s;
-  }
-  .route-clear:hover{color:#999}
-  .route-arrow{
-    text-align:center;color:#ccc;font-size:10px;
-    padding:0 0 0 4px;
-  }
+  .route-row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px}
+  .rdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .rdot.from{background:#22c55e}.rdot.to{background:#ef4444}
+  .rname{flex:1;color:#333;font-weight:500}
+  .rname.empty{color:#bbb;font-weight:400}
+  .rclear{font-size:13px;color:#ccc;cursor:pointer;padding:0 4px;transition:color .15s}
+  .rclear:hover{color:#999}
+  .rarrow{text-align:center;color:#ccc;font-size:10px;padding-left:4px}
   .route-go{
-    display:block;width:100%;margin-top:8px;
-    padding:10px;border:none;border-radius:8px;
-    font-size:13.5px;font-weight:600;font-family:inherit;
-    cursor:pointer;text-align:center;
-    text-decoration:none;color:#fff;
-    transition:all .15s;
+    display:block;width:100%;margin-top:8px;padding:10px;border:none;border-radius:8px;
+    font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;
+    text-decoration:none;color:#fff;transition:all .15s;
   }
-  .route-go.ready{background:#3b82f6}
-  .route-go.ready:hover{background:#2563eb}
+  .route-go.ready{background:#3b82f6}.route-go.ready:hover{background:#2563eb}
   .route-go.disabled{background:#ddd;color:#aaa;pointer-events:none}
 
-  /* ══ 로딩/토스트 ══ */
-  .loading-overlay{
-    position:fixed;inset:0;z-index:100;
-    background:rgba(255,255,255,.6);
-    display:none;align-items:center;justify-content:center;
-  }
+  /* ══ 유틸 ══ */
+  .loading-overlay{position:fixed;inset:0;z-index:100;background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center}
   .loading-overlay.show{display:flex}
-  .ld-spinner{
-    width:32px;height:32px;
-    border:3px solid #d4cfc6;border-top-color:#3a6b4e;
-    border-radius:50%;animation:spin .7s linear infinite;
-  }
+  .ld-spinner{width:32px;height:32px;border:3px solid #d4cfc6;border-top-color:#3a6b4e;border-radius:50%;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-
-  .toast{
-    position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:60;
-    background:#842029;color:#fff;
-    padding:10px 20px;border-radius:8px;
-    font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);
-    display:none;
-  }
+  .toast{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:60;background:#842029;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none}
   .toast.show{display:block;animation:fadeIn .3s}
+  .toast.success{background:#16a34a}
   @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
   @media(max-width:480px){
-    .controls{padding:8px 10px;gap:6px}
-    .logo{display:none}
-    .divider{display:none}
-    select{max-width:none}
-    .legend{left:8px;bottom:12px;gap:10px;font-size:11px;padding:8px 10px}
-    .stats{right:8px;bottom:12px}
-    .route-panel{left:8px;right:8px;transform:none;min-width:auto;bottom:48px}
+    .controls{padding:6px 8px;gap:4px}
+    .logo,.divider{display:none}
+    #providerSelect{max-width:none}
+    .dashboard{top:40px;padding:5px 8px;gap:6px}
+    #map{top:70px}
+    .legend{left:6px;bottom:10px;gap:8px;font-size:10px;padding:6px 8px}
+    .route-panel{left:6px;right:6px;transform:none;min-width:auto;bottom:44px}
   }
 </style>
 </head>
 <body>
 
+<!-- ════ 컨트롤 ════ -->
 <div class="controls">
   <div class="logo">오감쑥쑥 <span>지도</span></div>
   <div class="divider"></div>
   <select id="providerSelect"><option value="">선생님 선택</option></select>
   <div class="filter-group">
-    <button class="filter-btn active" id="filterAssigned" onclick="toggleFilter('assigned')">배정</button>
-    <button class="filter-btn active" id="filterWaiting" onclick="toggleFilter('waiting')">대기</button>
+    <button class="fbtn active" id="filterAssigned" onclick="toggleFilter('assigned')">배정</button>
+    <button class="fbtn active" id="filterWaiting" onclick="toggleFilter('waiting')">대기</button>
+  </div>
+</div>
+
+<!-- ════ 대시보드 ════ -->
+<div class="dashboard" id="dashboard">
+  <span class="dash-stat">전체 <b id="dashTotal">0</b></span>
+  <span class="dash-stat">배정 <b id="dashAssigned">0</b></span>
+  <span class="dash-stat">대기 <b id="dashWaiting">0</b></span>
+  <div class="dash-filters">
+    <select id="filterDay" onchange="applyFilters()">
+      <option value="">요일</option>
+      <option>월</option><option>화</option><option>수</option>
+      <option>목</option><option>금</option><option>토</option>
+    </select>
+    <select id="filterTime" onchange="applyFilters()">
+      <option value="">시간</option>
+      <option value="14">14시</option><option value="15">15시</option>
+      <option value="16">16시</option><option value="17">17시</option>
+      <option value="18">18시</option><option value="19">19시</option>
+    </select>
   </div>
 </div>
 
 <div id="map"></div>
 
 <div class="legend">
-  <div class="legend-item"><div class="legend-dot home"></div>선생님</div>
-  <div class="legend-item"><div class="legend-dot assigned"></div>배정 아동</div>
-  <div class="legend-item"><div class="legend-dot waiting"></div>대기 아동</div>
-</div>
-
-<div class="stats" id="stats">
-  <div class="stats-row">
-    <div><div class="stats-num" id="statAssigned">0</div><div class="stats-label">배정</div></div>
-    <div><div class="stats-num" id="statWaiting">0</div><div class="stats-label">대기</div></div>
-  </div>
+  <div class="legend-item"><div class="ldot home"></div>선생님</div>
+  <div class="legend-item"><div class="ldot assigned"></div>배정</div>
+  <div class="legend-item"><div class="ldot waiting"></div>대기</div>
 </div>
 
 <!-- ════ 길찾기 패널 ════ -->
 <div class="route-panel" id="routePanel">
-  <div class="route-row">
-    <div class="route-dot from"></div>
-    <div class="route-name" id="routeFromName">출발지를 선택하세요</div>
-    <span class="route-clear" id="routeFromClear" onclick="clearRoute('from')" style="display:none">✕</span>
-  </div>
-  <div class="route-arrow">▼</div>
-  <div class="route-row">
-    <div class="route-dot to"></div>
-    <div class="route-name" id="routeToName">도착지를 선택하세요</div>
-    <span class="route-clear" id="routeToClear" onclick="clearRoute('to')" style="display:none">✕</span>
-  </div>
+  <div class="route-row"><div class="rdot from"></div><div class="rname empty" id="routeFromName">출발지 선택</div><span class="rclear" id="routeFromClear" onclick="clearRoute('from')" style="display:none">✕</span></div>
+  <div class="rarrow">▼</div>
+  <div class="route-row"><div class="rdot to"></div><div class="rname empty" id="routeToName">도착지 선택</div><span class="rclear" id="routeToClear" onclick="clearRoute('to')" style="display:none">✕</span></div>
   <a class="route-go disabled" id="routeGoBtn" target="_blank">🧭 카카오맵에서 길찾기</a>
 </div>
 
@@ -266,349 +185,310 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ╔═══════════════════════════════════════════════════╗
-//  ★ 아래 두 값을 실제 값으로 교체 ★
-// ╚═══════════════════════════════════════════════════╝
 var CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec',
   KAKAO_JS_KEY: '90fa3176ac77c6fc1ae5a165b9f0662c'
 };
 
-
 var map, markers = [], infoWindow;
 var currentData = null;
 var showAssigned = true, showWaiting = true;
+var routeFrom = null, routeTo = null;
 
-// ══════════════════════════════════════════════
-//  길찾기 상태
-// ══════════════════════════════════════════════
-var routeFrom = null;  // { name, lat, lng }
-var routeTo = null;
+// ══ Haversine ══
+function haversine(a,b,c,d){var R=6371,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180,x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function fmtDist(k){return k<1?Math.round(k*1000)+'m':k.toFixed(1)+'km'}
 
+// ══ 시간 필터 매칭 ══
+function matchesTimeFilter(timesStr, day, hour) {
+  if (!day && !hour) return true;
+  if (!timesStr) return false;
+  // 구조화 데이터: "월-14,월-15,화-16"
+  if (/[월화수목금토일]-\d/.test(timesStr)) {
+    var slots = timesStr.split(',');
+    return slots.some(function(s) {
+      s = s.trim();
+      var p = s.split('-');
+      if (p.length < 2) return false;
+      if (day && p[0] !== day) return false;
+      if (hour && parseInt(p[1]) !== parseInt(hour)) return false;
+      return true;
+    });
+  }
+  // 비구조화 (자유텍스트): 필터 적용 불가 → 항상 표시
+  return true;
+}
+
+// 구조화 시간 → 보기 좋게 포맷
+function fmtTimes(timesStr) {
+  if (!timesStr) return '';
+  if (!/[월화수목금토일]-\d/.test(timesStr)) return timesStr;
+  var days = {};
+  timesStr.split(',').forEach(function(s) {
+    s = s.trim();
+    var p = s.split('-');
+    if (p.length < 2) return;
+    if (!days[p[0]]) days[p[0]] = [];
+    days[p[0]].push(parseInt(p[1]) + '시');
+  });
+  var parts = [];
+  ['월','화','수','목','금','토','일'].forEach(function(d) {
+    if (days[d]) parts.push(d + ' ' + days[d].join(','));
+  });
+  return parts.join(' | ');
+}
+
+// ══ 길찾기 패널 ══
 function setRoute(type, name, lat, lng) {
-  var point = { name: name, lat: lat, lng: lng };
-  if (type === 'from') routeFrom = point;
-  else routeTo = point;
-  updateRoutePanel();
-  infoWindow.close();
+  if (type === 'from') routeFrom = {name:name,lat:lat,lng:lng};
+  else routeTo = {name:name,lat:lat,lng:lng};
+  updateRoutePanel(); infoWindow.close();
 }
-
 function clearRoute(type) {
-  if (type === 'from') routeFrom = null;
-  else routeTo = null;
+  if (type === 'from') routeFrom = null; else routeTo = null;
   updateRoutePanel();
 }
-
 function updateRoutePanel() {
   var panel = document.getElementById('routePanel');
-  var fromName = document.getElementById('routeFromName');
-  var toName = document.getElementById('routeToName');
-  var fromClear = document.getElementById('routeFromClear');
-  var toClear = document.getElementById('routeToClear');
-  var goBtn = document.getElementById('routeGoBtn');
-
-  // 패널 표시 여부
-  if (!routeFrom && !routeTo) {
-    panel.classList.remove('show');
-    return;
-  }
+  var fn = document.getElementById('routeFromName'), tn = document.getElementById('routeToName');
+  var fc = document.getElementById('routeFromClear'), tc = document.getElementById('routeToClear');
+  var go = document.getElementById('routeGoBtn');
+  if (!routeFrom && !routeTo) { panel.classList.remove('show'); return; }
   panel.classList.add('show');
-
-  // 출발지
-  if (routeFrom) {
-    fromName.textContent = routeFrom.name;
-    fromName.classList.remove('empty');
-    fromClear.style.display = '';
-  } else {
-    fromName.textContent = '출발지를 선택하세요';
-    fromName.classList.add('empty');
-    fromClear.style.display = 'none';
-  }
-
-  // 도착지
-  if (routeTo) {
-    toName.textContent = routeTo.name;
-    toName.classList.remove('empty');
-    toClear.style.display = '';
-  } else {
-    toName.textContent = '도착지를 선택하세요';
-    toName.classList.add('empty');
-    toClear.style.display = 'none';
-  }
-
-  // 길찾기 버튼
+  if (routeFrom) { fn.textContent=routeFrom.name; fn.classList.remove('empty'); fc.style.display=''; }
+  else { fn.textContent='출발지 선택'; fn.classList.add('empty'); fc.style.display='none'; }
+  if (routeTo) { tn.textContent=routeTo.name; tn.classList.remove('empty'); tc.style.display=''; }
+  else { tn.textContent='도착지 선택'; tn.classList.add('empty'); tc.style.display='none'; }
   if (routeFrom && routeTo) {
-    var url = 'https://map.kakao.com/link/from/'
-      + encodeURIComponent(routeFrom.name) + ',' + routeFrom.lat + ',' + routeFrom.lng
-      + '/to/'
-      + encodeURIComponent(routeTo.name) + ',' + routeTo.lat + ',' + routeTo.lng;
-    goBtn.href = url;
-    goBtn.className = 'route-go ready';
-  } else {
-    goBtn.href = '#';
-    goBtn.className = 'route-go disabled';
-  }
+    go.href='https://map.kakao.com/link/from/'+encodeURIComponent(routeFrom.name)+','+routeFrom.lat+','+routeFrom.lng+'/to/'+encodeURIComponent(routeTo.name)+','+routeTo.lat+','+routeTo.lng;
+    go.className='route-go ready';
+  } else { go.href='#'; go.className='route-go disabled'; }
 }
 
-
-// ══════════════════════════════════════════════
-//  Haversine
-// ══════════════════════════════════════════════
-function haversine(lat1, lng1, lat2, lng2) {
-  var R = 6371;
-  var dLat = (lat2 - lat1) * Math.PI / 180;
-  var dLng = (lng2 - lng1) * Math.PI / 180;
-  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
-          Math.sin(dLng/2) * Math.sin(dLng/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-function fmtDist(km) { return km < 1 ? Math.round(km*1000)+'m' : km.toFixed(1)+'km'; }
-
-// ══════════════════════════════════════════════
-//  카카오맵 초기화
-// ══════════════════════════════════════════════
+// ══ 지도 초기화 ══
 function initMap() {
-  map = new kakao.maps.Map(document.getElementById('map'), {
-    center: new kakao.maps.LatLng(37.46, 126.70),
-    level: 7
-  });
+  map = new kakao.maps.Map(document.getElementById('map'), { center: new kakao.maps.LatLng(37.46, 126.70), level: 7 });
   infoWindow = new kakao.maps.InfoWindow({ zIndex: 10 });
   kakao.maps.event.addListener(map, 'click', function() { infoWindow.close(); });
   loadProviders();
 }
 
-// ── GAS API 호출 ──
+// ══ API ══
 function fetchGAS(action, params) {
   var url = CONFIG.GAS_URL + '?action=' + action;
   if (params) { for (var k in params) url += '&' + k + '=' + encodeURIComponent(params[k]); }
-  return fetch(url, { redirect: 'follow' }).then(function(r) {
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
-  });
+  return fetch(url, { redirect: 'follow' }).then(function(r) { if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
 }
 
-// ── 제공인력 목록 ──
+// ══ 제공인력 목록 ══
 function loadProviders() {
   showLoading(true);
   fetchGAS('providers').then(function(list) {
     var sel = document.getElementById('providerSelect');
-    list.forEach(function(p) {
-      var opt = document.createElement('option');
-      opt.value = p.name; opt.textContent = p.name;
-      sel.appendChild(opt);
-    });
+    list.forEach(function(p) { var o=document.createElement('option'); o.value=p.name; o.textContent=p.name; sel.appendChild(o); });
     showLoading(false);
-  }).catch(function(e) { showLoading(false); showToast('목록 로드 실패: ' + e.message); });
+  }).catch(function(e) { showLoading(false); showToast('목록 로드 실패: '+e.message); });
 }
 
-// ── 선생님 선택 ──
+// ══ 데이터 로드 ══
 document.getElementById('providerSelect').addEventListener('change', function() {
-  if (!this.value) { clearMarkers(); document.getElementById('stats').style.display='none'; routeFrom=null; routeTo=null; updateRoutePanel(); return; }
+  if (!this.value) { clearMarkers(); hideDashboard(); routeFrom=null; routeTo=null; updateRoutePanel(); return; }
   loadMapData(this.value);
 });
 
 function loadMapData(name) {
-  showLoading(true); infoWindow.close();
-  routeFrom = null; routeTo = null; updateRoutePanel();
-  fetchGAS('mapdata', { provider: name }).then(function(data) {
+  showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
+  document.getElementById('filterDay').value=''; document.getElementById('filterTime').value='';
+  fetchGAS('mapdata', {provider:name}).then(function(data) {
     showLoading(false);
     if (data.error) { showToast(data.error); return; }
     currentData = data;
-    renderMarkers(); fitBounds();
-    document.getElementById('statAssigned').textContent = data.assigned.length;
-    document.getElementById('statWaiting').textContent = data.waiting.length;
-    document.getElementById('stats').style.display = 'block';
-  }).catch(function(e) { showLoading(false); showToast('데이터 로드 실패: ' + e.message); });
+    renderMarkers(); fitBounds(); updateDashboard();
+  }).catch(function(e) { showLoading(false); showToast('데이터 로드 실패: '+e.message); });
 }
 
-// ══════════════════════════════════════════════
-//  좌표 기준 그룹핑
-// ══════════════════════════════════════════════
+// ══ 대시보드 ══
+function updateDashboard() {
+  if (!currentData) return;
+  var d = currentData;
+  var total = d.assigned.length + d.waiting.length;
+  document.getElementById('dashTotal').textContent = total;
+  document.getElementById('dashAssigned').textContent = d.assigned.length;
+  document.getElementById('dashWaiting').textContent = getFilteredWaiting().length + ' / ' + d.waiting.length;
+  document.getElementById('dashboard').classList.add('show');
+}
+function hideDashboard() { document.getElementById('dashboard').classList.remove('show'); }
+
+function getFilteredWaiting() {
+  if (!currentData) return [];
+  var day = document.getElementById('filterDay').value;
+  var hour = document.getElementById('filterTime').value;
+  return currentData.waiting.filter(function(c) { return matchesTimeFilter(c.times, day, hour); });
+}
+
+function applyFilters() { renderMarkers(); fitBounds(); updateDashboard(); }
+
+// ══ 좌표 그룹핑 ══
 function groupByCoord(items) {
-  var groups = {};
+  var g = {};
   items.forEach(function(c) {
-    if (!c.lat || !c.lng) return;
-    var key = c.lat.toFixed(6) + ',' + c.lng.toFixed(6);
-    if (!groups[key]) groups[key] = { lat: c.lat, lng: c.lng, items: [] };
-    groups[key].items.push(c);
+    if (!c.lat||!c.lng) return;
+    var k = c.lat.toFixed(6)+','+c.lng.toFixed(6);
+    if (!g[k]) g[k] = {lat:c.lat,lng:c.lng,items:[]};
+    g[k].items.push(c);
   });
-  return Object.values(groups);
+  return Object.values(g);
 }
 
-// ══════════════════════════════════════════════
-//  마커 렌더링
-// ══════════════════════════════════════════════
+// ══ 마커 렌더링 ══
 function clearMarkers() { markers.forEach(function(m){m.setMap(null)}); markers=[]; }
 
 function renderMarkers() {
   clearMarkers();
   if (!currentData) return;
-  var d = currentData;
-  var homeLat = d.provider.lat, homeLng = d.provider.lng;
+  var d = currentData, hLat = d.provider.lat, hLng = d.provider.lng;
 
-  if (homeLat && homeLng)
-    addMarker(homeLat, homeLng, 'home', 1, buildHomeIW(d.provider));
+  if (hLat && hLng) addMarker(hLat, hLng, 'home', 1, buildHomeIW(d.provider));
 
-  if (showAssigned) {
-    groupByCoord(d.assigned).forEach(function(g) {
-      addMarker(g.lat, g.lng, 'assigned', g.items.length, buildGroupedAssignedIW(g.items, homeLat, homeLng));
-    });
-  }
+  if (showAssigned) groupByCoord(d.assigned).forEach(function(g) {
+    addMarker(g.lat, g.lng, 'assigned', g.items.length, buildGroupedAssignedIW(g.items, hLat, hLng));
+  });
 
   if (showWaiting) {
-    groupByCoord(d.waiting).forEach(function(g) {
-      addMarker(g.lat, g.lng, 'waiting', g.items.length, buildGroupedWaitingIW(g.items, homeLat, homeLng));
+    var filtered = getFilteredWaiting();
+    groupByCoord(filtered).forEach(function(g) {
+      addMarker(g.lat, g.lng, 'waiting', g.items.length, buildGroupedWaitingIW(g.items, hLat, hLng));
     });
   }
 }
 
 function addMarker(lat, lng, type, count, iwContent) {
   var pos = new kakao.maps.LatLng(lat, lng);
-  var svgStr = (count > 1) ? markerSVGWithCount(type, count) : markerSVG(type);
+  var svg = count > 1 ? markerSVGCount(type, count) : markerSVG(type);
   var sz, off;
-  if (type === 'home') { sz = new kakao.maps.Size(32,32); off = new kakao.maps.Point(16,32); }
-  else if (count > 1) { sz = new kakao.maps.Size(30,30); off = new kakao.maps.Point(15,30); }
-  else { sz = new kakao.maps.Size(24,24); off = new kakao.maps.Point(12,24); }
-  var img = new kakao.maps.MarkerImage(svgStr, sz, {offset:off});
-  var marker = new kakao.maps.Marker({ position:pos, image:img, map:map, zIndex: type==='home'?10:(type==='assigned'?5:1) });
-  kakao.maps.event.addListener(marker, 'click', function() { infoWindow.setContent(iwContent); infoWindow.open(map, marker); });
-  markers.push(marker);
+  if (type==='home') { sz=new kakao.maps.Size(32,32); off=new kakao.maps.Point(16,32); }
+  else if (count>1) { sz=new kakao.maps.Size(30,30); off=new kakao.maps.Point(15,30); }
+  else { sz=new kakao.maps.Size(24,24); off=new kakao.maps.Point(12,24); }
+  var img = new kakao.maps.MarkerImage(svg, sz, {offset:off});
+  var m = new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:type==='home'?10:(type==='assigned'?5:1)});
+  kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
+  markers.push(m);
 }
 
 function fitBounds() {
   if (!markers.length) return;
-  if (markers.length === 1) { map.setCenter(markers[0].getPosition()); map.setLevel(5); return; }
+  if (markers.length===1) { map.setCenter(markers[0].getPosition()); map.setLevel(5); return; }
   var b = new kakao.maps.LatLngBounds();
   markers.forEach(function(m){b.extend(m.getPosition())});
-  map.setBounds(b, 60);
+  map.setBounds(b,60);
 }
 
-// ══════════════════════════════════════════════
-//  마커 SVG
-// ══════════════════════════════════════════════
-function markerSVG(type) {
-  var c = {home:{f:'#3b82f6',s:'#1d4ed8'},assigned:{f:'#22c55e',s:'#15803d'},waiting:{f:'#f59e0b',s:'#d97706'}}[type];
-  if (type==='home') {
-    return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">'
-      +'<path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/>'
-      +'<circle cx="16" cy="12" r="5" fill="#fff"/>'
-      +'<path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>');
-  }
-  return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">'
-    +'<path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/>'
-    +'<circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>');
-}
+// ══ 마커 SVG ══
+var MC={home:{f:'#3b82f6',s:'#1d4ed8'},assigned:{f:'#22c55e',s:'#15803d'},waiting:{f:'#f59e0b',s:'#d97706'}};
+function svgUri(s){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s)}
+function markerSVG(t){var c=MC[t];if(t==='home')return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>');return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>')}
+function markerSVGCount(t,n){var c=MC[t];return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/><circle cx="15" cy="11" r="7" fill="#fff"/><text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+n+'</text></svg>')}
 
-function markerSVGWithCount(type, count) {
-  var c = {assigned:{f:'#22c55e',s:'#15803d'},waiting:{f:'#f59e0b',s:'#d97706'}}[type];
-  return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">'
-    +'<path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/>'
-    +'<circle cx="15" cy="11" r="7" fill="#fff"/>'
-    +'<text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+count+'</text></svg>');
-}
+// ══ 인포윈도우 ══
+function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function escQ(s){return esc(s).replace(/'/g,"\\'")}
 
-function svgUri(s) { return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s); }
-
-// ══════════════════════════════════════════════
-//  인포윈도우 빌더
-// ══════════════════════════════════════════════
-
-function routeBtns(name, lat, lng) {
-  if (!lat || !lng) return '';
-  // onclick needs escaped quotes for inline HTML
-  var n = esc(name).replace(/'/g, "\\'");
+function routeBtns(name,lat,lng) {
+  if (!lat||!lng) return '';
+  var n=escQ(name);
   return '<div class="iw-actions">'
-    + '<button class="iw-act from" onclick="setRoute(\'from\',\'' + n + '\',' + lat + ',' + lng + ')">🟢 출발</button>'
-    + '<button class="iw-act to" onclick="setRoute(\'to\',\'' + n + '\',' + lat + ',' + lng + ')">🔴 도착</button>'
-    + '</div>';
+    +'<button class="iw-act from" onclick="setRoute(\'from\',\''+n+'\','+lat+','+lng+')">🟢 출발</button>'
+    +'<button class="iw-act to" onclick="setRoute(\'to\',\''+n+'\','+lat+','+lng+')">🔴 도착</button>'
+    +'</div>';
+}
+
+function assignBtn(row) {
+  var prov = document.getElementById('providerSelect').value;
+  if (!prov) return '';
+  return '<button class="iw-act assign" onclick="doAssign('+row+')">✓ '+esc(prov)+' 선생님에게 배정</button>';
 }
 
 function buildHomeIW(p) {
-  return '<div class="iw">'
-    + '<div class="iw-title">' + esc(p.name) + '<span class="iw-badge home">선생님</span></div>'
-    + '<div class="iw-row">📍 집 위치</div>'
-    + routeBtns(p.name + ' 집', p.lat, p.lng)
-    + '</div>';
+  return '<div class="iw"><div class="iw-title">'+esc(p.name)+'<span class="iw-badge home">선생님</span></div><div class="iw-row">📍 집 위치</div>'+routeBtns(p.name+' 집',p.lat,p.lng)+'</div>';
 }
 
-function buildGroupedAssignedIW(items, homeLat, homeLng) {
-  var h = '<div class="iw">';
-  if (items.length > 1) h += '<div class="iw-group-label">같은 위치 ' + items.length + '명</div>';
-
-  items.forEach(function(c, i) {
-    if (i > 0) h += '<hr class="iw-sep">';
-    var distLabel = '';
-    if (homeLat && homeLng && c.lat && c.lng)
-      distLabel = '<span class="iw-badge dist">' + fmtDist(haversine(homeLat, homeLng, c.lat, c.lng)) + '</span>';
-
-    h += '<div class="iw-title">' + esc(c.name) + '<span class="iw-badge assigned">배정</span>' + distLabel + '</div>'
-      + '<div class="iw-row">📍 ' + esc(c.address) + '</div>';
-
-    if (c.schedule && c.schedule.length) {
-      h += '<div class="iw-sch">';
-      c.schedule.forEach(function(s) { h += '<div>' + esc(s.day) + ' ' + esc(s.time) + ' · ' + esc(s.service) + '</div>'; });
-      h += '</div>';
+function buildGroupedAssignedIW(items, hLat, hLng) {
+  var h='<div class="iw">';
+  if (items.length>1) h+='<div class="iw-group-label">같은 위치 '+items.length+'명</div>';
+  items.forEach(function(c,i) {
+    if (i>0) h+='<hr class="iw-sep">';
+    var dist='';
+    if (hLat&&hLng&&c.lat&&c.lng) dist='<span class="iw-badge dist">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
+    h+='<div class="iw-title">'+esc(c.name)+'<span class="iw-badge assigned">배정</span>'+dist+'</div>'
+      +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
+    // 확정 요일/시간 우선, 없으면 스케줄 탭, 없으면 신청 시간
+    if (c.confirmedDay || c.confirmedTime) {
+      h+='<div class="iw-sch"><div>✅ '+(c.confirmedDay||'')+' '+(c.confirmedTime||'')+' (확정)</div></div>';
+    } else if (c.schedule && c.schedule.length) {
+      h+='<div class="iw-sch">';
+      c.schedule.forEach(function(s){h+='<div>'+esc(s.day)+' '+esc(s.time)+' · '+esc(s.service)+'</div>';});
+      h+='</div>';
     } else {
-      h += '<div class="iw-sch"><div style="color:#bbb">스케줄 미정</div></div>';
-      if (c.times) h += '<div class="iw-row">🕐 ' + esc(c.times) + '</div>';
+      h+='<div class="iw-sch"><div style="color:#bbb">스케줄 미정</div></div>';
     }
-
-    h += routeBtns(c.name, c.lat, c.lng);
+    if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
+    h+=routeBtns(c.name,c.lat,c.lng);
   });
-
-  return h + '</div>';
+  return h+'</div>';
 }
 
-function buildGroupedWaitingIW(items, homeLat, homeLng) {
-  var h = '<div class="iw">';
-  if (items.length > 1) h += '<div class="iw-group-label">같은 위치 ' + items.length + '명</div>';
-
-  items.forEach(function(c, i) {
-    if (i > 0) h += '<hr class="iw-sep">';
-    var statusBadge = c.status === '부재1' ? '<span class="iw-badge absent">부재1</span>' : '';
-    var distLabel = '';
-    if (homeLat && homeLng && c.lat && c.lng)
-      distLabel = '<span class="iw-badge dist">' + fmtDist(haversine(homeLat, homeLng, c.lat, c.lng)) + '</span>';
-
-    h += '<div class="iw-title">' + esc(c.name)
-      + '<span class="iw-badge waiting">대기</span>' + statusBadge + distLabel
-      + ' <span style="color:#aaa;font-size:11px;font-weight:400">' + c.row + '행</span></div>'
-      + '<div class="iw-row">📍 ' + esc(c.address) + '</div>'
-      + '<div class="iw-row">🕐 ' + esc(c.times) + '</div>';
-
-    if (c.sigungu || c.bname)
-      h += '<div class="iw-row" style="color:#aaa">' + esc(c.sigungu) + ' ' + esc(c.bname) + '</div>';
-
-    h += routeBtns(c.name, c.lat, c.lng);
+function buildGroupedWaitingIW(items, hLat, hLng) {
+  var h='<div class="iw">';
+  if (items.length>1) h+='<div class="iw-group-label">같은 위치 '+items.length+'명</div>';
+  items.forEach(function(c,i) {
+    if (i>0) h+='<hr class="iw-sep">';
+    var sb=c.status==='부재1'?'<span class="iw-badge absent">부재1</span>':'';
+    var dist='';
+    if (hLat&&hLng&&c.lat&&c.lng) dist='<span class="iw-badge dist">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
+    h+='<div class="iw-title">'+esc(c.name)+'<span class="iw-badge waiting">대기</span>'+sb+dist
+      +' <span style="color:#aaa;font-size:11px;font-weight:400">'+c.row+'행</span></div>'
+      +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
+    if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
+    if (c.sigungu||c.bname) h+='<div class="iw-row" style="color:#aaa">'+esc(c.sigungu)+' '+esc(c.bname)+'</div>';
+    h+='<div class="iw-actions">'+assignBtn(c.row)
+      +'<button class="iw-act from" onclick="setRoute(\'from\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🟢 출발</button>'
+      +'<button class="iw-act to" onclick="setRoute(\'to\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🔴 도착</button>'
+      +'</div>';
   });
-
-  return h + '</div>';
+  return h+'</div>';
 }
 
-function esc(s) { if(!s) return ''; var d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+// ══ 배정 처리 ══
+function doAssign(row) {
+  var prov = document.getElementById('providerSelect').value;
+  if (!prov) { showToast('선생님을 먼저 선택하세요'); return; }
+  if (!confirm(row + '행 아동을 ' + prov + ' 선생님에게 배정합니다.\n\n진행할까요?')) return;
 
-// ── 필터 ──
+  showLoading(true); infoWindow.close();
+  fetchGAS('assign', { row: row, provider: prov }).then(function(res) {
+    showLoading(false);
+    if (res.error) { showToast(res.error); return; }
+    showToast(prov + ' 선생님에게 배정 완료!', true);
+    // 데이터 새로고침
+    loadMapData(prov);
+  }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
+}
+
+// ══ 필터 ══
 function toggleFilter(t) {
-  if (t==='assigned') { showAssigned=!showAssigned; document.getElementById('filterAssigned').classList.toggle('active',showAssigned); }
-  else { showWaiting=!showWaiting; document.getElementById('filterWaiting').classList.toggle('active',showWaiting); }
+  if (t==='assigned'){showAssigned=!showAssigned;document.getElementById('filterAssigned').classList.toggle('active',showAssigned)}
+  else{showWaiting=!showWaiting;document.getElementById('filterWaiting').classList.toggle('active',showWaiting)}
   renderMarkers(); fitBounds();
 }
 
-// ── 유틸 ──
-function showLoading(v) { document.getElementById('loading').classList.toggle('show',v); }
+// ══ 유틸 ══
+function showLoading(v){document.getElementById('loading').classList.toggle('show',v)}
 var _tt;
-function showToast(m) { var e=document.getElementById('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(function(){e.classList.remove('show')},4000); }
+function showToast(m,ok){var e=document.getElementById('toast');e.textContent=m;e.className='toast show'+(ok?' success':'');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show')},3000)}
 </script>
 
 <script>
-(function(){
-  var s=document.createElement('script');
-  s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+CONFIG.KAKAO_JS_KEY+'&autoload=false';
-  s.onload=function(){kakao.maps.load(initMap)};
-  s.onerror=function(){showToast('카카오맵 SDK 로드 실패 — JS키/도메인 확인')};
-  document.head.appendChild(s);
-})();
+(function(){var s=document.createElement('script');s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+CONFIG.KAKAO_JS_KEY+'&autoload=false';s.onload=function(){kakao.maps.load(initMap)};s.onerror=function(){showToast('카카오맵 SDK 로드 실패')};document.head.appendChild(s)})();
 </script>
 </body>
 </html>
