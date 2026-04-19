@@ -229,7 +229,9 @@ function matchesTimeFilter(timesStr, day, hour) {
   return true;
 }
 
-// 구조화 시간 → 보기 좋게 포맷
+// 구조화 시간 → 압축 포맷
+// "월-15,월-16,월-17,월-18,월-19" → "월 15~19시"
+// "월-15,월-16,월-18,월-19" → "월 15~16시, 18~19시"
 function fmtTimes(timesStr) {
   if (!timesStr) return '';
   if (!/[월화수목금토일]-\d/.test(timesStr)) return timesStr;
@@ -239,11 +241,19 @@ function fmtTimes(timesStr) {
     var p = s.split('-');
     if (p.length < 2) return;
     if (!days[p[0]]) days[p[0]] = [];
-    days[p[0]].push(parseInt(p[1]) + '시');
+    days[p[0]].push(parseInt(p[1]));
   });
   var parts = [];
   ['월','화','수','목','금','토','일'].forEach(function(d) {
-    if (days[d]) parts.push(d + ' ' + days[d].join(','));
+    if (!days[d]) return;
+    var hrs = days[d].sort(function(a,b){return a-b});
+    var ranges = [], st = hrs[0], prev = hrs[0];
+    for (var i = 1; i < hrs.length; i++) {
+      if (hrs[i] === prev + 1) { prev = hrs[i]; }
+      else { ranges.push(st === prev ? st+'시' : st+'~'+prev+'시'); st = hrs[i]; prev = hrs[i]; }
+    }
+    ranges.push(st === prev ? st+'시' : st+'~'+prev+'시');
+    parts.push(d + ' ' + ranges.join(', '));
   });
   return parts.join(' | ');
 }
