@@ -387,7 +387,7 @@ function renderMarkers() {
   // ── 전체 모드: 모든 제공인력 집 표시 ──
   if (d.allProviders && d.allProviders.length > 0) {
     d.allProviders.forEach(function(p) {
-      addMarker(p.lat, p.lng, 'home', 1, buildHomeIW(p));
+      if (p.lat && p.lng) addMarker(p.lat, p.lng, 'home', 1, buildHomeIW(p));
     });
   } else if (hLat && hLng) {
     addMarker(hLat, hLng, 'home', 1, buildHomeIW(d.provider));
@@ -406,6 +406,7 @@ function renderMarkers() {
 }
 
 function addMarker(lat, lng, type, count, iwContent) {
+  if (!lat || !lng) return;  // 좌표 없으면 스킵
   var pos = new kakao.maps.LatLng(lat, lng);
   var svg = count > 1 ? markerSVGCount(type, count) : markerSVG(type);
   var sz, off;
