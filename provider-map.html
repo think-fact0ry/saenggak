@@ -80,7 +80,7 @@
   .iw-phone{margin-top:2px;font-size:12px}
   .iw-phone a{color:#3b82f6;text-decoration:none;font-weight:500}
   .iw-phone a:hover{text-decoration:underline}
-  .iw-notes{margin-top:3px;font-size:11px;color:#7c3aed;background:#f8f5ff;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap}
+  .iw-notes{margin-top:3px;font-size:11px;color:#333;background:#f5f3ef;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap;border-left:2px solid #7c3aed}
   .iw-actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
   .iw-act{
     padding:4px 8px;border-radius:5px;font-size:11px;font-weight:500;font-family:inherit;
@@ -153,15 +153,14 @@
 <div class="dashboard" id="dashboard">
   <span class="dash-stat">전체 <b id="dashTotal">0</b></span>
   <span class="dash-stat">배정 <b id="dashAssigned">0</b></span>
-  <span class="dash-stat">대기 <b id="dashWaiting">0</b></span>
   <div class="dash-filters">
     <select id="filterDay" onchange="applyFilters()">
-      <option value="">요일</option>
+      <option value="">전체 요일</option>
       <option>월</option><option>화</option><option>수</option>
       <option>목</option><option>금</option><option>토</option>
     </select>
     <select id="filterTime" onchange="applyFilters()">
-      <option value="">시간</option>
+      <option value="">전체 시간</option>
       <option value="14">14시</option><option value="15">15시</option>
       <option value="16">16시</option><option value="17">17시</option>
       <option value="18">18시</option><option value="19">19시</option>
@@ -301,10 +300,15 @@ function fetchGAS(action, params) {
 }
 
 // ══ 제공인력 목록 ══
+var providerList = [];
 function loadProviders() {
   showLoading(true);
   fetchGAS('providers').then(function(list) {
+    providerList = list;
     var sel = document.getElementById('providerSelect');
+    var optAll = document.createElement('option');
+    optAll.value = '__ALL__'; optAll.textContent = '— 전체 제공인력 —';
+    sel.appendChild(optAll);
     list.forEach(function(p) { var o=document.createElement('option'); o.value=p.name; o.textContent=p.name; sel.appendChild(o); });
     showLoading(false);
   }).catch(function(e) { showLoading(false); showToast('목록 로드 실패: '+e.message); });
@@ -313,8 +317,26 @@ function loadProviders() {
 // ══ 데이터 로드 ══
 document.getElementById('providerSelect').addEventListener('change', function() {
   if (!this.value) { clearMarkers(); hideDashboard(); routeFrom=null; routeTo=null; updateRoutePanel(); return; }
+  if (this.value === '__ALL__') { loadAllProviders(); return; }
   loadMapData(this.value);
 });
+
+function loadAllProviders() {
+  showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
+  document.getElementById('filterDay').value=''; document.getElementById('filterTime').value='';
+  // 아무 제공인력으로 대기 아동 전체 가져오기 (대기 아동은 배정 안 된 아동이라 공통)
+  fetchGAS('mapdata', {provider: providerList[0].name}).then(function(data) {
+    showLoading(false);
+    if (data.error) { showToast(data.error); return; }
+    currentData = {
+      provider: { name: '전체', lat: null, lng: null },
+      assigned: [],
+      waiting: data.waiting,
+      allProviders: providerList.filter(function(p){return p.lat&&p.lng})
+    };
+    renderMarkers(); fitBounds(); updateDashboard();
+  }).catch(function(e) { showLoading(false); showToast('로드 실패: '+e.message); });
+}
 
 function loadMapData(name) {
   showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
@@ -323,6 +345,7 @@ function loadMapData(name) {
     showLoading(false);
     if (data.error) { showToast(data.error); return; }
     currentData = data;
+    currentData.allProviders = null;
     renderMarkers(); fitBounds(); updateDashboard();
   }).catch(function(e) { showLoading(false); showToast('데이터 로드 실패: '+e.message); });
 }
@@ -334,7 +357,6 @@ function updateDashboard() {
   var total = d.assigned.length + d.waiting.length;
   document.getElementById('dashTotal').textContent = total;
   document.getElementById('dashAssigned').textContent = d.assigned.length;
-  document.getElementById('dashWaiting').textContent = getFilteredWaiting().length + ' / ' + d.waiting.length;
   document.getElementById('dashboard').classList.add('show');
 }
 function hideDashboard() { document.getElementById('dashboard').classList.remove('show'); }
@@ -346,7 +368,7 @@ function getFilteredWaiting() {
   return currentData.waiting.filter(function(c) { return matchesTimeFilter(c.times, day, hour); });
 }
 
-function applyFilters() { renderMarkers(); fitBounds(); updateDashboard(); }
+function applyFilters() { renderMarkers(); updateDashboard(); }
 
 // ══ 좌표 그룹핑 ══
 function groupByCoord(items) {
@@ -368,7 +390,14 @@ function renderMarkers() {
   if (!currentData) return;
   var d = currentData, hLat = d.provider.lat, hLng = d.provider.lng;
 
-  if (hLat && hLng) addMarker(hLat, hLng, 'home', 1, buildHomeIW(d.provider));
+  // ── 전체 모드: 모든 제공인력 집 표시 ──
+  if (d.allProviders && d.allProviders.length > 0) {
+    d.allProviders.forEach(function(p) {
+      addMarker(p.lat, p.lng, 'home', 1, buildHomeIW(p));
+    });
+  } else if (hLat && hLng) {
+    addMarker(hLat, hLng, 'home', 1, buildHomeIW(d.provider));
+  }
 
   if (showAssigned) groupByCoord(d.assigned).forEach(function(g) {
     addMarker(g.lat, g.lng, 'assigned', g.items.length, buildGroupedAssignedIW(g.items, hLat, hLng));
@@ -424,8 +453,8 @@ function routeBtns(name,lat,lng) {
 
 function assignBtn(row) {
   var prov = document.getElementById('providerSelect').value;
-  if (!prov) return '';
-  return '<button class="iw-act assign" onclick="doAssign('+row+')">✓ '+esc(prov)+' 선생님에게 배정</button>';
+  if (!prov || prov === '__ALL__') return '';
+  return '<button class="iw-act assign" onclick="doAssign('+row+')">✓ '+esc(prov)+' 배정</button>';
 }
 
 function buildHomeIW(p) {
@@ -502,7 +531,7 @@ function doAssign(row) {
 function toggleFilter(t) {
   if (t==='assigned'){showAssigned=!showAssigned;document.getElementById('filterAssigned').classList.toggle('active',showAssigned)}
   else{showWaiting=!showWaiting;document.getElementById('filterWaiting').classList.toggle('active',showWaiting)}
-  renderMarkers(); fitBounds();
+  renderMarkers();
 }
 
 // ══ 유틸 ══
