@@ -324,16 +324,10 @@ document.getElementById('providerSelect').addEventListener('change', function() 
 function loadAllProviders() {
   showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
   document.getElementById('filterDay').value=''; document.getElementById('filterTime').value='';
-  // 아무 제공인력으로 대기 아동 전체 가져오기 (대기 아동은 배정 안 된 아동이라 공통)
-  fetchGAS('mapdata', {provider: providerList[0].name}).then(function(data) {
+  fetchGAS('mapdata', {provider: '__ALL__'}).then(function(data) {
     showLoading(false);
     if (data.error) { showToast(data.error); return; }
-    currentData = {
-      provider: { name: '전체', lat: null, lng: null },
-      assigned: [],
-      waiting: data.waiting,
-      allProviders: providerList.filter(function(p){return p.lat&&p.lng})
-    };
+    currentData = data;
     renderMarkers(); fitBounds(); updateDashboard();
   }).catch(function(e) { showLoading(false); showToast('로드 실패: '+e.message); });
 }
@@ -468,7 +462,7 @@ function buildGroupedAssignedIW(items, hLat, hLng) {
     if (i>0) h+='<hr class="iw-sep">';
     var dist='';
     if (hLat&&hLng&&c.lat&&c.lng) dist='<span class="iw-badge dist">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
-    h+='<div class="iw-title">'+esc(c.name)+'<span class="iw-badge assigned">배정</span>'+dist+'</div>'
+    h+='<div class="iw-title">'+esc(c.name)+'<span class="iw-badge assigned">'+(c.assignedTo?esc(c.assignedTo)+' 배정':'배정')+'</span>'+dist+'</div>'
       +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
     // 확정 요일/시간 우선, 없으면 스케줄 탭, 없으면 신청 시간
     if (c.confirmedDay || c.confirmedTime) {
