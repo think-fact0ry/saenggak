@@ -48,6 +48,32 @@
   .dash-stat b{color:#3a6b4e;font-weight:700}
   .dash-filters{display:flex;gap:6px;margin-left:auto}
 
+  /* ══ 검색 ══ */
+  .search-wrap{position:relative;flex:1;max-width:200px}
+  .search-input{
+    width:100%;padding:6px 10px;border:1.5px solid #d4cfc6;border-radius:7px;
+    font-size:12px;font-family:inherit;outline:none;background:#fff;
+  }
+  .search-input:focus{border-color:#3a6b4e}
+  .search-results{
+    display:none;position:absolute;top:100%;left:0;right:0;z-index:60;
+    background:#fff;border:1px solid #e0dcd5;border-radius:0 0 8px 8px;
+    box-shadow:0 4px 16px rgba(0,0,0,.1);max-height:260px;overflow-y:auto;
+  }
+  .search-results.show{display:block}
+  .sr-item{
+    display:flex;align-items:center;gap:8px;padding:8px 10px;
+    cursor:pointer;border-bottom:1px solid #f5f5f5;transition:background .1s;
+  }
+  .sr-item:hover{background:#f5f3ef}
+  .sr-item:last-child{border-bottom:none}
+  .sr-name{font-weight:600;font-size:12.5px;color:#1a1a1a;min-width:50px}
+  .sr-phone{font-size:11px;color:#888;flex:1}
+  .sr-status{font-size:10px;padding:2px 6px;border-radius:8px;white-space:nowrap}
+  .sr-status.assigned{background:#dcfce7;color:#16a34a}
+  .sr-status.waiting{background:#fef3c7;color:#d97706}
+  .sr-none{padding:12px;text-align:center;font-size:12px;color:#bbb}
+
   /* ══ 지도 ══ */
   #map{position:fixed;top:76px;left:0;right:0;bottom:0}
 
@@ -163,6 +189,11 @@
   <div class="filter-group">
     <button class="fbtn active" id="filterAssigned" onclick="toggleFilter('assigned')">배정</button>
     <button class="fbtn active" id="filterWaiting" onclick="toggleFilter('waiting')">대기</button>
+  </div>
+  <div class="divider"></div>
+  <div class="search-wrap">
+    <input type="text" class="search-input" id="searchInput" placeholder="🔍 아동 검색" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
   </div>
 </div>
 
@@ -418,15 +449,15 @@ function renderMarkers() {
     addMarker(g.lat, g.lng, 'assigned', g.items.length, buildGroupedAssignedIW(g.items, hLat, hLng));
     // 배정 아동 라벨: 담당 선생님 성
     var label = '';
-    if (g.items.length === 1 && g.items[0].assignedTo) {
-      label = g.items[0].assignedTo.charAt(0);
-    } else if (g.items.length > 1) {
-      // 같은 선생님이면 성, 다른 선생님이면 숫자
-      var names = {};
-      g.items.forEach(function(c){ if(c.assignedTo) names[c.assignedTo]=1; });
-      var uq = Object.keys(names);
-      label = uq.length === 1 ? uq[0].charAt(0) : g.items.length+'';
+    var names = {};
+    g.items.forEach(function(c){ if(c.assignedTo) names[c.assignedTo]=1; });
+    var uq = Object.keys(names);
+    if (uq.length === 1) {
+      label = uq[0].charAt(0);
+    } else if (uq.length >= 2 && uq.length <= 3) {
+      label = uq.map(function(n){ return n.charAt(0); }).join('·');
     }
+    // 4명 이상은 라벨 없음 (마커 안 숫자로 충분)
     if (label) addLabel(g.lat, g.lng, label, 'assigned');
   });
 
@@ -675,6 +706,96 @@ function doAssign(row) {
     loadMapData(prov);
   }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
 }
+
+// ══ 검색 ══
+(function(){
+  var input = document.getElementById('searchInput');
+  var results = document.getElementById('searchResults');
+  var debounce;
+
+  input.addEventListener('input', function() {
+    clearTimeout(debounce);
+    debounce = setTimeout(function(){ doSearch(input.value.trim()); }, 150);
+  });
+
+  input.addEventListener('focus', function() {
+    if (input.value.trim()) doSearch(input.value.trim());
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-wrap')) results.classList.remove('show');
+  });
+
+  function doSearch(q) {
+    if (!q || !currentData) { results.classList.remove('show'); return; }
+
+    var all = [];
+    // 배정 아동
+    if (currentData.assigned) {
+      currentData.assigned.forEach(function(c) {
+        all.push({ name: c.name, phone: c.phone||'', lat: c.lat, lng: c.lng, status: c.assignedTo ? c.assignedTo+' 배정' : '배정', type: 'assigned', row: c.formRow, data: c });
+      });
+    }
+    // 대기 아동
+    if (currentData.waiting) {
+      currentData.waiting.forEach(function(c) {
+        all.push({ name: c.name, phone: c.phone||'', lat: c.lat, lng: c.lng, status: '대기', type: 'waiting', row: c.row, data: c });
+      });
+    }
+
+    var filtered = all.filter(function(item) {
+      return item.name && item.name.indexOf(q) >= 0;
+    });
+
+    if (!filtered.length) {
+      results.innerHTML = '<div class="sr-none">검색 결과 없음</div>';
+      results.classList.add('show');
+      return;
+    }
+
+    var html = '';
+    filtered.slice(0, 10).forEach(function(item, idx) {
+      var stClass = item.type === 'assigned' ? 'assigned' : 'waiting';
+      html += '<div class="sr-item" data-idx="'+idx+'">'
+        + '<div class="sr-name">' + esc(item.name) + '</div>'
+        + '<div class="sr-phone">' + esc(fmtPhone(item.phone)) + '</div>'
+        + '<div class="sr-status ' + stClass + '">' + esc(item.status) + '</div>'
+        + '</div>';
+    });
+
+    results.innerHTML = html;
+    results.classList.add('show');
+
+    // 클릭 이벤트
+    results.querySelectorAll('.sr-item').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var idx = parseInt(this.getAttribute('data-idx'));
+        var item = filtered[idx];
+        if (!item || !item.lat || !item.lng) return;
+
+        // 지도 이동 + 인포윈도우
+        var pos = new kakao.maps.LatLng(item.lat, item.lng);
+        map.setCenter(pos);
+        map.setLevel(3);
+
+        // 인포윈도우 빌드
+        var iwContent;
+        if (item.type === 'assigned') {
+          iwContent = buildGroupedAssignedIW([item.data], currentData.provider.lat, currentData.provider.lng);
+        } else {
+          iwContent = buildGroupedWaitingIW([item.data], currentData.provider.lat, currentData.provider.lng);
+        }
+        infoWindow.setContent(iwContent);
+        // 임시 마커에 열기
+        var tempMarker = new kakao.maps.Marker({ position: pos, map: map, visible: false });
+        infoWindow.open(map, tempMarker);
+
+        results.classList.remove('show');
+        input.value = item.name;
+      });
+    });
+  }
+})();
 
 // ══ 필터 ══
 function toggleFilter(t) {
