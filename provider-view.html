@@ -6,6 +6,7 @@
 <title>내 배정 아동 지도</title>
 <meta property="og:title" content="">
 <meta property="og:description" content="배정 아동 위치 · 길찾기 · 수업 일정">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
@@ -64,6 +65,29 @@
   .day-filter.show{display:flex}
   .day-btn{padding:4px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;border:1.5px solid #d4cfc6;background:#fff;color:#666;transition:all .15s}
   .day-btn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e}
+  /* ═ 동선 하단 바 (요일 필터 시 출현) ═ */
+  .trip-bar{position:fixed;bottom:0;left:0;right:0;z-index:46;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid rgba(0,0,0,.08);padding:8px 12px 12px;display:none;flex-direction:column;gap:7px;box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+  .trip-bar.show{display:flex}
+  .trip-mode{display:flex;gap:4px}
+  .tm-btn{flex:1;padding:6px 6px;border:1.5px solid #e0dcd5;background:#fff;color:#888;border-radius:8px;font-size:11.5px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
+  .tm-btn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e;font-weight:600}
+  .trip-list{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 2px;scrollbar-width:none;min-height:42px}
+  .trip-list::-webkit-scrollbar{display:none}
+  .trip-item{flex-shrink:0;padding:6px 10px 6px 6px;background:#f5f3ef;border-radius:20px;font-size:11.5px;cursor:grab;display:flex;align-items:center;gap:6px;border:1.5px solid transparent;transition:border-color .12s,background .12s,transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:manipulation}
+  .trip-item:active{cursor:grabbing}
+  .trip-item.sortable-chosen{transform:scale(1.08);box-shadow:0 4px 14px rgba(0,0,0,.18);border-color:#3a6b4e;background:#eef5e9;z-index:10}
+  .trip-item.sortable-ghost{opacity:.35}
+  .trip-rank{width:20px;height:20px;border-radius:50%;background:#3a6b4e;color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .trip-rank.empty{background:#bbb}
+  .trip-name{font-weight:600;color:#333;white-space:nowrap}
+  .trip-chip-nav{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#3a6b4e;color:#fff;font-size:12px;text-decoration:none;margin-left:2px;flex-shrink:0}
+  .trip-chip-nav:active{background:#2d5540}
+  .trip-start{display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 14px;background:#3a6b4e;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;text-decoration:none;cursor:pointer;transition:background .15s}
+  .trip-start:active{background:#2d5540}
+  .trip-start.disabled{background:#d4cfc6;pointer-events:none;cursor:not-allowed}
+  .trip-start .count{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600;margin-left:4px}
+  .trip-hint{font-size:10.5px;color:#999;text-align:center;margin-top:-2px}
+  body.trip-active .legend{display:none}
   @media(max-width:480px){.controls{padding:6px 10px;gap:5px}}
 </style>
 </head>
@@ -87,6 +111,19 @@
   <button class="day-btn" data-day="금" onclick="filterDay('금')">금</button>
   <button class="day-btn" data-day="토" onclick="filterDay('토')">토</button>
 </div>
+<div class="trip-bar" id="tripBar">
+  <div class="trip-mode" id="tripMode">
+    <button type="button" class="tm-btn active" data-mode="car">🚗 자동차</button>
+    <button type="button" class="tm-btn" data-mode="traffic">🚇 대중교통</button>
+    <button type="button" class="tm-btn" data-mode="walk">🚶 도보</button>
+  </div>
+  <div class="trip-list" id="tripList"></div>
+  <div class="trip-hint" id="tripHint"></div>
+  <a class="trip-start" id="tripStart" target="_blank" rel="noopener">
+    🧭 <span id="tripStartLabel">동선 시작</span>
+    <span class="count" id="tripCount">0명</span>
+  </a>
+</div>
 <div id="map"></div>
 <div class="empty-msg" id="emptyMsg" style="display:none">배정된 아동이 없습니다.</div>
 <div class="route-panel" id="routePanel">
@@ -99,15 +136,23 @@
 <div class="loading-overlay" id="loading"><div class="ld-spinner"></div></div>
 <div class="toast" id="toast"></div>
 <script>
-var CONFIG={GAS_URL:'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec',KAKAO_JS_KEY:'90fa3176ac77c6fc1ae5a165b9f0662c',KAKAO_REST_KEY:'80cb2c5189a12697f4d4e77c050910dd'};
+// ─────────────────────────────────────────────
+//  REST 키는 서버 전용. 클라이언트에서는 JavaScript 키만.
+// ─────────────────────────────────────────────
+var CONFIG={
+  GAS_URL:'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec',
+  KAKAO_JS_KEY:'90fa3176ac77c6fc1ae5a165b9f0662c'
+};
 var map,markers=[],overlays=[],infoWindow,routeFrom=null,routeTo=null,viewData=null,routeLine=null;
 var searchMarker=null,searchMarkerIW='',searchMarkerLat=0,searchMarkerLng=0;
 var params=new URLSearchParams(window.location.search);var viewToken=params.get('t')||'';
+var placesService=null;  // services.Places 인스턴스 (키워드 검색용)
 
 function initMap(){
   map=new kakao.maps.Map(document.getElementById('map'),{center:new kakao.maps.LatLng(37.46,126.70),level:6});
   infoWindow=new kakao.maps.InfoWindow({zIndex:10});
   kakao.maps.event.addListener(map,'click',function(){infoWindow.close()});
+  placesService=new kakao.maps.services.Places();
   if(!viewToken){document.getElementById('hdrName').textContent='링크가 유효하지 않습니다';return}
   loadData();
 }
@@ -130,16 +175,18 @@ function loadData(){
 }
 
 function clearMarkers(){markers.forEach(function(m){m.setMap(null)});markers=[];overlays.forEach(function(o){o.setMap(null)});overlays=[];if(routeLine){routeLine.setMap(null);routeLine=null}}
-function addMarker(lat,lng,type,iwContent,count){
+function addMarker(lat,lng,type,iwContent,count,rank){
   if(!lat||!lng)return;var pos=new kakao.maps.LatLng(lat,lng);
   count = count || 1;
+  // 숫자 표시 우선순위: 그룹 2명 이상이면 그룹수 / 아니면 rank / 그것도 없으면 숫자 없음
+  var displayNum = (count > 1) ? count : (rank || 0);
   var c=type==='home'?{f:'#3b82f6',s:'#1d4ed8'}:{f:'#22c55e',s:'#15803d'};
   var svg, sz, off;
   if(type==='home'){
     svg='<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>';
     sz=new kakao.maps.Size(32,32);off=new kakao.maps.Point(16,32);
-  } else if(count>1){
-    svg='<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/><circle cx="15" cy="11" r="7" fill="#fff"/><text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+count+'</text></svg>';
+  } else if(displayNum){
+    svg='<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/><circle cx="15" cy="11" r="7" fill="#fff"/><text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+displayNum+'</text></svg>';
     sz=new kakao.maps.Size(30,30);off=new kakao.maps.Point(15,30);
   } else {
     svg='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>';
@@ -174,18 +221,17 @@ function buildChildIW(items,hLat,hLng){
   if(items.length>1)h+='<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:4px">같은 위치 '+items.length+'명</div>';
   items.forEach(function(c,i){
     if(i>0)h+='<hr style="border:none;border-top:1px solid #eee;margin:6px 0">';
-    var name = (c.name||'').replace(/\s+$/,'');  // 이름 끝 공백 제거
+    var name = (c.name||'').replace(/\s+$/,'');
     var dist='';if(hLat&&hLng&&c.lat&&c.lng)dist='<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;background:#f3e8ff;color:#7c3aed;margin-left:4px;vertical-align:middle">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
     h+='<div class="iw-title">'+esc(name)+'<span class="iw-badge child">배정</span>'+dist+'</div>'
       +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
     if(c.phone)h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
     if(c.times)h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
 
-    // 확정 스케줄 편집: 요일 + 순서
     if(c.formRow){
       var schId = 'sch_'+c.formRow;
       var curDay = c.confirmedDay||'';
-      var curOrder = c.confirmedTime||'';  // T열을 순서로 활용
+      var curOrder = c.confirmedTime||'';
       h+='<div style="margin-top:6px;padding:6px 8px;background:#f5f3ef;border-radius:6px">';
       if(curDay) h+='<div style="font-size:11px;color:#3a6b4e;font-weight:600;margin-bottom:4px">✅ '+esc(curDay)+(curOrder?' · '+esc(curOrder)+'번째':'')+'</div>';
       h+='<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">'
@@ -237,7 +283,7 @@ function placeSearchMarker(lat,lng,iwContent){
   return searchMarker;
 }
 
-// ══ 검색 ══
+// ══ 검색 (services.Places 사용 — REST 키 제거됨) ══
 (function(){
   var input=document.getElementById('searchInput'),results=document.getElementById('searchResults'),debounce;
   input.addEventListener('input',function(){clearTimeout(debounce);debounce=setTimeout(function(){doSearch(input.value.trim())},250)});
@@ -255,14 +301,20 @@ function placeSearchMarker(lat,lng,iwContent){
     var isAddr=q.length>=2&&!childResults.length;
     if(!isAddr&&q.length>=2&&/\d/.test(q))isAddr=true;
     if(!isAddr&&!childResults.length&&q.length>=2)isAddr=true;
-    if(isAddr){
+    if(isAddr && placesService){
       html+='<div class="sr-hdr">📍 검색 중...</div>';results.innerHTML=html;results.classList.add('show');
-      fetch('https://dapi.kakao.com/v2/local/search/keyword.json?query='+encodeURIComponent(q)+'&size=5',{headers:{'Authorization':'KakaoAK '+CONFIG.KAKAO_REST_KEY}}).then(function(r){return r.json()}).then(function(data){
+      placesService.keywordSearch(q, function(data, status){
         var ah='';
-        if(data.documents&&data.documents.length){ah+='<div class="sr-hdr">📍 주소</div>';data.documents.forEach(function(doc){ah+='<div class="sr-item sr-addr" data-lat="'+doc.y+'" data-lng="'+doc.x+'" data-name="'+esc(doc.place_name||doc.address_name)+'"><div class="sr-name" style="min-width:auto">'+esc(doc.place_name||'')+'</div><div class="sr-sub">'+esc(doc.road_address_name||doc.address_name||'')+'</div></div>'})}
+        if(status === kakao.maps.services.Status.OK && data.length){
+          ah+='<div class="sr-hdr">📍 주소</div>';
+          data.slice(0,5).forEach(function(doc){
+            ah+='<div class="sr-item sr-addr" data-lat="'+doc.y+'" data-lng="'+doc.x+'" data-name="'+esc(doc.place_name||doc.address_name)+'"><div class="sr-name" style="min-width:auto">'+esc(doc.place_name||'')+'</div><div class="sr-sub">'+esc(doc.road_address_name||doc.address_name||'')+'</div></div>'
+          });
+        }
         var ch='';if(childResults.length){ch+='<div class="sr-hdr">아동</div>';childResults.slice(0,5).forEach(function(c,idx){ch+='<div class="sr-item sr-child" data-cidx="'+idx+'"><div class="sr-name">'+esc(c.name)+'</div><div class="sr-sub">'+esc(fmtPhone(c.phone))+'</div></div>'})}
         results.innerHTML=ch+ah;results.classList.add('show');bindClicks(childResults);
-      }).catch(function(){});return;
+      });
+      return;
     }
     if(!html)html='<div class="sr-none">검색 결과 없음</div>';
     results.innerHTML=html;results.classList.add('show');bindClicks(childResults);
@@ -272,7 +324,6 @@ function placeSearchMarker(lat,lng,iwContent){
       var c=childResults[parseInt(this.getAttribute('data-cidx'))];if(!c||!c.lat||!c.lng)return;
       map.setCenter(new kakao.maps.LatLng(c.lat,c.lng));map.setLevel(3);
       var iw=buildChildIW([c],viewData.provider.lat,viewData.provider.lng);
-      // 같은 좌표 기존 마커 있으면 그쪽 인포윈도우 열기 (중복 방지)
       var found=null;markers.forEach(function(m){var p=m.getPosition();if(Math.abs(p.getLat()-c.lat)<0.00001&&Math.abs(p.getLng()-c.lng)<0.00001)found=m});
       if(found){infoWindow.setContent(iw);infoWindow.open(map,found)}
       else{var sm=placeSearchMarker(c.lat,c.lng,iw);infoWindow.setContent(iw);infoWindow.open(map,sm)}
@@ -295,7 +346,6 @@ function saveSchedule(row, schId) {
   var day = document.getElementById(schId+'_day').value;
   var order = document.getElementById(schId+'_order').value;
   if (!day) { showToast('요일을 선택해주세요'); return; }
-  // 즉시 UI 반영
   if (viewData && viewData.assigned) {
     viewData.assigned.forEach(function(c) {
       if (c.formRow === row) { c.confirmedDay = day; c.confirmedTime = order; }
@@ -304,7 +354,6 @@ function saveSchedule(row, schId) {
   }
   showToast(day + (order ? ' '+order+'번째' : '') + ' 저장됨', true);
   infoWindow.close();
-  // 백그라운드 저장
   fetch(CONFIG.GAS_URL + '?action=saveschedule&token=' + encodeURIComponent(viewToken)
     + '&row=' + row + '&day=' + encodeURIComponent(day) + '&time=' + encodeURIComponent(order),
     {redirect:'follow'}).catch(function(){});
@@ -328,7 +377,6 @@ function clearSchedule(row) {
 var activeDay = '';
 function filterDay(day) {
   activeDay = (activeDay === day) ? '' : day;
-  // 버튼 토글
   document.querySelectorAll('.day-btn').forEach(function(b){
     b.classList.toggle('active', b.getAttribute('data-day') === activeDay);
   });
@@ -347,9 +395,25 @@ function renderFiltered() {
     filtered = filtered.filter(function(c) { return c.confirmedDay === activeDay; });
   }
 
+  // 동선 정렬 (rank 계산용, 필터 걸렸을 때만)
+  var sortedForRoute = null;
+  if (activeDay && filtered.length >= 1) {
+    sortedForRoute = filtered.slice().sort(function(a,b) {
+      var oa = parseInt(a.confirmedTime) || 999;
+      var ob = parseInt(b.confirmedTime) || 999;
+      return oa - ob;
+    });
+  }
+
   var grouped = groupByCoord(filtered);
   grouped.forEach(function(g) {
-    addMarker(g.lat, g.lng, 'child', buildChildIW(g.items, p.lat, p.lng), g.items.length);
+    // 그룹 1명 + 요일 필터 중이면 정렬 순서 기반 rank 부여
+    var rank = null;
+    if (sortedForRoute && g.items.length === 1) {
+      var ci = sortedForRoute.indexOf(g.items[0]);
+      if (ci >= 0) rank = ci + 1;
+    }
+    addMarker(g.lat, g.lng, 'child', buildChildIW(g.items, p.lat, p.lng), g.items.length, rank);
     var label = '';
     if (g.items.length === 1) {
       label = (g.items[0].name||'').replace(/\s+$/,'');
@@ -359,18 +423,11 @@ function renderFiltered() {
     if (label) addLabel(g.lat, g.lng, label, 'child');
   });
 
-  // ── 요일 필터 시 동선 표시 ──
-  if (activeDay && filtered.length >= 2) {
-    // 순서(confirmedTime)로 정렬, 없으면 뒤로
-    var sorted = filtered.slice().sort(function(a,b) {
-      var oa = parseInt(a.confirmedTime) || 999;
-      var ob = parseInt(b.confirmedTime) || 999;
-      return oa - ob;
-    });
-    // 집 → 아동1 → 아동2 → ... 순서로 Polyline
+  // ── 요일 필터 시 동선 폴리라인 ──
+  if (sortedForRoute && sortedForRoute.length >= 2) {
     var path = [];
     if (p.lat && p.lng) path.push(new kakao.maps.LatLng(p.lat, p.lng));
-    sorted.forEach(function(c) {
+    sortedForRoute.forEach(function(c) {
       if (c.lat && c.lng) path.push(new kakao.maps.LatLng(c.lat, c.lng));
     });
     if (path.length >= 2) {
@@ -387,8 +444,322 @@ function renderFiltered() {
   }
 
   document.getElementById('hdrCount').textContent = filtered.length + '명' + (activeDay ? ' ('+activeDay+')' : '');
+  updateTripBar(sortedForRoute);
+}
+
+// ── 하단 동선 바: 모드 토글 + 드래그 리스트 + 시작 버튼 ──
+var tripMode = 'car';  // 'car' | 'traffic' | 'walk'
+var sortableInstance = null;
+var lastSortedForRoute = null;  // 드래그 중/후 참조용
+
+// 모드 토글 초기화 (스크립트 실행 시점에 .tm-btn이 이미 DOM에 있음)
+(function initTripModeToggle(){
+  document.querySelectorAll('.tm-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      tripMode = this.getAttribute('data-mode');
+      document.querySelectorAll('.tm-btn').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-mode') === tripMode);
+      });
+      updateTripBar(lastSortedForRoute);
+    });
+  });
+})();
+
+function updateTripBar(sorted) {
+  lastSortedForRoute = sorted;
+  var bar = document.getElementById('tripBar');
+  var list = document.getElementById('tripList');
+  var hint = document.getElementById('tripHint');
+  var startBtn = document.getElementById('tripStart');
+  var startLabel = document.getElementById('tripStartLabel');
+  var countEl = document.getElementById('tripCount');
+
+  if (!activeDay || !sorted || sorted.length < 2 || !viewData) {
+    bar.classList.remove('show');
+    document.body.classList.remove('trip-active');
+    if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
+    return;
+  }
+
+  var p = viewData.provider;
+
+  // 리스트 아이템 렌더
+  list.innerHTML = '';
+  var unorderedCount = 0;
+  sorted.forEach(function(c, idx) {
+    var hasOrder = !!parseInt(c.confirmedTime);
+    if (!hasOrder) unorderedCount++;
+    var name = (c.name || '').replace(/\s+$/, '');
+    var item = document.createElement('div');
+    item.className = 'trip-item';
+    item.setAttribute('data-row', c.formRow || '');
+    item.setAttribute('data-lat', c.lat || '');
+    item.setAttribute('data-lng', c.lng || '');
+
+    var inner = '<div class="trip-rank' + (hasOrder ? '' : ' empty') + '">' + (idx + 1) + '</div>'
+      + '<div class="trip-name">' + esc(name) + '</div>';
+
+    // 대중교통 모드면 개별 🚇 버튼 추가
+    if (tripMode === 'traffic' && c.lat && c.lng) {
+      var fromName, fromLat, fromLng;
+      if (idx === 0) {
+        fromName = (p.name || '집') + ' 집';
+        fromLat = p.lat; fromLng = p.lng;
+      } else {
+        var prev = sorted[idx - 1];
+        fromName = (prev.name || '이전').replace(/\s+$/, '');
+        fromLat = prev.lat; fromLng = prev.lng;
+      }
+      if (fromLat && fromLng) {
+        var toName = name || '아동';
+        var href = 'https://map.kakao.com/link/by/traffic/'
+          + encodeURIComponent(fromName) + ',' + fromLat + ',' + fromLng + '/'
+          + encodeURIComponent(toName) + ',' + c.lat + ',' + c.lng;
+        inner += '<a class="trip-chip-nav" href="' + href + '" target="_blank" rel="noopener" title="이 구간 대중교통으로 열기">🚇</a>';
+      }
+    }
+
+    item.innerHTML = inner;
+
+    // 칩 탭 → 지도 이동 + 인포윈도우 (🚇 버튼·드래그 중엔 무시)
+    item.addEventListener('click', function(e) {
+      if (e.target.closest('.trip-chip-nav')) return;  // 링크 기본동작 허용
+      var lat = parseFloat(this.getAttribute('data-lat'));
+      var lng = parseFloat(this.getAttribute('data-lng'));
+      if (!lat || !lng) return;
+      map.setCenter(new kakao.maps.LatLng(lat, lng));
+      map.setLevel(3);
+      markers.forEach(function(m) {
+        var pp = m.getPosition();
+        if (Math.abs(pp.getLat() - lat) < 0.00001 && Math.abs(pp.getLng() - lng) < 0.00001) {
+          kakao.maps.event.trigger(m, 'click');
+        }
+      });
+    });
+    list.appendChild(item);
+  });
+
+  // 힌트 텍스트
+  if (tripMode === 'traffic') {
+    hint.textContent = '🚇 대중교통은 구간별로 여세요 — 각 칩의 🚇 버튼';
+    hint.style.display = 'block';
+  } else if (unorderedCount > 0) {
+    hint.textContent = '⚠️ 순서 미지정 ' + unorderedCount + '명 — 아동 탭 → 순서 설정';
+    hint.style.display = 'block';
+  } else {
+    hint.textContent = '드래그로 순서 변경';
+    hint.style.display = 'block';
+    hint.style.color = '#bbb';
+  }
+  if (tripMode !== 'traffic' && unorderedCount === 0) hint.style.color = '';
+
+  // 메인 버튼: 모드별 분기
+  if (tripMode === 'traffic') {
+    startBtn.classList.add('disabled');
+    startBtn.removeAttribute('href');
+    startLabel.textContent = '구간별로 열기';
+    countEl.textContent = sorted.length + '구간';
+  } else {
+    startBtn.classList.remove('disabled');
+    var points = [];
+    if (p.lat && p.lng) {
+      points.push(encodeURIComponent((p.name || '집') + ' 집') + ',' + p.lat + ',' + p.lng);
+    }
+    sorted.forEach(function(c) {
+      if (c.lat && c.lng) {
+        var nm = (c.name || '아동').replace(/\s+$/, '');
+        points.push(encodeURIComponent(nm) + ',' + c.lat + ',' + c.lng);
+      }
+    });
+    if (points.length > 7) points = points.slice(0, 7);  // 카카오 URL 안전 한도
+    if (points.length >= 2) {
+      startBtn.href = 'https://map.kakao.com/link/by/' + tripMode + '/' + points.join('/');
+    } else {
+      startBtn.removeAttribute('href');
+      startBtn.classList.add('disabled');
+    }
+    var modeLabel = tripMode === 'car' ? '자동차' : '도보';
+    startLabel.textContent = activeDay + '요일 ' + modeLabel + ' 동선 시작';
+    countEl.textContent = sorted.length + '명';
+  }
+
+  bar.classList.add('show');
+  document.body.classList.add('trip-active');
+
+  // SortableJS 드래그 초기화
+  if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
+  if (typeof Sortable !== 'undefined') {
+    sortableInstance = Sortable.create(list, {
+      animation: 180,
+      delay: 80,               // 짧은 탭은 클릭으로 처리, 긴 프레스는 드래그
+      delayOnTouchOnly: true,
+      forceFallback: false,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      onStart: function() {
+        if (navigator.vibrate) { try { navigator.vibrate(10); } catch(e){} }
+      },
+      onEnd: function(evt) {
+        if (evt.oldIndex === evt.newIndex) return;
+        handleTripReorder();
+      }
+    });
+  }
+}
+
+// 드래그 종료 시: 새 순서 읽어 낙관적 업데이트 + 지도 재렌더 + 백그라운드 저장
+function handleTripReorder() {
+  var list = document.getElementById('tripList');
+  var newAssignments = [];
+  list.querySelectorAll('.trip-item').forEach(function(el, idx) {
+    var row = parseInt(el.getAttribute('data-row'));
+    if (row) newAssignments.push({ row: row, order: idx + 1 });
+  });
+
+  // viewData 낙관적 업데이트
+  newAssignments.forEach(function(a) {
+    viewData.assigned.forEach(function(c) {
+      if (c.formRow === a.row) c.confirmedTime = String(a.order);
+    });
+  });
+
+  // 지도 마커 + 폴리라인 재렌더 (하지만 trip-bar는 updateRanksInPlace로 최소 갱신)
+  updateRanksInPlace();
+  rebuildMapOnly();
+
+  // 저장 (fire-and-forget)
+  var failed = 0;
+  var pending = newAssignments.length;
+  newAssignments.forEach(function(a) {
+    fetch(CONFIG.GAS_URL + '?action=saveschedule&token=' + encodeURIComponent(viewToken)
+      + '&row=' + a.row + '&day=' + encodeURIComponent(activeDay)
+      + '&time=' + encodeURIComponent(String(a.order)), { redirect: 'follow' })
+      .then(function(r){ return r.json(); })
+      .catch(function(){ failed++; })
+      .finally(function(){
+        pending--;
+        if (pending === 0) {
+          if (failed > 0) showToast('일부 저장 실패 ('+failed+'건) — 새로고침 권장');
+          else showToast('순서 저장됨', true);
+        }
+      });
+  });
+}
+
+// 드래그 직후 리스트 rank 번호만 갱신 (DOM 재생성 없이 → SortableJS 바인딩 유지)
+function updateRanksInPlace() {
+  var items = document.querySelectorAll('#tripList .trip-item');
+  items.forEach(function(el, idx) {
+    var rankEl = el.querySelector('.trip-rank');
+    if (rankEl) {
+      rankEl.textContent = idx + 1;
+      rankEl.classList.remove('empty');  // 드래그 후엔 모두 확정 순서
+    }
+  });
+  // 대중교통 모드면 🚇 링크 재생성 필요
+  if (tripMode === 'traffic') {
+    var p = viewData.provider;
+    var items2 = document.querySelectorAll('#tripList .trip-item');
+    items2.forEach(function(el, idx) {
+      var lat = parseFloat(el.getAttribute('data-lat'));
+      var lng = parseFloat(el.getAttribute('data-lng'));
+      if (!lat || !lng) return;
+      var fromName, fromLat, fromLng;
+      if (idx === 0) {
+        fromName = (p.name || '집') + ' 집';
+        fromLat = p.lat; fromLng = p.lng;
+      } else {
+        var prev = items2[idx - 1];
+        fromLat = parseFloat(prev.getAttribute('data-lat'));
+        fromLng = parseFloat(prev.getAttribute('data-lng'));
+        var prevName = prev.querySelector('.trip-name');
+        fromName = prevName ? prevName.textContent : '이전';
+      }
+      var nameEl = el.querySelector('.trip-name');
+      var toName = nameEl ? nameEl.textContent : '아동';
+      var navLink = el.querySelector('.trip-chip-nav');
+      if (navLink && fromLat && fromLng) {
+        navLink.href = 'https://map.kakao.com/link/by/traffic/'
+          + encodeURIComponent(fromName) + ',' + fromLat + ',' + fromLng + '/'
+          + encodeURIComponent(toName) + ',' + lat + ',' + lng;
+      }
+    });
+  }
+  // 메인 버튼 URL도 새 순서로 업데이트
+  if (tripMode !== 'traffic' && lastSortedForRoute) {
+    var p = viewData.provider;
+    var sorted = lastSortedForRoute.slice().sort(function(a,b){
+      var oa = parseInt(a.confirmedTime) || 999;
+      var ob = parseInt(b.confirmedTime) || 999;
+      return oa - ob;
+    });
+    lastSortedForRoute = sorted;
+    var points = [];
+    if (p.lat && p.lng) points.push(encodeURIComponent((p.name||'집')+' 집')+','+p.lat+','+p.lng);
+    sorted.forEach(function(c){
+      if (c.lat && c.lng) {
+        var nm = (c.name||'아동').replace(/\s+$/,'');
+        points.push(encodeURIComponent(nm)+','+c.lat+','+c.lng);
+      }
+    });
+    if (points.length > 7) points = points.slice(0, 7);
+    var startBtn = document.getElementById('tripStart');
+    if (points.length >= 2) {
+      startBtn.href = 'https://map.kakao.com/link/by/' + tripMode + '/' + points.join('/');
+    }
+  }
+}
+
+// 지도(마커+폴리라인)만 재렌더 (trip-bar는 건드리지 않음 → 드래그 연속성 유지)
+function rebuildMapOnly() {
+  if (!viewData) return;
+  clearMarkers();
+  var p = viewData.provider;
+  if (p.lat && p.lng) { addMarker(p.lat, p.lng, 'home', buildHomeIW(p)); addLabel(p.lat, p.lng, p.name, 'home'); }
+
+  var filtered = viewData.assigned;
+  if (activeDay) filtered = filtered.filter(function(c){ return c.confirmedDay === activeDay; });
+
+  var sortedForRank = null;
+  if (activeDay && filtered.length >= 1) {
+    sortedForRank = filtered.slice().sort(function(a,b) {
+      var oa = parseInt(a.confirmedTime) || 999;
+      var ob = parseInt(b.confirmedTime) || 999;
+      return oa - ob;
+    });
+  }
+
+  var grouped = groupByCoord(filtered);
+  grouped.forEach(function(g) {
+    var rank = null;
+    if (sortedForRank && g.items.length === 1) {
+      var ci = sortedForRank.indexOf(g.items[0]);
+      if (ci >= 0) rank = ci + 1;
+    }
+    addMarker(g.lat, g.lng, 'child', buildChildIW(g.items, p.lat, p.lng), g.items.length, rank);
+    var label = '';
+    if (g.items.length === 1) label = (g.items[0].name||'').replace(/\s+$/,'');
+    else if (g.items.length <= 3) label = g.items.map(function(c){return (c.name||'').replace(/\s+$/,'');}).join(', ');
+    if (label) addLabel(g.lat, g.lng, label, 'child');
+  });
+
+  if (sortedForRank && sortedForRank.length >= 2) {
+    var path = [];
+    if (p.lat && p.lng) path.push(new kakao.maps.LatLng(p.lat, p.lng));
+    sortedForRank.forEach(function(c) {
+      if (c.lat && c.lng) path.push(new kakao.maps.LatLng(c.lat, c.lng));
+    });
+    if (path.length >= 2) {
+      var line = new kakao.maps.Polyline({
+        path: path, strokeWeight: 3, strokeColor: '#3a6b4e',
+        strokeOpacity: 0.6, strokeStyle: 'shortdash'
+      });
+      line.setMap(map);
+      routeLine = line;
+    }
+  }
 }
 </script>
-<script>(function(){var s=document.createElement('script');s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+CONFIG.KAKAO_JS_KEY+'&autoload=false';s.onload=function(){kakao.maps.load(initMap)};document.head.appendChild(s)})()</script>
+<script>(function(){var s=document.createElement('script');s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+CONFIG.KAKAO_JS_KEY+'&libraries=services&autoload=false';s.onload=function(){kakao.maps.load(initMap)};document.head.appendChild(s)})()</script>
 </body>
 </html>
