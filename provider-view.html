@@ -26,7 +26,7 @@
   .sr-name{font-weight:600;min-width:40px}.sr-sub{color:#888;font-size:11px;flex:1}
   .sr-none{padding:12px;text-align:center;font-size:12px;color:#bbb}
   .sr-hdr{padding:5px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee}
-  #map{position:fixed;top:44px;left:0;right:0;bottom:0}
+  #map{position:fixed;top:76px;left:0;right:0;bottom:0}
   .iw{padding:10px 14px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:180px;max-width:300px;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   .iw-title{font-weight:700;font-size:14px;margin-bottom:3px}
   .iw-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
@@ -60,6 +60,10 @@
   .toast{position:fixed;top:54px;left:50%;transform:translateX(-50%);z-index:60;background:#842029;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none}
   .toast.show{display:block}
   .empty-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#999;font-size:14px;z-index:10}
+  .day-filter{position:fixed;top:44px;left:0;right:0;z-index:49;background:rgba(250,250,247,.95);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,0,0,.04);padding:5px 14px;display:none;gap:4px}
+  .day-filter.show{display:flex}
+  .day-btn{padding:4px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;border:1.5px solid #d4cfc6;background:#fff;color:#666;transition:all .15s}
+  .day-btn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e}
   @media(max-width:480px){.controls{padding:6px 10px;gap:5px}}
 </style>
 </head>
@@ -73,6 +77,15 @@
     <input type="text" class="search-input" id="searchInput" placeholder="🔍 아동 이름 또는 주소" autocomplete="off">
     <div class="search-results" id="searchResults"></div>
   </div>
+</div>
+<div class="day-filter" id="dayFilter" style="display:none">
+  <button class="day-btn active" id="dayAll" data-day="" onclick="filterDay('')">전체</button>
+  <button class="day-btn" data-day="월" onclick="filterDay('월')">월</button>
+  <button class="day-btn" data-day="화" onclick="filterDay('화')">화</button>
+  <button class="day-btn" data-day="수" onclick="filterDay('수')">수</button>
+  <button class="day-btn" data-day="목" onclick="filterDay('목')">목</button>
+  <button class="day-btn" data-day="금" onclick="filterDay('금')">금</button>
+  <button class="day-btn" data-day="토" onclick="filterDay('토')">토</button>
 </div>
 <div id="map"></div>
 <div class="empty-msg" id="emptyMsg" style="display:none">배정된 아동이 없습니다.</div>
@@ -107,35 +120,31 @@ function loadData(){
     viewData=data;var p=data.provider;
     document.getElementById('hdrName').textContent=p.name+' 선생님';
     document.getElementById('hdrIcon').textContent=p.name.charAt(0);
-    document.getElementById('hdrCount').textContent=data.assigned.length+'명';
     document.title=p.name+' 선생님 배정 아동 지도';
     var og=document.querySelector('meta[property="og:title"]');if(og)og.content=p.name+' 선생님 배정 아동 지도';
     if(!data.assigned.length){document.getElementById('emptyMsg').style.display='block';return}
-    if(p.lat&&p.lng){addMarker(p.lat,p.lng,'home',buildHomeIW(p));addLabel(p.lat,p.lng,p.name,'home')}
-    groupByCoord(data.assigned).forEach(function(g){
-      addMarker(g.lat,g.lng,'child',buildChildIW(g.items,p.lat,p.lng));
-      var label;
-      if(g.items.length === 1) {
-        var c = g.items[0];
-        label = c.name;
-        if(c.confirmedDay) label += ' · ' + c.confirmedDay;
-        if(c.confirmedTime) label += ' ' + c.confirmedTime;
-      } else {
-        label = g.items.length + '명';
-      }
-      addLabel(g.lat, g.lng, label, 'child');
-    });
+    document.getElementById('dayFilter').classList.add('show');
+    renderFiltered();
     fitBounds();
   }).catch(function(){showLoading(false);showToast('로드 실패')});
 }
 
 function clearMarkers(){markers.forEach(function(m){m.setMap(null)});markers=[];overlays.forEach(function(o){o.setMap(null)});overlays=[]}
-function addMarker(lat,lng,type,iwContent){
+function addMarker(lat,lng,type,iwContent,count){
   if(!lat||!lng)return;var pos=new kakao.maps.LatLng(lat,lng);
+  count = count || 1;
   var c=type==='home'?{f:'#3b82f6',s:'#1d4ed8'}:{f:'#22c55e',s:'#15803d'};
-  var svg=type==='home'?'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>':'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>';
-  var sz=type==='home'?new kakao.maps.Size(32,32):new kakao.maps.Size(24,24);
-  var off=type==='home'?new kakao.maps.Point(16,32):new kakao.maps.Point(12,24);
+  var svg, sz, off;
+  if(type==='home'){
+    svg='<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>';
+    sz=new kakao.maps.Size(32,32);off=new kakao.maps.Point(16,32);
+  } else if(count>1){
+    svg='<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/><circle cx="15" cy="11" r="7" fill="#fff"/><text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+count+'</text></svg>';
+    sz=new kakao.maps.Size(30,30);off=new kakao.maps.Point(15,30);
+  } else {
+    svg='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>';
+    sz=new kakao.maps.Size(24,24);off=new kakao.maps.Point(12,24);
+  }
   var img=new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),sz,{offset:off});
   var m=new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:type==='home'?10:1});
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
@@ -165,19 +174,20 @@ function buildChildIW(items,hLat,hLng){
   if(items.length>1)h+='<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:4px">같은 위치 '+items.length+'명</div>';
   items.forEach(function(c,i){
     if(i>0)h+='<hr style="border:none;border-top:1px solid #eee;margin:6px 0">';
+    var name = (c.name||'').replace(/\s+$/,'');  // 이름 끝 공백 제거
     var dist='';if(hLat&&hLng&&c.lat&&c.lng)dist='<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;background:#f3e8ff;color:#7c3aed;margin-left:4px;vertical-align:middle">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
-    h+='<div class="iw-title">'+esc(c.name)+'<span class="iw-badge child">배정</span>'+dist+'</div>'
+    h+='<div class="iw-title">'+esc(name)+'<span class="iw-badge child">배정</span>'+dist+'</div>'
       +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
     if(c.phone)h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
     if(c.times)h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
 
-    // 확정 스케줄 표시 + 편집
-    var curDay = c.confirmedDay||'';
-    var curTime = c.confirmedTime||'';
+    // 확정 스케줄 편집: 요일 + 순서
     if(c.formRow){
       var schId = 'sch_'+c.formRow;
+      var curDay = c.confirmedDay||'';
+      var curOrder = c.confirmedTime||'';  // T열을 순서로 활용
       h+='<div style="margin-top:6px;padding:6px 8px;background:#f5f3ef;border-radius:6px">';
-      if(curDay||curTime) h+='<div style="font-size:11px;color:#3a6b4e;font-weight:600;margin-bottom:4px">✅ '+esc(curDay)+' '+esc(curTime)+' 확정</div>';
+      if(curDay) h+='<div style="font-size:11px;color:#3a6b4e;font-weight:600;margin-bottom:4px">✅ '+esc(curDay)+(curOrder?' · '+esc(curOrder)+'번째':'')+'</div>';
       h+='<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">'
         +'<select id="'+schId+'_day" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit">'
         +'<option value="">요일</option>';
@@ -185,15 +195,19 @@ function buildChildIW(items,hLat,hLng){
         h+='<option'+(curDay===d?' selected':'')+'>'+d+'</option>';
       });
       h+='</select>'
-        +'<input id="'+schId+'_time" type="text" placeholder="16:00" value="'+esc(curTime)+'" style="width:55px;padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit;text-align:center">'
-        +'<button onclick="saveSchedule('+c.formRow+',\''+schId+'\')" style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #3a6b4e;color:#3a6b4e;background:#fff;font-family:inherit">저장</button>'
-        +'</div></div>';
-    } else if(curDay||curTime){
-      h+='<div class="iw-row" style="color:#3a6b4e;font-weight:600">✅ '+esc(curDay)+' '+esc(curTime)+' 확정</div>';
+        +'<select id="'+schId+'_order" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit">'
+        +'<option value="">순서</option>';
+      for(var n=1;n<=10;n++){
+        h+='<option value="'+n+'"'+(curOrder==String(n)?' selected':'')+'>'+n+'번째</option>';
+      }
+      h+='</select>'
+        +'<button onclick="saveSchedule('+c.formRow+',\''+schId+'\')" style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #3a6b4e;color:#3a6b4e;background:#fff;font-family:inherit">저장</button>';
+      if(curDay) h+='<button onclick="clearSchedule('+c.formRow+')" style="padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid #ccc;color:#999;background:#fff;font-family:inherit">취소</button>';
+      h+='</div></div>';
     }
 
     if(c.notes)h+='<div class="iw-notes">'+esc(c.notes)+'</div>';
-    h+=routeBtns(c.name,c.lat,c.lng);
+    h+=routeBtns(name,c.lat,c.lng);
   });
   return h+'</div>';
 }
@@ -279,19 +293,77 @@ var _tt;function showToast(m,ok){var e=document.getElementById('toast');e.textCo
 
 function saveSchedule(row, schId) {
   var day = document.getElementById(schId+'_day').value;
-  var time = document.getElementById(schId+'_time').value.trim();
+  var order = document.getElementById(schId+'_order').value;
   if (!day) { showToast('요일을 선택해주세요'); return; }
   
   showLoading(true);
   var url = CONFIG.GAS_URL + '?action=saveschedule&token=' + encodeURIComponent(viewToken)
-    + '&row=' + row + '&day=' + encodeURIComponent(day) + '&time=' + encodeURIComponent(time);
+    + '&row=' + row + '&day=' + encodeURIComponent(day) + '&time=' + encodeURIComponent(order);
   fetch(url, {redirect:'follow'}).then(function(r){return r.json()}).then(function(res){
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
-    showToast(day + ' ' + time + ' 저장됨', true);
-    // 데이터 갱신
+    showToast(day + (order ? ' '+order+'번째' : '') + ' 저장됨', true);
     loadData();
   }).catch(function(e){ showLoading(false); showToast('저장 실패'); });
+}
+
+function clearSchedule(row) {
+  if (!confirm('이 아동의 확정 요일을 취소합니다.\n\n진행할까요?')) return;
+  showLoading(true);
+  var url = CONFIG.GAS_URL + '?action=saveschedule&token=' + encodeURIComponent(viewToken)
+    + '&row=' + row + '&day=&time=';
+  fetch(url, {redirect:'follow'}).then(function(r){return r.json()}).then(function(res){
+    showLoading(false);
+    if (res.error) { showToast(res.error); return; }
+    showToast('확정 취소됨', true);
+    loadData();
+  }).catch(function(e){ showLoading(false); showToast('취소 실패'); });
+}
+
+// ══ 요일 필터 ══
+var activeDay = '';
+function filterDay(day) {
+  activeDay = (activeDay === day) ? '' : day;
+  // 버튼 토글
+  document.querySelectorAll('.day-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-day') === activeDay);
+  });
+  document.getElementById('dayAll').classList.toggle('active', activeDay === '');
+  renderFiltered();
+}
+
+function renderFiltered() {
+  if (!viewData) return;
+  clearMarkers();
+  var p = viewData.provider;
+  if (p.lat && p.lng) { addMarker(p.lat, p.lng, 'home', buildHomeIW(p)); addLabel(p.lat, p.lng, p.name, 'home'); }
+
+  var filtered = viewData.assigned;
+  if (activeDay) {
+    filtered = filtered.filter(function(c) { return c.confirmedDay === activeDay; });
+  }
+
+  var grouped = groupByCoord(filtered);
+  grouped.forEach(function(g) {
+    addMarker(g.lat, g.lng, 'child', buildChildIW(g.items, p.lat, p.lng), g.items.length);
+    var label = '';
+    if (g.items.length === 1) {
+      var c = g.items[0];
+      label = (c.name||'').replace(/\s+$/,'');
+      if (c.confirmedDay) label += ' · ' + c.confirmedDay;
+      if (c.confirmedTime) label += ' ' + c.confirmedTime + '번째';
+    } else if (g.items.length <= 3) {
+      label = g.items.map(function(c) {
+        var n = (c.name||'').replace(/\s+$/,'');
+        if (c.confirmedDay) n += '·' + c.confirmedDay;
+        return n;
+      }).join(', ');
+    }
+    if (label) addLabel(g.lat, g.lng, label, 'child');
+  });
+
+  // 카운트 갱신
+  document.getElementById('hdrCount').textContent = filtered.length + '명' + (activeDay ? ' ('+activeDay+')' : '');
 }
 </script>
 <script>(function(){var s=document.createElement('script');s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+CONFIG.KAKAO_JS_KEY+'&autoload=false';s.onload=function(){kakao.maps.load(initMap)};document.head.appendChild(s)})()</script>
