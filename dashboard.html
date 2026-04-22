@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오감쑥쑥 배정 대시보드</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Pretendard','Noto Sans KR',sans-serif;color:#1a1a1a;background:#f0ebe4;line-height:1.6}
+
+  .wrap{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+
+  .page-title{font-size:20px;font-weight:700;color:#2c2c2c;margin-bottom:4px}
+  .page-sub{font-size:12px;color:#999;margin-bottom:20px}
+
+  /* 요약 카드 */
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+  .sum-card{
+    background:#fff;border-radius:10px;padding:14px 12px;text-align:center;
+    box-shadow:0 1px 4px rgba(0,0,0,.05);
+  }
+  .sum-num{font-size:24px;font-weight:700;color:#3a6b4e}
+  .sum-num.warn{color:#d97706}
+  .sum-num.bad{color:#c0392b}
+  .sum-label{font-size:11px;color:#999;margin-top:2px}
+
+  /* 섹션 */
+  .section{margin-bottom:24px}
+  .section-title{font-size:15px;font-weight:700;color:#333;margin-bottom:10px;padding-left:2px}
+
+  /* 제공인력 테이블 */
+  .prov-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .prov-table th{background:#f5f3ef;font-size:11px;font-weight:600;color:#888;padding:8px 10px;text-align:left}
+  .prov-table td{font-size:13px;padding:8px 10px;border-top:1px solid #f5f5f5}
+  .prov-table tr:hover td{background:#fafaf7}
+  .prov-name{font-weight:600}
+  .prov-bar-wrap{height:8px;background:#eee;border-radius:4px;overflow:hidden;min-width:60px}
+  .prov-bar{height:100%;background:#3a6b4e;border-radius:4px;transition:width .3s}
+
+  /* 지역 분포 */
+  .dist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+  .dist-card{
+    background:#fff;border-radius:8px;padding:10px 12px;
+    box-shadow:0 1px 4px rgba(0,0,0,.05);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .dist-name{font-size:13px;font-weight:600;color:#333}
+  .dist-count{font-size:18px;font-weight:700;color:#3a6b4e}
+
+  /* 상태 분포 */
+  .status-bar{display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .sb-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;transition:width .3s}
+  .sb-assigned{background:#22c55e}
+  .sb-waiting{background:#f59e0b}
+  .sb-absent{background:#fb923c}
+  .sb-rejected{background:#ef4444}
+  .status-legend{display:flex;gap:14px;font-size:11px;color:#888;flex-wrap:wrap}
+  .status-legend span{display:flex;align-items:center;gap:4px}
+  .sl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+  /* 로딩 */
+  .loading{text-align:center;padding:60px;color:#bbb;font-size:14px}
+
+  /* 링크 */
+  .back-link{
+    display:inline-block;margin-bottom:16px;font-size:12px;color:#3a6b4e;
+    text-decoration:none;font-weight:600;
+  }
+  .back-link:hover{text-decoration:underline}
+
+  @media(max-width:480px){
+    .summary{grid-template-columns:repeat(2,1fr)}
+    .wrap{padding:16px 12px 40px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a class="back-link" href="provider-map.html">← 지도로 돌아가기</a>
+  <div class="page-title">오감쑥쑥 배정 대시보드</div>
+  <div class="page-sub" id="timestamp">로딩 중...</div>
+
+  <!-- 요약 -->
+  <div class="summary" id="summary">
+    <div class="sum-card"><div class="sum-num" id="sTotal">-</div><div class="sum-label">전체 신청</div></div>
+    <div class="sum-card"><div class="sum-num" id="sAssigned">-</div><div class="sum-label">배정 완료</div></div>
+    <div class="sum-card"><div class="sum-num warn" id="sWaiting">-</div><div class="sum-label">대기</div></div>
+    <div class="sum-card"><div class="sum-num bad" id="sExcluded">-</div><div class="sum-label">부재·거절</div></div>
+  </div>
+
+  <!-- 배정률 바 -->
+  <div class="section">
+    <div class="section-title">전체 상태 분포</div>
+    <div class="status-bar" id="statusBar"></div>
+    <div class="status-legend">
+      <span><div class="sl-dot" style="background:#22c55e"></div>배정</span>
+      <span><div class="sl-dot" style="background:#f59e0b"></div>대기</span>
+      <span><div class="sl-dot" style="background:#fb923c"></div>부재</span>
+      <span><div class="sl-dot" style="background:#ef4444"></div>거절</span>
+    </div>
+  </div>
+
+  <!-- 제공인력별 -->
+  <div class="section">
+    <div class="section-title">제공인력별 배정 현황</div>
+    <table class="prov-table" id="provTable">
+      <thead><tr><th>선생님</th><th>배정 수</th><th style="width:40%"></th></tr></thead>
+      <tbody id="provBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 지역별 -->
+  <div class="section">
+    <div class="section-title">시군구별 신청 분포</div>
+    <div class="dist-grid" id="distGrid"></div>
+  </div>
+
+  <!-- 법정동별 TOP -->
+  <div class="section">
+    <div class="section-title">법정동 TOP 15</div>
+    <div class="dist-grid" id="dongGrid"></div>
+  </div>
+</div>
+
+<script>
+var CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec'
+};
+
+(function(){
+  var url = CONFIG.GAS_URL + '?action=dashboard';
+  fetch(url, {redirect:'follow'}).then(function(r){return r.json()}).then(render).catch(function(e){
+    document.getElementById('timestamp').textContent = '로드 실패: ' + e.message;
+  });
+})();
+
+function render(data) {
+  document.getElementById('timestamp').textContent = '마지막 갱신: ' + new Date().toLocaleString('ko-KR');
+
+  var total = data.total || 0;
+  var assigned = data.assigned || 0;
+  var waiting = data.waiting || 0;
+  var absent = data.absent || 0;
+  var rejected = data.rejected || 0;
+
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sAssigned').textContent = assigned;
+  document.getElementById('sWaiting').textContent = waiting;
+  document.getElementById('sExcluded').textContent = absent + rejected;
+
+  // 상태 바
+  var bar = document.getElementById('statusBar');
+  if (total > 0) {
+    bar.innerHTML = seg('sb-assigned', assigned, total, '배정 '+assigned)
+      + seg('sb-waiting', waiting, total, '대기 '+waiting)
+      + seg('sb-absent', absent, total, '부재 '+absent)
+      + seg('sb-rejected', rejected, total, '거절 '+rejected);
+  }
+
+  // 제공인력별
+  var provs = data.providers || [];
+  provs.sort(function(a,b){return b.count - a.count});
+  var maxCount = provs.length ? provs[0].count : 1;
+  var tbody = document.getElementById('provBody');
+  tbody.innerHTML = '';
+  provs.forEach(function(p) {
+    var pct = Math.round(p.count / Math.max(maxCount,1) * 100);
+    tbody.innerHTML += '<tr><td class="prov-name">'+esc(p.name)+'</td><td>'+p.count+'명</td>'
+      + '<td><div class="prov-bar-wrap"><div class="prov-bar" style="width:'+pct+'%"></div></div></td></tr>';
+  });
+
+  // 시군구별
+  var districts = data.districts || [];
+  districts.sort(function(a,b){return b.count - a.count});
+  var dg = document.getElementById('distGrid');
+  dg.innerHTML = '';
+  districts.forEach(function(d) {
+    dg.innerHTML += '<div class="dist-card"><div class="dist-name">'+esc(d.name)+'</div><div class="dist-count">'+d.count+'</div></div>';
+  });
+
+  // 법정동 TOP 15
+  var dongs = data.dongs || [];
+  dongs.sort(function(a,b){return b.count - a.count});
+  var dg2 = document.getElementById('dongGrid');
+  dg2.innerHTML = '';
+  dongs.slice(0,15).forEach(function(d) {
+    dg2.innerHTML += '<div class="dist-card"><div class="dist-name">'+esc(d.name)+'</div><div class="dist-count">'+d.count+'</div></div>';
+  });
+}
+
+function seg(cls, count, total, label) {
+  var pct = Math.max(count/total*100, count>0?3:0);
+  return '<div class="sb-seg '+cls+'" style="width:'+pct+'%">'+(pct>8?label:'')+'</div>';
+}
+
+function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+</script>
+</body>
+</html>
