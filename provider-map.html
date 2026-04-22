@@ -189,14 +189,14 @@
 <div class="controls">
   <div class="logo">오감쑥쑥 <span>지도</span></div>
   <div class="divider"></div>
-  <select id="providerSelect"><option value="">선생님 선택</option></select>
+  <select id="providerSelect"></select>
   <div class="filter-group">
     <button class="fbtn active" id="filterAssigned" onclick="toggleFilter('assigned')">배정</button>
     <button class="fbtn active" id="filterWaiting" onclick="toggleFilter('waiting')">대기</button>
   </div>
   <div class="divider"></div>
   <div class="search-wrap">
-    <input type="text" class="search-input" id="searchInput" placeholder="🔍 아동 검색" autocomplete="off">
+    <input type="text" class="search-input" id="searchInput" placeholder="🔍 아동 이름 또는 주소" autocomplete="off">
     <div class="search-results" id="searchResults"></div>
   </div>
 </div>
@@ -242,7 +242,8 @@
 <script>
 var CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec',
-  KAKAO_JS_KEY: '90fa3176ac77c6fc1ae5a165b9f0662c'
+  KAKAO_JS_KEY: '90fa3176ac77c6fc1ae5a165b9f0662c',
+  KAKAO_REST_KEY: '80cb2c5189a12697f4d4e77c050910dd'
 };
 
 var map, markers = [], overlays = [], infoWindow;
@@ -358,11 +359,15 @@ function loadProviders() {
   fetchGAS('providers').then(function(list) {
     providerList = list;
     var sel = document.getElementById('providerSelect');
+    // 첫 옵션 = 전체 (선택 상태)
     var optAll = document.createElement('option');
     optAll.value = '__ALL__'; optAll.textContent = '— 전체 제공인력 —';
     sel.appendChild(optAll);
     list.forEach(function(p) { var o=document.createElement('option'); o.value=p.name; o.textContent=p.name; sel.appendChild(o); });
+    sel.value = '__ALL__';
     showLoading(false);
+    // 자동으로 전체 로드
+    loadAllProviders();
   }).catch(function(e) { showLoading(false); showToast('목록 로드 실패: '+e.message); });
 }
 
@@ -793,7 +798,7 @@ function placeSearchMarker(lat, lng) {
 
   input.addEventListener('input', function() {
     clearTimeout(debounce);
-    debounce = setTimeout(function(){ doSearch(input.value.trim()); }, 150);
+    debounce = setTimeout(function(){ doSearch(input.value.trim()); }, 250);
   });
 
   input.addEventListener('focus', function() {
@@ -805,66 +810,142 @@ function placeSearchMarker(lat, lng) {
   });
 
   function doSearch(q) {
-    if (!q || !currentData) { results.classList.remove('show'); return; }
+    if (!q) { results.classList.remove('show'); return; }
 
-    var all = [];
-    if (currentData.assigned) {
-      currentData.assigned.forEach(function(c) {
-        all.push({ name: c.name, phone: c.phone||'', lat: c.lat, lng: c.lng, status: c.assignedTo ? c.assignedTo+' 배정' : '배정', type: 'assigned', row: c.formRow, data: c });
+    var html = '';
+    var childResults = [];
+
+    // ── 1. 아동 이름 검색 ──
+    if (currentData) {
+      var all = [];
+      if (currentData.assigned) {
+        currentData.assigned.forEach(function(c) {
+          all.push({ name: c.name, phone: c.phone||'', lat: c.lat, lng: c.lng, status: c.assignedTo ? c.assignedTo+' 배정' : '배정', type: 'assigned', row: c.formRow, data: c });
+        });
+      }
+      if (currentData.waiting) {
+        currentData.waiting.forEach(function(c) {
+          all.push({ name: c.name, phone: c.phone||'', lat: c.lat, lng: c.lng, status: '대기', type: 'waiting', row: c.row, data: c });
+        });
+      }
+      childResults = all.filter(function(item) { return item.name && item.name.indexOf(q) >= 0; });
+    }
+
+    if (childResults.length) {
+      html += '<div style="padding:6px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee">아동</div>';
+      childResults.slice(0, 8).forEach(function(item, idx) {
+        var stClass = item.type === 'assigned' ? 'assigned' : 'waiting';
+        html += '<div class="sr-item sr-child" data-cidx="'+idx+'">'
+          + '<div class="sr-name">' + esc(item.name) + '</div>'
+          + '<div class="sr-phone">' + esc(fmtPhone(item.phone)) + '</div>'
+          + '<div class="sr-status ' + stClass + '">' + esc(item.status) + '</div>'
+          + '</div>';
       });
     }
-    if (currentData.waiting) {
-      currentData.waiting.forEach(function(c) {
-        all.push({ name: c.name, phone: c.phone||'', lat: c.lat, lng: c.lng, status: '대기', type: 'waiting', row: c.row, data: c });
-      });
-    }
 
-    var filtered = all.filter(function(item) {
-      return item.name && item.name.indexOf(q) >= 0;
-    });
+    // ── 2. 주소 검색 (2글자 이상, 한글 포함) ──
+    var isAddr = q.length >= 2 && /[가-힣]/.test(q) && !childResults.length;
+    // 아동 결과 없거나 숫자 포함이면 주소 검색도 실행
+    if (!isAddr && q.length >= 2 && /\d/.test(q)) isAddr = true;
+    if (!isAddr && !childResults.length && q.length >= 2) isAddr = true;
 
-    if (!filtered.length) {
-      results.innerHTML = '<div class="sr-none">검색 결과 없음</div>';
+    if (isAddr) {
+      html += '<div style="padding:6px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee">📍 주소 검색 중...</div>';
+      results.innerHTML = html;
       results.classList.add('show');
+
+      // 카카오 로컬 키워드 검색
+      var url = 'https://dapi.kakao.com/v2/local/search/keyword.json?query=' + encodeURIComponent(q) + '&size=5';
+      fetch(url, { headers: { 'Authorization': 'KakaoAK ' + CONFIG.KAKAO_REST_KEY } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var addrHtml = '';
+          if (data.documents && data.documents.length) {
+            addrHtml += '<div style="padding:6px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee">📍 주소</div>';
+            data.documents.forEach(function(doc, idx) {
+              addrHtml += '<div class="sr-item sr-addr" data-lat="'+doc.y+'" data-lng="'+doc.x+'" data-name="'+esc(doc.place_name || doc.address_name)+'">'
+                + '<div class="sr-name" style="min-width:auto">'+esc(doc.place_name || '')+'</div>'
+                + '<div class="sr-phone" style="flex:1">'+esc(doc.road_address_name || doc.address_name || '')+'</div>'
+                + '</div>';
+            });
+          } else {
+            addrHtml += '<div class="sr-none">주소 검색 결과 없음</div>';
+          }
+
+          // 아동 결과 재구성
+          var childHtml = '';
+          if (childResults.length) {
+            childHtml += '<div style="padding:6px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee">아동</div>';
+            childResults.slice(0, 5).forEach(function(item, idx) {
+              var stClass = item.type === 'assigned' ? 'assigned' : 'waiting';
+              childHtml += '<div class="sr-item sr-child" data-cidx="'+idx+'">'
+                + '<div class="sr-name">' + esc(item.name) + '</div>'
+                + '<div class="sr-phone">' + esc(fmtPhone(item.phone)) + '</div>'
+                + '<div class="sr-status ' + stClass + '">' + esc(item.status) + '</div>'
+                + '</div>';
+            });
+          }
+
+          results.innerHTML = childHtml + addrHtml;
+          results.classList.add('show');
+          bindResultClicks(childResults);
+        })
+        .catch(function() {
+          // API 실패 시 아동 결과만 표시
+          if (childResults.length) {
+            results.innerHTML = html;
+            bindResultClicks(childResults);
+          }
+        });
       return;
     }
 
-    var html = '';
-    filtered.slice(0, 10).forEach(function(item, idx) {
-      var stClass = item.type === 'assigned' ? 'assigned' : 'waiting';
-      html += '<div class="sr-item" data-idx="'+idx+'">'
-        + '<div class="sr-name">' + esc(item.name) + '</div>'
-        + '<div class="sr-phone">' + esc(fmtPhone(item.phone)) + '</div>'
-        + '<div class="sr-status ' + stClass + '">' + esc(item.status) + '</div>'
-        + '</div>';
-    });
+    if (!html) {
+      html = '<div class="sr-none">검색 결과 없음</div>';
+    }
 
     results.innerHTML = html;
     results.classList.add('show');
+    bindResultClicks(childResults);
+  }
 
-    results.querySelectorAll('.sr-item').forEach(function(el) {
+  function bindResultClicks(childResults) {
+    // 아동 클릭
+    results.querySelectorAll('.sr-child').forEach(function(el) {
       el.addEventListener('click', function() {
-        var idx = parseInt(this.getAttribute('data-idx'));
-        var item = filtered[idx];
+        var idx = parseInt(this.getAttribute('data-cidx'));
+        var item = childResults[idx];
         if (!item || !item.lat || !item.lng) return;
-
-        var pos = new kakao.maps.LatLng(item.lat, item.lng);
-        map.setCenter(pos);
+        map.setCenter(new kakao.maps.LatLng(item.lat, item.lng));
         map.setLevel(3);
-
         var sm = placeSearchMarker(item.lat, item.lng);
-
-        var iwContent;
-        if (item.type === 'assigned') {
-          iwContent = buildGroupedAssignedIW([item.data], currentData.provider.lat, currentData.provider.lng);
-        } else {
-          iwContent = buildGroupedWaitingIW([item.data], currentData.provider.lat, currentData.provider.lng);
-        }
+        var iwContent = item.type === 'assigned'
+          ? buildGroupedAssignedIW([item.data], currentData.provider.lat, currentData.provider.lng)
+          : buildGroupedWaitingIW([item.data], currentData.provider.lat, currentData.provider.lng);
         infoWindow.setContent(iwContent);
         infoWindow.open(map, sm);
-
         results.classList.remove('show');
         input.value = item.name;
+      });
+    });
+
+    // 주소 클릭
+    results.querySelectorAll('.sr-addr').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var lat = parseFloat(this.getAttribute('data-lat'));
+        var lng = parseFloat(this.getAttribute('data-lng'));
+        var name = this.getAttribute('data-name');
+        if (!lat || !lng) return;
+        map.setCenter(new kakao.maps.LatLng(lat, lng));
+        map.setLevel(3);
+        var sm = placeSearchMarker(lat, lng);
+        var iwContent = '<div class="iw"><div class="iw-title">📍 '+esc(name)+'</div>'
+          + routeBtns(name, lat, lng)
+          + '</div>';
+        infoWindow.setContent(iwContent);
+        infoWindow.open(map, sm);
+        results.classList.remove('show');
+        input.value = name;
       });
     });
   }
