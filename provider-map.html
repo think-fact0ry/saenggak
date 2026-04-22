@@ -325,7 +325,7 @@ function updateRoutePanel() {
   var fn = document.getElementById('routeFromName'), tn = document.getElementById('routeToName');
   var fc = document.getElementById('routeFromClear'), tc = document.getElementById('routeToClear');
   var go = document.getElementById('routeGoBtn');
-  if (!routeFrom && !routeTo) { panel.classList.remove('show'); return; }
+  if (!routeFrom && !routeTo) { panel.classList.remove('show'); clearSearchMarker(); return; }
   panel.classList.add('show');
   if (routeFrom) { fn.textContent=routeFrom.name; fn.classList.remove('empty'); fc.style.display=''; }
   else { fn.textContent='출발지 선택'; fn.classList.add('empty'); fc.style.display='none'; }
@@ -769,13 +769,14 @@ function reloadCurrent() {
 }
 
 // ══ 검색 ══
-var searchMarker = null;  // 검색 전용 마커 (1개만 유지)
+var searchMarker = null;
+var searchMarkerIW = '';  // 검색 마커의 인포윈도우 내용 보관
 
 function clearSearchMarker() {
-  if (searchMarker) { searchMarker.setMap(null); searchMarker = null; }
+  if (searchMarker) { searchMarker.setMap(null); searchMarker = null; searchMarkerIW = ''; }
 }
 
-function placeSearchMarker(lat, lng) {
+function placeSearchMarker(lat, lng, iwContent) {
   clearSearchMarker();
   var pos = new kakao.maps.LatLng(lat, lng);
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">'
@@ -788,6 +789,16 @@ function placeSearchMarker(lat, lng) {
     new kakao.maps.Size(28,28), {offset: new kakao.maps.Point(14,28)}
   );
   searchMarker = new kakao.maps.Marker({ position:pos, image:img, map:map, zIndex:20 });
+  searchMarkerIW = iwContent || '';
+
+  // 빨간 마커 클릭하면 인포윈도우 다시 열림
+  kakao.maps.event.addListener(searchMarker, 'click', function() {
+    if (searchMarkerIW) {
+      infoWindow.setContent(searchMarkerIW);
+      infoWindow.open(map, searchMarker);
+    }
+  });
+
   return searchMarker;
 }
 
@@ -918,10 +929,10 @@ function placeSearchMarker(lat, lng) {
         if (!item || !item.lat || !item.lng) return;
         map.setCenter(new kakao.maps.LatLng(item.lat, item.lng));
         map.setLevel(3);
-        var sm = placeSearchMarker(item.lat, item.lng);
         var iwContent = item.type === 'assigned'
           ? buildGroupedAssignedIW([item.data], currentData.provider.lat, currentData.provider.lng)
           : buildGroupedWaitingIW([item.data], currentData.provider.lat, currentData.provider.lng);
+        var sm = placeSearchMarker(item.lat, item.lng, iwContent);
         infoWindow.setContent(iwContent);
         infoWindow.open(map, sm);
         results.classList.remove('show');
@@ -938,10 +949,10 @@ function placeSearchMarker(lat, lng) {
         if (!lat || !lng) return;
         map.setCenter(new kakao.maps.LatLng(lat, lng));
         map.setLevel(3);
-        var sm = placeSearchMarker(lat, lng);
         var iwContent = '<div class="iw"><div class="iw-title">📍 '+esc(name)+'</div>'
           + routeBtns(name, lat, lng)
           + '</div>';
+        var sm = placeSearchMarker(lat, lng, iwContent);
         infoWindow.setContent(iwContent);
         infoWindow.open(map, sm);
         results.classList.remove('show');
