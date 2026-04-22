@@ -438,6 +438,7 @@ function clearMarkers() { markers.forEach(function(m){m.setMap(null)}); markers=
 
 function renderMarkers() {
   clearMarkers();
+  _copyData = [];  // 복사 데이터 리셋
   if (!currentData) return;
   var d = currentData, hLat = d.provider.lat, hLng = d.provider.lng;
 
@@ -562,10 +563,12 @@ function buildGroupedAssignedIW(items, hLat, hLng) {
     }
     if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
     if (c.phone) h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
+    if (c.voucher && c.voucher !== '네') h+='<div class="iw-row" style="color:#c0392b;font-weight:600">⚠️ 바우처: '+esc(c.voucher)+'</div>';
     if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
+    var ci = registerCopyData(c);
     h+='<div class="iw-actions">';
     if (c.formRow) h+='<button class="iw-act unassign" onclick="doUnassign('+c.formRow+')">배정취소</button>';
-    h+='<button class="iw-act copy" onclick="doCopy(\''+escQ(c.name)+'\',\'\',\'\',\''+escQ(c.address)+'\',\''+escQ(c.times)+'\',\''+escQ(c.phone||'')+'\',\''+escQ(c.notes||'')+'\')">📋 복사</button>'
+    h+='<button class="iw-act copy" onclick="doCopy('+ci+')">📋 복사</button>'
       +'</div>';
     h+=routeBtns(c.name,c.lat,c.lng);
   });
@@ -585,16 +588,18 @@ function buildGroupedWaitingIW(items, hLat, hLng) {
       +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
     if (c.phone) h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
     if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
+    if (c.voucher && c.voucher !== '네') h+='<div class="iw-row" style="color:#c0392b;font-weight:600">⚠️ 바우처: '+esc(c.voucher)+'</div>';
     if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
     if (c.sigungu||c.bname) h+='<div class="iw-row" style="color:#aaa">'+esc(c.sigungu)+' '+esc(c.bname)+'</div>';
 
     // ── 배정 추천 ──
     h += buildRecommendation(c);
 
+    var ci = registerCopyData(c);
     h+='<div class="iw-actions">'+assignBtn(c.row)
-      +'<button class="iw-act absent" onclick="doStatus('+c.row+',\'부재1\')">📵 부재</button>'
-      +'<button class="iw-act reject" onclick="doStatus('+c.row+',\'거절\')">✕ 거절</button>'
-      +'<button class="iw-act copy" onclick="doCopy(\''+escQ(c.name)+'\',\'\',\'\',\''+escQ(c.address)+'\',\''+escQ(c.times)+'\',\''+escQ(c.phone||'')+'\',\''+escQ(c.notes||'')+'\')">📋</button>'
+      +'<button class="iw-act absent" onclick="doStatus('+c.row+',\'부재1\')">📵</button>'
+      +'<button class="iw-act reject" onclick="doStatus('+c.row+',\'거절\')">✕</button>'
+      +'<button class="iw-act copy" onclick="doCopy('+ci+')">📋</button>'
       +'</div>'
       +'<div class="iw-actions">'
       +'<button class="iw-act from" onclick="setRoute(\'from\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🟢 출발</button>'
@@ -744,14 +749,23 @@ function doUnassign(row) {
   }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
 }
 
-function doCopy(name, gender, dob, address, times, phone, notes) {
-  var lines = ['신청폼-오감', name];
-  if (gender) lines.push(gender);
-  if (dob) lines.push(dob);
-  if (address) lines.push(address);
-  if (times) lines.push(fmtTimes(times));
-  if (phone) lines.push(fmtPhone(phone));
-  if (notes) lines.push(notes);
+// 복사 데이터 저장소
+var _copyData = [];
+function registerCopyData(c) {
+  var idx = _copyData.length;
+  _copyData.push(c);
+  return idx;
+}
+
+function doCopy(idx) {
+  var c = _copyData[idx];
+  if (!c) { showToast('복사 실패'); return; }
+  var lines = ['신청폼-오감', c.name || ''];
+  if (c.address) lines.push(c.address);
+  if (c.times) lines.push(fmtTimes(c.times));
+  if (c.phone) lines.push(fmtPhone(c.phone));
+  if (c.notes) lines.push(c.notes);
+  if (c.voucher) lines.push('바우처: ' + c.voucher);
   var text = lines.join('\n');
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(function(){ showToast('복사됨', true); });
@@ -790,17 +804,48 @@ function placeSearchMarker(lat, lng, iwContent) {
   );
   searchMarker = new kakao.maps.Marker({ position:pos, image:img, map:map, zIndex:20 });
   searchMarkerIW = iwContent || '';
+  searchMarkerLat = lat;
+  searchMarkerLng = lng;
 
-  // 빨간 마커 클릭하면 인포윈도우 다시 열림
   kakao.maps.event.addListener(searchMarker, 'click', function() {
-    if (searchMarkerIW) {
-      infoWindow.setContent(searchMarkerIW);
+    // 같은 좌표의 아동도 합쳐서 표시
+    var mergedIW = searchMarkerIW || '';
+    if (currentData) {
+      var key = searchMarkerLat.toFixed(6) + ',' + searchMarkerLng.toFixed(6);
+      var hLat = currentData.provider ? currentData.provider.lat : null;
+      var hLng = currentData.provider ? currentData.provider.lng : null;
+
+      var colocated = [];
+      if (showWaiting && currentData.waiting) {
+        currentData.waiting.forEach(function(c) {
+          if (c.lat && c.lng && (c.lat.toFixed(6)+','+c.lng.toFixed(6)) === key) colocated.push({type:'waiting',data:c});
+        });
+      }
+      if (showAssigned && currentData.assigned) {
+        currentData.assigned.forEach(function(c) {
+          if (c.lat && c.lng && (c.lat.toFixed(6)+','+c.lng.toFixed(6)) === key) colocated.push({type:'assigned',data:c});
+        });
+      }
+
+      if (colocated.length > 0) {
+        var childIW = '';
+        var wItems = colocated.filter(function(x){return x.type==='waiting'}).map(function(x){return x.data});
+        var aItems = colocated.filter(function(x){return x.type==='assigned'}).map(function(x){return x.data});
+        if (aItems.length) childIW += buildGroupedAssignedIW(aItems, hLat, hLng);
+        if (wItems.length) childIW += buildGroupedWaitingIW(wItems, hLat, hLng);
+        mergedIW = mergedIW + childIW;
+      }
+    }
+
+    if (mergedIW) {
+      infoWindow.setContent('<div class="iw" style="max-height:350px;overflow-y:auto">' + mergedIW + '</div>');
       infoWindow.open(map, searchMarker);
     }
   });
 
   return searchMarker;
 }
+var searchMarkerLat = 0, searchMarkerLng = 0;
 
 (function(){
   var input = document.getElementById('searchInput');
