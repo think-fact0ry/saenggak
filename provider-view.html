@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>내 배정 아동 지도</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Pretendard','Noto Sans KR',sans-serif;color:#1a1a1a;background:#f0ebe4}
+
+  .header{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(0,0,0,.06);
+    padding:12px 16px;display:flex;align-items:center;gap:10px;
+  }
+  .header-icon{width:32px;height:32px;background:#3a6b4e;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0}
+  .header-info{flex:1}
+  .header-name{font-size:15px;font-weight:700;color:#1a1a1a}
+  .header-sub{font-size:11px;color:#999}
+  .header-count{
+    padding:4px 12px;border-radius:20px;background:#e8f0e5;
+    font-size:12px;font-weight:700;color:#3a6b4e;white-space:nowrap;
+  }
+
+  #map{position:fixed;top:58px;left:0;right:0;bottom:0}
+
+  .iw{padding:10px 14px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:180px;max-width:300px}
+  .iw-title{font-weight:700;font-size:14px;margin-bottom:3px}
+  .iw-row{color:#666;font-size:12px}
+  .iw-times{margin-top:3px;font-size:11.5px;color:#7c3aed;font-weight:500}
+  .iw-phone{margin-top:2px;font-size:12px}
+  .iw-phone a{color:#3b82f6;text-decoration:none;font-weight:500}
+  .iw-nav{
+    display:inline-block;margin-top:6px;padding:6px 12px;border-radius:6px;
+    font-size:12px;font-weight:600;text-decoration:none;
+    background:#3b82f6;color:#fff;transition:background .15s;
+  }
+  .iw-nav:hover{background:#2563eb}
+  .iw-home{
+    display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;
+    background:#dbeafe;color:#2563eb;margin-left:4px;vertical-align:middle;
+  }
+
+  .legend{
+    position:fixed;bottom:16px;left:14px;z-index:40;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+    border-radius:10px;padding:8px 12px;box-shadow:0 2px 12px rgba(0,0,0,.1);
+    font-size:11px;display:flex;gap:12px;pointer-events:none;
+  }
+  .legend-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
+  .ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .ldot.home{background:#3b82f6}.ldot.child{background:#22c55e}
+
+  .empty-msg{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    text-align:center;color:#999;font-size:14px;z-index:10;
+  }
+
+  .loading-overlay{position:fixed;inset:0;z-index:100;background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center}
+  .loading-overlay.show{display:flex}
+  .ld-spinner{width:32px;height:32px;border:3px solid #d4cfc6;border-top-color:#3a6b4e;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media(max-width:480px){
+    .header{padding:10px 12px}
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon" id="headerIcon">?</div>
+  <div class="header-info">
+    <div class="header-name" id="headerName">로딩 중...</div>
+    <div class="header-sub">배정 아동 지도</div>
+  </div>
+  <div class="header-count" id="headerCount">0명</div>
+</div>
+
+<div id="map"></div>
+<div class="empty-msg" id="emptyMsg" style="display:none">배정된 아동이 없습니다.</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="ldot home"></div>내 집</div>
+  <div class="legend-item"><div class="ldot child"></div>배정 아동</div>
+</div>
+
+<div class="loading-overlay" id="loading"><div class="ld-spinner"></div></div>
+
+<script>
+var CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec',
+  KAKAO_JS_KEY: '90fa3176ac77c6fc1ae5a165b9f0662c'
+};
+
+var map, markers = [], infoWindow;
+
+// URL에서 선생님 이름 가져오기
+var params = new URLSearchParams(window.location.search);
+var providerName = params.get('name') || '';
+
+function initMap() {
+  map = new kakao.maps.Map(document.getElementById('map'), { center: new kakao.maps.LatLng(37.46, 126.70), level: 6 });
+  infoWindow = new kakao.maps.InfoWindow({ zIndex: 10 });
+  kakao.maps.event.addListener(map, 'click', function() { infoWindow.close(); });
+
+  if (!providerName) {
+    document.getElementById('headerName').textContent = '선생님 이름이 지정되지 않았습니다';
+    return;
+  }
+
+  document.getElementById('headerName').textContent = providerName + ' 선생님';
+  document.getElementById('headerIcon').textContent = providerName.charAt(0);
+  loadData();
+}
+
+function loadData() {
+  showLoading(true);
+  var url = CONFIG.GAS_URL + '?action=mapdata&provider=' + encodeURIComponent(providerName);
+  fetch(url, { redirect: 'follow' }).then(function(r) { return r.json(); }).then(function(data) {
+    showLoading(false);
+    if (data.error) { document.getElementById('headerName').textContent = data.error; return; }
+
+    document.getElementById('headerCount').textContent = data.assigned.length + '명';
+
+    if (!data.assigned.length) {
+      document.getElementById('emptyMsg').style.display = 'block';
+      return;
+    }
+
+    // 선생님 집 마커
+    if (data.provider.lat && data.provider.lng) {
+      addMarker(data.provider.lat, data.provider.lng, 'home',
+        '<div class="iw"><div class="iw-title">'+esc(data.provider.name)+'<span class="iw-home">내 집</span></div></div>');
+    }
+
+    // 배정 아동 마커
+    data.assigned.forEach(function(c) {
+      if (!c.lat || !c.lng) return;
+      var iw = '<div class="iw">'
+        + '<div class="iw-title">' + esc(c.name) + '</div>'
+        + '<div class="iw-row">📍 ' + esc(c.address) + '</div>';
+      if (c.phone) iw += '<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
+      if (c.times) iw += '<div class="iw-times">🕐 ' + esc(fmtTimes(c.times)) + '</div>';
+      if (c.confirmedDay || c.confirmedTime) {
+        iw += '<div class="iw-row" style="color:#3a6b4e;font-weight:600">✅ '+(c.confirmedDay||'')+' '+(c.confirmedTime||'')+' 확정</div>';
+      }
+      if (c.notes) iw += '<div class="iw-row" style="color:#888;font-size:11px;margin-top:3px">📋 '+esc(c.notes)+'</div>';
+      // 길찾기
+      iw += '<a class="iw-nav" href="https://map.kakao.com/link/to/'+encodeURIComponent(c.name)+','+c.lat+','+c.lng+'" target="_blank">🧭 길찾기</a>';
+      iw += '</div>';
+      addMarker(c.lat, c.lng, 'child', iw);
+    });
+
+    fitBounds();
+  }).catch(function(e) { showLoading(false); });
+}
+
+function addMarker(lat, lng, type, iwContent) {
+  var pos = new kakao.maps.LatLng(lat, lng);
+  var c = type === 'home' ? {f:'#3b82f6',s:'#1d4ed8'} : {f:'#22c55e',s:'#15803d'};
+  var svg;
+  if (type === 'home') {
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>';
+  } else {
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>';
+  }
+  var sz = type==='home' ? new kakao.maps.Size(32,32) : new kakao.maps.Size(24,24);
+  var off = type==='home' ? new kakao.maps.Point(16,32) : new kakao.maps.Point(12,24);
+  var img = new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg), sz, {offset:off});
+  var m = new kakao.maps.Marker({position:pos, image:img, map:map, zIndex:type==='home'?10:1});
+  kakao.maps.event.addListener(m, 'click', function() { infoWindow.setContent(iwContent); infoWindow.open(map, m); });
+  markers.push(m);
+}
+
+function fitBounds() {
+  if (!markers.length) return;
+  if (markers.length === 1) { map.setCenter(markers[0].getPosition()); map.setLevel(4); return; }
+  var b = new kakao.maps.LatLngBounds();
+  markers.forEach(function(m){b.extend(m.getPosition())});
+  map.setBounds(b, 50);
+}
+
+function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function fmtPhone(s){var d=String(s||'').replace(/\D/g,'');if(d.length===11&&/^01/.test(d))return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);return s}
+
+function fmtTimes(t) {
+  if (!t||!/[월화수목금토일]-\d/.test(t)) return t;
+  var days={};
+  t.split(',').forEach(function(s){s=s.trim();var p=s.split('-');if(p.length<2)return;if(!days[p[0]])days[p[0]]=[];days[p[0]].push(parseInt(p[1]))});
+  var parts=[];
+  ['월','화','수','목','금','토','일'].forEach(function(d){
+    if(!days[d])return;
+    var hrs=days[d].sort(function(a,b){return a-b});
+    var ranges=[],st=hrs[0],prev=hrs[0];
+    for(var i=1;i<hrs.length;i++){if(hrs[i]===prev+1)prev=hrs[i];else{ranges.push(st===prev?st+'시':st+'~'+prev+'시');st=hrs[i];prev=hrs[i]}}
+    ranges.push(st===prev?st+'시':st+'~'+prev+'시');
+    parts.push(d+' '+ranges.join(', '));
+  });
+  return parts.join(' | ');
+}
+
+function showLoading(v){document.getElementById('loading').classList.toggle('show',v)}
+</script>
+
+<script>
+(function(){var s=document.createElement('script');s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+CONFIG.KAKAO_JS_KEY+'&autoload=false';s.onload=function(){kakao.maps.load(initMap)};document.head.appendChild(s)})();
+</script>
+</body>
+</html>
