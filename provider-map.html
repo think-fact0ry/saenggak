@@ -116,6 +116,10 @@
   .iw-act.from{border-color:#22c55e;color:#16a34a}.iw-act.from:hover{background:#dcfce7}
   .iw-act.to{border-color:#ef4444;color:#dc2626}.iw-act.to:hover{background:#fee2e2}
   .iw-act.assign{border-color:#3a6b4e;color:#3a6b4e;font-weight:600}.iw-act.assign:hover{background:#eef5e9}
+  .iw-act.absent{border-color:#e67e22;color:#e67e22}.iw-act.absent:hover{background:#fef5ec}
+  .iw-act.reject{border-color:#c0392b;color:#c0392b}.iw-act.reject:hover{background:#fdeaea}
+  .iw-act.copy{border-color:#888;color:#555}.iw-act.copy:hover{background:#f0f0f0}
+  .iw-act.unassign{border-color:#c0392b;color:#c0392b}.iw-act.unassign:hover{background:#fdeaea}
 
   /* ══ 길찾기 패널 ══ */
   .route-panel{
@@ -554,6 +558,10 @@ function buildGroupedAssignedIW(items, hLat, hLng) {
     if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
     if (c.phone) h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
     if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
+    h+='<div class="iw-actions">';
+    if (c.formRow) h+='<button class="iw-act unassign" onclick="doUnassign('+c.formRow+')">배정취소</button>';
+    h+='<button class="iw-act copy" onclick="doCopy(\''+escQ(c.name)+'\',\'\',\'\',\''+escQ(c.address)+'\',\''+escQ(c.times)+'\',\''+escQ(c.phone||'')+'\',\''+escQ(c.notes||'')+'\')">📋 복사</button>'
+      +'</div>';
     h+=routeBtns(c.name,c.lat,c.lng);
   });
   return h+'</div>';
@@ -579,6 +587,11 @@ function buildGroupedWaitingIW(items, hLat, hLng) {
     h += buildRecommendation(c);
 
     h+='<div class="iw-actions">'+assignBtn(c.row)
+      +'<button class="iw-act absent" onclick="doStatus('+c.row+',\'부재1\')">📵 부재</button>'
+      +'<button class="iw-act reject" onclick="doStatus('+c.row+',\'거절\')">✕ 거절</button>'
+      +'<button class="iw-act copy" onclick="doCopy(\''+escQ(c.name)+'\',\'\',\'\',\''+escQ(c.address)+'\',\''+escQ(c.times)+'\',\''+escQ(c.phone||'')+'\',\''+escQ(c.notes||'')+'\')">📋</button>'
+      +'</div>'
+      +'<div class="iw-actions">'
       +'<button class="iw-act from" onclick="setRoute(\'from\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🟢 출발</button>'
       +'<button class="iw-act to" onclick="setRoute(\'to\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🔴 도착</button>'
       +'</div>';
@@ -684,10 +697,8 @@ function doAssignTo(row, provName) {
   fetchGAS('assign', { row: row, provider: provName }).then(function(res) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
-    showToast(provName + ' 선생님에게 배정 완료!', true);
-    var sel = document.getElementById('providerSelect').value;
-    if (sel === '__ALL__') loadAllProviders();
-    else if (sel) loadMapData(sel);
+    showToast(provName + ' 배정 완료!', true);
+    reloadCurrent();
   }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
 }
 
@@ -696,18 +707,85 @@ function doAssign(row) {
   var prov = document.getElementById('providerSelect').value;
   if (!prov) { showToast('선생님을 먼저 선택하세요'); return; }
   if (!confirm(row + '행 아동을 ' + prov + ' 선생님에게 배정합니다.\n\n진행할까요?')) return;
-
   showLoading(true); infoWindow.close();
   fetchGAS('assign', { row: row, provider: prov }).then(function(res) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
-    showToast(prov + ' 선생님에게 배정 완료!', true);
-    // 데이터 새로고침
-    loadMapData(prov);
+    showToast(prov + ' 배정 완료!', true);
+    reloadCurrent();
   }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
 }
 
+function doStatus(row, status) {
+  var label = status === '부재1' ? '부재 처리' : (status === '거절' ? '거절 처리' : status + ' 처리');
+  if (!confirm(row + '행 아동을 ' + label + '합니다.\n\n진행할까요?')) return;
+  showLoading(true); infoWindow.close();
+  fetchGAS('status', { row: row, status: status }).then(function(res) {
+    showLoading(false);
+    if (res.error) { showToast(res.error); return; }
+    showToast(label + ' 완료', true);
+    reloadCurrent();
+  }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
+}
+
+function doUnassign(row) {
+  if (!confirm(row + '행 아동의 배정을 취소합니다.\n\n진행할까요?')) return;
+  showLoading(true); infoWindow.close();
+  fetchGAS('unassign', { row: row }).then(function(res) {
+    showLoading(false);
+    if (res.error) { showToast(res.error); return; }
+    showToast('배정 취소됨', true);
+    reloadCurrent();
+  }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
+}
+
+function doCopy(name, gender, dob, address, times, phone, notes) {
+  var lines = ['신청폼-오감', name];
+  if (gender) lines.push(gender);
+  if (dob) lines.push(dob);
+  if (address) lines.push(address);
+  if (times) lines.push(fmtTimes(times));
+  if (phone) lines.push(fmtPhone(phone));
+  if (notes) lines.push(notes);
+  var text = lines.join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function(){ showToast('복사됨', true); });
+  } else {
+    var ta = document.createElement('textarea'); ta.value = text;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showToast('복사됨', true);
+  }
+}
+
+function reloadCurrent() {
+  var sel = document.getElementById('providerSelect').value;
+  if (sel === '__ALL__') loadAllProviders();
+  else if (sel) loadMapData(sel);
+}
+
 // ══ 검색 ══
+var searchMarker = null;  // 검색 전용 마커 (1개만 유지)
+
+function clearSearchMarker() {
+  if (searchMarker) { searchMarker.setMap(null); searchMarker = null; }
+}
+
+function placeSearchMarker(lat, lng) {
+  clearSearchMarker();
+  var pos = new kakao.maps.LatLng(lat, lng);
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">'
+    +'<path d="M14 27C14 27 3 16 3 10A11 11 0 0125 10C25 16 14 27 14 27Z" fill="#ef4444" stroke="#b91c1c" stroke-width="1.3"/>'
+    +'<circle cx="14" cy="10" r="4" fill="#fff"/>'
+    +'<circle cx="14" cy="10" r="2" fill="#ef4444"/>'
+    +'</svg>';
+  var img = new kakao.maps.MarkerImage(
+    'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),
+    new kakao.maps.Size(28,28), {offset: new kakao.maps.Point(14,28)}
+  );
+  searchMarker = new kakao.maps.Marker({ position:pos, image:img, map:map, zIndex:20 });
+  return searchMarker;
+}
+
 (function(){
   var input = document.getElementById('searchInput');
   var results = document.getElementById('searchResults');
@@ -730,13 +808,11 @@ function doAssign(row) {
     if (!q || !currentData) { results.classList.remove('show'); return; }
 
     var all = [];
-    // 배정 아동
     if (currentData.assigned) {
       currentData.assigned.forEach(function(c) {
         all.push({ name: c.name, phone: c.phone||'', lat: c.lat, lng: c.lng, status: c.assignedTo ? c.assignedTo+' 배정' : '배정', type: 'assigned', row: c.formRow, data: c });
       });
     }
-    // 대기 아동
     if (currentData.waiting) {
       currentData.waiting.forEach(function(c) {
         all.push({ name: c.name, phone: c.phone||'', lat: c.lat, lng: c.lng, status: '대기', type: 'waiting', row: c.row, data: c });
@@ -766,19 +842,18 @@ function doAssign(row) {
     results.innerHTML = html;
     results.classList.add('show');
 
-    // 클릭 이벤트
     results.querySelectorAll('.sr-item').forEach(function(el) {
       el.addEventListener('click', function() {
         var idx = parseInt(this.getAttribute('data-idx'));
         var item = filtered[idx];
         if (!item || !item.lat || !item.lng) return;
 
-        // 지도 이동 + 인포윈도우
         var pos = new kakao.maps.LatLng(item.lat, item.lng);
         map.setCenter(pos);
         map.setLevel(3);
 
-        // 인포윈도우 빌드
+        var sm = placeSearchMarker(item.lat, item.lng);
+
         var iwContent;
         if (item.type === 'assigned') {
           iwContent = buildGroupedAssignedIW([item.data], currentData.provider.lat, currentData.provider.lng);
@@ -786,9 +861,7 @@ function doAssign(row) {
           iwContent = buildGroupedWaitingIW([item.data], currentData.provider.lat, currentData.provider.lng);
         }
         infoWindow.setContent(iwContent);
-        // 임시 마커에 열기
-        var tempMarker = new kakao.maps.Marker({ position: pos, map: map, visible: false });
-        infoWindow.open(map, tempMarker);
+        infoWindow.open(map, sm);
 
         results.classList.remove('show');
         input.value = item.name;
