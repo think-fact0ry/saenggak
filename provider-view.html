@@ -114,8 +114,15 @@ function loadData(){
     if(p.lat&&p.lng){addMarker(p.lat,p.lng,'home',buildHomeIW(p));addLabel(p.lat,p.lng,p.name,'home')}
     groupByCoord(data.assigned).forEach(function(g){
       addMarker(g.lat,g.lng,'child',buildChildIW(g.items,p.lat,p.lng));
-      // 아동 이름 라벨
-      var label = g.items.length === 1 ? g.items[0].name : g.items.length + '명';
+      var label;
+      if(g.items.length === 1) {
+        var c = g.items[0];
+        label = c.name;
+        if(c.confirmedDay) label += ' · ' + c.confirmedDay;
+        if(c.confirmedTime) label += ' ' + c.confirmedTime;
+      } else {
+        label = g.items.length + '명';
+      }
       addLabel(g.lat, g.lng, label, 'child');
     });
     fitBounds();
@@ -134,8 +141,9 @@ function addMarker(lat,lng,type,iwContent){
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
   markers.push(m);
 }
-function addLabel(lat,lng,text){
-  var ov=new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(lat,lng),content:'<div style="padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;color:#1d4ed8">'+text+'</div>',yAnchor:2.8,zIndex:9});
+function addLabel(lat,lng,text,type){
+  var color = type==='home' ? '#1d4ed8' : '#15803d';
+  var ov=new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(lat,lng),content:'<div style="padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;color:'+color+'">'+text+'</div>',yAnchor:type==='home'?2.8:2.5,zIndex:type==='home'?9:4});
   ov.setMap(map);overlays.push(ov);
 }
 function groupByCoord(items){var g={};items.forEach(function(c){if(!c.lat||!c.lng)return;var k=c.lat.toFixed(6)+','+c.lng.toFixed(6);if(!g[k])g[k]={lat:c.lat,lng:c.lng,items:[]};g[k].items.push(c)});return Object.values(g)}
@@ -162,7 +170,28 @@ function buildChildIW(items,hLat,hLng){
       +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
     if(c.phone)h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
     if(c.times)h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
-    if(c.confirmedDay||c.confirmedTime)h+='<div class="iw-row" style="color:#3a6b4e;font-weight:600">✅ '+(c.confirmedDay||'')+' '+(c.confirmedTime||'')+' 확정</div>';
+
+    // 확정 스케줄 표시 + 편집
+    var curDay = c.confirmedDay||'';
+    var curTime = c.confirmedTime||'';
+    if(c.formRow){
+      var schId = 'sch_'+c.formRow;
+      h+='<div style="margin-top:6px;padding:6px 8px;background:#f5f3ef;border-radius:6px">';
+      if(curDay||curTime) h+='<div style="font-size:11px;color:#3a6b4e;font-weight:600;margin-bottom:4px">✅ '+esc(curDay)+' '+esc(curTime)+' 확정</div>';
+      h+='<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">'
+        +'<select id="'+schId+'_day" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit">'
+        +'<option value="">요일</option>';
+      ['월','화','수','목','금','토'].forEach(function(d){
+        h+='<option'+(curDay===d?' selected':'')+'>'+d+'</option>';
+      });
+      h+='</select>'
+        +'<input id="'+schId+'_time" type="text" placeholder="16:00" value="'+esc(curTime)+'" style="width:55px;padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit;text-align:center">'
+        +'<button onclick="saveSchedule('+c.formRow+',\''+schId+'\')" style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #3a6b4e;color:#3a6b4e;background:#fff;font-family:inherit">저장</button>'
+        +'</div></div>';
+    } else if(curDay||curTime){
+      h+='<div class="iw-row" style="color:#3a6b4e;font-weight:600">✅ '+esc(curDay)+' '+esc(curTime)+' 확정</div>';
+    }
+
     if(c.notes)h+='<div class="iw-notes">'+esc(c.notes)+'</div>';
     h+=routeBtns(c.name,c.lat,c.lng);
   });
@@ -247,6 +276,23 @@ function placeSearchMarker(lat,lng,iwContent){
 
 function showLoading(v){document.getElementById('loading').classList.toggle('show',v)}
 var _tt;function showToast(m,ok){var e=document.getElementById('toast');e.textContent=m;e.className='toast show'+(ok?' success':'');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show')},3000)}
+
+function saveSchedule(row, schId) {
+  var day = document.getElementById(schId+'_day').value;
+  var time = document.getElementById(schId+'_time').value.trim();
+  if (!day) { showToast('요일을 선택해주세요'); return; }
+  
+  showLoading(true);
+  var url = CONFIG.GAS_URL + '?action=saveschedule&token=' + encodeURIComponent(viewToken)
+    + '&row=' + row + '&day=' + encodeURIComponent(day) + '&time=' + encodeURIComponent(time);
+  fetch(url, {redirect:'follow'}).then(function(r){return r.json()}).then(function(res){
+    showLoading(false);
+    if (res.error) { showToast(res.error); return; }
+    showToast(day + ' ' + time + ' 저장됨', true);
+    // 데이터 갱신
+    loadData();
+  }).catch(function(e){ showLoading(false); showToast('저장 실패'); });
+}
 </script>
 <script>(function(){var s=document.createElement('script');s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+CONFIG.KAKAO_JS_KEY+'&autoload=false';s.onload=function(){kakao.maps.load(initMap)};document.head.appendChild(s)})()</script>
 </body>
