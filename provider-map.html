@@ -47,6 +47,8 @@
   .dash-stat{color:#888}
   .dash-stat b{color:#3a6b4e;font-weight:700}
   .dash-filters{display:flex;gap:6px;margin-left:auto}
+  .prov-link-btn{padding:3px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid #d4cfc6;background:#fff;color:#666;transition:all .15s;white-space:nowrap}
+  .prov-link-btn:hover{background:#f5f3ef;border-color:#3a6b4e;color:#3a6b4e}
 
   /* ══ 검색 ══ */
   .search-wrap{position:relative;flex:1;max-width:200px}
@@ -206,6 +208,7 @@
 <div class="dashboard" id="dashboard">
   <span class="dash-stat">전체 <b id="dashTotal">0</b></span>
   <span class="dash-stat">배정 <b id="dashAssigned">0</b></span>
+  <button class="prov-link-btn" id="provLinkBtn" onclick="copyProviderLink()" style="display:none">📎 선생님 지도 링크</button>
   <div class="dash-filters">
     <select id="filterDay" onchange="applyFilters()">
       <option value="">전체 요일</option>
@@ -382,6 +385,7 @@ document.getElementById('providerSelect').addEventListener('change', function() 
 function loadAllProviders() {
   showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
   document.getElementById('filterDay').value=''; document.getElementById('filterTime').value='';
+  document.getElementById('provLinkBtn').style.display='none';
   fetchGAS('mapdata', {provider: '__ALL__'}).then(function(data) {
     showLoading(false);
     if (data.error) { showToast(data.error); return; }
@@ -412,6 +416,7 @@ function updateProviderCounts(assigned) {
 function loadMapData(name) {
   showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
   document.getElementById('filterDay').value=''; document.getElementById('filterTime').value='';
+  document.getElementById('provLinkBtn').style.display='inline-block';
   fetchGAS('mapdata', {provider:name}).then(function(data) {
     showLoading(false);
     if (data.error) { showToast(data.error); return; }
@@ -817,6 +822,21 @@ function reloadCurrent() {
   var sel = document.getElementById('providerSelect').value;
   if (sel === '__ALL__') loadAllProviders();
   else if (sel) loadMapData(sel);
+}
+
+function copyProviderLink() {
+  var sel = document.getElementById('providerSelect').value;
+  if (!sel || sel === '__ALL__') return;
+  var prov = providerList.find(function(p) { return p.name === sel; });
+  if (!prov || !prov.token) { showToast('토큰이 없습니다. GAS를 재배포해주세요.'); return; }
+  var url = 'https://think-fact0ry.github.io/saenggak/provider-view.html?t=' + prov.token;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function() { showToast(sel + ' 선생님 지도 링크 복사됨', true); });
+  } else {
+    var ta = document.createElement('textarea'); ta.value = url;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showToast(sel + ' 선생님 지도 링크 복사됨', true);
+  }
 }
 
 // ══ 검색 ══
