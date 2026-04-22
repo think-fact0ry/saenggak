@@ -385,8 +385,27 @@ function loadAllProviders() {
     showLoading(false);
     if (data.error) { showToast(data.error); return; }
     currentData = data;
+    updateProviderCounts(data.assigned);
     renderMarkers(); fitBounds(); updateDashboard();
   }).catch(function(e) { showLoading(false); showToast('로드 실패: '+e.message); });
+}
+
+function updateProviderCounts(assigned) {
+  var counts = {};
+  if (assigned) assigned.forEach(function(a) {
+    var p = a.assignedTo || '';
+    counts[p] = (counts[p] || 0) + 1;
+  });
+  var sel = document.getElementById('providerSelect');
+  for (var i = 0; i < sel.options.length; i++) {
+    var opt = sel.options[i];
+    if (opt.value === '__ALL__' || !opt.value) continue;
+    var name = opt.value;
+    var cnt = counts[name] || 0;
+    // 이름 뒤 기존 괄호 제거 후 재표시
+    var clean = name.replace(/\s*\(\d+명\)$/, '');
+    opt.textContent = clean + ' (' + cnt + '명)';
+  }
 }
 
 function loadMapData(name) {
@@ -596,8 +615,9 @@ function buildGroupedWaitingIW(items, hLat, hLng) {
     h += buildRecommendation(c);
 
     var ci = registerCopyData(c);
+    var absentLabel = c.status === '부재1' ? '📵2' : '📵';
     h+='<div class="iw-actions">'+assignBtn(c.row)
-      +'<button class="iw-act absent" onclick="doStatus('+c.row+',\'부재1\')">📵</button>'
+      +'<button class="iw-act absent" onclick="doAbsent('+c.row+',\''+esc(c.status||'')+'\')">'+absentLabel+'</button>'
       +'<button class="iw-act reject" onclick="doStatus('+c.row+',\'거절\')">✕</button>'
       +'<button class="iw-act copy" onclick="doCopy('+ci+')">📋</button>'
       +'</div>'
@@ -727,13 +747,29 @@ function doAssign(row) {
 }
 
 function doStatus(row, status) {
-  var label = status === '부재1' ? '부재 처리' : (status === '거절' ? '거절 처리' : status + ' 처리');
-  if (!confirm(row + '행 아동을 ' + label + '합니다.\n\n진행할까요?')) return;
+  var label = status === '거절' ? '거절 처리' : status + ' 처리';
+  if (!confirm(row + '행 아동: ' + label + '\n\n진행할까요?')) return;
   showLoading(true); infoWindow.close();
   fetchGAS('status', { row: row, status: status }).then(function(res) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast(label + ' 완료', true);
+    reloadCurrent();
+  }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
+}
+
+// 부재 자동 에스컬레이션: 부재1 → 부재2
+function doAbsent(row, currentStatus) {
+  var next = (currentStatus === '부재1') ? '부재2' : '부재1';
+  var msg = next === '부재2'
+    ? row + '행 아동: 부재2 처리 (이후 검색에서 제외됩니다)\n\n진행할까요?'
+    : row + '행 아동: 부재 처리\n\n진행할까요?';
+  if (!confirm(msg)) return;
+  showLoading(true); infoWindow.close();
+  fetchGAS('status', { row: row, status: next }).then(function(res) {
+    showLoading(false);
+    if (res.error) { showToast(res.error); return; }
+    showToast(next + ' 처리 완료', true);
     reloadCurrent();
   }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
 }
