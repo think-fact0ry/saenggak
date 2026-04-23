@@ -256,7 +256,7 @@
   </div>
   <div class="divider"></div>
   <div class="search-wrap">
-    <input type="text" class="search-input" id="searchInput" placeholder="🔍 아동 이름 또는 주소" autocomplete="off">
+    <input type="text" class="search-input" id="searchInput" placeholder="🔍 이름 · 주소 · 전화번호" autocomplete="off">
     <div class="search-results" id="searchResults"></div>
   </div>
 </div>
@@ -973,10 +973,14 @@ function findMarkerAt(lat, lng) {
   function doSearch(q) {
     if (!q) { results.classList.remove('show'); return; }
 
+    // 쿼리 분석
+    var digitsOnly = q.replace(/\D/g, '');
+    var isNumericQuery = digitsOnly.length > 0 && q.replace(/[\s\-0-9]/g, '') === '';
+
     var html = '';
     var childResults = [];
 
-    // ── 1. 아동 이름 검색 ──
+    // ── 아동 매칭 (이름 OR 전화번호) ──
     if (currentData) {
       var all = [];
       if (currentData.assigned) {
@@ -989,25 +993,65 @@ function findMarkerAt(lat, lng) {
           all.push({ name: c.name, phone: c.phone||'', lat: c.lat, lng: c.lng, status: '대기', type: 'waiting', row: c.row, data: c });
         });
       }
-      childResults = all.filter(function(item) { return item.name && item.name.indexOf(q) >= 0; });
+
+      if (isNumericQuery && digitsOnly.length >= 2) {
+        // 전화번호 매칭: 저장된 phone에서 숫자만 뽑아 'contains' 검사
+        // 뒷자리만 입력해도 매칭되게 (예: "4565" → 010-1234-4565 매칭)
+        childResults = all.filter(function(item) {
+          if (!item.phone) return false;
+          var p = String(item.phone).replace(/\D/g, '');
+          return p.indexOf(digitsOnly) >= 0;
+        });
+      } else {
+        // 이름 매칭 (기존 동작)
+        childResults = all.filter(function(item) { return item.name && item.name.indexOf(q) >= 0; });
+      }
     }
 
     if (childResults.length) {
-      html += '<div style="padding:6px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee">아동</div>';
+      var headerLabel = isNumericQuery ? '전화번호 일치' : '아동';
+      html += '<div style="padding:6px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee">'+headerLabel+'</div>';
       childResults.slice(0, 8).forEach(function(item, idx) {
         var stClass = item.type === 'assigned' ? 'assigned' : 'waiting';
+        // 전화번호 검색이면 뒷자리 강조
+        var phoneDisplay = esc(fmtPhone(item.phone));
+        if (isNumericQuery && digitsOnly.length >= 2) {
+          var rawPhone = String(item.phone || '').replace(/\D/g, '');
+          var matchIdx = rawPhone.indexOf(digitsOnly);
+          if (matchIdx >= 0) {
+            // 원본 포맷된 번호에서 숫자 위치 계산해 하이라이트
+            var formattedDisplay = fmtPhone(item.phone);
+            var digitCount = 0;
+            var startIdx = -1, endIdx = -1;
+            for (var k = 0; k < formattedDisplay.length; k++) {
+              if (/\d/.test(formattedDisplay[k])) {
+                if (digitCount === matchIdx) startIdx = k;
+                if (digitCount === matchIdx + digitsOnly.length - 1) { endIdx = k + 1; break; }
+                digitCount++;
+              }
+            }
+            if (startIdx >= 0 && endIdx > startIdx) {
+              phoneDisplay = esc(formattedDisplay.substring(0, startIdx))
+                + '<b style="color:#3a6b4e">' + esc(formattedDisplay.substring(startIdx, endIdx)) + '</b>'
+                + esc(formattedDisplay.substring(endIdx));
+            }
+          }
+        }
         html += '<div class="sr-item sr-child" data-cidx="'+idx+'">'
           + '<div class="sr-name">' + esc(item.name) + '</div>'
-          + '<div class="sr-phone">' + esc(fmtPhone(item.phone)) + '</div>'
+          + '<div class="sr-phone">' + phoneDisplay + '</div>'
           + '<div class="sr-status ' + stClass + '">' + esc(item.status) + '</div>'
           + '</div>';
       });
     }
 
-    // ── 2. 주소 검색 (services.Places 사용) ──
-    var isAddr = q.length >= 2 && /[가-힣]/.test(q) && !childResults.length;
-    if (!isAddr && q.length >= 2 && /\d/.test(q)) isAddr = true;
-    if (!isAddr && !childResults.length && q.length >= 2) isAddr = true;
+    // ── 주소 검색 (services.Places 사용) — 숫자만 입력된 경우는 건너뜀 ──
+    var isAddr = false;
+    if (!isNumericQuery) {
+      isAddr = q.length >= 2 && /[가-힣]/.test(q) && !childResults.length;
+      if (!isAddr && q.length >= 2 && /\d/.test(q)) isAddr = true;
+      if (!isAddr && !childResults.length && q.length >= 2) isAddr = true;
+    }
 
     if (isAddr && placesService) {
       html += '<div style="padding:6px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee">📍 주소 검색 중...</div>';
