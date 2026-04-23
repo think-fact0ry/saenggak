@@ -1321,8 +1321,21 @@ function renderNewList() {
       var idx = parseInt(this.getAttribute('data-idx'));
       var item = filtered[idx];
       if (!item || !item.lat || !item.lng) { showToast('좌표 없음'); return; }
-      map.setCenter(new kakao.maps.LatLng(item.lat, item.lng));
-      map.setLevel(3);
+
+      var pos = new kakao.maps.LatLng(item.lat, item.lng);
+
+      if (nlSort === 'near') {
+        // 가까운순: 보고 있는 맥락 유지. viewport 안이면 카메라 고정, 밖이면 center만 이동(zoom 유지)
+        var bounds = map.getBounds();
+        if (!bounds.contain(pos)) {
+          map.setCenter(pos);
+        }
+        // zoom은 절대 건드리지 않음
+      } else {
+        // 최신순: 점프 후 확대 (기존 동작)
+        map.setCenter(pos);
+        map.setLevel(3);
+      }
 
       // 기존 마커 찾아서 인포윈도우 열기
       var existing = findMarkerAt(item.lat, item.lng);
