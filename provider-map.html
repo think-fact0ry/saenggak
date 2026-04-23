@@ -174,6 +174,59 @@
   .toast.success{background:#16a34a}
   @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
+  /* ══ 신규 아동 리스트 사이드 패널 (PC 전용) ══ */
+  .nl-fab{
+    position:fixed;right:14px;top:92px;z-index:44;
+    width:44px;height:44px;border-radius:50%;
+    background:#3a6b4e;color:#fff;border:none;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.18);
+    font-size:18px;display:flex;align-items:center;justify-content:center;
+    transition:all .2s;
+  }
+  .nl-fab:hover{transform:scale(1.05);background:#2d5540}
+  .nl-fab.hidden{display:none}
+  .nl-fab .badge{
+    position:absolute;top:-4px;right:-4px;
+    background:#ef4444;color:#fff;font-size:10px;font-weight:700;
+    padding:2px 5px;border-radius:10px;min-width:18px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .nl-panel{
+    position:fixed;right:0;top:76px;bottom:0;z-index:45;
+    width:340px;background:rgba(255,255,255,.97);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-left:1px solid rgba(0,0,0,.08);
+    box-shadow:-4px 0 16px rgba(0,0,0,.06);
+    display:flex;flex-direction:column;
+    transform:translateX(100%);transition:transform .25s cubic-bezier(.3,.7,.3,1);
+  }
+  .nl-panel.show{transform:translateX(0)}
+  .nl-head{padding:12px 14px 8px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px}
+  .nl-title{font-size:13px;font-weight:700;color:#1a1a1a;flex:1}
+  .nl-title b{color:#3a6b4e}
+  .nl-close{background:none;border:none;font-size:18px;color:#999;cursor:pointer;padding:2px 6px;border-radius:4px}
+  .nl-close:hover{background:#f5f3ef;color:#333}
+  .nl-controls{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #eee;background:#fafaf7}
+  .nl-sort{display:flex;gap:4px}
+  .nl-sort-btn{flex:1;padding:6px;border:1.5px solid #e0dcd5;background:#fff;color:#888;border-radius:7px;font-size:11.5px;font-family:inherit;cursor:pointer;transition:all .15s}
+  .nl-sort-btn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e;font-weight:600}
+  .nl-filters{display:flex;gap:6px}
+  .nl-filters select{flex:1;font-size:11.5px;padding:5px 22px 5px 8px;border-radius:6px}
+  .nl-list{flex:1;overflow-y:auto;padding:6px 8px}
+  .nl-item{padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:background .1s;border:1px solid transparent;-webkit-tap-highlight-color:transparent}
+  .nl-item:hover{background:#f5f3ef;border-color:#e0dcd5}
+  .nl-item-row1{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+  .nl-item-name{font-weight:700;font-size:13px;color:#1a1a1a}
+  .nl-item-badge{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600;flex-shrink:0}
+  .nl-item-badge.assigned{background:#dcfce7;color:#16a34a}
+  .nl-item-badge.waiting{background:#fef3c7;color:#d97706}
+  .nl-item-badge.absent{background:#fff3cd;color:#856404}
+  .nl-item-date{color:#bbb;font-size:10px;margin-left:auto;flex-shrink:0}
+  .nl-item-row2{font-size:11px;color:#888;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .nl-item-dist{color:#7c3aed;font-weight:600}
+  .nl-empty{padding:40px 16px;text-align:center;color:#bbb;font-size:12px}
+  .nl-count{font-size:10.5px;color:#999;padding:6px 14px;background:#fafaf7;border-bottom:1px solid #eee}
+
   @media(max-width:480px){
     .controls{padding:6px 8px;gap:4px}
     .logo,.divider{display:none}
@@ -182,6 +235,10 @@
     #map{top:70px}
     .legend{left:6px;bottom:10px;gap:8px;font-size:10px;padding:6px 8px}
     .route-panel{left:6px;right:6px;transform:none;min-width:auto;bottom:44px}
+    .nl-fab,.nl-panel{display:none !important}
+  }
+  @media(max-width:768px){
+    .nl-fab,.nl-panel{display:none !important}
   }
 </style>
 </head>
@@ -238,6 +295,29 @@
   <div class="rarrow">▼</div>
   <div class="route-row"><div class="rdot to"></div><div class="rname empty" id="routeToName">도착지 선택</div><span class="rclear" id="routeToClear" onclick="clearRoute('to')" style="display:none">✕</span></div>
   <a class="route-go disabled" id="routeGoBtn" target="_blank">🧭 카카오맵에서 길찾기</a>
+</div>
+
+<!-- ════ 신규 아동 리스트 FAB + 패널 (PC 전용) ════ -->
+<button class="nl-fab" id="nlFab" onclick="toggleNewList()" title="신청폼 리스트">
+  📋<span class="badge" id="nlFabBadge" style="display:none">0</span>
+</button>
+<div class="nl-panel" id="nlPanel">
+  <div class="nl-head">
+    <div class="nl-title"><b>신청폼</b> <span id="nlTotalCount" style="color:#999;font-weight:400">0건</span></div>
+    <button class="nl-close" onclick="toggleNewList()" title="닫기">✕</button>
+  </div>
+  <div class="nl-controls">
+    <div class="nl-sort">
+      <button class="nl-sort-btn active" id="nlSortLatest" onclick="setNlSort('latest')">🕐 최신순</button>
+      <button class="nl-sort-btn" id="nlSortNear" onclick="setNlSort('near')">📍 가까운순</button>
+    </div>
+    <div class="nl-filters">
+      <select id="nlSigungu" onchange="onSigunguChange()"><option value="">전체 시군구</option></select>
+      <select id="nlBname" onchange="renderNewList()"><option value="">전체 법정동</option></select>
+    </div>
+  </div>
+  <div class="nl-count" id="nlFilteredCount"></div>
+  <div class="nl-list" id="nlList"></div>
 </div>
 
 <div class="loading-overlay" id="loading"><div class="ld-spinner"></div></div>
@@ -345,6 +425,7 @@ function initMap() {
   infoWindow = new kakao.maps.InfoWindow({ zIndex: 10 });
   kakao.maps.event.addListener(map, 'click', function() { infoWindow.close(); });
   placesService = new kakao.maps.services.Places();
+  setupMapMoveListener();
   loadProviders();
 }
 
@@ -389,6 +470,7 @@ function loadAllProviders() {
     currentData = data;
     updateProviderCounts(data.assigned);
     renderMarkers(); fitBounds(); updateDashboard();
+    populateNlFilters(); renderNewList();
   }).catch(function(e) { showLoading(false); showToast('로드 실패: '+e.message); });
 }
 
@@ -419,6 +501,7 @@ function loadMapData(name) {
     currentData = data;
     currentData.allProviders = null;
     renderMarkers(); fitBounds(); updateDashboard();
+    populateNlFilters(); renderNewList();
   }).catch(function(e) { showLoading(false); showToast('데이터 로드 실패: '+e.message); });
 }
 
@@ -1041,6 +1124,227 @@ function toggleFilter(t) {
   if (t==='assigned'){showAssigned=!showAssigned;document.getElementById('filterAssigned').classList.toggle('active',showAssigned)}
   else{showWaiting=!showWaiting;document.getElementById('filterWaiting').classList.toggle('active',showWaiting)}
   renderMarkers();
+}
+
+// ══════════════════════════════════════════════
+//  신규 아동 리스트 패널 (PC 전용)
+// ══════════════════════════════════════════════
+var nlSort = 'latest';   // 'latest' | 'near'
+var nlMapMoveDebounce = null;
+
+function toggleNewList() {
+  var panel = document.getElementById('nlPanel');
+  var fab = document.getElementById('nlFab');
+  var open = panel.classList.toggle('show');
+  fab.classList.toggle('hidden', open);
+  if (open) { renderNewList(); }
+}
+
+function setNlSort(mode) {
+  nlSort = mode;
+  document.getElementById('nlSortLatest').classList.toggle('active', mode === 'latest');
+  document.getElementById('nlSortNear').classList.toggle('active', mode === 'near');
+  renderNewList();
+}
+
+// 시군구·법정동 드롭다운 채우기 (현재 데이터 기준)
+function populateNlFilters() {
+  if (!currentData) return;
+  var all = (currentData.assigned || []).concat(currentData.waiting || []);
+
+  // 거절·부재2는 항상 제외
+  all = all.filter(function(c) {
+    var s = String(c.status || '').trim();
+    return s !== '거절' && s !== '부재2';
+  });
+
+  var sgMap = {};  // sigungu → Set of bname
+  all.forEach(function(c) {
+    var sg = String(c.sigungu || '').trim();
+    var bn = String(c.bname || '').trim();
+    if (!sg) return;
+    if (!sgMap[sg]) sgMap[sg] = {};
+    if (bn) sgMap[sg][bn] = 1;
+  });
+
+  var sgList = Object.keys(sgMap).sort(function(a, b) { return a.localeCompare(b, 'ko'); });
+  var sgSel = document.getElementById('nlSigungu');
+  var curSg = sgSel.value;
+  sgSel.innerHTML = '<option value="">전체 시군구</option>';
+  sgList.forEach(function(sg) {
+    sgSel.innerHTML += '<option value="' + esc(sg) + '"' + (sg === curSg ? ' selected' : '') + '>' + esc(sg) + '</option>';
+  });
+  if (curSg && sgList.indexOf(curSg) < 0) sgSel.value = '';  // 사라진 시군구 리셋
+
+  populateNlBname();
+}
+
+function populateNlBname() {
+  if (!currentData) return;
+  var sgSel = document.getElementById('nlSigungu');
+  var bnSel = document.getElementById('nlBname');
+  var curSg = sgSel.value;
+  var curBn = bnSel.value;
+
+  var all = (currentData.assigned || []).concat(currentData.waiting || []);
+  all = all.filter(function(c) {
+    var s = String(c.status || '').trim();
+    return s !== '거절' && s !== '부재2';
+  });
+  if (curSg) all = all.filter(function(c) { return String(c.sigungu || '').trim() === curSg; });
+
+  var bnSet = {};
+  all.forEach(function(c) {
+    var bn = String(c.bname || '').trim();
+    if (bn) bnSet[bn] = 1;
+  });
+
+  var bnList = Object.keys(bnSet).sort(function(a, b) { return a.localeCompare(b, 'ko'); });
+  bnSel.innerHTML = '<option value="">전체 법정동</option>';
+  bnList.forEach(function(bn) {
+    bnSel.innerHTML += '<option value="' + esc(bn) + '"' + (bn === curBn ? ' selected' : '') + '>' + esc(bn) + '</option>';
+  });
+  if (curBn && bnList.indexOf(curBn) < 0) bnSel.value = '';
+}
+
+function onSigunguChange() {
+  populateNlBname();
+  renderNewList();
+}
+
+function parseTimestamp(t) {
+  if (!t) return 0;
+  if (t instanceof Date) return t.getTime();
+  var d = new Date(t);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
+
+function fmtRelativeDate(ts) {
+  if (!ts) return '';
+  var diff = Date.now() - ts;
+  var days = Math.floor(diff / 86400000);
+  if (days === 0) return '오늘';
+  if (days === 1) return '어제';
+  if (days < 7) return days + '일 전';
+  var d = new Date(ts);
+  return (d.getMonth() + 1) + '/' + d.getDate();
+}
+
+function renderNewList() {
+  if (!currentData) return;
+  var list = document.getElementById('nlList');
+  var countEl = document.getElementById('nlFilteredCount');
+  var totalEl = document.getElementById('nlTotalCount');
+  var badgeEl = document.getElementById('nlFabBadge');
+
+  // 전체 모수 (거절/부재2 제외)
+  var all = [];
+  (currentData.assigned || []).forEach(function(c) {
+    all.push({
+      name: c.name, lat: c.lat, lng: c.lng, address: c.address,
+      phone: c.phone, sigungu: c.sigungu || '', bname: c.bname || '',
+      times: c.times, status: c.assignedTo ? (c.assignedTo + ' 배정') : '배정',
+      statusType: 'assigned', row: c.formRow, timestamp: c.timestamp, data: c
+    });
+  });
+  (currentData.waiting || []).forEach(function(c) {
+    var st = String(c.status || '').trim();
+    if (st === '거절' || st === '부재2') return;
+    var statusType = 'waiting';
+    var statusLabel = '대기';
+    if (st === '부재1') { statusType = 'absent'; statusLabel = '부재1'; }
+    all.push({
+      name: c.name, lat: c.lat, lng: c.lng, address: c.address,
+      phone: c.phone, sigungu: c.sigungu || '', bname: c.bname || '',
+      times: c.times, status: statusLabel, statusType: statusType,
+      row: c.row, timestamp: c.timestamp, data: c
+    });
+  });
+
+  totalEl.textContent = all.length + '건';
+  badgeEl.textContent = all.length;
+  badgeEl.style.display = all.length > 0 ? 'flex' : 'none';
+
+  // 필터
+  var sg = document.getElementById('nlSigungu').value;
+  var bn = document.getElementById('nlBname').value;
+  var filtered = all.filter(function(item) {
+    if (sg && item.sigungu !== sg) return false;
+    if (bn && item.bname !== bn) return false;
+    return true;
+  });
+
+  // 정렬
+  if (nlSort === 'near' && map) {
+    var c = map.getCenter();
+    var cLat = c.getLat(), cLng = c.getLng();
+    filtered.forEach(function(item) {
+      item._dist = (item.lat && item.lng) ? haversine(cLat, cLng, item.lat, item.lng) : Infinity;
+    });
+    filtered.sort(function(a, b) { return a._dist - b._dist; });
+  } else {
+    filtered.sort(function(a, b) { return parseTimestamp(b.timestamp) - parseTimestamp(a.timestamp); });
+  }
+
+  countEl.textContent = filtered.length + '건 (필터)';
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="nl-empty">해당 조건의 신청이 없습니다</div>';
+    return;
+  }
+
+  var html = '';
+  filtered.forEach(function(item, idx) {
+    var ts = parseTimestamp(item.timestamp);
+    var dateStr = fmtRelativeDate(ts);
+    var distStr = '';
+    if (nlSort === 'near' && item._dist !== Infinity) {
+      distStr = '<span class="nl-item-dist">' + fmtDist(item._dist) + '</span>';
+    }
+    html += '<div class="nl-item" data-idx="' + idx + '">'
+      + '<div class="nl-item-row1">'
+      +   '<div class="nl-item-name">' + esc(item.name) + '</div>'
+      +   '<span class="nl-item-badge ' + item.statusType + '">' + esc(item.status) + '</span>'
+      +   (dateStr ? '<span class="nl-item-date">' + dateStr + '</span>' : '')
+      + '</div>'
+      + '<div class="nl-item-row2">'
+      +   distStr
+      +   '<span>' + esc(item.sigungu) + (item.bname ? ' · ' + esc(item.bname) : '') + '</span>'
+      + '</div>'
+      + '</div>';
+  });
+  list.innerHTML = html;
+
+  // 클릭 핸들러
+  list.querySelectorAll('.nl-item').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var idx = parseInt(this.getAttribute('data-idx'));
+      var item = filtered[idx];
+      if (!item || !item.lat || !item.lng) { showToast('좌표 없음'); return; }
+      map.setCenter(new kakao.maps.LatLng(item.lat, item.lng));
+      map.setLevel(3);
+
+      // 기존 마커 찾아서 인포윈도우 열기
+      var existing = findMarkerAt(item.lat, item.lng);
+      if (existing) {
+        kakao.maps.event.trigger(existing, 'click');
+      }
+    });
+  });
+}
+
+// 지도 이동 시 가까운순이면 재정렬 (debounce 300ms)
+function setupMapMoveListener() {
+  if (!map) return;
+  kakao.maps.event.addListener(map, 'dragend', nlMapMoveHandler);
+  kakao.maps.event.addListener(map, 'zoom_changed', nlMapMoveHandler);
+}
+function nlMapMoveHandler() {
+  if (nlSort !== 'near') return;
+  var panel = document.getElementById('nlPanel');
+  if (!panel.classList.contains('show')) return;
+  clearTimeout(nlMapMoveDebounce);
+  nlMapMoveDebounce = setTimeout(renderNewList, 300);
 }
 
 // ══ 유틸 ══
