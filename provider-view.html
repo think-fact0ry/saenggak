@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>내 배정 아동 지도</title>
-<meta property="og:title" content="">
-<meta property="og:description" content="배정 아동 위치 · 길찾기 · 수업 일정">
+<meta property="og:title" content="수업 일정 지도 — 생각공작소">
+<meta property="og:description" content="오감쑥쑥 선생님 전용 지도 · 수업 일정·이동 경로 확인">
+<meta property="og:type" content="website">
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
@@ -28,14 +29,19 @@
   .sr-none{padding:12px;text-align:center;font-size:12px;color:#bbb}
   .sr-hdr{padding:5px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee}
   #map{position:fixed;top:76px;left:0;right:0;bottom:0}
-  .iw{padding:10px 14px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:180px;max-width:300px;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .iw{padding:10px 14px;font-family:inherit;font-size:12.5px;line-height:1.55;min-width:180px;max-width:280px;max-height:340px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;box-sizing:border-box}
   .iw-title{font-weight:700;font-size:14px;margin-bottom:3px}
   .iw-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
   .iw-badge.home{background:#dbeafe;color:#2563eb}.iw-badge.child{background:#dcfce7;color:#16a34a}
   .iw-row{color:#666;font-size:12px}
   .iw-times{margin-top:3px;font-size:11.5px;color:#7c3aed;font-weight:500}
   .iw-phone{margin-top:2px;font-size:12px}.iw-phone a{color:#3b82f6;text-decoration:none;font-weight:500}
-  .iw-notes{margin-top:3px;font-size:11px;color:#333;background:#f5f3ef;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap;border-left:2px solid #7c3aed}
+  .iw-notes{margin-top:4px;font-size:11px;color:#333;background:#f5f3ef;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap;border-left:2px solid #7c3aed}
+  .iw-edit{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:5px;padding:5px 6px;background:#f5f3ef;border-radius:6px}
+  .iw-edit-label{font-size:11px;color:#3a6b4e;font-weight:700}
+  .iw-edit-sel{padding:3px 5px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit;background:#fff}
+  .iw-edit-btn{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #3a6b4e;color:#3a6b4e;background:#fff}
+  .iw-edit-btn.clear{border-color:#ccc;color:#999;font-weight:400}
   .iw-actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
   .iw-act{padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid #ccc;color:#555;background:#fff;transition:all .15s;white-space:nowrap;font-family:inherit}
   .iw-act:hover{background:#f5f5f5}
@@ -232,28 +238,21 @@ function buildChildIW(items,hLat,hLng){
       var schId = 'sch_'+c.formRow;
       var curDay = c.confirmedDay||'';
       var curOrder = c.confirmedTime||'';
-      h+='<div style="margin-top:6px;padding:6px 8px;background:#f5f3ef;border-radius:6px">';
-      if(curDay) h+='<div style="font-size:11px;color:#3a6b4e;font-weight:600;margin-bottom:4px">✅ '+esc(curDay)+(curOrder?' · '+esc(curOrder)+'번째':'')+'</div>';
-      h+='<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">'
-        +'<select id="'+schId+'_day" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit">'
+      h+='<div class="iw-edit">';
+      if(curDay) h+='<span class="iw-edit-label">✅ '+esc(curDay)+(curOrder?' · '+esc(curOrder)+'번째':'')+'</span>';
+      h+='<select id="'+schId+'_day" class="iw-edit-sel">'
         +'<option value="">요일</option>';
       ['월','화','수','목','금','토'].forEach(function(d){
         h+='<option'+(curDay===d?' selected':'')+'>'+d+'</option>';
       });
       h+='</select>'
-        +'<select id="'+schId+'_order" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit">'
-        +'<option value="">순서</option>';
-      for(var n=1;n<=10;n++){
-        h+='<option value="'+n+'"'+(curOrder==String(n)?' selected':'')+'>'+n+'번째</option>';
-      }
-      h+='</select>'
-        +'<button onclick="saveSchedule('+c.formRow+',\''+schId+'\')" style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #3a6b4e;color:#3a6b4e;background:#fff;font-family:inherit">저장</button>';
-      if(curDay) h+='<button onclick="clearSchedule('+c.formRow+')" style="padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid #ccc;color:#999;background:#fff;font-family:inherit">취소</button>';
-      h+='</div></div>';
+        +'<button class="iw-edit-btn" onclick="saveSchedule('+c.formRow+',\''+schId+'\')">저장</button>';
+      if(curDay) h+='<button class="iw-edit-btn clear" onclick="clearSchedule('+c.formRow+')">초기화</button>';
+      h+='</div>';
     }
 
     if(c.notes)h+='<div class="iw-notes">'+esc(c.notes)+'</div>';
-    h+=routeBtns(name,c.lat,c.lng);
+    // 출발/도착 버튼 제거 — 하단 동선 바로 이동이 기본 플로우
   });
   return h+'</div>';
 }
@@ -344,11 +343,17 @@ var _tt;function showToast(m,ok){var e=document.getElementById('toast');e.textCo
 
 function saveSchedule(row, schId) {
   var day = document.getElementById(schId+'_day').value;
-  var order = document.getElementById(schId+'_order').value;
   if (!day) { showToast('요일을 선택해주세요'); return; }
+  // 순서 드롭다운 제거됨 — 기존 confirmedTime 유지 (드래그로만 순서 변경)
+  var order = '';
   if (viewData && viewData.assigned) {
     viewData.assigned.forEach(function(c) {
-      if (c.formRow === row) { c.confirmedDay = day; c.confirmedTime = order; }
+      if (c.formRow === row) order = c.confirmedTime || '';
+    });
+  }
+  if (viewData && viewData.assigned) {
+    viewData.assigned.forEach(function(c) {
+      if (c.formRow === row) { c.confirmedDay = day; /* confirmedTime 유지 */ }
     });
     renderFiltered();
   }
@@ -502,13 +507,26 @@ function updateTripBar(sorted) {
     // 대중교통 모드면 개별 🚇 버튼 추가
     if (tripMode === 'traffic' && c.lat && c.lng) {
       var fromName, fromLat, fromLng;
+      // 이전 '다른 좌표' 지점을 찾는다 (동일좌표 연속이면 건너뜀)
       if (idx === 0) {
-        fromName = (p.name || '집') + ' 집';
-        fromLat = p.lat; fromLng = p.lng;
+        if (p.lat && p.lng && !(Math.abs(p.lat - c.lat) < 0.00001 && Math.abs(p.lng - c.lng) < 0.00001)) {
+          fromName = (p.name || '집') + ' 집';
+          fromLat = p.lat; fromLng = p.lng;
+        }
       } else {
-        var prev = sorted[idx - 1];
-        fromName = (prev.name || '이전').replace(/\s+$/, '');
-        fromLat = prev.lat; fromLng = prev.lng;
+        for (var j = idx - 1; j >= 0; j--) {
+          var prev = sorted[j];
+          if (!prev.lat || !prev.lng) continue;
+          if (Math.abs(prev.lat - c.lat) < 0.00001 && Math.abs(prev.lng - c.lng) < 0.00001) continue;
+          fromName = (prev.name || '이전').replace(/\s+$/, '');
+          fromLat = prev.lat; fromLng = prev.lng;
+          break;
+        }
+        // 이전 칩 전부 같은 좌표였다면 집에서 출발
+        if (!fromLat && p.lat && p.lng && !(Math.abs(p.lat - c.lat) < 0.00001 && Math.abs(p.lng - c.lng) < 0.00001)) {
+          fromName = (p.name || '집') + ' 집';
+          fromLat = p.lat; fromLng = p.lng;
+        }
       }
       if (fromLat && fromLng) {
         var toName = name || '아동';
@@ -516,6 +534,9 @@ function updateTripBar(sorted) {
           + encodeURIComponent(fromName) + ',' + fromLat + ',' + fromLng + '/'
           + encodeURIComponent(toName) + ',' + c.lat + ',' + c.lng;
         inner += '<a class="trip-chip-nav" href="' + href + '" target="_blank" rel="noopener" title="이 구간 대중교통으로 열기">🚇</a>';
+      } else {
+        // 이전 지점과 동일 좌표 → 이동 필요 없음
+        inner += '<span style="font-size:9.5px;color:#aaa;margin-left:2px">같은 위치</span>';
       }
     }
 
@@ -561,19 +582,28 @@ function updateTripBar(sorted) {
     countEl.textContent = sorted.length + '구간';
   } else {
     startBtn.classList.remove('disabled');
-    var points = [];
+    // 포인트 객체로 빌드하면서 동일좌표 연속 dedup (형제 같은 아파트 케이스 등)
+    var pts = [];
     if (p.lat && p.lng) {
-      points.push(encodeURIComponent((p.name || '집') + ' 집') + ',' + p.lat + ',' + p.lng);
+      pts.push({ name: (p.name || '집') + ' 집', lat: p.lat, lng: p.lng });
     }
     sorted.forEach(function(c) {
-      if (c.lat && c.lng) {
-        var nm = (c.name || '아동').replace(/\s+$/, '');
-        points.push(encodeURIComponent(nm) + ',' + c.lat + ',' + c.lng);
+      if (!c.lat || !c.lng) return;
+      var nm = (c.name || '아동').replace(/\s+$/, '');
+      var last = pts.length > 0 ? pts[pts.length - 1] : null;
+      if (last && Math.abs(last.lat - c.lat) < 0.00001 && Math.abs(last.lng - c.lng) < 0.00001) {
+        // 직전 포인트와 같은 좌표 → 이름만 병합 (예: "지안, 예준")
+        last.name += ', ' + nm;
+      } else {
+        pts.push({ name: nm, lat: c.lat, lng: c.lng });
       }
     });
-    if (points.length > 7) points = points.slice(0, 7);  // 카카오 URL 안전 한도
-    if (points.length >= 2) {
-      startBtn.href = 'https://map.kakao.com/link/by/' + tripMode + '/' + points.join('/');
+    if (pts.length > 7) pts = pts.slice(0, 7);  // 카카오 URL 안전 한도
+    if (pts.length >= 2) {
+      var urlPoints = pts.map(function(pt) {
+        return encodeURIComponent(pt.name) + ',' + pt.lat + ',' + pt.lng;
+      });
+      startBtn.href = 'https://map.kakao.com/link/by/' + tripMode + '/' + urlPoints.join('/');
     } else {
       startBtn.removeAttribute('href');
       startBtn.classList.add('disabled');
@@ -685,7 +715,7 @@ function updateRanksInPlace() {
       }
     });
   }
-  // 메인 버튼 URL도 새 순서로 업데이트
+  // 메인 버튼 URL도 새 순서로 업데이트 (dedup 포함)
   if (tripMode !== 'traffic' && lastSortedForRoute) {
     var p = viewData.provider;
     var sorted = lastSortedForRoute.slice().sort(function(a,b){
@@ -694,18 +724,25 @@ function updateRanksInPlace() {
       return oa - ob;
     });
     lastSortedForRoute = sorted;
-    var points = [];
-    if (p.lat && p.lng) points.push(encodeURIComponent((p.name||'집')+' 집')+','+p.lat+','+p.lng);
+    var pts = [];
+    if (p.lat && p.lng) pts.push({name:(p.name||'집')+' 집',lat:p.lat,lng:p.lng});
     sorted.forEach(function(c){
-      if (c.lat && c.lng) {
-        var nm = (c.name||'아동').replace(/\s+$/,'');
-        points.push(encodeURIComponent(nm)+','+c.lat+','+c.lng);
+      if (!c.lat || !c.lng) return;
+      var nm = (c.name||'아동').replace(/\s+$/,'');
+      var last = pts.length > 0 ? pts[pts.length-1] : null;
+      if (last && Math.abs(last.lat-c.lat)<0.00001 && Math.abs(last.lng-c.lng)<0.00001) {
+        last.name += ', ' + nm;
+      } else {
+        pts.push({name:nm,lat:c.lat,lng:c.lng});
       }
     });
-    if (points.length > 7) points = points.slice(0, 7);
+    if (pts.length > 7) pts = pts.slice(0, 7);
     var startBtn = document.getElementById('tripStart');
-    if (points.length >= 2) {
-      startBtn.href = 'https://map.kakao.com/link/by/' + tripMode + '/' + points.join('/');
+    if (pts.length >= 2) {
+      var urlPoints = pts.map(function(pt){
+        return encodeURIComponent(pt.name)+','+pt.lat+','+pt.lng;
+      });
+      startBtn.href = 'https://map.kakao.com/link/by/' + tripMode + '/' + urlPoints.join('/');
     }
   }
 }
