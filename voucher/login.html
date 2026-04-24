@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>생각공작소 바우처 조회</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+  .container {
+    width: 100%; max-width: 360px; padding: 20px;
+  }
+  .card {
+    background: white; border-radius: 16px; padding: 32px 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  }
+  h1 {
+    margin: 0 0 4px 0; font-size: 20px; color: #202124; text-align: center;
+  }
+  .subtitle {
+    margin: 0 0 28px 0; font-size: 13px; color: #5f6368; text-align: center;
+  }
+  .field { margin-bottom: 16px; }
+  label {
+    display: block; font-size: 13px; color: #5f6368; margin-bottom: 6px; font-weight: 500;
+  }
+  input {
+    width: 100%; padding: 13px 14px; font-size: 16px;
+    border: 1.5px solid #dadce0; border-radius: 8px; outline: none;
+    -webkit-appearance: none;
+  }
+  input:focus { border-color: #667eea; }
+  input[type="password"] { letter-spacing: 4px; }
+  button {
+    width: 100%; padding: 14px; font-size: 15px; font-weight: 600;
+    background: #667eea; color: white; border: none; border-radius: 8px;
+    cursor: pointer; margin-top: 8px;
+  }
+  button:active { background: #5568d3; }
+  button:disabled { background: #9aa0a6; cursor: wait; }
+  .error {
+    display: none; background: #fce8e6; color: #c5221f; padding: 10px 12px;
+    border-radius: 8px; font-size: 13px; margin-bottom: 14px;
+  }
+  .error.show { display: block; }
+  .footer {
+    text-align: center; color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 20px;
+  }
+  .hidden { display: none; }
+  .info-box {
+    background: #e8f0fe; color: #1967d2; padding: 12px; border-radius: 8px;
+    font-size: 13px; margin-bottom: 16px; line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>생각공작소</h1>
+    <p class="subtitle">바우처 이용내역 조회</p>
+
+    <div class="error" id="error"></div>
+
+    <!-- 로그인 화면 -->
+    <div id="loginView">
+      <div class="field">
+        <label>이름</label>
+        <input type="text" id="name" autocomplete="username" placeholder="예: 권선화">
+      </div>
+      <div class="field">
+        <label>비밀번호 (4자리)</label>
+        <input type="password" id="pw" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="current-password">
+      </div>
+      <button id="loginBtn">로그인</button>
+    </div>
+
+    <!-- 비번 변경 화면 (초기비번 또는 사용자 요청) -->
+    <div id="changeView" class="hidden">
+      <div class="info-box" id="changeInfo">초기 비밀번호를 변경해주세요.</div>
+      <div class="field">
+        <label>현재 비밀번호</label>
+        <input type="password" id="oldPw" inputmode="numeric" pattern="[0-9]*" maxlength="4">
+      </div>
+      <div class="field">
+        <label>새 비밀번호 (4자리 숫자)</label>
+        <input type="password" id="newPw" inputmode="numeric" pattern="[0-9]*" maxlength="4">
+      </div>
+      <div class="field">
+        <label>새 비밀번호 확인</label>
+        <input type="password" id="newPw2" inputmode="numeric" pattern="[0-9]*" maxlength="4">
+      </div>
+      <button id="changeBtn">비밀번호 변경</button>
+    </div>
+  </div>
+  <div class="footer">© 생각공작소</div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec';
+const STORAGE_KEY = 'saenggak_voucher_session';
+
+const $ = id => document.getElementById(id);
+const showError = msg => { $('error').textContent = msg; $('error').classList.add('show'); };
+const hideError = () => $('error').classList.remove('show');
+
+async function apiCall(params) {
+  const url = API_URL + '?' + Object.keys(params).map(k =>
+    encodeURIComponent(k) + '=' + encodeURIComponent(params[k])
+  ).join('&');
+  const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+  return res.json();
+}
+
+function saveSession(name, token) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ name, token, savedAt: Date.now() }));
+}
+
+function clearSession() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+function getSession() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
+}
+
+// 숫자만 입력 허용
+['pw', 'oldPw', 'newPw', 'newPw2'].forEach(id => {
+  const el = $(id);
+  if (!el) return;
+  el.addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+  });
+});
+
+// 엔터로 진행
+$('name').addEventListener('keydown', e => { if (e.key === 'Enter') $('pw').focus(); });
+$('pw').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+$('oldPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('newPw').focus(); });
+$('newPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('newPw2').focus(); });
+$('newPw2').addEventListener('keydown', e => { if (e.key === 'Enter') changePw(); });
+
+// 로그인
+async function login() {
+  hideError();
+  const name = $('name').value.trim();
+  const pw = $('pw').value.trim();
+  if (!name) return showError('이름을 입력해주세요.');
+  if (pw.length !== 4) return showError('비밀번호는 4자리입니다.');
+
+  $('loginBtn').disabled = true;
+  $('loginBtn').textContent = '로그인 중...';
+
+  try {
+    const res = await apiCall({ action: 'authLogin', name, pw });
+    if (res.error) { showError(res.error); return; }
+
+    saveSession(res.name, res.token);
+
+    if (res.mustChangePassword) {
+      // 초기비번 → 변경 화면으로
+      $('oldPw').value = pw; // 자동 입력 (UX 편의)
+      $('loginView').classList.add('hidden');
+      $('changeView').classList.remove('hidden');
+      $('newPw').focus();
+    } else {
+      // 바로 조회 페이지로
+      location.href = 'view.html';
+    }
+  } catch (e) {
+    showError('네트워크 오류: ' + e.message);
+  } finally {
+    $('loginBtn').disabled = false;
+    $('loginBtn').textContent = '로그인';
+  }
+}
+
+// 비번 변경
+async function changePw() {
+  hideError();
+  const oldPw = $('oldPw').value.trim();
+  const newPw = $('newPw').value.trim();
+  const newPw2 = $('newPw2').value.trim();
+
+  if (oldPw.length !== 4) return showError('현재 비밀번호는 4자리입니다.');
+  if (newPw.length !== 4) return showError('새 비밀번호는 4자리여야 합니다.');
+  if (newPw !== newPw2) return showError('새 비밀번호가 일치하지 않습니다.');
+  if (newPw === '0000') return showError('초기 비밀번호(0000)로는 변경할 수 없습니다.');
+  if (newPw === oldPw) return showError('기존 비밀번호와 동일합니다.');
+
+  const session = getSession();
+  if (!session) { showError('세션이 만료되었습니다. 다시 로그인해주세요.'); return; }
+
+  $('changeBtn').disabled = true;
+  $('changeBtn').textContent = '변경 중...';
+
+  try {
+    const res = await apiCall({
+      action: 'authChangePassword',
+      token: session.token,
+      oldPw: oldPw,
+      newPw: newPw
+    });
+    if (res.error) { showError(res.error); return; }
+
+    alert('비밀번호가 변경되었습니다.');
+    location.href = 'view.html';
+  } catch (e) {
+    showError('네트워크 오류: ' + e.message);
+  } finally {
+    $('changeBtn').disabled = false;
+    $('changeBtn').textContent = '비밀번호 변경';
+  }
+}
+
+$('loginBtn').addEventListener('click', login);
+$('changeBtn').addEventListener('click', changePw);
+
+// 자동 로그인 체크
+(async function() {
+  const session = getSession();
+  if (!session) { $('name').focus(); return; }
+
+  try {
+    const res = await apiCall({ action: 'authVerifySession', token: session.token });
+    if (res.success) {
+      if (res.mustChangePassword) {
+        // 초기비번 상태라면 변경 화면 먼저
+        return;
+      }
+      location.href = 'view.html';
+    } else {
+      clearSession();
+      $('name').focus();
+    }
+  } catch {
+    $('name').focus();
+  }
+})();
+</script>
+</body>
+</html>
