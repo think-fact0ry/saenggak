@@ -38,14 +38,19 @@
     background: white; border-radius: 10px; padding: 10px; margin-bottom: 10px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   }
-  .control-row { display: flex; gap: 6px; margin-bottom: 6px; }
-  .control-row:last-child { margin-bottom: 0; }
-  .control-row select {
+  .control-row { display: flex; gap: 6px; }
+  .control-row select, .control-row input {
     flex: 1; padding: 9px 10px; font-size: 13px;
     border: 1px solid #dadce0; border-radius: 7px; outline: none;
     background: white; -webkit-appearance: none;
+  }
+  .control-row select {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%235f6368' d='M0 0l5 6 5-6z'/></svg>");
     background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+  }
+  .control-row button {
+    padding: 9px 18px; font-size: 13px; font-weight: 600;
+    background: #667eea; color: white; border: none; border-radius: 7px; cursor: pointer;
   }
 
   .title-bar {
@@ -69,7 +74,7 @@
     padding: 7px 6px; border: 1px solid #e8eaed; text-align: center; white-space: nowrap;
   }
   thead th {
-    background: #f5f6fa; font-weight: 600; color: #202124;
+    background: #f5f6fa; font-weight: 600;
     font-size: 11.5px; border-top: 1.5px solid #202124; border-bottom: 1.5px solid #202124;
   }
   td.amount { text-align: right; padding-right: 10px; }
@@ -109,12 +114,13 @@
   </div>
 
   <div class="controls">
-    <div class="control-row">
+    <div class="control-row" id="monthControls">
       <select id="yearSel"></select>
       <select id="monthSel"></select>
     </div>
-    <div class="control-row" id="childRow" style="display:none;">
-      <select id="childSel"><option value="">아동 선택</option></select>
+    <div class="control-row" id="childControls" style="display:none;">
+      <input type="text" id="childInput" placeholder="아동 이름 (일부 입력 가능)">
+      <button id="searchBtn">검색</button>
     </div>
   </div>
 
@@ -142,109 +148,114 @@ const session = getSession();
 if (!session) location.href = 'login.html';
 $('providerName').textContent = session.name + ' 선생님';
 
-// 연/월 셀렉트
-(function() {
-  const now = new Date();
-  const yearSel = $('yearSel');
-  for (let y = now.getFullYear() + 1; y >= 2024; y--) {
-    const opt = document.createElement('option');
-    opt.value = y; opt.textContent = y + '년';
-    if (y === now.getFullYear()) opt.selected = true;
-    yearSel.appendChild(opt);
-  }
-  const monthSel = $('monthSel');
-  for (let m = 1; m <= 12; m++) {
-    const opt = document.createElement('option');
-    opt.value = m; opt.textContent = m + '월';
-    if (m === now.getMonth() + 1) opt.selected = true;
-    monthSel.appendChild(opt);
-  }
-})();
-
 let currentTab = 'month';
+let availableMonths = []; // [{year, month}]
 
+// 탭 전환
 document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', async () => {
+  t.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
     t.classList.add('active');
     currentTab = t.dataset.tab;
+
     if (currentTab === 'child') {
-      $('childRow').style.display = 'flex';
-      await reloadChildren();
+      $('monthControls').style.display = 'none';
+      $('childControls').style.display = 'flex';
+      $('resultWrap').innerHTML = '<div class="empty">아동 이름을 입력하고 검색해주세요.</div>';
+      $('childInput').focus();
     } else {
-      $('childRow').style.display = 'none';
+      $('monthControls').style.display = 'flex';
+      $('childControls').style.display = 'none';
+      loadMonthData();
     }
-    loadData();
   });
 });
 
-$('yearSel').addEventListener('change', async () => {
-  if (currentTab === 'child') await reloadChildren();
-  loadData();
-});
-$('monthSel').addEventListener('change', async () => {
-  if (currentTab === 'child') await reloadChildren();
-  loadData();
-});
-$('childSel').addEventListener('change', loadData);
-
-async function reloadChildren() {
-  const year = Number($('yearSel').value);
-  const month = Number($('monthSel').value);
-  const sel = $('childSel');
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">불러오는 중...</option>';
-
-  const res = await apiCall({
-    action: 'queryMyChildren',
-    token: session.token, year, month
-  });
-
+// 데이터 있는 연/월만 채우기
+async function initAvailableMonths() {
+  const res = await apiCall({ action: 'queryAvailableMonths', token: session.token });
   if (res.error) {
     if (res.error.indexOf('세션') >= 0) { clearSession(); location.href = 'login.html'; return; }
-    sel.innerHTML = '<option value="">' + res.error + '</option>';
+    $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
+    return;
+  }
+  availableMonths = res.months || [];
+
+  if (availableMonths.length === 0) {
+    $('resultWrap').innerHTML = '<div class="empty">이용내역이 없습니다.</div>';
     return;
   }
 
-  if (!res.children || res.children.length === 0) {
-    sel.innerHTML = '<option value="">해당 월 담당 아동 없음</option>';
-    return;
-  }
-
-  sel.innerHTML = '<option value="">아동 선택</option>';
-  res.children.forEach(c => {
+  const years = [...new Set(availableMonths.map(m => m.year))].sort((a,b) => b - a);
+  const yearSel = $('yearSel');
+  yearSel.innerHTML = '';
+  years.forEach(y => {
     const opt = document.createElement('option');
-    opt.value = c.name; opt.textContent = c.name;
-    sel.appendChild(opt);
+    opt.value = y; opt.textContent = y + '년';
+    yearSel.appendChild(opt);
   });
-  if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+
+  updateMonthSelect();
+  loadMonthData();
 }
+
+function updateMonthSelect() {
+  const year = Number($('yearSel').value);
+  const monthSel = $('monthSel');
+  const prev = Number(monthSel.value);
+  monthSel.innerHTML = '';
+
+  const months = availableMonths
+    .filter(m => m.year === year)
+    .map(m => m.month)
+    .sort((a,b) => b - a); // 최근월 먼저
+
+  months.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m + '월';
+    monthSel.appendChild(opt);
+  });
+
+  if (months.indexOf(prev) >= 0) monthSel.value = prev;
+}
+
+$('yearSel').addEventListener('change', () => {
+  updateMonthSelect();
+  loadMonthData();
+});
+$('monthSel').addEventListener('change', loadMonthData);
+
+// 아동 검색
+$('searchBtn').addEventListener('click', searchByChild);
+$('childInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchByChild();
+});
 
 function getPayClass(type) { return (type === '소급' || type === '취소') ? 'pay-red' : ''; }
 function displayType(type) { return type === '보강' ? '-보강' : type; }
 
-function renderTable(records, year, month, childName, latestUpdate) {
+function renderTable(records, titleText, latestUpdate) {
   const wrap = $('resultWrap');
 
   if (!records || records.length === 0) {
-    wrap.innerHTML = '<div class="title-bar">' + year + '년 ' + month + '월 바우처 이용내역 조회' +
-      (childName ? ' · ' + childName : '') + '</div>' +
-      '<div class="empty">해당 월 이용내역이 없습니다.</div>';
+    wrap.innerHTML = '<div class="title-bar">' + titleText + '</div>' +
+      '<div class="empty">이용내역이 없습니다.</div>';
     return;
   }
 
-  // 순번 할당 (취소 제외, 1부터 연속)
+  // 순번 (취소 제외 연속)
   let seq = 0;
   records.forEach(r => {
     if (r.paymentType === '취소') r._seq = '';
     else { seq++; r._seq = seq; }
   });
 
-  // 유형 또는 아동 바뀔 때 빈 행
+  // 유형 / 아동 / 월 바뀔 때 빈 행
   const rowsHtml = [];
-  let prevType = null, prevChild = null;
+  let prevType = null, prevChild = null, prevYm = null;
   records.forEach(r => {
-    if (prevType !== null && (r.serviceType !== prevType || r.childName !== prevChild)) {
+    const ym = r.date.substring(0, 7);
+    if (prevType !== null && (r.serviceType !== prevType || r.childName !== prevChild || ym !== prevYm)) {
       rowsHtml.push('<tr class="row-empty"><td colspan="10"></td></tr>');
     }
     const cls = getPayClass(r.paymentType);
@@ -264,13 +275,11 @@ function renderTable(records, year, month, childName, latestUpdate) {
     );
     prevType = r.serviceType;
     prevChild = r.childName;
+    prevYm = ym;
   });
 
-  let title = year + '년 ' + month + '월 바우처 이용내역 조회';
-  if (childName) title += ' · ' + childName;
-
   wrap.innerHTML =
-    '<div class="title-bar">' + title + '</div>' +
+    '<div class="title-bar">' + titleText + '</div>' +
     '<div class="meta-bar">' +
       '<span>' + (latestUpdate ? '최신화: ' + latestUpdate : '') + '</span>' +
       '<span>제공인력: ' + session.name + '</span>' +
@@ -287,30 +296,21 @@ function renderTable(records, year, month, childName, latestUpdate) {
     '</div>';
 }
 
-async function loadData() {
+// 월별 전체 조회
+async function loadMonthData() {
   $('resultWrap').innerHTML = '<div class="loading">불러오는 중</div>';
-
   const year = Number($('yearSel').value);
   const month = Number($('monthSel').value);
+  if (!year || !month) {
+    $('resultWrap').innerHTML = '<div class="empty">이용내역이 없습니다.</div>';
+    return;
+  }
 
   try {
-    let res;
-    if (currentTab === 'child') {
-      const child = $('childSel').value;
-      if (!child) {
-        $('resultWrap').innerHTML = '<div class="empty">아동을 선택해주세요.</div>';
-        return;
-      }
-      res = await apiCall({
-        action: 'queryMyChildDetail',
-        token: session.token, child, year, month
-      });
-    } else {
-      res = await apiCall({
-        action: 'queryMyVoucher',
-        token: session.token, year, month
-      });
-    }
+    const res = await apiCall({
+      action: 'queryMyVoucher',
+      token: session.token, year, month
+    });
 
     if (res.error) {
       if (res.error.indexOf('세션') >= 0 || res.error.indexOf('로그인') >= 0) {
@@ -320,7 +320,34 @@ async function loadData() {
       return;
     }
 
-    renderTable(res.records, year, month, res.childName || null, res.latestUpdate);
+    renderTable(res.records, year + '년 ' + month + '월 바우처 이용내역 조회', res.latestUpdate);
+  } catch (e) {
+    $('resultWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
+  }
+}
+
+// 아동별 검색
+async function searchByChild() {
+  const name = $('childInput').value.trim();
+  if (!name) { alert('아동 이름을 입력해주세요.'); $('childInput').focus(); return; }
+
+  $('resultWrap').innerHTML = '<div class="loading">불러오는 중</div>';
+
+  try {
+    const res = await apiCall({
+      action: 'queryMyChildDetail',
+      token: session.token, child: name
+    });
+
+    if (res.error) {
+      if (res.error.indexOf('세션') >= 0 || res.error.indexOf('로그인') >= 0) {
+        clearSession(); location.href = 'login.html'; return;
+      }
+      $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
+      return;
+    }
+
+    renderTable(res.records, '"' + name + '" 바우처 이용내역 조회 (전체 기간)', res.latestUpdate);
   } catch (e) {
     $('resultWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
   }
@@ -336,7 +363,8 @@ $('changePwBtn').addEventListener('click', () => {
   if (confirm('비밀번호 변경을 위해 로그인 페이지로 이동합니다.')) location.href = 'login.html';
 });
 
-loadData();
+// 시작
+initAvailableMonths();
 </script>
 </body>
 </html>
