@@ -52,6 +52,10 @@
     padding: 9px 18px; font-size: 13px; font-weight: 600;
     background: #667eea; color: white; border: none; border-radius: 7px; cursor: pointer;
   }
+  .refresh-btn {
+    padding: 7px 12px; font-size: 12px; background: white; color: #667eea;
+    border: 1px solid #667eea; border-radius: 6px; cursor: pointer; margin-top: 6px;
+  }
 
   .title-bar {
     background: white; border-radius: 10px 10px 0 0; padding: 14px 12px;
@@ -60,7 +64,7 @@
   }
   .meta-bar {
     background: white; padding: 6px 12px; font-size: 11px; color: #5f6368;
-    display: flex; justify-content: space-between;
+    display: flex; justify-content: space-between; align-items: center;
   }
 
   .table-wrap {
@@ -101,6 +105,7 @@
       <div class="name" id="providerName">-</div>
     </div>
     <div class="header-btns">
+      <button id="refreshBtn" title="데이터 새로고침">↻</button>
       <button id="changePwBtn">비번변경</button>
       <button id="logoutBtn">로그아웃</button>
     </div>
@@ -148,10 +153,13 @@ const session = getSession();
 if (!session) location.href = 'login.html';
 $('providerName').textContent = session.name + ' 선생님';
 
+// ───── 클라이언트 전역 캐시 ─────
+let allRecords = [];       // 본인 전체 데이터
+let availableMonths = [];  // [{year, month}]
+let latestUpdate = '';
 let currentTab = 'month';
-let availableMonths = []; // [{year, month}]
 
-// 탭 전환
+// 탭 전환 — 서버 호출 없음, 즉시
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -166,37 +174,73 @@ document.querySelectorAll('.tab').forEach(t => {
     } else {
       $('monthControls').style.display = 'flex';
       $('childControls').style.display = 'none';
-      loadMonthData();
+      renderMonthView();
     }
   });
 });
 
-// 데이터 있는 연/월만 채우기
-async function initAvailableMonths() {
-  const res = await apiCall({ action: 'queryAvailableMonths', token: session.token });
-  if (res.error) {
-    if (res.error.indexOf('세션') >= 0) { clearSession(); location.href = 'login.html'; return; }
-    $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
-    return;
-  }
-  availableMonths = res.months || [];
-
-  if (availableMonths.length === 0) {
-    $('resultWrap').innerHTML = '<div class="empty">이용내역이 없습니다.</div>';
-    return;
-  }
-
-  const years = [...new Set(availableMonths.map(m => m.year))].sort((a,b) => b - a);
-  const yearSel = $('yearSel');
-  yearSel.innerHTML = '';
-  years.forEach(y => {
-    const opt = document.createElement('option');
-    opt.value = y; opt.textContent = y + '년';
-    yearSel.appendChild(opt);
-  });
-
+$('yearSel').addEventListener('change', () => {
   updateMonthSelect();
-  loadMonthData();
+  renderMonthView();
+});
+$('monthSel').addEventListener('change', renderMonthView);
+
+$('searchBtn').addEventListener('click', searchByChild);
+$('childInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchByChild();
+});
+
+$('refreshBtn').addEventListener('click', async () => {
+  $('refreshBtn').disabled = true;
+  $('refreshBtn').textContent = '...';
+  await loadAllData(true);
+  $('refreshBtn').disabled = false;
+  $('refreshBtn').textContent = '↻';
+});
+
+// ───── 초기 전체 로드 (1회) ─────
+async function loadAllData(forceRefresh) {
+  if (!forceRefresh && allRecords.length > 0) return; // 이미 로드됨
+
+  $('resultWrap').innerHTML = '<div class="loading">전체 데이터 불러오는 중</div>';
+
+  const params = { action: 'queryMyAllData', token: session.token };
+  if (forceRefresh) params._t = Date.now(); // 캐시 우회용 dummy
+
+  try {
+    const res = await apiCall(params);
+    if (res.error) {
+      if (res.error.indexOf('세션') >= 0 || res.error.indexOf('로그인') >= 0) {
+        clearSession(); location.href = 'login.html'; return;
+      }
+      $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
+      return;
+    }
+
+    allRecords = res.records || [];
+    availableMonths = res.months || [];
+    latestUpdate = res.latestUpdate || '';
+
+    if (availableMonths.length === 0) {
+      $('resultWrap').innerHTML = '<div class="empty">이용내역이 없습니다.</div>';
+      return;
+    }
+
+    // 연도 드롭다운 채우기
+    const years = [...new Set(availableMonths.map(m => m.year))].sort((a,b) => b - a);
+    const yearSel = $('yearSel');
+    yearSel.innerHTML = '';
+    years.forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y + '년';
+      yearSel.appendChild(opt);
+    });
+
+    updateMonthSelect();
+    renderMonthView();
+  } catch (e) {
+    $('resultWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
+  }
 }
 
 function updateMonthSelect() {
@@ -208,7 +252,7 @@ function updateMonthSelect() {
   const months = availableMonths
     .filter(m => m.year === year)
     .map(m => m.month)
-    .sort((a,b) => b - a); // 최근월 먼저
+    .sort((a,b) => b - a);
 
   months.forEach(m => {
     const opt = document.createElement('option');
@@ -219,22 +263,10 @@ function updateMonthSelect() {
   if (months.indexOf(prev) >= 0) monthSel.value = prev;
 }
 
-$('yearSel').addEventListener('change', () => {
-  updateMonthSelect();
-  loadMonthData();
-});
-$('monthSel').addEventListener('change', loadMonthData);
-
-// 아동 검색
-$('searchBtn').addEventListener('click', searchByChild);
-$('childInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') searchByChild();
-});
-
 function getPayClass(type) { return (type === '소급' || type === '취소') ? 'pay-red' : ''; }
 function displayType(type) { return type === '보강' ? '-보강' : type; }
 
-function renderTable(records, titleText, latestUpdate) {
+function renderTable(records, titleText) {
   const wrap = $('resultWrap');
 
   if (!records || records.length === 0) {
@@ -243,14 +275,12 @@ function renderTable(records, titleText, latestUpdate) {
     return;
   }
 
-  // 순번 (취소 제외 연속)
   let seq = 0;
   records.forEach(r => {
     if (r.paymentType === '취소') r._seq = '';
     else { seq++; r._seq = seq; }
   });
 
-  // 유형 / 아동 / 월 바뀔 때 빈 행
   const rowsHtml = [];
   let prevType = null, prevChild = null, prevYm = null;
   records.forEach(r => {
@@ -296,9 +326,8 @@ function renderTable(records, titleText, latestUpdate) {
     '</div>';
 }
 
-// 월별 전체 조회
-async function loadMonthData() {
-  $('resultWrap').innerHTML = '<div class="loading">불러오는 중</div>';
+// ───── 월별 전체 (클라이언트 필터) ─────
+function renderMonthView() {
   const year = Number($('yearSel').value);
   const month = Number($('monthSel').value);
   if (!year || !month) {
@@ -306,51 +335,20 @@ async function loadMonthData() {
     return;
   }
 
-  try {
-    const res = await apiCall({
-      action: 'queryMyVoucher',
-      token: session.token, year, month
-    });
+  const mm = ('0' + month).slice(-2);
+  const ymPrefix = year + '-' + mm;
+  const filtered = allRecords.filter(r => r.date.substring(0, 7) === ymPrefix);
 
-    if (res.error) {
-      if (res.error.indexOf('세션') >= 0 || res.error.indexOf('로그인') >= 0) {
-        clearSession(); location.href = 'login.html'; return;
-      }
-      $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
-      return;
-    }
-
-    renderTable(res.records, year + '년 ' + month + '월 바우처 이용내역 조회', res.latestUpdate);
-  } catch (e) {
-    $('resultWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
-  }
+  renderTable(filtered, year + '년 ' + month + '월 바우처 이용내역 조회');
 }
 
-// 아동별 검색
-async function searchByChild() {
+// ───── 아동별 검색 (클라이언트 필터, 부분 일치) ─────
+function searchByChild() {
   const name = $('childInput').value.trim();
   if (!name) { alert('아동 이름을 입력해주세요.'); $('childInput').focus(); return; }
 
-  $('resultWrap').innerHTML = '<div class="loading">불러오는 중</div>';
-
-  try {
-    const res = await apiCall({
-      action: 'queryMyChildDetail',
-      token: session.token, child: name
-    });
-
-    if (res.error) {
-      if (res.error.indexOf('세션') >= 0 || res.error.indexOf('로그인') >= 0) {
-        clearSession(); location.href = 'login.html'; return;
-      }
-      $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
-      return;
-    }
-
-    renderTable(res.records, '"' + name + '" 바우처 이용내역 조회 (전체 기간)', res.latestUpdate);
-  } catch (e) {
-    $('resultWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
-  }
+  const filtered = allRecords.filter(r => r.childName.indexOf(name) >= 0);
+  renderTable(filtered, '"' + name + '" 바우처 이용내역 조회 (전체 기간)');
 }
 
 $('logoutBtn').addEventListener('click', async () => {
@@ -364,7 +362,7 @@ $('changePwBtn').addEventListener('click', () => {
 });
 
 // 시작
-initAvailableMonths();
+loadAllData();
 </script>
 </body>
 </html>
