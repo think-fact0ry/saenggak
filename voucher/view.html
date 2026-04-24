@@ -13,106 +13,79 @@
   }
   .header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white; padding: 18px 16px 20px; position: sticky; top: 0; z-index: 10;
+    color: white; padding: 14px 16px; position: sticky; top: 0; z-index: 10;
   }
   .header-top { display: flex; justify-content: space-between; align-items: center; }
-  .header h1 { margin: 0; font-size: 16px; font-weight: 500; opacity: 0.9; }
-  .header .name { font-size: 20px; font-weight: 700; margin-top: 2px; }
+  .header h1 { margin: 0; font-size: 13px; font-weight: 400; opacity: 0.85; }
+  .header .name { font-size: 17px; font-weight: 700; margin-top: 2px; }
   .header-btns button {
     background: rgba(255,255,255,0.2); color: white; border: none;
-    padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
-    margin-left: 4px;
+    padding: 5px 9px; border-radius: 5px; font-size: 11px; cursor: pointer; margin-left: 4px;
   }
-  .content { padding: 16px; padding-bottom: 80px; }
-
-  .controls {
-    background: white; border-radius: 12px; padding: 14px; margin-bottom: 14px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  .control-row { display: flex; gap: 8px; margin-bottom: 10px; }
-  .control-row:last-child { margin-bottom: 0; }
-  .control-row select, .control-row input {
-    flex: 1; padding: 10px 12px; font-size: 14px;
-    border: 1px solid #dadce0; border-radius: 8px; outline: none;
-    background: white; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%235f6368' d='M0 0l5 6 5-6z'/></svg>");
-    background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px;
-  }
-  .control-row input { background-image: none; padding-right: 12px; }
-
-  .summary {
-    background: white; border-radius: 12px; padding: 16px; margin-bottom: 14px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  .summary-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
-  }
-  .stat-box { background: #f5f6fa; border-radius: 8px; padding: 12px; }
-  .stat-label { font-size: 11px; color: #5f6368; margin-bottom: 4px; }
-  .stat-value { font-size: 22px; font-weight: 700; color: #202124; }
-  .stat-value small { font-size: 12px; font-weight: 500; color: #5f6368; margin-left: 2px; }
-
-  .centers { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e8eaed; }
-  .centers-title { font-size: 11px; color: #5f6368; margin-bottom: 6px; }
-  .center-chip {
-    display: inline-block; background: #e8f0fe; color: #1967d2;
-    padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-right: 6px; margin-bottom: 4px;
-  }
-
-  .latest-update {
-    text-align: right; font-size: 11px; color: #5f6368; margin-bottom: 8px;
-  }
-
-  .records { background: white; border-radius: 12px; overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  .record-group-title {
-    padding: 10px 14px; background: #f5f6fa; font-size: 12px; color: #5f6368;
-    font-weight: 600; border-bottom: 1px solid #e8eaed;
-  }
-  .record {
-    padding: 12px 14px; border-bottom: 1px solid #f1f3f4;
-  }
-  .record:last-child { border-bottom: none; }
-  .record-top {
-    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;
-  }
-  .record-name { font-size: 15px; font-weight: 600; }
-  .record-amount { font-size: 14px; color: #1967d2; font-weight: 600; }
-  .record-meta {
-    font-size: 12px; color: #5f6368; display: flex; gap: 10px; flex-wrap: wrap;
-  }
-  .badge {
-    display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;
-  }
-  .badge-normal { background: #e6f4ea; color: #137333; }
-  .badge-makeup { background: #fef7e0; color: #b06000; }
-  .badge-retro { background: #fce8e6; color: #c5221f; }
-  .badge-cancel { background: #f1f3f4; color: #5f6368; text-decoration: line-through; }
-
-  .empty {
-    text-align: center; padding: 40px 20px; color: #5f6368; font-size: 14px;
-  }
-  .loading { text-align: center; padding: 40px 20px; color: #5f6368; }
-  .loading::after {
-    content: '...'; animation: dots 1.5s steps(4, end) infinite;
-  }
-  @keyframes dots {
-    0%, 20% { content: ''; }
-    40% { content: '.'; }
-    60% { content: '..'; }
-    80%, 100% { content: '...'; }
-  }
+  .content { padding: 12px; padding-bottom: 60px; }
 
   .tabs {
-    display: flex; background: white; border-radius: 12px; padding: 4px; margin-bottom: 14px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    display: flex; background: white; border-radius: 10px; padding: 3px; margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   }
   .tab {
-    flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 500;
-    border-radius: 8px; cursor: pointer; color: #5f6368;
+    flex: 1; padding: 9px; text-align: center; font-size: 13px; font-weight: 500;
+    border-radius: 7px; cursor: pointer; color: #5f6368;
   }
   .tab.active { background: #667eea; color: white; }
+
+  .controls {
+    background: white; border-radius: 10px; padding: 10px; margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .control-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .control-row:last-child { margin-bottom: 0; }
+  .control-row select {
+    flex: 1; padding: 9px 10px; font-size: 13px;
+    border: 1px solid #dadce0; border-radius: 7px; outline: none;
+    background: white; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%235f6368' d='M0 0l5 6 5-6z'/></svg>");
+    background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+  }
+
+  .title-bar {
+    background: white; border-radius: 10px 10px 0 0; padding: 14px 12px;
+    font-size: 15px; font-weight: 700; text-align: center;
+    border-bottom: 1.5px solid #202124;
+  }
+  .meta-bar {
+    background: white; padding: 6px 12px; font-size: 11px; color: #5f6368;
+    display: flex; justify-content: space-between;
+  }
+
+  .table-wrap {
+    background: white; border-radius: 0 0 10px 10px; overflow-x: auto;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  table {
+    border-collapse: collapse; width: 100%; min-width: 720px; font-size: 12px;
+  }
+  th, td {
+    padding: 7px 6px; border: 1px solid #e8eaed; text-align: center; white-space: nowrap;
+  }
+  thead th {
+    background: #f5f6fa; font-weight: 600; color: #202124;
+    font-size: 11.5px; border-top: 1.5px solid #202124; border-bottom: 1.5px solid #202124;
+  }
+  td.amount { text-align: right; padding-right: 10px; }
+  td.name { font-weight: 500; }
+  .pay-red { color: #d93025; font-weight: 700; }
+  .row-empty td { border: none; height: 10px; padding: 0; background: white; }
+
+  .empty, .loading {
+    background: white; text-align: center; padding: 40px 20px; color: #5f6368;
+    font-size: 14px; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .loading::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
+  @keyframes dots {
+    0%, 20% { content: ''; } 40% { content: '.'; }
+    60% { content: '..'; } 80%, 100% { content: '...'; }
+  }
 </style>
 </head>
 <body>
@@ -141,17 +114,11 @@
       <select id="monthSel"></select>
     </div>
     <div class="control-row" id="childRow" style="display:none;">
-      <select id="childSel"><option value="">담당 아동 선택</option></select>
+      <select id="childSel"><option value="">아동 선택</option></select>
     </div>
   </div>
 
-  <div class="latest-update" id="latestUpdate"></div>
-
-  <div id="summaryWrap"></div>
-
-  <div id="recordsWrap">
-    <div class="loading">불러오는 중</div>
-  </div>
+  <div id="resultWrap"><div class="loading">불러오는 중</div></div>
 </div>
 
 <script>
@@ -160,9 +127,7 @@ const STORAGE_KEY = 'saenggak_voucher_session';
 
 const $ = id => document.getElementById(id);
 
-function getSession() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
-}
+function getSession() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; } }
 function clearSession() { localStorage.removeItem(STORAGE_KEY); }
 
 async function apiCall(params) {
@@ -173,21 +138,18 @@ async function apiCall(params) {
   return res.json();
 }
 
-// 세션 체크
 const session = getSession();
 if (!session) location.href = 'login.html';
-
 $('providerName').textContent = session.name + ' 선생님';
 
-// 연/월 셀렉트 채우기
-(function initSelects() {
+// 연/월 셀렉트
+(function() {
   const now = new Date();
-  const currentYear = now.getFullYear();
   const yearSel = $('yearSel');
-  for (let y = currentYear + 1; y >= 2024; y--) {
+  for (let y = now.getFullYear() + 1; y >= 2024; y--) {
     const opt = document.createElement('option');
     opt.value = y; opt.textContent = y + '년';
-    if (y === currentYear) opt.selected = true;
+    if (y === now.getFullYear()) opt.selected = true;
     yearSel.appendChild(opt);
   }
   const monthSel = $('monthSel');
@@ -199,8 +161,8 @@ $('providerName').textContent = session.name + ' 선생님';
   }
 })();
 
-// 탭 전환
 let currentTab = 'month';
+
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', async () => {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -208,123 +170,125 @@ document.querySelectorAll('.tab').forEach(t => {
     currentTab = t.dataset.tab;
     if (currentTab === 'child') {
       $('childRow').style.display = 'flex';
-      await loadChildren();
+      await reloadChildren();
     } else {
       $('childRow').style.display = 'none';
-      $('childSel').value = '';
     }
     loadData();
   });
 });
 
-$('yearSel').addEventListener('change', loadData);
-$('monthSel').addEventListener('change', loadData);
+$('yearSel').addEventListener('change', async () => {
+  if (currentTab === 'child') await reloadChildren();
+  loadData();
+});
+$('monthSel').addEventListener('change', async () => {
+  if (currentTab === 'child') await reloadChildren();
+  loadData();
+});
 $('childSel').addEventListener('change', loadData);
 
-// 담당 아동 목록 로드
-let childrenLoaded = false;
-async function loadChildren() {
-  if (childrenLoaded) return;
-  const res = await apiCall({ action: 'queryMyChildren', token: session.token });
-  if (res.error) { alert(res.error); return; }
+async function reloadChildren() {
+  const year = Number($('yearSel').value);
+  const month = Number($('monthSel').value);
   const sel = $('childSel');
-  res.children.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.name;
-    opt.textContent = c.name + (c.birth ? ' (' + c.birth + ')' : '');
-    sel.appendChild(opt);
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">불러오는 중...</option>';
+
+  const res = await apiCall({
+    action: 'queryMyChildren',
+    token: session.token, year, month
   });
-  childrenLoaded = true;
-}
 
-// 결제구분 배지
-function getBadge(type) {
-  if (type === '정상') return '<span class="badge badge-normal">정상</span>';
-  if (type === '보강') return '<span class="badge badge-makeup">보강</span>';
-  if (type === '소급') return '<span class="badge badge-retro">소급</span>';
-  if (type === '취소') return '<span class="badge badge-cancel">취소</span>';
-  return '<span class="badge">' + type + '</span>';
-}
-
-// 요약 렌더
-function renderSummary(summary) {
-  if (!summary) { $('summaryWrap').innerHTML = ''; return; }
-  let centersHtml = '';
-  if (summary.centers && summary.centers.length > 0) {
-    centersHtml = '<div class="centers"><div class="centers-title">센터별 회기수</div>' +
-      summary.centers.map(c =>
-        '<span class="center-chip">' + c.name + ' ' + c.count + '회</span>'
-      ).join('') + '</div>';
-  }
-  $('summaryWrap').innerHTML = `
-    <div class="summary">
-      <div class="summary-grid">
-        <div class="stat-box">
-          <div class="stat-label">총 회기</div>
-          <div class="stat-value">${summary.totalSessions}<small>회</small></div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">근로일수</div>
-          <div class="stat-value">${summary.workDays}<small>일</small></div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">담당 아동</div>
-          <div class="stat-value">${summary.uniqueChildren}<small>명</small></div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">취소·보강</div>
-          <div class="stat-value" style="font-size:16px;">취소 ${summary.cancelled} · 보강 ${summary.makeup}</div>
-        </div>
-      </div>
-      ${centersHtml}
-    </div>
-  `;
-}
-
-// 내역 렌더 (아동별 그룹)
-function renderRecords(records) {
-  if (!records || records.length === 0) {
-    $('recordsWrap').innerHTML = '<div class="empty">이용내역이 없습니다.</div>';
+  if (res.error) {
+    if (res.error.indexOf('세션') >= 0) { clearSession(); location.href = 'login.html'; return; }
+    sel.innerHTML = '<option value="">' + res.error + '</option>';
     return;
   }
 
-  // 아동별 그룹핑 (API에서 이미 정렬된 상태)
-  const groups = {};
-  const order = [];
-  records.forEach(r => {
-    const key = r.childName;
-    if (!groups[key]) { groups[key] = []; order.push(key); }
-    groups[key].push(r);
-  });
+  if (!res.children || res.children.length === 0) {
+    sel.innerHTML = '<option value="">해당 월 담당 아동 없음</option>';
+    return;
+  }
 
-  let html = '<div class="records">';
-  order.forEach(name => {
-    const serviceType = groups[name][0].serviceType;
-    html += '<div class="record-group-title">' + name + ' · ' + serviceType + ' (' + groups[name].length + '건)</div>';
-    groups[name].forEach(r => {
-      html += `
-        <div class="record">
-          <div class="record-top">
-            <div class="record-name">${r.dateDisplay} ${r.time}</div>
-            <div class="record-amount">${r.amount}원</div>
-          </div>
-          <div class="record-meta">
-            ${getBadge(r.paymentType)}
-            <span>${r.center || ''}</span>
-            ${r.paymentProvider && r.paymentProvider !== session.name ? '<span>결제: ' + r.paymentProvider + '</span>' : ''}
-          </div>
-        </div>
-      `;
-    });
+  sel.innerHTML = '<option value="">아동 선택</option>';
+  res.children.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.name; opt.textContent = c.name;
+    sel.appendChild(opt);
   });
-  html += '</div>';
-  $('recordsWrap').innerHTML = html;
+  if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
 }
 
-// 데이터 로드
+function getPayClass(type) { return (type === '소급' || type === '취소') ? 'pay-red' : ''; }
+function displayType(type) { return type === '보강' ? '-보강' : type; }
+
+function renderTable(records, year, month, childName, latestUpdate) {
+  const wrap = $('resultWrap');
+
+  if (!records || records.length === 0) {
+    wrap.innerHTML = '<div class="title-bar">' + year + '년 ' + month + '월 바우처 이용내역 조회' +
+      (childName ? ' · ' + childName : '') + '</div>' +
+      '<div class="empty">해당 월 이용내역이 없습니다.</div>';
+    return;
+  }
+
+  // 순번 할당 (취소 제외, 1부터 연속)
+  let seq = 0;
+  records.forEach(r => {
+    if (r.paymentType === '취소') r._seq = '';
+    else { seq++; r._seq = seq; }
+  });
+
+  // 유형 또는 아동 바뀔 때 빈 행
+  const rowsHtml = [];
+  let prevType = null, prevChild = null;
+  records.forEach(r => {
+    if (prevType !== null && (r.serviceType !== prevType || r.childName !== prevChild)) {
+      rowsHtml.push('<tr class="row-empty"><td colspan="10"></td></tr>');
+    }
+    const cls = getPayClass(r.paymentType);
+    rowsHtml.push(
+      '<tr>' +
+        '<td>' + r._seq + '</td>' +
+        '<td class="name">' + r.childName + '</td>' +
+        '<td>' + (r.dateDisplay || r.date) + '</td>' +
+        '<td>' + r.time + '</td>' +
+        '<td class="' + cls + '">' + displayType(r.paymentType) + '</td>' +
+        '<td class="amount">' + r.amount + '</td>' +
+        '<td>' + r.birth + '</td>' +
+        '<td>' + r.serviceType + '</td>' +
+        '<td>' + r.paymentProvider + '</td>' +
+        '<td>' + (r.center || '') + '</td>' +
+      '</tr>'
+    );
+    prevType = r.serviceType;
+    prevChild = r.childName;
+  });
+
+  let title = year + '년 ' + month + '월 바우처 이용내역 조회';
+  if (childName) title += ' · ' + childName;
+
+  wrap.innerHTML =
+    '<div class="title-bar">' + title + '</div>' +
+    '<div class="meta-bar">' +
+      '<span>' + (latestUpdate ? '최신화: ' + latestUpdate : '') + '</span>' +
+      '<span>제공인력: ' + session.name + '</span>' +
+    '</div>' +
+    '<div class="table-wrap">' +
+      '<table>' +
+        '<thead><tr>' +
+          '<th>순번</th><th>대상자명</th><th>결제일시</th><th>결제시간</th>' +
+          '<th>구분</th><th>승인금액</th><th>생년월일</th><th>유형</th>' +
+          '<th>제공인력</th><th>센터</th>' +
+        '</tr></thead>' +
+        '<tbody>' + rowsHtml.join('') + '</tbody>' +
+      '</table>' +
+    '</div>';
+}
+
 async function loadData() {
-  $('recordsWrap').innerHTML = '<div class="loading">불러오는 중</div>';
-  $('summaryWrap').innerHTML = '';
+  $('resultWrap').innerHTML = '<div class="loading">불러오는 중</div>';
 
   const year = Number($('yearSel').value);
   const month = Number($('monthSel').value);
@@ -334,7 +298,7 @@ async function loadData() {
     if (currentTab === 'child') {
       const child = $('childSel').value;
       if (!child) {
-        $('recordsWrap').innerHTML = '<div class="empty">아동을 선택해주세요.</div>';
+        $('resultWrap').innerHTML = '<div class="empty">아동을 선택해주세요.</div>';
         return;
       }
       res = await apiCall({
@@ -352,38 +316,26 @@ async function loadData() {
       if (res.error.indexOf('세션') >= 0 || res.error.indexOf('로그인') >= 0) {
         clearSession(); location.href = 'login.html'; return;
       }
-      $('recordsWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
+      $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
       return;
     }
 
-    if (res.latestUpdate) {
-      $('latestUpdate').textContent = '최신화: ' + res.latestUpdate;
-    }
-
-    renderSummary(res.summary);
-    renderRecords(res.records);
+    renderTable(res.records, year, month, res.childName || null, res.latestUpdate);
   } catch (e) {
-    $('recordsWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
+    $('resultWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
   }
 }
 
-// 로그아웃
 $('logoutBtn').addEventListener('click', async () => {
   if (!confirm('로그아웃 하시겠습니까?')) return;
   try { await apiCall({ action: 'authLogout', token: session.token }); } catch {}
   clearSession();
   location.href = 'login.html';
 });
-
-// 비번 변경 (로그인 페이지로 가서 처리)
 $('changePwBtn').addEventListener('click', () => {
-  if (confirm('비밀번호 변경을 위해 로그인 페이지로 이동합니다.')) {
-    // 세션은 유지, 로그인 페이지에서 변경 화면으로 유도
-    location.href = 'login.html?changepw=1';
-  }
+  if (confirm('비밀번호 변경을 위해 로그인 페이지로 이동합니다.')) location.href = 'login.html';
 });
 
-// 최초 로드
 loadData();
 </script>
 </body>
