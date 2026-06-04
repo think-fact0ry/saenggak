@@ -109,8 +109,8 @@
   .ldot.home{background:#3b82f6}.ldot.assigned{background:#22c55e}.ldot.waiting{background:#f59e0b}
 
   /* ══ 인포윈도우 ══ */
-  .iw{padding:10px 14px 12px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:200px;max-width:300px;max-height:300px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-  .iw-title{font-weight:700;font-size:14px;margin-bottom:3px;color:#1a1a1a;word-break:keep-all}
+  .iw{padding:10px 12px 10px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:200px;max-width:300px;max-height:300px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .iw-title{font-weight:700;font-size:14px;margin-bottom:4px;color:#1a1a1a;word-break:keep-all}
   .iw-title.iw-addr{font-size:13px;line-height:1.45}
   .iw-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:4px;vertical-align:middle}
   .iw-badge.home{background:#dbeafe;color:#2563eb}
@@ -168,7 +168,7 @@
 
   /* ══ 마커 라벨 ══ */
   .mlbl{padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
-  .mlbl.home{color:#1d4ed8}
+  .mlbl.home{color:#1d4ed8;margin:14px 0 0 -19px}
 
   /* ══ 추천 ══ */
   .iw-rec{margin-top:6px;padding-top:6px;border-top:1.5px solid #e8f0e5}
@@ -620,19 +620,19 @@ function renderMarkers() {
 // home(테두리 링)은 가운데 정렬이라 이름을 원 '아래'에 둔다(#2).
 function addLabel(lat, lng, text, type, markerH) {
   var content = '<div class="mlbl '+type+'">'+text+'</div>';
-  var H = 14; // 라벨 대략 높이(px)
-  var yAnchor;
-  if (type === 'home') {
-    yAnchor = -1.3;                       // 원 아래로 (음수 = 점 아래로 내림)
-  } else {
-    yAnchor = 1 + ((markerH || 26) + 2) / H; // 마커 꼭대기 바로 위. 크기 다른 마커도 일정한 간격
-  }
-  var ov = new kakao.maps.CustomOverlay({
+  var opts = {
     position: new kakao.maps.LatLng(lat, lng),
     content: content,
-    yAnchor: yAnchor,
-    zIndex: type==='home' ? 9 : 8        // 이름은 모든 마커(≤5) 위로
-  });
+    zIndex: type==='home' ? 9 : 8        // 이름은 모든 마커(≤6) 위로
+  };
+  if (type === 'home') {
+    // 라벨 좌상단을 마커 지점에 맞추고, 미세 위치는 .mlbl.home CSS margin으로 통제
+    opts.xAnchor = 0; opts.yAnchor = 0;
+  } else {
+    // 아동 마커 위에 바짝: 마커 높이(단일26/그룹32)에 맞춰 간격 일정(#5)
+    opts.yAnchor = 1 + ((markerH || 26) + 2) / 14;
+  }
+  var ov = new kakao.maps.CustomOverlay(opts);
   ov.setMap(map);
   overlays.push(ov);
 }
