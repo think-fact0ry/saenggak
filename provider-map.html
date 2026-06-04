@@ -168,7 +168,10 @@
 
   /* ══ 마커 라벨 ══ */
   .mlbl{padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
-  .mlbl.home{color:#1d4ed8;margin:14px 0 0 -19px}
+  .mlbl.home{color:#1d4ed8;margin:14px 0 0 0}
+  .mlbl.assigned{margin:-46px 0 0 -9px}
+  /* 드래그 중 라벨(DOM 오버레이) 숨김 → 팬 시 따라오는 지연 제거 (dragend에 복원) */
+  body.dragging .mlbl{display:none}
 
   /* ══ 추천 ══ */
   .iw-rec{margin-top:6px;padding-top:6px;border-top:1.5px solid #e8f0e5}
@@ -605,7 +608,7 @@ function renderMarkers() {
     } else if (uq.length >= 2 && uq.length <= 3) {
       label = uq.map(function(n){ return n.charAt(0); }).join('·');
     }
-    if (label) addLabel(g.lat, g.lng, label, 'assigned', g.items.length > 1 ? 32 : 26);
+    if (label && !hideAssignedLabels()) addLabel(g.lat, g.lng, label, 'assigned'); // 완전 축소 시 숨김
   });
 
   if (showWaiting) {
@@ -626,11 +629,11 @@ function addLabel(lat, lng, text, type, markerH) {
     zIndex: type==='home' ? 9 : 8        // 이름은 모든 마커(≤6) 위로
   };
   if (type === 'home') {
-    // 라벨 좌상단을 마커 지점에 맞추고, 미세 위치는 .mlbl.home CSS margin으로 통제
-    opts.xAnchor = 0; opts.yAnchor = 0;
+    // 가로 자동 중앙(이름 길이 무관), 세로는 .mlbl.home margin-top으로 통제
+    opts.xAnchor = 0.5; opts.yAnchor = 0;
   } else {
-    // 아동 마커 위에 바짝: 마커 높이(단일26/그룹32)에 맞춰 간격 일정(#5)
-    opts.yAnchor = 1 + ((markerH || 26) + 2) / 14;
+    // 좌상단을 마커 지점에 맞추고, 위치는 .mlbl.assigned margin으로 통제
+    opts.xAnchor = 0; opts.yAnchor = 0;
   }
   var ov = new kakao.maps.CustomOverlay(opts);
   ov.setMap(map);
@@ -640,12 +643,7 @@ function addLabel(lat, lng, text, type, markerH) {
 function addMarker(lat, lng, type, count, iwContent) {
   if (!lat || !lng) return;
   var pos = new kakao.maps.LatLng(lat, lng);
-  var svg = count > 1 ? markerSVGCount(type, count) : markerSVG(type);
-  var sz, off;
-  if (type==='home') { sz=new kakao.maps.Size(32,34); off=new kakao.maps.Point(16,34); }
-  else if (count>1) { sz=new kakao.maps.Size(30,32); off=new kakao.maps.Point(15,32); }
-  else { sz=new kakao.maps.Size(24,26); off=new kakao.maps.Point(12,26); }
-  var img = new kakao.maps.MarkerImage(svg, sz, {offset:off});
+  var img = getMarkerImage(type, count);
   var m = new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:type==='home'?10:(type==='assigned'?5:1)});
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
   markers.push(m);
@@ -668,17 +666,38 @@ function markerSVGCount(t,n){var c=MC[t];return svgUri('<svg xmlns="http://www.w
 
 // 집(선생님) 테두리 링 — ALL 모드 전용. 가운데가 비어 밑의 아동이 비쳐 보임.
 function markerHomeRing(){return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="rgba(59,130,246,0.12)" stroke="#1d4ed8" stroke-width="2.5"/></svg>')}
+
+// ── 마커 이미지 캐시: 같은 모양은 한 번만 생성 (렌더/줌 재배치 시 SVG 인코딩 반복 제거) ──
+var _imgCache = {}, _ringImg = null;
+function getMarkerImage(type, count) {
+  var key = type + '|' + (count > 1 ? count : 1);
+  if (_imgCache[key]) return _imgCache[key];
+  var svg = count > 1 ? markerSVGCount(type, count) : markerSVG(type);
+  var sz, off;
+  if (type==='home') { sz=new kakao.maps.Size(32,34); off=new kakao.maps.Point(16,34); }
+  else if (count>1)  { sz=new kakao.maps.Size(30,32); off=new kakao.maps.Point(15,32); }
+  else               { sz=new kakao.maps.Size(24,26); off=new kakao.maps.Point(12,26); }
+  return (_imgCache[key] = new kakao.maps.MarkerImage(svg, sz, {offset:off}));
+}
+function getRingImage() {
+  if (!_ringImg) _ringImg = new kakao.maps.MarkerImage(markerHomeRing(), new kakao.maps.Size(30,30), {offset:new kakao.maps.Point(15,15)});
+  return _ringImg;
+}
+
 function addHomeRingMarker(lat,lng,iwContent,z){
   if(!lat||!lng)return;
   var pos=new kakao.maps.LatLng(lat,lng);
-  var img=new kakao.maps.MarkerImage(markerHomeRing(),new kakao.maps.Size(30,30),{offset:new kakao.maps.Point(15,15)});
+  var img=getRingImage();
   var m=new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:z||0});
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
   markers.push(m);
 }
 
-// 축소(개요) 여부: 레벨 6 이상이면 멀리 본다고 판단 → 링을 위로
-function isOverview(){ return map && map.getLevel() >= 6; }
+// 줌 임계값 (카카오 레벨: 숫자 클수록 축소. 첫 화면=7)
+var RING_TOP_LEVEL = 7;            // 이 레벨 이상이면 집 링을 아동 위로 (전 6 → 한 칸 더 축소)
+var HIDE_ASSIGNED_LABEL_LEVEL = 8; // 이 레벨 이상이면 배정 성 라벨 숨김 (완전 축소 시 지저분 방지)
+function isOverview(){ return map && map.getLevel() >= RING_TOP_LEVEL; }
+function hideAssignedLabels(){ return map && map.getLevel() >= HIDE_ASSIGNED_LABEL_LEVEL; }
 
 // ══ 인포윈도우 ══
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
@@ -1502,16 +1521,20 @@ function renderNewList() {
 }
 
 // 지도 이동 시 가까운순이면 재정렬 (debounce 300ms)
-var _lastOverview = null;
+var _zoomSig = null;
+function zoomSig(){ return (isOverview()?1:0) + '|' + (hideAssignedLabels()?1:0); }
 function setupMapMoveListener() {
   if (!map) return;
   kakao.maps.event.addListener(map, 'dragend', nlMapMoveHandler);
   kakao.maps.event.addListener(map, 'zoom_changed', nlMapMoveHandler);
-  // 축소/확대 경계(레벨 6)를 넘을 때만 마커 재배치 → 선생님 링 z-index 갱신 (#3)
-  _lastOverview = isOverview();
+  // 드래그 중 라벨 숨김 → 팬 지연 제거
+  kakao.maps.event.addListener(map, 'dragstart', function(){ document.body.classList.add('dragging'); });
+  kakao.maps.event.addListener(map, 'dragend',   function(){ document.body.classList.remove('dragging'); });
+  // 줌 임계(링 z-index / 배정 라벨 표시)를 넘을 때만 마커 재배치
+  _zoomSig = zoomSig();
   kakao.maps.event.addListener(map, 'zoom_changed', function() {
-    var now = isOverview();
-    if (now !== _lastOverview) { _lastOverview = now; renderMarkers(); }
+    var s = zoomSig();
+    if (s !== _zoomSig) { _zoomSig = s; renderMarkers(); }
   });
 }
 function nlMapMoveHandler() {
