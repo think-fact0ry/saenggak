@@ -167,9 +167,9 @@
   .route-go.disabled{background:#ddd;color:#aaa;pointer-events:none}
 
   /* ══ 마커 라벨 ══ */
-  .mlbl{padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+  .mlbl{padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;transform:translateX(-50%)}
   .mlbl.home{color:#1d4ed8;margin:14px 0 0 0}
-  .mlbl.assigned{margin:-46px 0 0 -9px}
+  .mlbl.assigned{margin:-46px 0 0 0}
   /* 드래그 중 라벨(DOM 오버레이) 숨김 → 팬 시 따라오는 지연 제거 (dragend에 복원) */
   body.dragging .mlbl{display:none}
 
@@ -628,13 +628,9 @@ function addLabel(lat, lng, text, type, markerH) {
     content: content,
     zIndex: type==='home' ? 9 : 8        // 이름은 모든 마커(≤6) 위로
   };
-  if (type === 'home') {
-    // 가로 자동 중앙(이름 길이 무관), 세로는 .mlbl.home margin-top으로 통제
-    opts.xAnchor = 0.5; opts.yAnchor = 0;
-  } else {
-    // 좌상단을 마커 지점에 맞추고, 위치는 .mlbl.assigned margin으로 통제
-    opts.xAnchor = 0; opts.yAnchor = 0;
-  }
+  // 기준점은 마커 지점(좌상단). 가로 중앙정렬은 .mlbl의 transform:translateX(-50%)가
+  // 제 너비 절반만큼 당겨 처리 → 이름 길이가 달라져도 항상 중앙. 세로는 margin-top.
+  opts.xAnchor = 0; opts.yAnchor = 0;
   var ov = new kakao.maps.CustomOverlay(opts);
   ov.setMap(map);
   overlays.push(ov);
