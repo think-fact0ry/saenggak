@@ -95,7 +95,7 @@
   .sr-none{padding:12px;text-align:center;font-size:12px;color:#bbb}
 
   /* ══ 지도 ══ */
-  #map{position:fixed;top:76px;left:0;right:0;bottom:0}
+  #map{position:fixed;top:76px;left:0;right:0;bottom:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
   /* ══ 범례 ══ */
   .legend{
@@ -269,6 +269,7 @@
   <div class="divider"></div>
   <select id="providerSelect"></select>
   <div class="filter-group">
+    <button class="fbtn active" id="filterHome" onclick="toggleFilter('home')">선생님</button>
     <button class="fbtn active" id="filterAssigned" onclick="toggleFilter('assigned')">배정</button>
     <button class="fbtn active" id="filterWaiting" onclick="toggleFilter('waiting')">대기</button>
   </div>
@@ -352,9 +353,10 @@ var CONFIG = {
 
 var map, markers = [], overlays = [], infoWindow;
 var currentData = null;
-var showAssigned = true, showWaiting = true;
+var showAssigned = true, showWaiting = true, showHome = true;
 var routeFrom = null, routeTo = null;
 var placesService = null;  // services.Places 인스턴스
+var geocoder = null;       // services.Geocoder (좌표→주소, 우클릭/롱프레스용)
 
 // ══ Haversine ══
 function haversine(a,b,c,d){var R=6371,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180,x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
@@ -443,6 +445,14 @@ function initMap() {
   infoWindow = new kakao.maps.InfoWindow({ zIndex: 10 });
   kakao.maps.event.addListener(map, 'click', function() { infoWindow.close(); });
   placesService = new kakao.maps.services.Places();
+  geocoder = new kakao.maps.services.Geocoder();
+
+  // 임의 지점 선택: PC 우클릭 + 모바일 롱프레스
+  var mapEl = document.getElementById('map');
+  kakao.maps.event.addListener(map, 'rightclick', function(mouseEvent) { handleMapPointPick(mouseEvent.latLng); });
+  mapEl.addEventListener('contextmenu', function(e) { e.preventDefault(); }); // 브라우저 기본 메뉴 차단
+  setupLongPress(mapEl);
+
   setupMapMoveListener();
   loadProviders();
 }
@@ -564,16 +574,22 @@ function renderMarkers() {
   if (!currentData) return;
   var d = currentData, hLat = d.provider.lat, hLng = d.provider.lng;
 
-  if (d.allProviders && d.allProviders.length > 0) {
-    d.allProviders.forEach(function(p) {
-      if (p.lat && p.lng) {
-        addMarker(p.lat, p.lng, 'home', 1, buildHomeIW(p));
-        addLabel(p.lat, p.lng, p.name, 'home');
-      }
-    });
-  } else if (hLat && hLng) {
-    addMarker(hLat, hLng, 'home', 1, buildHomeIW(d.provider));
-    addLabel(hLat, hLng, d.provider.name, 'home');
+  if (showHome) {
+    if (d.allProviders && d.allProviders.length > 0) {
+      // [ALL 모드] 집은 테두리 링 + 아동보다 낮은 z-index.
+      //   겹치면 아동 마커가 위로 올라와 클릭이 아동에 닿고(아이 클릭 우선),
+      //   링은 아동보다 커서 비어져 나온 테두리를 누르면 선생님이 잡힘.
+      d.allProviders.forEach(function(p) {
+        if (p.lat && p.lng) {
+          addHomeRingMarker(p.lat, p.lng, buildHomeIW(p));
+          addLabel(p.lat, p.lng, p.name, 'home');
+        }
+      });
+    } else if (hLat && hLng) {
+      // [단일 선생님] 집이 하나뿐 → 가림 없음, 기존 채운 마커 유지
+      addMarker(hLat, hLng, 'home', 1, buildHomeIW(d.provider));
+      addLabel(hLat, hLng, d.provider.name, 'home');
+    }
   }
 
   if (showAssigned) groupByCoord(d.assigned).forEach(function(g) {
@@ -637,6 +653,18 @@ var MC={home:{f:'#3b82f6',s:'#1d4ed8'},assigned:{f:'#22c55e',s:'#15803d'},waitin
 function svgUri(s){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s)}
 function markerSVG(t){var c=MC[t];if(t==='home')return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>');return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>')}
 function markerSVGCount(t,n){var c=MC[t];return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/><circle cx="15" cy="11" r="7" fill="#fff"/><text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+n+'</text></svg>')}
+
+// 집(선생님) 테두리 링 — ALL 모드 전용. 가운데가 비어 밑의 아동이 비쳐 보임.
+function markerHomeRing(){return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="rgba(59,130,246,0.12)" stroke="#1d4ed8" stroke-width="2.5"/></svg>')}
+function addHomeRingMarker(lat,lng,iwContent){
+  if(!lat||!lng)return;
+  var pos=new kakao.maps.LatLng(lat,lng);
+  var img=new kakao.maps.MarkerImage(markerHomeRing(),new kakao.maps.Size(30,30),{offset:new kakao.maps.Point(15,15)});
+  // zIndex 0 = 아동(배정5/대기1)보다 아래. 겹침부에선 아동이 클릭을 먹음.
+  var m=new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:0});
+  kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
+  markers.push(m);
+}
 
 // ══ 인포윈도우 ══
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
@@ -970,6 +998,50 @@ function findMarkerAt(lat, lng) {
   return found;
 }
 
+// ══ 지도 임의 지점 선택 (PC 우클릭 / 모바일 롱프레스) ══
+// 임의 위치에 빨간 핀을 찍고 역지오코딩한 주소 + 출발/도착 버튼을 띄운다.
+function handleMapPointPick(latlng) {
+  if (!latlng || !geocoder) return;
+  var lat = latlng.getLat(), lng = latlng.getLng();
+  geocoder.coord2Address(lng, lat, function(result, status) {
+    var addr = '선택한 지점';
+    if (status === kakao.maps.services.Status.OK && result[0]) {
+      addr = result[0].road_address ? result[0].road_address.address_name
+           : (result[0].address ? result[0].address.address_name : addr);
+    }
+    var iw = '<div class="iw"><div class="iw-title">📍 ' + esc(addr) + '</div>'
+      + '<div class="iw-row" style="color:#aaa;font-size:11px">' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '</div>'
+      + routeBtns(addr, lat, lng) + '</div>';
+    var sm = placeSearchMarker(lat, lng, iw);  // 검색 핀과 동일(임의 지점 = 빨강)
+    infoWindow.setContent(iw);
+    infoWindow.open(map, sm);
+  });
+}
+
+// 모바일 롱프레스(600ms, 손가락 1개, 이동 10px 미만)를 우클릭처럼 처리.
+function setupLongPress(el) {
+  var timer = null, sx = 0, sy = 0, moved = false;
+  el.addEventListener('touchstart', function(e) {
+    if (e.touches.length !== 1) { clearTimeout(timer); return; }
+    var t = e.touches[0]; sx = t.clientX; sy = t.clientY; moved = false;
+    timer = setTimeout(function() {
+      if (moved) return;
+      var proj = map.getProjection();
+      if (!proj || !proj.coordsFromContainerPoint) return;  // 구버전 SDK 방어
+      var rect = el.getBoundingClientRect();
+      var latlng = proj.coordsFromContainerPoint(new kakao.maps.Point(sx - rect.left, sy - rect.top));
+      if (latlng) handleMapPointPick(latlng);
+    }, 600);
+  }, { passive: true });
+  el.addEventListener('touchmove', function(e) {
+    if (!e.touches.length) return;
+    var t = e.touches[0];
+    if (Math.abs(t.clientX - sx) > 10 || Math.abs(t.clientY - sy) > 10) { moved = true; clearTimeout(timer); }
+  }, { passive: true });
+  el.addEventListener('touchend', function() { clearTimeout(timer); });
+  el.addEventListener('touchcancel', function() { clearTimeout(timer); });
+}
+
 (function(){
   var input = document.getElementById('searchInput');
   var results = document.getElementById('searchResults');
@@ -1184,6 +1256,7 @@ function findMarkerAt(lat, lng) {
 // ══ 필터 ══
 function toggleFilter(t) {
   if (t==='assigned'){showAssigned=!showAssigned;document.getElementById('filterAssigned').classList.toggle('active',showAssigned)}
+  else if (t==='home'){showHome=!showHome;document.getElementById('filterHome').classList.toggle('active',showHome)}
   else{showWaiting=!showWaiting;document.getElementById('filterWaiting').classList.toggle('active',showWaiting)}
   renderMarkers();
 }
