@@ -129,9 +129,21 @@ var CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec'
 };
 
+// 관리자 토큰: provider-map.html과 동일 키 → 한쪽에서 입력하면 양쪽 적용
+var ADMIN_TOKEN_KEY = 'saenggak_admin_token';
+function getAdminToken(){ try { return localStorage.getItem(ADMIN_TOKEN_KEY) || ''; } catch(e){ return ''; } }
+function setAdminToken(t){ try { localStorage.setItem(ADMIN_TOKEN_KEY, (t||'').trim()); } catch(e){} }
+function dashUrl(){ var u = CONFIG.GAS_URL + '?action=dashboard'; var t = getAdminToken(); if (t) u += '&t=' + encodeURIComponent(t); return u; }
+
 (function(){
-  var url = CONFIG.GAS_URL + '?action=dashboard';
-  fetch(url, {redirect:'follow'}).then(function(r){return r.json()}).then(render).catch(function(e){
+  fetch(dashUrl(), {redirect:'follow'}).then(function(r){return r.json()}).then(function(data){
+    if (data && data.error === 'Unauthorized') {
+      var t = prompt('🔒 관리자 인증 토큰을 입력하세요', getAdminToken());
+      if (t !== null) { setAdminToken(t); }
+      if (getAdminToken()) return fetch(dashUrl(), {redirect:'follow'}).then(function(r){return r.json()}).then(render);
+    }
+    render(data);
+  }).catch(function(e){
     document.getElementById('timestamp').textContent = '로드 실패: ' + e.message;
   });
 })();
