@@ -167,11 +167,9 @@
   .route-go.disabled{background:#ddd;color:#aaa;pointer-events:none}
 
   /* ══ 마커 라벨 ══ */
-  .mlbl{padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;transform:translateX(-50%)}
+  .mlbl{padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;transform:translateX(-50%);will-change:transform}
   .mlbl.home{color:#1d4ed8;margin:14px 0 0 0}
   .mlbl.assigned{margin:-46px 0 0 0}
-  /* 드래그 중 라벨(DOM 오버레이) 숨김 → 팬 시 따라오는 지연 제거 (dragend에 복원) */
-  body.dragging .mlbl{display:none}
 
   /* ══ 추천 ══ */
   .iw-rec{margin-top:6px;padding-top:6px;border-top:1.5px solid #e8f0e5}
@@ -1523,9 +1521,6 @@ function setupMapMoveListener() {
   if (!map) return;
   kakao.maps.event.addListener(map, 'dragend', nlMapMoveHandler);
   kakao.maps.event.addListener(map, 'zoom_changed', nlMapMoveHandler);
-  // 드래그 중 라벨 숨김 → 팬 지연 제거
-  kakao.maps.event.addListener(map, 'dragstart', function(){ document.body.classList.add('dragging'); });
-  kakao.maps.event.addListener(map, 'dragend',   function(){ document.body.classList.remove('dragging'); });
   // 줌 임계(링 z-index / 배정 라벨 표시)를 넘을 때만 마커 재배치
   _zoomSig = zoomSig();
   kakao.maps.event.addListener(map, 'zoom_changed', function() {
