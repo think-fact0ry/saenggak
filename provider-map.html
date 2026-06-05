@@ -264,6 +264,23 @@
 </head>
 <body>
 
+<!-- ════ 관리자 토큰 입력 모달 (password 마스킹) ════ -->
+<div id="tokenModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:10px;padding:20px;width:300px;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,.25)">
+    <div id="tokenModalMsg" style="font-size:13px;color:#333;margin-bottom:10px">관리자 인증 토큰을 입력하세요</div>
+    <div style="position:relative">
+      <input id="tokenModalInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"
+             style="width:100%;box-sizing:border-box;padding:8px 34px 8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px">
+      <button type="button" id="tokenModalToggle" title="표시/숨김"
+              style="position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;font-size:15px;color:#999;padding:4px">👁</button>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button type="button" id="tokenModalCancel" style="padding:6px 12px;border:1px solid #ddd;background:#fff;border-radius:6px;cursor:pointer;font-size:13px">취소</button>
+      <button type="button" id="tokenModalOk" style="padding:6px 12px;border:none;background:#4a90d9;color:#fff;border-radius:6px;cursor:pointer;font-size:13px">확인</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ 컨트롤 ════ -->
 <div class="controls">
   <div class="logo">오감쑥쑥 <span>지도</span></div>
@@ -465,10 +482,31 @@ function initMap() {
 var ADMIN_TOKEN_KEY = 'saenggak_admin_token';
 function getAdminToken(){ try { return localStorage.getItem(ADMIN_TOKEN_KEY) || ''; } catch(e){ return ''; } }
 function setAdminToken(t){ try { localStorage.setItem(ADMIN_TOKEN_KEY, (t||'').trim()); } catch(e){} }
+// prompt()는 마스킹 불가 → password 입력 모달로 대체. Promise<string>(현재 토큰) 반환.
 function promptAdminToken(msg){
-  var t = prompt(msg || '관리자 인증 토큰을 입력하세요', getAdminToken());
-  if (t !== null) setAdminToken(t);
-  return getAdminToken();
+  return new Promise(function(resolve){
+    var modal  = document.getElementById('tokenModal');
+    var input  = document.getElementById('tokenModalInput');
+    var toggle = document.getElementById('tokenModalToggle');
+    var okBtn  = document.getElementById('tokenModalOk');
+    var cancel = document.getElementById('tokenModalCancel');
+    document.getElementById('tokenModalMsg').textContent = msg || '관리자 인증 토큰을 입력하세요';
+    input.type  = 'password';
+    input.value = getAdminToken();
+    modal.style.display = 'flex';
+    setTimeout(function(){ input.focus(); input.select(); }, 50);
+
+    function close(){
+      modal.style.display = 'none';
+      okBtn.onclick = cancel.onclick = toggle.onclick = input.onkeydown = null;
+    }
+    function commit(){ setAdminToken(input.value); close(); resolve(getAdminToken()); }  // 확인=저장(빈값이면 비움)
+    function abort(){ close(); resolve(getAdminToken()); }                                // 취소=기존 토큰 유지
+    okBtn.onclick   = commit;
+    cancel.onclick  = abort;
+    toggle.onclick  = function(){ input.type = (input.type === 'password') ? 'text' : 'password'; input.focus(); };
+    input.onkeydown = function(e){ if(e.key==='Enter'){ commit(); } else if(e.key==='Escape'){ abort(); } };
+  });
 }
 
 function _gasUrl(action, params) {
@@ -484,8 +522,10 @@ function fetchGAS(action, params) {
   return _getJson(_gasUrl(action, params)).then(function(data){
     // 토큰 없음/틀림 → 입력 받아 저장 후 1회 재시도 (무한루프 방지: 한 번만)
     if (data && data.error === 'Unauthorized') {
-      promptAdminToken('🔒 관리자 인증 필요/실패 — 토큰을 입력하세요:');
-      if (getAdminToken()) return _getJson(_gasUrl(action, params));
+      return promptAdminToken('🔒 관리자 인증 필요/실패 — 토큰을 입력하세요:').then(function(){
+        if (getAdminToken()) return _getJson(_gasUrl(action, params));
+        return data;
+      });
     }
     return data;
   });
