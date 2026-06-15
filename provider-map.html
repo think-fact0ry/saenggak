@@ -1517,7 +1517,10 @@ function renderNewList() {
     });
     filtered.sort(function(a, b) { return a._dist - b._dist; });
   } else {
-    filtered.sort(function(a, b) { return parseTimestamp(b.timestamp) - parseTimestamp(a.timestamp); });
+    // 최신순 = 시트 행 순서(아래일수록 최신). A열 타임스탬프는 신청폼 수정 시에도 고정이라
+    // 못 쓰고(수정 행은 A열 유지한 채 맨 아래로 이동), 실제 최신성은 행 위치가 진실.
+    // 표시용 날짜(fmtRelativeDate)는 여전히 A열 timestamp를 씀(접수일 표기는 그대로).
+    filtered.sort(function(a, b) { return (b.row || 0) - (a.row || 0); });
   }
 
   countEl.textContent = filtered.length + '건 (필터)';
