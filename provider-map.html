@@ -110,7 +110,7 @@
   }
   .legend-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
   .ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-  .ldot.home{background:#1a1a1a}.ldot.assigned{background:#84cc16}.ldot.waiting{background:#f59e0b}
+  .ldot.home{background:#3b82f6}.ldot.assigned{background:#22c55e}.ldot.waiting{background:#f59e0b}
 
   /* ══ 인포윈도우 ══ */
   .iw{padding:10px 12px 10px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:200px;max-width:300px;max-height:300px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
@@ -299,7 +299,7 @@
   </div>
   <div class="divider"></div>
   <div class="svc-filter" id="svcFilter">
-    <button class="sbtn active" data-svc="오감" onclick="pickService('오감')">오감<i style="background:#84cc16"></i></button>
+    <button class="sbtn active" data-svc="오감" onclick="pickService('오감')">오감<i style="background:#22c55e"></i></button>
     <button class="sbtn" data-svc="아청심" onclick="pickService('아청심')">아청<i style="background:#38bdf8"></i></button>
     <button class="sbtn" data-svc="성인" onclick="pickService('성인')">성인<i style="background:#f472b6"></i></button>
     <button class="sbtn" data-svc="정신토탈" onclick="pickService('정신토탈')">정신<i style="background:#a78bfa"></i></button>
@@ -569,18 +569,22 @@ document.getElementById('providerSelect').addEventListener('change', function() 
   loadMapData(this.value);
 });
 
-function loadAllProviders() {
-  showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
-  document.getElementById('filterDay').value=''; document.getElementById('filterTime').value='';
+function loadAllProviders(keepView) {
+  infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
+  if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; }
   document.getElementById('provLinkBtn').style.display='none';
-  fetchGAS('mapdata', {provider: '__ALL__', service: currentService}).then(function(data) {
-    showLoading(false);
+  var key='__ALL__|'+currentService;
+  var done=function(data){
     if (data.error) { showToast(data.error); return; }
+    _svcCache[key]=data;
     currentData = data;
     updateProviderCounts(data.assigned);
-    renderMarkers(); fitBounds(); updateDashboard();
+    renderMarkers(); if(!keepView) fitBounds(); updateDashboard();
     populateNlFilters(); renderNewList();
-  }).catch(function(e) { showLoading(false); showToast('로드 실패: '+e.message); });
+  };
+  if(_svcCache[key]){ done(_svcCache[key]); return; }   // 캐시 즉시 (로딩 없음)
+  showLoading(true);
+  fetchGAS('mapdata', {provider: '__ALL__', service: currentService}).then(function(data){ showLoading(false); done(data); }).catch(function(e) { showLoading(false); showToast('로드 실패: '+e.message); });
 }
 
 function updateProviderCounts(assigned) {
@@ -600,18 +604,21 @@ function updateProviderCounts(assigned) {
   }
 }
 
-function loadMapData(name) {
-  showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
-  document.getElementById('filterDay').value=''; document.getElementById('filterTime').value='';
+function loadMapData(name, keepView) {
+  infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
+  if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; }
   document.getElementById('provLinkBtn').style.display='inline-block';
-  fetchGAS('mapdata', {provider:name, service: currentService}).then(function(data) {
-    showLoading(false);
+  var key=name+'|'+currentService;
+  var done=function(data){
     if (data.error) { showToast(data.error); return; }
-    currentData = data;
-    currentData.allProviders = null;
-    renderMarkers(); fitBounds(); updateDashboard();
+    _svcCache[key]=data;
+    currentData = data; currentData.allProviders = null;
+    renderMarkers(); if(!keepView) fitBounds(); updateDashboard();
     populateNlFilters(); renderNewList();
-  }).catch(function(e) { showLoading(false); showToast('데이터 로드 실패: '+e.message); });
+  };
+  if(_svcCache[key]){ done(_svcCache[key]); return; }   // 캐시 즉시
+  showLoading(true);
+  fetchGAS('mapdata', {provider:name, service: currentService}).then(function(data){ showLoading(false); done(data); }).catch(function(e) { showLoading(false); showToast('데이터 로드 실패: '+e.message); });
 }
 
 // ══ 대시보드 ══
@@ -731,28 +738,29 @@ function fitBounds() {
 }
 
 // ══ 마커 SVG ══
-// 서비스별 배정 마커색 (대기는 전부 노랑 고정, 선생님은 검정)
-var SVC_COLOR={'오감':{f:'#84cc16',s:'#65a30d'},'아청심':{f:'#38bdf8',s:'#0284c7'},'성인':{f:'#f472b6',s:'#db2777'},'정신토탈':{f:'#a78bfa',s:'#7c3aed'},'비바우처재가':{f:'#9ca3af',s:'#6b7280'},'비바우처기관':{f:'#9ca3af',s:'#6b7280'}};
+// 서비스별 배정 마커색 (오감=기존 초록, 대기는 전부 노랑 고정, 선생님은 기존 파랑)
+var SVC_COLOR={'오감':{f:'#22c55e',s:'#15803d'},'아청심':{f:'#38bdf8',s:'#0284c7'},'성인':{f:'#f472b6',s:'#db2777'},'정신토탈':{f:'#a78bfa',s:'#7c3aed'},'비바우처재가':{f:'#9ca3af',s:'#6b7280'},'비바우처기관':{f:'#9ca3af',s:'#6b7280'}};
 var currentService='오감';
-var MC={home:{f:'#1a1a1a',s:'#000000'},assigned:SVC_COLOR['오감'],waiting:{f:'#f59e0b',s:'#d97706'}};
-// 서비스 선택(단일) — 배정색·범례·데이터 갱신. 배정/대기 토글 상태는 유지
+var _svcCache={};   // (provider|service) → mapdata 캐시: 서비스 전환 즉시화(액션 시 비움)
+var MC={home:{f:'#3b82f6',s:'#1d4ed8'},assigned:SVC_COLOR['오감'],waiting:{f:'#f59e0b',s:'#d97706'}};
+// 서비스 선택(단일) — 배정색·범례·데이터만 갱신. 줌/위치(keepView)·토글 유지
 function pickService(svc){
-  if(!SVC_COLOR[svc])return;
+  if(!SVC_COLOR[svc]||svc===currentService)return;
   currentService=svc;
   MC.assigned=SVC_COLOR[svc];
   _imgCache={};   // 배정 색이 바뀌었으니 마커 이미지 캐시 무효화
   var btns=document.querySelectorAll('#svcFilter .sbtn');
   for(var i=0;i<btns.length;i++)btns[i].classList.toggle('active',btns[i].getAttribute('data-svc')===svc);
   var ld=document.querySelector('.legend .ldot.assigned');if(ld)ld.style.background=MC.assigned.f;
-  reloadCurrent();
+  reloadCurrent(true);   // 줌/위치 유지
 }
 function svgUri(s){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s)}
 // viewBox 상단에 -2 여백: 물방울 원의 맨 위 stroke가 잘리던 문제(#4) 방지
-function markerSVG(t){var c=MC[t];if(t==='home')return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="34" viewBox="0 -2 32 34"><defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1a1a" stop-opacity="0.92"/><stop offset="1" stop-color="#1a1a1a" stop-opacity="0.32"/></linearGradient></defs><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="url(#hg)" stroke="#111" stroke-width="1.2"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="#1a1a1a"/></svg>');return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="26" viewBox="0 -2 24 26"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>')}
+function markerSVG(t){var c=MC[t];if(t==='home')return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="34" viewBox="0 -2 32 34"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>');return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="26" viewBox="0 -2 24 26"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>')}
 function markerSVGCount(t,n){var c=MC[t];return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="32" viewBox="0 -2 30 32"><path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/><circle cx="15" cy="11" r="7" fill="#fff"/><text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+n+'</text></svg>')}
 
 // 집(선생님) 테두리 링 — ALL 모드 전용. 가운데가 비어 밑의 아동이 비쳐 보임.
-function markerHomeRing(){return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="rgba(0,0,0,0.10)" stroke="#1a1a1a" stroke-width="2.5"/></svg>')}
+function markerHomeRing(){return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="rgba(59,130,246,0.12)" stroke="#1d4ed8" stroke-width="2.5"/></svg>')}
 
 // ── 마커 이미지 캐시: 같은 모양은 한 번만 생성 (렌더/줌 재배치 시 SVG 인코딩 반복 제거) ──
 var _imgCache = {}, _ringImg = null;
@@ -971,7 +979,7 @@ function doAssignTo(row, provName) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast(provName + ' 배정 완료!', true);
-    reloadCurrent();
+    _svcCache = {}; reloadCurrent(true);
   }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
 }
 
@@ -985,7 +993,7 @@ function doAssign(row) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast(prov + ' 배정 완료!', true);
-    reloadCurrent();
+    _svcCache = {}; reloadCurrent(true);
   }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
 }
 
@@ -997,7 +1005,7 @@ function doStatus(row, status) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast(label + ' 완료', true);
-    reloadCurrent();
+    _svcCache = {}; reloadCurrent(true);
   }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
 }
 
@@ -1012,7 +1020,7 @@ function doAbsent(row, currentStatus) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast(next + ' 처리 완료', true);
-    reloadCurrent();
+    _svcCache = {}; reloadCurrent(true);
   }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
 }
 
@@ -1023,7 +1031,7 @@ function doUnassign(row) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast('배정 취소됨', true);
-    reloadCurrent();
+    _svcCache = {}; reloadCurrent(true);
   }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
 }
 
@@ -1053,10 +1061,10 @@ function doCopy(idx) {
   }
 }
 
-function reloadCurrent() {
+function reloadCurrent(keepView) {
   var sel = document.getElementById('providerSelect').value;
-  if (sel === '__ALL__') loadAllProviders();
-  else if (sel) loadMapData(sel);
+  if (sel === '__ALL__') loadAllProviders(keepView);
+  else if (sel) loadMapData(sel, keepView);
 }
 
 function copyProviderLink() {
