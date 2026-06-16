@@ -47,6 +47,10 @@
   select:focus{border-color:#3a6b4e}
   #providerSelect{flex:1;max-width:200px}
   .filter-group{display:flex;gap:3px}
+  .svc-filter{display:flex;gap:4px}
+  .sbtn{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:600;color:#9aa3ae;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 7px;cursor:pointer;font-family:inherit;line-height:1.1;white-space:nowrap}
+  .sbtn.active{color:#191f28;border-color:#999;background:#f7f7f5}
+  .sbtn i{width:8px;height:8px;border-radius:50%;display:block}
   .fbtn{
     padding:5px 10px;border-radius:6px;font-size:11px;font-family:inherit;
     cursor:pointer;border:1.5px solid #d4cfc6;background:#fff;color:#666;transition:all .15s;
@@ -106,7 +110,7 @@
   }
   .legend-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
   .ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-  .ldot.home{background:#3b82f6}.ldot.assigned{background:#22c55e}.ldot.waiting{background:#f59e0b}
+  .ldot.home{background:#1a1a1a}.ldot.assigned{background:#84cc16}.ldot.waiting{background:#f59e0b}
 
   /* ══ 인포윈도우 ══ */
   .iw{padding:10px 12px 10px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:200px;max-width:300px;max-height:300px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
@@ -292,6 +296,15 @@
     <button class="fbtn active" id="filterHome" onclick="toggleFilter('home')">선생님</button>
     <button class="fbtn active" id="filterAssigned" onclick="toggleFilter('assigned')">배정</button>
     <button class="fbtn active" id="filterWaiting" onclick="toggleFilter('waiting')">대기</button>
+  </div>
+  <div class="divider"></div>
+  <div class="svc-filter" id="svcFilter">
+    <button class="sbtn active" data-svc="오감" onclick="pickService('오감')">오감<i style="background:#84cc16"></i></button>
+    <button class="sbtn" data-svc="아청심" onclick="pickService('아청심')">아청<i style="background:#38bdf8"></i></button>
+    <button class="sbtn" data-svc="성인" onclick="pickService('성인')">성인<i style="background:#f472b6"></i></button>
+    <button class="sbtn" data-svc="정신토탈" onclick="pickService('정신토탈')">정신<i style="background:#a78bfa"></i></button>
+    <button class="sbtn" data-svc="비바우처재가" onclick="pickService('비바우처재가')">일반·가정<i style="background:#9ca3af"></i></button>
+    <button class="sbtn" data-svc="비바우처기관" onclick="pickService('비바우처기관')">일반·기관<i style="background:#9ca3af"></i></button>
   </div>
   <div class="divider"></div>
   <div class="search-wrap">
@@ -560,7 +573,7 @@ function loadAllProviders() {
   showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
   document.getElementById('filterDay').value=''; document.getElementById('filterTime').value='';
   document.getElementById('provLinkBtn').style.display='none';
-  fetchGAS('mapdata', {provider: '__ALL__'}).then(function(data) {
+  fetchGAS('mapdata', {provider: '__ALL__', service: currentService}).then(function(data) {
     showLoading(false);
     if (data.error) { showToast(data.error); return; }
     currentData = data;
@@ -591,7 +604,7 @@ function loadMapData(name) {
   showLoading(true); infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
   document.getElementById('filterDay').value=''; document.getElementById('filterTime').value='';
   document.getElementById('provLinkBtn').style.display='inline-block';
-  fetchGAS('mapdata', {provider:name}).then(function(data) {
+  fetchGAS('mapdata', {provider:name, service: currentService}).then(function(data) {
     showLoading(false);
     if (data.error) { showToast(data.error); return; }
     currentData = data;
@@ -718,14 +731,28 @@ function fitBounds() {
 }
 
 // ══ 마커 SVG ══
-var MC={home:{f:'#3b82f6',s:'#1d4ed8'},assigned:{f:'#22c55e',s:'#15803d'},waiting:{f:'#f59e0b',s:'#d97706'}};
+// 서비스별 배정 마커색 (대기는 전부 노랑 고정, 선생님은 검정)
+var SVC_COLOR={'오감':{f:'#84cc16',s:'#65a30d'},'아청심':{f:'#38bdf8',s:'#0284c7'},'성인':{f:'#f472b6',s:'#db2777'},'정신토탈':{f:'#a78bfa',s:'#7c3aed'},'비바우처재가':{f:'#9ca3af',s:'#6b7280'},'비바우처기관':{f:'#9ca3af',s:'#6b7280'}};
+var currentService='오감';
+var MC={home:{f:'#1a1a1a',s:'#000000'},assigned:SVC_COLOR['오감'],waiting:{f:'#f59e0b',s:'#d97706'}};
+// 서비스 선택(단일) — 배정색·범례·데이터 갱신. 배정/대기 토글 상태는 유지
+function pickService(svc){
+  if(!SVC_COLOR[svc])return;
+  currentService=svc;
+  MC.assigned=SVC_COLOR[svc];
+  _imgCache={};   // 배정 색이 바뀌었으니 마커 이미지 캐시 무효화
+  var btns=document.querySelectorAll('#svcFilter .sbtn');
+  for(var i=0;i<btns.length;i++)btns[i].classList.toggle('active',btns[i].getAttribute('data-svc')===svc);
+  var ld=document.querySelector('.legend .ldot.assigned');if(ld)ld.style.background=MC.assigned.f;
+  reloadCurrent();
+}
 function svgUri(s){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s)}
 // viewBox 상단에 -2 여백: 물방울 원의 맨 위 stroke가 잘리던 문제(#4) 방지
-function markerSVG(t){var c=MC[t];if(t==='home')return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="34" viewBox="0 -2 32 34"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>');return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="26" viewBox="0 -2 24 26"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>')}
+function markerSVG(t){var c=MC[t];if(t==='home')return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="34" viewBox="0 -2 32 34"><defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1a1a" stop-opacity="0.92"/><stop offset="1" stop-color="#1a1a1a" stop-opacity="0.32"/></linearGradient></defs><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="url(#hg)" stroke="#111" stroke-width="1.2"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="#1a1a1a"/></svg>');return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="26" viewBox="0 -2 24 26"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>')}
 function markerSVGCount(t,n){var c=MC[t];return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="32" viewBox="0 -2 30 32"><path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/><circle cx="15" cy="11" r="7" fill="#fff"/><text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+n+'</text></svg>')}
 
 // 집(선생님) 테두리 링 — ALL 모드 전용. 가운데가 비어 밑의 아동이 비쳐 보임.
-function markerHomeRing(){return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="rgba(59,130,246,0.12)" stroke="#1d4ed8" stroke-width="2.5"/></svg>')}
+function markerHomeRing(){return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="rgba(0,0,0,0.10)" stroke="#1a1a1a" stroke-width="2.5"/></svg>')}
 
 // ── 마커 이미지 캐시: 같은 모양은 한 번만 생성 (렌더/줌 재배치 시 SVG 인코딩 반복 제거) ──
 var _imgCache = {}, _ringImg = null;
@@ -940,7 +967,7 @@ function calcTimeOverlap(childTimes, provAvail) {
 function doAssignTo(row, provName) {
   if (!confirm(row + '행 아동을 ' + provName + ' 선생님에게 배정합니다.\n\n진행할까요?')) return;
   showLoading(true); infoWindow.close();
-  fetchGAS('assign', { row: row, provider: provName }).then(function(res) {
+  fetchGAS('assign', { row: row, provider: provName, service: currentService }).then(function(res) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast(provName + ' 배정 완료!', true);
@@ -954,7 +981,7 @@ function doAssign(row) {
   if (!prov) { showToast('선생님을 먼저 선택하세요'); return; }
   if (!confirm(row + '행 아동을 ' + prov + ' 선생님에게 배정합니다.\n\n진행할까요?')) return;
   showLoading(true); infoWindow.close();
-  fetchGAS('assign', { row: row, provider: prov }).then(function(res) {
+  fetchGAS('assign', { row: row, provider: prov, service: currentService }).then(function(res) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast(prov + ' 배정 완료!', true);
@@ -966,7 +993,7 @@ function doStatus(row, status) {
   var label = status === '거절' ? '거절 처리' : status + ' 처리';
   if (!confirm(row + '행 아동: ' + label + '\n\n진행할까요?')) return;
   showLoading(true); infoWindow.close();
-  fetchGAS('status', { row: row, status: status }).then(function(res) {
+  fetchGAS('status', { row: row, status: status, service: currentService }).then(function(res) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast(label + ' 완료', true);
@@ -981,7 +1008,7 @@ function doAbsent(row, currentStatus) {
     : row + '행 아동: 부재 처리\n\n진행할까요?';
   if (!confirm(msg)) return;
   showLoading(true); infoWindow.close();
-  fetchGAS('status', { row: row, status: next }).then(function(res) {
+  fetchGAS('status', { row: row, status: next, service: currentService }).then(function(res) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast(next + ' 처리 완료', true);
@@ -992,7 +1019,7 @@ function doAbsent(row, currentStatus) {
 function doUnassign(row) {
   if (!confirm(row + '행 아동의 배정을 취소합니다.\n\n진행할까요?')) return;
   showLoading(true); infoWindow.close();
-  fetchGAS('unassign', { row: row }).then(function(res) {
+  fetchGAS('unassign', { row: row, service: currentService }).then(function(res) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast('배정 취소됨', true);
