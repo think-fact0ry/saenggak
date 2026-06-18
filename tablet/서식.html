@@ -96,6 +96,17 @@
   #load.on{display:flex;}
   .spin{width:34px;height:34px;border:3px solid var(--g200);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg);}}
+
+  /* 인쇄: 화면의 PDF(#pdfBox)만 인쇄, 나머지 UI 숨김 */
+  @media print {
+    body * { visibility: hidden !important; }
+    #pdfBox, #pdfBox * { visibility: visible !important; }
+    #pdfBox { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: #fff; }
+    .pv-page { box-shadow: none !important; border-radius: 0 !important; margin: 0 !important; page-break-after: always; }
+    .pv-page:last-child { page-break-after: auto; }
+    .pv-actions, .pv-head, .gear, .top, h1, .sub { display: none !important; }
+  }
+  @page { margin: 0; }
 </style>
 </head>
 <body>
@@ -254,15 +265,14 @@ function renderPdf(bytes){
   if (!window.pdfjsLib) return Promise.reject('no pdfjs');
   return pdfjsLib.getDocument({ data: bytes }).promise.then(function(pdf){
     box.innerHTML = '';
-    var cssW = box.clientWidth - 20 || 600;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var targetW = 1500;   // 인쇄 화질용 고해상도(화면엔 width:100%로 축소표시)
     var chain = Promise.resolve();
     for (var p = 1; p <= pdf.numPages; p++){
       (function(pageNum){
         chain = chain.then(function(){
           return pdf.getPage(pageNum).then(function(page){
             var base = page.getViewport({ scale: 1 });
-            var vp = page.getViewport({ scale: (cssW / base.width) * dpr });
+            var vp = page.getViewport({ scale: targetW / base.width });
             var canvas = document.createElement('canvas');
             canvas.className = 'pv-page';
             canvas.width = Math.floor(vp.width);
@@ -287,10 +297,9 @@ function saveForm(){
   document.body.appendChild(a); a.click(); a.remove();
 }
 function printForm(){
-  if (!curBlobUrl) return;
-  var w = window.open(curBlobUrl, '_blank');     // 원본 PDF를 기기 뷰어/인쇄로
-  if (!w){ window.location.href = curBlobUrl; return; }
-  try { w.addEventListener('load', function(){ setTimeout(function(){ try { w.print(); } catch(e){} }, 400); }); } catch(e){}
+  if (!document.getElementById('preview').classList.contains('on')) return;
+  // 화면에 그린 PDF만 인쇄(아래 @media print) → 기기 인쇄 대화상자(대상·페이지·레이아웃) 바로 뜸
+  window.print();
 }
 function backToList(){
   document.getElementById('preview').classList.remove('on');
