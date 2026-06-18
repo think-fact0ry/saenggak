@@ -465,5 +465,20 @@ function renderReport(){
   </div>`;
 }
 </script>
+
+<script>
+// 검사 진행 중(질문 화면에서 답을 하나라도 골랐으면) 홈으로 나갈 때 확인 — 실수로 답 날아가는 것 방지
+document.querySelectorAll('a.back').forEach(function(a){
+  a.addEventListener('click', function(e){
+    var active = document.querySelector('.screen.active');
+    if (!active) return;
+    var onTest = (active.id === 's-sdq' || active.id === 's-kars');
+    var answered = document.querySelectorAll('#s-sdq .opts button.on, #s-kars .opts button.on').length > 0;
+    if (onTest && answered && !confirm('지금 나가면 입력한 답이 사라져요. 나갈까요?')) {
+      e.preventDefault();
+    }
+  });
+});
+</script>
 </body>
 </html>
