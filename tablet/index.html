@@ -96,6 +96,16 @@
   }
   .gate-key:active{background:var(--g200); transform:scale(.94);}
   .gate-key.fn{font-size:15px; font-weight:600; color:var(--g500); background:transparent;}
+
+  /* ═ 오프라인 안내 토스트 ═ */
+  .net-toast{
+    position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom));
+    transform:translateX(-50%) translateY(10px); z-index:200;
+    background:var(--g900); color:#fff; font-size:14px; font-weight:600;
+    padding:12px 18px; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,.18);
+    opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+  }
+  .net-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -148,10 +158,10 @@
       <div class="desc">서비스 종류와 비용</div>
     </a>
 
-    <a class="tile" href="https://blog.naver.com/" target="_blank" rel="noopener">
+    <a class="tile needs-net" href="https://think-factory.kr/activities.html" target="_blank" rel="noopener">
       <div class="ico">📷</div>
-      <div class="name">활동 사진</div>
-      <div class="desc">센터 블로그</div>
+      <div class="name">아이들의 오늘</div>
+      <div class="desc">센터 활동 이야기</div>
     </a>
 
     <a class="tile" href="./검사_오감.html">
@@ -160,7 +170,7 @@
       <div class="desc">오감 사정평가 · 즉시 채점</div>
     </a>
 
-    <a class="tile" href="https://think-fact0ry.github.io/saenggak/provider-map.html">
+    <a class="tile needs-net" href="https://think-fact0ry.github.io/saenggak/provider-map.html">
       <div class="ico">🗺️</div>
       <div class="name">제공인력 지도</div>
       <div class="desc">선생님·대기 아동 위치</div>
@@ -179,6 +189,8 @@
   <div class="foot">생각공작소 · think-factory.kr</div>
 
 </div>
+
+<div class="net-toast" id="netToast">와이파이가 연결되면 볼 수 있어요</div>
 
 <script>
 // ════════════════════════════════════════════════════════════════
@@ -255,6 +267,23 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 }
+
+// 오프라인이면 인터넷 필요한 타일(활동 이야기·제공인력 지도)은 이동 막고 안내.
+// 가격표·심리검사는 서비스워커가 캐시해 와이파이 없어도 열림.
+(function(){
+  var toast = document.getElementById('netToast');
+  var tiles = document.querySelectorAll('a.needs-net');
+  for (var i = 0; i < tiles.length; i++) {
+    tiles[i].addEventListener('click', function(e){
+      if (!navigator.onLine) {
+        e.preventDefault();
+        toast.classList.add('show');
+        clearTimeout(toast._t);
+        toast._t = setTimeout(function(){ toast.classList.remove('show'); }, 2200);
+      }
+    });
+  }
+})();
 </script>
 </body>
 </html>
