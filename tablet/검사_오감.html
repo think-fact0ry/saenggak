@@ -17,6 +17,13 @@
   .screen{display:none;}
   .screen.active{display:block;}
   .wrap{max-width:720px;margin:0 auto;padding:20px 22px 48px;}
+  .back{
+    display:flex; align-items:center; justify-content:center;
+    width:40px; height:40px; margin:0 0 4px -4px; border-radius:12px;
+    border:none; background:transparent; text-decoration:none;
+    font-size:22px; color:var(--g700); cursor:pointer;
+  }
+  .back:active{background:var(--g100);}
 
   /* 진행바 */
   .progress{position:sticky;top:0;background:#fff;padding:14px 0 10px;z-index:5;}
@@ -98,6 +105,7 @@
 <!-- ===== 화면 1: 시작/아동정보 ===== -->
 <div class="screen active" id="s-intro">
   <div class="wrap">
+    <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
     <h1>오감 사정평가</h1>
     <p class="sub">아이의 강점·난점(SDQ)과 주의력(K-ARS)을 살펴봐요. 보호자님이 평소 모습을 떠올리며 답해 주세요.</p>
 
@@ -135,6 +143,7 @@
 <!-- ===== 화면 2: SDQ ===== -->
 <div class="screen" id="s-sdq">
   <div class="wrap">
+    <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
     <div class="progress noprint">
       <div class="bar"><div class="fill" id="sdqFill"></div></div>
       <div class="lbl"><span>강점·난점 설문지 (SDQ-kr)</span><span id="sdqCount">0 / 25</span></div>
@@ -149,6 +158,7 @@
 <!-- ===== 화면 3: K-ARS ===== -->
 <div class="screen" id="s-kars">
   <div class="wrap">
+    <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
     <div class="progress noprint">
       <div class="bar"><div class="fill" id="karsFill"></div></div>
       <div class="lbl"><span>ADHD 평가척도 (K-ARS)</span><span id="karsCount">0 / 18</span></div>
@@ -163,6 +173,7 @@
 <!-- ===== 화면 4: 결과지 ===== -->
 <div class="screen" id="s-result">
   <div class="wrap">
+    <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
     <div id="resultDoc"></div>
     <div class="print-row noprint">
       <button class="btn ghost" id="backEdit">수정</button>

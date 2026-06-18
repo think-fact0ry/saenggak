@@ -250,6 +250,11 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   });
   render();
 })();
+
+// 서비스워커 등록 (Android 설치 배너 조건 + 오프라인). 실패해도 앱 동작엔 지장 없음.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
 </script>
 </body>
 </html>
