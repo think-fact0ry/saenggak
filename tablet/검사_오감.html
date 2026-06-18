@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>오감 사정평가 — 생각공작소</title>
+<title>사전사후검사 — 생각공작소</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
     --green:#3a8a5f; --green-d:#2f6f4d; --green-l:#eaf5ee;
-    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
+    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g400:#b0b8c1; --g300:#d1d6db;
     --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
     --mint-h:#d8e4e2; --mint-l:#eef4ef;
   }
@@ -38,6 +38,7 @@
   .field{margin-bottom:18px;}
   .field label{display:block;font-size:14px;font-weight:600;color:var(--g700);margin:0 2px 8px;}
   .field input{width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
+  .field input::placeholder{color:var(--g400);font-weight:500;}   /* 예시 텍스트는 연하게(현금영수증 폼과 동일) */
   .field input:focus{background:#fff;border-color:var(--green);}
   .toggle{display:flex;gap:10px;}
   .toggle button{flex:1;font-family:inherit;font-size:16px;font-weight:600;padding:15px;border-radius:14px;border:2px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
@@ -106,16 +107,16 @@
 <div class="screen active" id="s-intro">
   <div class="wrap">
     <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
-    <h1>오감 사정평가</h1>
+    <h1>사전사후검사</h1>
     <p class="sub">아이의 강점·난점(SDQ)과 주의력(K-ARS)을 살펴봐요. 보호자님이 평소 모습을 떠올리며 답해 주세요.</p>
 
     <div class="field">
       <label>아이 이름</label>
-      <input id="f-name" type="text" placeholder="예: 김서준" autocomplete="off">
+      <input id="f-name" type="text" placeholder="홍길동" autocomplete="off">
     </div>
     <div class="field">
       <label>생년월일</label>
-      <input id="f-birth" type="text" inputmode="numeric" placeholder="2020. 09. 11" autocomplete="off">
+      <input id="f-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off">
     </div>
     <div class="field">
       <label>성별</label>
@@ -126,12 +127,12 @@
     </div>
     <div class="field">
       <label>보호자 연락처</label>
-      <input id="f-phone" type="text" inputmode="numeric" placeholder="010-1234-5678" autocomplete="off">
+      <input id="f-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off">
     </div>
     <div class="field">
       <label>평가 종류</label>
       <div class="toggle" id="f-type">
-        <button type="button" data-v="사정" class="on">사전(사정평가)</button>
+        <button type="button" data-v="사정" class="on">사정평가</button>
         <button type="button" data-v="사후">사후평가</button>
       </div>
     </div>

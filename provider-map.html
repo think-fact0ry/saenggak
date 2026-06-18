@@ -198,7 +198,7 @@
   .toast.success{background:#16a34a}
   @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-  /* ══ 신규 아동 리스트 사이드 패널 (PC 전용) ══ */
+  /* ══ 신규 아동 리스트 사이드 패널 (PC·태블릿) ══ */
   .nl-fab{
     position:fixed;right:14px;top:92px;z-index:44;
     width:44px;height:44px;border-radius:50%;
@@ -251,6 +251,11 @@
   .nl-empty{padding:40px 16px;text-align:center;color:#bbb;font-size:12px}
   .nl-count{font-size:10.5px;color:#999;padding:6px 14px;background:#fafaf7;border-bottom:1px solid #eee}
 
+  @media(max-width:768px){
+    /* 신규 아동 리스트(최신순·가까운순)를 태블릿에서도 우하단 버튼으로 사용 */
+    .nl-fab{top:auto;bottom:calc(18px + env(safe-area-inset-bottom));right:16px}
+    .nl-panel{width:min(380px,92vw)}
+  }
   @media(max-width:480px){
     .controls{padding:6px 8px;gap:4px}
     .logo,.divider{display:none}
@@ -259,10 +264,8 @@
     #map{top:70px}
     .legend{left:6px;bottom:10px;gap:8px;font-size:10px;padding:6px 8px}
     .route-panel{left:6px;right:6px;transform:none;min-width:auto;bottom:44px}
-    .nl-fab,.nl-panel{display:none !important}
-  }
-  @media(max-width:768px){
-    .nl-fab,.nl-panel{display:none !important}
+    .nl-fab{bottom:calc(14px + env(safe-area-inset-bottom));right:12px}
+    .nl-panel{width:100vw;top:70px}
   }
 </style>
 </head>
@@ -349,7 +352,7 @@
   <a class="route-go disabled" id="routeGoBtn" target="_blank">🧭 카카오맵에서 길찾기</a>
 </div>
 
-<!-- ════ 신규 아동 리스트 FAB + 패널 (PC 전용) ════ -->
+<!-- ════ 신규 아동 리스트 FAB + 패널 (PC·태블릿) ════ -->
 <button class="nl-fab" id="nlFab" onclick="toggleNewList()" title="신청폼 리스트">
   📋<span class="badge" id="nlFabBadge" style="display:none">0</span>
 </button>
