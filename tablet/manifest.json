@@ -3,7 +3,7 @@
   "short_name": "생각공작소",
   "description": "생각공작소 행정 태블릿",
   "start_url": "/saenggak/tablet/",
-  "scope": "/saenggak/tablet/",
+  "scope": "/saenggak/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#ffffff",
