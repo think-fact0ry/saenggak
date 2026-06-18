@@ -392,10 +392,10 @@ var currentData = null;
 var michuholCenter = null;   // 미추홀 센터(주안로 128) 좌표 — 지오코딩 1회로 채워 시작 중심에 사용
 // 4개 센터(빨간 테두리 흰 원 마커로 표시). 주소→좌표 1회 변환. ⚠️ 서구·연수·남동(행복마음) 주소 받으면 addr 채울 것
 var CENTERS = [
-  { name:'미추홀 센터', addr:'인천 미추홀구 주안로 128', isMichuhol:true }
-  // { name:'서구 센터',   addr:'' },
-  // { name:'연수 센터',   addr:'' },
-  // { name:'남동 센터(행복마음)', addr:'' },
+  { name:'미추홀 센터', addr:'인천 미추홀구 주안로 128', isMichuhol:true },
+  { name:'서구 센터',   addr:'인천 서구 봉오대로 270' },
+  { name:'연수 센터',   addr:'인천 연수구 함박뫼로84번길 2' },
+  { name:'남동 센터(행복마음)', addr:'인천 남동구 소래로669번길 47' },
 ];
 var centerPoints = [];   // [{name, pos}] — 지오코딩 완료분
 var showAssigned = true, showWaiting = true, showHome = true;
