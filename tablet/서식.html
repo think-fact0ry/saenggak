@@ -42,14 +42,23 @@
   .msg{text-align:center;color:var(--g500);font-size:14px;padding:40px 16px;}
   .msg.err{color:var(--red);}
 
-  /* 토큰 게이트 */
-  #gate{position:fixed;inset:0;z-index:9999;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;}
+  /* PIN 게이트 (키패드) */
+  #gate{position:fixed;inset:0;z-index:9999;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;padding-bottom:calc(40px + env(safe-area-inset-bottom));}
   #gate.on{display:flex;}
-  .gate-t{font-size:19px;font-weight:700;letter-spacing:-.4px;}
-  .gate-s{font-size:14px;color:var(--g500);margin:8px 0 22px;text-align:center;}
-  .gate-in{width:100%;max-width:320px;font-family:inherit;font-size:17px;padding:15px 16px;border-radius:14px;border:2px solid var(--g200);background:var(--g100);outline:none;}
-  .gate-in:focus{background:#fff;border-color:var(--green);}
-  .gate-btn{max-width:320px;margin-top:12px;}
+  .gate-logo{width:60px;height:60px;border-radius:18px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:18px;}
+  .gate-title{font-size:19px;font-weight:700;letter-spacing:-.4px;}
+  .gate-sub{font-size:14px;color:var(--g500);font-weight:500;margin-top:6px;}
+  .gate-dots{display:flex;gap:14px;margin:28px 0 4px;}
+  .gate-dot{width:14px;height:14px;border-radius:50%;background:var(--g200);transition:background .12s,transform .12s;}
+  .gate-dot.on{background:var(--green);transform:scale(1.15);}
+  .gate-err{height:18px;font-size:13px;color:var(--red);font-weight:600;margin-top:8px;opacity:0;transition:opacity .15s;}
+  .gate-err.show{opacity:1;}
+  .gate-err.shake{animation:gshake .35s;}
+  @keyframes gshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+  .gate-pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px;margin-top:22px;}
+  .gate-key{height:64px;border-radius:18px;background:var(--g100);border:none;cursor:pointer;font-family:inherit;font-size:26px;font-weight:600;color:var(--g900);display:flex;align-items:center;justify-content:center;transition:background .1s,transform .08s;}
+  .gate-key:active{background:var(--g200);transform:scale(.94);}
+  .gate-key.fn{font-size:15px;font-weight:600;color:var(--g500);background:transparent;}
 
   /* 로딩 */
   #load{position:fixed;inset:0;z-index:500;background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center;}
@@ -78,13 +87,29 @@
   </div>
 </div>
 
-<!-- 토큰 게이트 (기기당 1회) -->
+<!-- PIN 게이트 (기기당 1회, 4자리 자동 입장) -->
 <div id="gate">
-  <div class="gate-t">서식함 연결</div>
-  <div class="gate-s">이 기기에서 처음이에요.<br>서식함 암호를 한 번만 입력하면 다음부턴 안 물어요.</div>
-  <input class="gate-in" id="gateIn" type="password" inputmode="text" autocomplete="off" placeholder="서식함 암호" />
-  <button class="btn gate-btn" id="gateOk">연결</button>
-  <div class="gate-s err" id="gateErr" style="color:var(--red);display:none;margin-top:10px">암호가 맞지 않아요.</div>
+  <div class="gate-logo">📄</div>
+  <div class="gate-title">서식함</div>
+  <div class="gate-sub">암호 4자리를 입력해요</div>
+  <div class="gate-dots">
+    <div class="gate-dot"></div><div class="gate-dot"></div><div class="gate-dot"></div><div class="gate-dot"></div>
+  </div>
+  <div class="gate-err" id="gateErr">암호가 맞지 않아요</div>
+  <div class="gate-pad">
+    <button class="gate-key" data-k="1">1</button>
+    <button class="gate-key" data-k="2">2</button>
+    <button class="gate-key" data-k="3">3</button>
+    <button class="gate-key" data-k="4">4</button>
+    <button class="gate-key" data-k="5">5</button>
+    <button class="gate-key" data-k="6">6</button>
+    <button class="gate-key" data-k="7">7</button>
+    <button class="gate-key" data-k="8">8</button>
+    <button class="gate-key" data-k="9">9</button>
+    <span></span>
+    <button class="gate-key" data-k="0">0</button>
+    <button class="gate-key fn" data-k="del">지우기</button>
+  </div>
 </div>
 
 <div id="load"><div class="spin"></div></div>
@@ -110,15 +135,50 @@ function gasGet(action, params){
   });
 }
 
-// ── 토큰 게이트 ──
-function openGate(){ document.getElementById('gate').classList.add('on'); setTimeout(function(){ document.getElementById('gateIn').focus(); }, 60); }
-function closeGate(){ document.getElementById('gate').classList.remove('on'); }
-document.getElementById('gateOk').onclick = function(){
-  var v = document.getElementById('gateIn').value.trim();
-  if (!v) return;
-  setToken(v); closeGate(); loadList();
-};
-document.getElementById('gateIn').addEventListener('keydown', function(e){ if (e.key === 'Enter') document.getElementById('gateOk').click(); });
+// ── PIN 게이트 (키패드, 4자리 채우면 자동 제출 → 서버 검증) ──
+var gateEntry = '';
+function openGate(){ gateEntry = ''; gateDraw(); document.getElementById('gate').classList.add('on'); }
+function gateDraw(){
+  var dots = document.querySelectorAll('#gate .gate-dot');
+  for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('on', i < gateEntry.length);
+}
+function gateFail(msg){
+  var err = document.getElementById('gateErr');
+  if (msg) err.textContent = msg;
+  err.classList.add('show', 'shake');
+  setTimeout(function(){ err.classList.remove('shake'); }, 360);
+  gateEntry = ''; gateDraw();
+}
+function gateSubmit(){
+  var pin = gateEntry;
+  showLoad(true);
+  fetch(GAS_URL + '?action=list&t=' + encodeURIComponent(pin), { redirect:'follow' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      showLoad(false);
+      if (d && d.error){ gateFail('암호가 맞지 않아요'); return; }   // Unauthorized 등
+      setToken(pin);
+      document.getElementById('gate').classList.remove('on');
+      renderList((d && d.files) || []);
+    })
+    .catch(function(){ showLoad(false); gateFail('연결이 안 돼요. 와이파이를 확인해요'); });
+}
+function gatePress(k){
+  var err = document.getElementById('gateErr');
+  if (k === 'del'){ gateEntry = gateEntry.slice(0, -1); err.classList.remove('show'); gateDraw(); return; }
+  if (gateEntry.length >= 4) return;
+  err.classList.remove('show');
+  gateEntry += k; gateDraw();
+  if (gateEntry.length === 4) gateSubmit();
+}
+document.querySelector('#gate .gate-pad').addEventListener('click', function(e){
+  var b = e.target.closest('.gate-key'); if (b) gatePress(b.getAttribute('data-k'));
+});
+document.addEventListener('keydown', function(e){
+  if (!document.getElementById('gate').classList.contains('on')) return;
+  if (/^[0-9]$/.test(e.key)) gatePress(e.key);
+  else if (e.key === 'Backspace') gatePress('del');
+});
 
 // ── 목차 ──
 function loadList(){
@@ -127,7 +187,7 @@ function loadList(){
   document.getElementById('listMsg').style.display = 'none';
   gasGet('list').then(function(d){
     showLoad(false);
-    if (d && d.error === 'Unauthorized'){ setToken(''); document.getElementById('gateErr').style.display='block'; openGate(); return; }
+    if (d && d.error === 'Unauthorized'){ setToken(''); openGate(); return; }
     if (d && d.error){ return showListMsg('불러오기 실패: ' + d.error, true); }
     renderList((d && d.files) || []);
   }).catch(function(e){ showLoad(false); showListMsg('네트워크 오류예요. 와이파이를 확인해 주세요.', true); });
