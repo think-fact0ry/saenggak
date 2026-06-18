@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>서식함 · 생각공작소</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --green:#3a8a5f; --green-d:#2f6f4d;
+    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
+    --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;}
+  .wrap{max-width:720px;margin:0 auto;padding:20px 22px 48px;}
+  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin:0 0 4px -4px;border-radius:12px;border:none;background:transparent;text-decoration:none;font-size:22px;color:var(--g700);cursor:pointer;}
+  .back:active{background:var(--g100);}
+  h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:6px 2px 4px;}
+  .sub{font-size:14px;color:var(--g500);font-weight:500;margin:0 2px 22px;}
+
+  /* 목차 */
+  .list{display:flex;flex-direction:column;gap:10px;}
+  .item{display:flex;align-items:center;gap:14px;background:var(--g100);border:1.5px solid transparent;border-radius:16px;padding:18px 18px;cursor:pointer;transition:transform .08s,background .15s;}
+  .item:active{transform:scale(.99);background:#eef0f3;}
+  .item .ico{font-size:24px;flex-shrink:0;}
+  .item .meta{flex:1;min-width:0;}
+  .item .nm{font-size:16px;font-weight:700;letter-spacing:-.3px;}
+  .item .dt{font-size:12.5px;color:var(--g500);margin-top:2px;}
+  .item .arrow{color:var(--g300);font-size:20px;}
+
+  /* 미리보기 */
+  #preview{display:none;}
+  #preview.on{display:block;}
+  .pv-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .pv-name{flex:1;font-size:16px;font-weight:700;letter-spacing:-.3px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pv-frame{width:100%;height:62vh;border:1.5px solid var(--g200);border-radius:14px;background:var(--g100);}
+  .btn{display:block;width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:16px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;margin-top:14px;text-align:center;transition:.12s;}
+  .btn:active{transform:scale(.99);background:var(--green-d);}
+  .btn.ghost{background:var(--g100);color:var(--g700);}
+
+  .msg{text-align:center;color:var(--g500);font-size:14px;padding:40px 16px;}
+  .msg.err{color:var(--red);}
+
+  /* 토큰 게이트 */
+  #gate{position:fixed;inset:0;z-index:9999;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;}
+  #gate.on{display:flex;}
+  .gate-t{font-size:19px;font-weight:700;letter-spacing:-.4px;}
+  .gate-s{font-size:14px;color:var(--g500);margin:8px 0 22px;text-align:center;}
+  .gate-in{width:100%;max-width:320px;font-family:inherit;font-size:17px;padding:15px 16px;border-radius:14px;border:2px solid var(--g200);background:var(--g100);outline:none;}
+  .gate-in:focus{background:#fff;border-color:var(--green);}
+  .gate-btn{max-width:320px;margin-top:12px;}
+
+  /* 로딩 */
+  #load{position:fixed;inset:0;z-index:500;background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center;}
+  #load.on{display:flex;}
+  .spin{width:34px;height:34px;border:3px solid var(--g200);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+  <h1>서식함</h1>
+  <div class="sub">최신 양식을 미리 보고 바로 출력해요.</div>
+
+  <div id="list" class="list"></div>
+  <div id="listMsg" class="msg" style="display:none"></div>
+
+  <div id="preview">
+    <div class="pv-head">
+      <button class="back" onclick="backToList()" aria-label="목록으로" style="margin:0 0 0 -4px">‹</button>
+      <div class="pv-name" id="pvName"></div>
+    </div>
+    <iframe class="pv-frame" id="pvFrame" title="양식 미리보기"></iframe>
+    <button class="btn" id="pvPrint">🖨️ 인쇄 / 출력</button>
+  </div>
+</div>
+
+<!-- 토큰 게이트 (기기당 1회) -->
+<div id="gate">
+  <div class="gate-t">서식함 연결</div>
+  <div class="gate-s">이 기기에서 처음이에요.<br>행정 토큰을 한 번만 입력하면 다음부턴 안 물어요.</div>
+  <input class="gate-in" id="gateIn" type="password" inputmode="text" autocomplete="off" placeholder="행정 토큰" />
+  <button class="btn gate-btn" id="gateOk">연결</button>
+  <div class="gate-s err" id="gateErr" style="color:var(--red);display:none;margin-top:10px">토큰이 맞지 않아요.</div>
+</div>
+
+<div id="load"><div class="spin"></div></div>
+
+<script>
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwAyTXgNRYg3hRUUwWRbilNx_pGAvvAqfwoKduWCCwxQT2502oQKY1lKiqclze1ko3QNw/exec';
+var TOKEN_KEY = 'tf_forms_token';
+var curBlobUrl = null;
+
+function getToken(){ try { return localStorage.getItem(TOKEN_KEY) || ''; } catch(e){ return ''; } }
+function setToken(t){ try { localStorage.setItem(TOKEN_KEY, (t||'').trim()); } catch(e){} }
+function showLoad(on){ document.getElementById('load').classList.toggle('on', !!on); }
+
+function gasUrl(action, params){
+  var u = GAS_URL + '?action=' + action + '&t=' + encodeURIComponent(getToken());
+  if (params){ for (var k in params) u += '&' + k + '=' + encodeURIComponent(params[k]); }
+  return u;
+}
+function gasGet(action, params){
+  return fetch(gasUrl(action, params), { redirect:'follow' }).then(function(r){
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  });
+}
+
+// ── 토큰 게이트 ──
+function openGate(){ document.getElementById('gate').classList.add('on'); setTimeout(function(){ document.getElementById('gateIn').focus(); }, 60); }
+function closeGate(){ document.getElementById('gate').classList.remove('on'); }
+document.getElementById('gateOk').onclick = function(){
+  var v = document.getElementById('gateIn').value.trim();
+  if (!v) return;
+  setToken(v); closeGate(); loadList();
+};
+document.getElementById('gateIn').addEventListener('keydown', function(e){ if (e.key === 'Enter') document.getElementById('gateOk').click(); });
+
+// ── 목차 ──
+function loadList(){
+  if (!getToken()){ openGate(); return; }
+  showLoad(true);
+  document.getElementById('listMsg').style.display = 'none';
+  gasGet('list').then(function(d){
+    showLoad(false);
+    if (d && d.error === 'Unauthorized'){ setToken(''); document.getElementById('gateErr').style.display='block'; openGate(); return; }
+    if (d && d.error){ return showListMsg('불러오기 실패: ' + d.error, true); }
+    renderList((d && d.files) || []);
+  }).catch(function(e){ showLoad(false); showListMsg('네트워크 오류예요. 와이파이를 확인해 주세요.', true); });
+}
+function showListMsg(t, err){
+  var el = document.getElementById('listMsg');
+  el.textContent = t; el.className = 'msg' + (err ? ' err' : ''); el.style.display = 'block';
+  document.getElementById('list').innerHTML = '';
+}
+function renderList(files){
+  var box = document.getElementById('list');
+  box.innerHTML = '';
+  if (!files.length){ return showListMsg('아직 등록된 양식이 없어요.', false); }
+  files.forEach(function(f){
+    var dt = (f.modified || '').slice(0,10).replace(/-/g, '.');
+    var el = document.createElement('div');
+    el.className = 'item';
+    el.innerHTML = '<div class="ico">📄</div><div class="meta"><div class="nm"></div><div class="dt">'+dt+'</div></div><div class="arrow">›</div>';
+    el.querySelector('.nm').textContent = f.name;
+    el.onclick = function(){ openForm(f); };
+    box.appendChild(el);
+  });
+}
+
+// ── 미리보기 + 출력 ──
+function openForm(f){
+  showLoad(true);
+  gasGet('file', { id: f.id, name: f.name }).then(function(d){
+    showLoad(false);
+    if (!d || d.error){ alert('양식을 여는 데 실패했어요.' + (d && d.error ? '\n' + d.error : '')); return; }
+    if (curBlobUrl){ URL.revokeObjectURL(curBlobUrl); curBlobUrl = null; }
+    var blob = b64ToBlob(d.b64, d.mime || 'application/pdf');
+    curBlobUrl = URL.createObjectURL(blob);
+    document.getElementById('pvName').textContent = f.name;
+    document.getElementById('pvFrame').src = curBlobUrl;
+    document.getElementById('preview').classList.add('on');
+    document.getElementById('list').style.display = 'none';
+    document.getElementById('pvPrint').onclick = function(){ if (curBlobUrl) window.open(curBlobUrl, '_blank'); };
+    window.scrollTo(0,0);
+  }).catch(function(e){ showLoad(false); alert('네트워크 오류예요. 와이파이를 확인해 주세요.'); });
+}
+function backToList(){
+  document.getElementById('preview').classList.remove('on');
+  document.getElementById('pvFrame').src = 'about:blank';
+  if (curBlobUrl){ URL.revokeObjectURL(curBlobUrl); curBlobUrl = null; }
+  document.getElementById('list').style.display = 'flex';
+}
+function b64ToBlob(b64, mime){
+  var bin = atob(b64), len = bin.length, bytes = new Uint8Array(len);
+  for (var i=0;i<len;i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: mime || 'application/pdf' });
+}
+
+loadList();
+</script>
+</body>
+</html>
