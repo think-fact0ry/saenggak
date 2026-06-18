@@ -220,7 +220,7 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbwAyTXgNRYg3hRUUwWRbilNx_
 var TOKEN_KEY = 'tf_forms_token';
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
-var curName = '양식', curBytes = null, curFormId = null;
+var curName = '양식', curFormId = null, fastOk = null;   // fastOk: null=미정, true=직접받기 됨, false=폴백
 var drawMode = false;
 var pageData = [];     // [{canvas(보이는것), base(PDF만 사본)}]
 var strokes = [];      // [{page, pts:[{x,y}]}]  전 페이지 공통(그린 순서)
@@ -282,30 +282,40 @@ function b64ToBytes(b64){
   return u;
 }
 function openForm(f){
+  curName = f.name || '양식'; curFormId = f.id;
+  setEdit(false);
+  document.getElementById('list').style.display = 'none';
+  document.getElementById('listMsg').style.display = 'none';
+  document.getElementById('pvName').textContent = curName;
+  document.getElementById('preview').classList.add('on');
+  document.getElementById('pdfBox').innerHTML = '<div class="pv-loading">불러오는 중…</div>';
+  window.scrollTo(0, 0);
   showLoad(true);
-  gasGet('file', { id: f.id, name: f.name }).then(function(d){
-    showLoad(false);
-    if (!d || d.error){ alert('양식을 여는 데 실패했어요' + (d && d.error ? '\n' + d.error : '')); return; }
-    curBytes = b64ToBytes(d.b64);
-    curName = d.name || f.name || '양식';
-    curFormId = f.id;
-    setEdit(false);
-    document.getElementById('list').style.display = 'none';
-    document.getElementById('listMsg').style.display = 'none';
-    document.getElementById('pvName').textContent = curName;
-    document.getElementById('preview').classList.add('on');
-    window.scrollTo(0, 0);
-    renderPdf(curBytes.slice(0)).then(function(){ loadMarks(); }).catch(function(){
-      document.getElementById('pdfBox').innerHTML = '<div class="pv-loading">미리보기를 못 그렸어요.<br>출력은 됩니다.</div>';
-    });
-  }).catch(function(){ showLoad(false); alert('네트워크 오류예요. 와이파이를 확인해 주세요.'); });
+  // 빠른 경로: OneDrive에서 직접 받기 → 막히면(CORS) 자동으로 GAS 경유 폴백
+  var go = (fastOk === false)
+    ? openViaBase64(f)
+    : openViaUrl(f).then(function(){ fastOk = true; }, function(){ fastOk = false; return openViaBase64(f); });
+  go.then(function(){ showLoad(false); loadMarks(); })
+    .catch(function(){ showLoad(false); document.getElementById('pdfBox').innerHTML = '<div class="pv-loading">양식을 못 열었어요.<br>다시 시도해 주세요.</div>'; });
 }
-function renderPdf(bytes){
+function openViaUrl(f){
+  return gasGet('url', { id: f.id }).then(function(d){
+    if (!d || d.error || !d.url) throw new Error((d && d.error) || 'no url');
+    return renderPdf({ url: d.url });             // CORS 막히면 reject → 폴백
+  });
+}
+function openViaBase64(f){
+  return gasGet('file', { id: f.id }).then(function(d){
+    if (!d || d.error || !d.b64) throw new Error((d && d.error) || 'file fail');
+    return renderPdf({ data: b64ToBytes(d.b64) });
+  });
+}
+function renderPdf(src){
   var box = document.getElementById('pdfBox');
   box.innerHTML = '<div class="pv-loading">미리보기 그리는 중…</div>';
   pageData = [];
   if (!window.pdfjsLib) return Promise.reject('no pdfjs');
-  return pdfjsLib.getDocument({ data: bytes }).promise.then(function(pdf){
+  return pdfjsLib.getDocument(src).promise.then(function(pdf){   // src = {url:..} 직접받기 또는 {data:..} 폴백
     box.innerHTML = '<div id="zoomLayer"></div>'; zoomReset();
     var layer = document.getElementById('zoomLayer');
     var targetW = 1500;   // 인쇄 화질용 고해상도(화면엔 width:100%로 축소표시)
