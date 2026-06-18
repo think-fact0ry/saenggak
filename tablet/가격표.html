@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>이용 안내 · 가격표 — 생각공작소</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --green:#3a8a5f; --green-d:#2f6f4d;
+    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
+    --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:'Pretendard',-apple-system,sans-serif;
+    background:#fff; color:var(--g900);
+    word-break:keep-all; line-height:1.5;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding:18px 24px 60px;}
+
+  .topbar{display:flex; align-items:center; gap:6px; height:44px; margin-bottom:14px;}
+  .back{
+    width:40px; height:40px; border-radius:12px; border:none; background:transparent;
+    font-size:22px; color:var(--g700); cursor:pointer; display:flex;
+    align-items:center; justify-content:center; text-decoration:none;
+  }
+  .back:active{background:var(--g100);}
+
+  h1.page{font-size:25px; font-weight:700; letter-spacing:-.6px; margin:6px 2px 4px;}
+  .lead{font-size:14.5px; color:var(--g500); font-weight:500; margin:0 2px 26px;}
+
+  .sec{margin-bottom:34px;}
+  .sec-h{display:flex; align-items:baseline; gap:8px; margin:0 2px 14px;}
+  .sec-h .t{font-size:19px; font-weight:700; letter-spacing:-.4px;}
+  .sec-h .badge{font-size:12px; font-weight:700; color:var(--green); background:#eaf5ee; padding:3px 9px; border-radius:8px;}
+  .sec-h .badge.gray{color:var(--g500); background:var(--g100);}
+
+  .card{
+    background:#fff; border:1.5px solid var(--g200); border-radius:18px;
+    padding:18px 18px 16px; margin-bottom:12px;
+  }
+  .card .head-row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:14px;}
+  .card .name{font-size:17px; font-weight:700; letter-spacing:-.3px;}
+  .card .who{font-size:13.5px; color:var(--g500); font-weight:500; margin-top:2px;}
+  .total{
+    flex-shrink:0; text-align:right;
+    font-size:13px; color:var(--g500); font-weight:600;
+  }
+  .total b{display:block; font-size:16px; color:var(--green); font-weight:700; letter-spacing:-.3px;}
+
+  table{width:100%; border-collapse:collapse;}
+  th,td{text-align:left; font-size:14px; padding:9px 4px; border-bottom:1px solid var(--g100);}
+  th{color:var(--g500); font-weight:600; font-size:12.5px;}
+  td.num,th.num{text-align:right; font-variant-numeric:tabular-nums;}
+  td.num{font-weight:600;}
+  td.grade{font-weight:600; color:var(--g700);}
+  tr:last-child td,tr:last-child th{border-bottom:none;}
+  .own{color:var(--g900);} .sup{color:var(--g500);}
+
+  .cap{font-size:12px; color:var(--g500); margin-top:10px; padding-left:2px;}
+  .note{font-size:12.5px; color:var(--g500); margin:2px 2px 0; padding-left:2px;}
+  .note.warn{color:var(--red);}
+
+  .fill{
+    display:inline-block; min-width:64px; height:20px; border-radius:6px;
+    border:1.5px dashed var(--g300); background:repeating-linear-gradient(45deg,#fafbfc,#fafbfc 5px,#f2f4f6 5px,#f2f4f6 10px);
+    vertical-align:middle;
+  }
+  .tofill-banner{
+    background:#fff7ed; border:1.5px solid #fed7aa; border-radius:14px;
+    padding:13px 15px; font-size:13.5px; color:#9a3412; font-weight:500; margin-bottom:24px;
+  }
+  .tofill-banner b{font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a class="back" href="./index.html">‹</a>
+  </div>
+
+  <h1 class="page">이용 안내 · 가격표</h1>
+  <p class="lead">정부 바우처 서비스 월 이용료를 안내해 드려요.</p>
+
+  <!-- ── 정부 바우처 ── -->
+  <div class="sec">
+    <div class="sec-h">
+      <span class="t">정부 바우처 서비스</span>
+      <span class="badge">월 정부지원 + 본인부담</span>
+    </div>
+
+    <!-- 오감쑥쑥 -->
+    <div class="card">
+      <div class="head-row">
+        <div>
+          <div class="name">오감쑥쑥</div>
+          <div class="who">방문교사 영유아 발달 서비스</div>
+        </div>
+        <div class="total">월 총액<b>130,000원</b></div>
+      </div>
+      <table>
+        <tr><th>등급</th><th class="num">정부지원</th><th class="num">본인부담</th></tr>
+        <tr><td class="grade">1등급</td><td class="num sup">104,000</td><td class="num own">26,000</td></tr>
+        <tr><td class="grade">2등급</td><td class="num sup">91,000</td><td class="num own">39,000</td></tr>
+        <tr><td class="grade">3등급</td><td class="num sup">78,000</td><td class="num own">52,000</td></tr>
+        <tr><td class="grade">4등급</td><td class="num sup">65,000</td><td class="num own">65,000</td></tr>
+        <tr><td class="grade">5등급</td><td class="num sup">26,000</td><td class="num own">104,000</td></tr>
+      </table>
+    </div>
+
+    <!-- 아동청소년심리지원 -->
+    <div class="card">
+      <div class="head-row">
+        <div>
+          <div class="name">아동청소년심리지원 <span style="font-weight:500;color:var(--g500);font-size:13px;">(아청심)</span></div>
+          <div class="who">아동·청소년 심리 지원 · 가격탄력제</div>
+        </div>
+        <div class="total">월 총액<b>18~24만원</b></div>
+      </div>
+      <table>
+        <tr><th>등급</th><th class="num">정부지원</th><th class="num">본인부담</th></tr>
+        <tr><td class="grade">1등급</td><td class="num sup">162,000</td><td class="num own">18,000 ~ 78,000</td></tr>
+        <tr><td class="grade">2등급</td><td class="num sup">144,000</td><td class="num own">36,000 ~ 96,000</td></tr>
+        <tr><td class="grade">3등급</td><td class="num sup">126,000</td><td class="num own">54,000 ~ 114,000</td></tr>
+        <tr><td class="grade">4등급</td><td class="num sup">108,000</td><td class="num own">72,000 ~ 132,000</td></tr>
+        <tr><td class="grade">5등급</td><td class="num sup">36,000</td><td class="num own">144,000 ~ 204,000</td></tr>
+      </table>
+      <div class="cap">※ 정부지원금은 등급별 고정, 본인부담금은 월 총액(18~24만원) 선택에 따라 범위 내에서 결정됩니다.</div>
+    </div>
+
+    <!-- 정신건강토탈케어 -->
+    <div class="card">
+      <div class="head-row">
+        <div>
+          <div class="name">정신건강토탈케어 <span style="font-weight:500;color:var(--g500);font-size:13px;">(정신토탈)</span></div>
+          <div class="who">정신건강 통합 케어 · 등급 고정</div>
+        </div>
+        <div class="total">월 총액<b>200,000원</b></div>
+      </div>
+      <table>
+        <tr><th>구분</th><th class="num">정부지원</th><th class="num">본인부담</th></tr>
+        <tr><td class="grade">전 등급 동일</td><td class="num sup">180,000</td><td class="num own">20,000</td></tr>
+      </table>
+    </div>
+
+    <!-- 성인심리상담 -->
+    <div class="card">
+      <div class="head-row">
+        <div>
+          <div class="name">성인심리상담 <span style="font-weight:500;color:var(--g500);font-size:13px;">(성인심리)</span></div>
+          <div class="who">성인 심리 상담</div>
+        </div>
+        <div class="total">월 총액<b>200,000원</b></div>
+      </div>
+      <table>
+        <tr><th>등급</th><th class="num">정부지원</th><th class="num">본인부담</th></tr>
+        <tr><td class="grade">1등급</td><td class="num sup">180,000</td><td class="num own">20,000</td></tr>
+        <tr><td class="grade">2등급</td><td class="num sup">160,000</td><td class="num own">40,000</td></tr>
+      </table>
+    </div>
+
+    <p class="note warn">※ 바우처 단가·지원 비율은 매년 11월 보건복지부 고시로 변동됩니다. (위 금액 = 2026년 기준 · 갱신 주기 연 1회)</p>
+  </div>
+
+  <!-- ── 일반 상담 ── -->
+  <div class="sec">
+    <div class="sec-h">
+      <span class="t">일반 상담</span>
+      <span class="badge gray">바우처 없이 이용</span>
+    </div>
+
+    <div class="tofill-banner">
+      🛠️ 일반(비바우처) 상담 가격은 아직 비어 있어요. 회기·검사 단가와 가격 축을 알려주시면 채울게요.
+    </div>
+
+    <div class="card">
+      <div class="head-row">
+        <div>
+          <div class="name">개인 심리상담</div>
+          <div class="who">회기 단위 · 패키지(예: 1회 / 10회권)</div>
+        </div>
+      </div>
+      <table>
+        <tr><th>구분</th><th class="num">1회</th><th class="num">패키지</th></tr>
+        <tr><td class="grade">—</td><td class="num"><span class="fill"></span></td><td class="num"><span class="fill"></span></td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="head-row">
+        <div>
+          <div class="name">심리검사</div>
+          <div class="who">단일 검사 / 풀배터리</div>
+        </div>
+      </div>
+      <table>
+        <tr><th>구분</th><th class="num">단일</th><th class="num">풀배터리</th></tr>
+        <tr><td class="grade">—</td><td class="num"><span class="fill"></span></td><td class="num"><span class="fill"></span></td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

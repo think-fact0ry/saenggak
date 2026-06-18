@@ -1,0 +1,16 @@
+{
+  "name": "생각공작소",
+  "short_name": "생각공작소",
+  "description": "생각공작소 행정 태블릿",
+  "start_url": "/saenggak/tablet/",
+  "scope": "/saenggak/tablet/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#3a8a5f",
+  "icons": [
+    { "src": "/saenggak/android-icon-144x144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "/saenggak/android-icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/saenggak/apple-icon-180x180.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

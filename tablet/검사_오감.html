@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>오감 사정평가 — 생각공작소</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --green:#3a8a5f; --green-d:#2f6f4d; --green-l:#eaf5ee;
+    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
+    --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
+    --mint-h:#d8e4e2; --mint-l:#eef4ef;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .wrap{max-width:720px;margin:0 auto;padding:20px 22px 48px;}
+
+  /* 진행바 */
+  .progress{position:sticky;top:0;background:#fff;padding:14px 0 10px;z-index:5;}
+  .progress .bar{height:6px;background:var(--g100);border-radius:99px;overflow:hidden;}
+  .progress .fill{height:100%;background:var(--green);width:0;transition:width .25s;}
+  .progress .lbl{display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--g500);font-weight:600;}
+
+  h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 2px 6px;}
+  .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 2px 24px;}
+
+  /* 입력 */
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:14px;font-weight:600;color:var(--g700);margin:0 2px 8px;}
+  .field input{width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
+  .field input:focus{background:#fff;border-color:var(--green);}
+  .toggle{display:flex;gap:10px;}
+  .toggle button{flex:1;font-family:inherit;font-size:16px;font-weight:600;padding:15px;border-radius:14px;border:2px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
+  .toggle button.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);}
+
+  /* 버튼 */
+  .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;margin-top:14px;transition:.12s;}
+  .btn:active{transform:scale(.985);background:var(--green-d);}
+  .btn:disabled{background:var(--g200);color:var(--g500);cursor:default;transform:none;}
+  .btn.ghost{background:var(--g100);color:var(--g700);}
+
+  /* 문항 */
+  .q{padding:18px 2px;border-bottom:1px solid var(--g100);}
+  .q .qtext{font-size:16px;font-weight:600;letter-spacing:-.3px;margin-bottom:12px;}
+  .q .qtext .num{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:8px;background:var(--g100);color:var(--g500);font-size:13px;font-weight:700;margin-right:8px;vertical-align:middle;}
+  .opts{display:flex;gap:8px;}
+  .opts button{flex:1;font-family:inherit;font-size:13.5px;font-weight:600;padding:12px 4px;border-radius:12px;border:2px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;line-height:1.3;transition:.1s;}
+  .opts button.on{background:var(--green);border-color:var(--green);color:#fff;}
+  .q.unanswered.flash{animation:flash .5s;}
+  @keyframes flash{0%,100%{background:#fff;}50%{background:#fff0f1;}}
+
+  .sec-title{font-size:19px;font-weight:700;letter-spacing:-.4px;margin:6px 2px 2px;}
+  .sec-desc{font-size:13.5px;color:var(--g500);margin:0 2px 8px;}
+
+  /* ===== 결과지 (A4 가로 비율) ===== */
+  #s-result .wrap{max-width:1060px;}
+  #resultDoc{background:#fff;overflow-x:auto;}
+  .report{border:1.6px solid var(--g900);margin-top:8px;min-width:920px;}
+  .rtitle{text-align:center;font-size:24px;font-weight:800;letter-spacing:-1px;padding:16px 0 4px;}
+  .rname{padding:2px 18px 12px;font-size:14px;}
+  .rname b{display:inline-block;background:var(--g100);padding:3px 14px;border-radius:6px;margin-left:6px;font-weight:600;}
+  table.rt{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
+  table.rt th,table.rt td{border:1px solid var(--g300);padding:4px 6px;text-align:center;vertical-align:middle;}
+  table.rt thead th{background:var(--mint-h);font-weight:700;height:32px;}
+  table.rt tbody tr{height:40px;}                  /* 하위영역 행 높이 균일 */
+  .method{background:var(--mint-l);font-weight:700;line-height:1.55;}
+  .method .mtag{color:var(--green-d);}
+  .critcell{padding:6px 8px!important;}
+  .crit{width:100%;border-collapse:collapse;font-size:11px;}
+  .crit th,.crit td{border:1px solid var(--g300);padding:0 4px;height:24px;text-align:center;white-space:nowrap;}  /* crit 행 높이 균일 */
+  .crit th{background:#fafbfc;color:var(--g700);font-weight:600;}
+  .crit .rk{background:#fafbfc;font-weight:600;}
+  .desc{font-size:10.5px;color:var(--g700);line-height:1.5;text-align:left;padding:6px 2px 0;}
+  .grp{background:#fafbfc;font-weight:700;}          /* 세로쓰기 제거 → 가로 두 글자 */
+  .score{font-weight:700;font-size:14px;}
+  .judge.danger{color:var(--red);font-weight:700;}
+  .rfoot{font-size:12.5px;line-height:1.6;padding:13px 18px;text-align:center;}
+  .rfoot .flabel{display:block;font-weight:700;margin-bottom:3px;color:var(--g700);}
+
+  .print-row{display:flex;gap:10px;margin-top:16px;}
+  .print-row .btn{margin-top:0;}
+
+  @media print{
+    @page{size:A4 landscape;margin:8mm;}
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .noprint{display:none!important;}
+    .wrap{max-width:none;padding:0;}
+    #resultDoc{overflow:visible;}
+    .report{border-color:#000;min-width:0;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 화면 1: 시작/아동정보 ===== -->
+<div class="screen active" id="s-intro">
+  <div class="wrap">
+    <h1>오감 사정평가</h1>
+    <p class="sub">아이의 강점·난점(SDQ)과 주의력(K-ARS)을 살펴봐요. 보호자님이 평소 모습을 떠올리며 답해 주세요.</p>
+
+    <div class="field">
+      <label>아이 이름</label>
+      <input id="f-name" type="text" placeholder="예: 김서준" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>생년월일</label>
+      <input id="f-birth" type="text" inputmode="numeric" placeholder="2020. 09. 11" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>성별</label>
+      <div class="toggle" id="f-sex">
+        <button type="button" data-v="남">남</button>
+        <button type="button" data-v="여">여</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>보호자 연락처</label>
+      <input id="f-phone" type="text" inputmode="numeric" placeholder="010-1234-5678" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>평가 종류</label>
+      <div class="toggle" id="f-type">
+        <button type="button" data-v="사정" class="on">사전(사정평가)</button>
+        <button type="button" data-v="사후">사후평가</button>
+      </div>
+    </div>
+
+    <button class="btn" id="toSdq">검사 시작</button>
+  </div>
+</div>
+
+<!-- ===== 화면 2: SDQ ===== -->
+<div class="screen" id="s-sdq">
+  <div class="wrap">
+    <div class="progress noprint">
+      <div class="bar"><div class="fill" id="sdqFill"></div></div>
+      <div class="lbl"><span>강점·난점 설문지 (SDQ-kr)</span><span id="sdqCount">0 / 25</span></div>
+    </div>
+    <div class="sec-title">강점·난점 설문지</div>
+    <div class="sec-desc">각 문항을 읽고 가장 가까운 답을 골라 주세요.</div>
+    <div id="sdqList"></div>
+    <button class="btn" id="toKars">다음 (주의력 검사)</button>
+  </div>
+</div>
+
+<!-- ===== 화면 3: K-ARS ===== -->
+<div class="screen" id="s-kars">
+  <div class="wrap">
+    <div class="progress noprint">
+      <div class="bar"><div class="fill" id="karsFill"></div></div>
+      <div class="lbl"><span>ADHD 평가척도 (K-ARS)</span><span id="karsCount">0 / 18</span></div>
+    </div>
+    <div class="sec-title">주의력 평가척도</div>
+    <div class="sec-desc">지난 6개월 동안의 모습에 근거해 답해 주세요.</div>
+    <div id="karsList"></div>
+    <button class="btn" id="toResult">결과 보기</button>
+  </div>
+</div>
+
+<!-- ===== 화면 4: 결과지 ===== -->
+<div class="screen" id="s-result">
+  <div class="wrap">
+    <div id="resultDoc"></div>
+    <div class="print-row noprint">
+      <button class="btn ghost" id="backEdit">수정</button>
+      <button class="btn" id="doPrint">인쇄 / PDF 저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 문항 데이터 =====
+const SDQ_ITEMS = [
+  "다른 사람의 감정을 배려한다.",
+  "차분하지 않고, 부산하며, 오랫동안 가만히 있지 못한다.",
+  "두통, 또는 복통을 자주 호소하거나 몸이 아프다고 한다.",
+  "간식, 장난감, 또는 연필 등을 기꺼이 다른 아이들과 함께 나눈다.",
+  "자주 분노발작을 보이거나, 불같이 성질을 부린다.",
+  "주로 홀로 있고, 혼자서 노는 편이다.",
+  "일반적으로 순종적이고, 평소 어른이 시키는 대로 한다.",
+  "걱정이 많고, 종종 근심스러워 보인다.",
+  "누군가 다치거나, 몸 상태가 나쁘거나, 아파 보이면 도움을 준다.",
+  "언제나 안절부절못하고 꼼지락거린다.",
+  "적어도 한 명 이상의 절친한 친구가 있다.",
+  "다른 아이들에게 종종 싸움을 걸거나, 괴롭힌다. (때리기, 위협하기, 빼앗기)",
+  "자주 불행해 보이고, 낙담하며, 눈물이 고인다.",
+  "대체로 다른 아이들이 내 자녀를 좋아한다.",
+  "쉽게 주의가 분산되고, 집중력이 산만하다.",
+  "낯선 상황에서는 불안해하거나 안 떨어지려 하고, 쉽사리 자신감을 잃는다.",
+  "자신보다 어린 아이들에게 친절하다.",
+  "종종 거짓말을 하거나 속인다.",
+  "다른 아이들에게 놀림을 받거나 괴롭힘을 당한다.",
+  "자주 부모나 선생님, 또는 다른 아이들을 자진해서 돕는다.",
+  "곰곰이 생각한 다음에 행동한다.",
+  "가정이나 학교 또는 어떤 곳에서 무언가를 훔친다.",
+  "또래 아이들보다 어른들과 더 잘 지낸다.",
+  "두려움이 많고 무서움을 잘 탄다.",
+  "주어진 일을 끝까지 마치고, 주의력을 잘 유지한다."
+];
+const SDQ_OPTS = ["전혀 아니다","다소 그렇다","분명히 그렇다"]; // 0,1,2
+
+const KARS_ITEMS = [
+  "세부적인 면에 대해 꼼꼼하게 주의를 기울이지 못하거나, 학업에서 부주의한 실수를 한다.",
+  "손발을 가만히 두지 못하거나, 의자에 앉아서도 몸을 꼼지락거린다.",
+  "일을 하거나 놀이를 할 때, 지속적으로 주의를 집중하는데 어려움이 있다.",
+  "자리에 앉아 있어야 하는 교실이나 다른 상황에서 앉아있지 못한다.",
+  "다른 사람이 마주 보고 이야기할 때, 경청하지 않는 것처럼 보인다.",
+  "상황에 부적절하게 뛰어다니거나 높은 곳에 기어오른다.",
+  "지시를 따르지 않고, 일을 끝내지 못한다.",
+  "여가 활동이나 재미있는 일에 조용히 참여하기가 어렵다.",
+  "과제와 일을 체계적으로 하지 못한다.",
+  "끊임없이 무엇인가를 하거나 마치 모터가 돌아가듯 움직인다.",
+  "지속적인 노력이 요구되는 과제(학교 공부나 숙제)를 하지 않으려 한다.",
+  "지나치게 말을 많이 한다.",
+  "과제나 일을 하는데 필요한 물건들은 잃어버린다.",
+  "질문이 채 끝나기도 전에 성급하게 대답한다.",
+  "쉽게 주의가 분산된다.",
+  "차례를 기다리는 데 어려움이 있다.",
+  "일상적으로 하는 일을 잊어버린다.",
+  "다른 사람을 방해하거나 간섭한다."
+];
+const KARS_OPTS = ["전혀 그렇지 않다","때때로 그렇다","자주 그렇다","매우 자주 그렇다"]; // 0,1,2,3
+
+const sdqAns = new Array(25).fill(null);
+const karsAns = new Array(18).fill(null);
+
+// ===== 상태 입력 =====
+const state = {sex:"", type:"사정"};
+
+function bindToggle(id, key){
+  document.querySelectorAll("#"+id+" button").forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll("#"+id+" button").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on"); state[key]=b.dataset.v; validateIntro();
+    };
+  });
+}
+bindToggle("f-sex","sex");
+bindToggle("f-type","type");
+
+// 생년월일 자동서식
+const birth=document.getElementById("f-birth");
+birth.oninput=()=>{
+  let d=birth.value.replace(/\D/g,"").slice(0,8);
+  let out=d.slice(0,4);
+  if(d.length>4) out+=". "+d.slice(4,6);
+  if(d.length>6) out+=". "+d.slice(6,8);
+  birth.value=out; validateIntro();
+};
+// 전화 자동 하이픈
+const phone=document.getElementById("f-phone");
+phone.oninput=()=>{
+  let d=phone.value.replace(/\D/g,"").slice(0,11);
+  if(d.length<4) phone.value=d;
+  else if(d.length<8) phone.value=d.slice(0,3)+"-"+d.slice(3);
+  else phone.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7);
+  validateIntro();
+};
+document.getElementById("f-name").oninput=validateIntro;
+
+function validateIntro(){
+  const ok = document.getElementById("f-name").value.trim()
+    && birth.value.replace(/\D/g,"").length===8
+    && state.sex
+    && phone.value.replace(/\D/g,"").length>=10;
+  document.getElementById("toSdq").disabled=!ok;
+}
+validateIntro();
+
+// ===== 문항 렌더 =====
+function renderQuestions(listId, items, opts, ansArr, onChange){
+  const box=document.getElementById(listId);
+  box.innerHTML="";
+  items.forEach((txt,i)=>{
+    const q=document.createElement("div");
+    q.className="q"; q.dataset.i=i;
+    const optBtns=opts.map((o,v)=>`<button type="button" data-v="${v}">${o}</button>`).join("");
+    q.innerHTML=`<div class="qtext"><span class="num">${i+1}</span>${txt}</div><div class="opts">${optBtns}</div>`;
+    q.querySelectorAll(".opts button").forEach(b=>{
+      b.onclick=()=>{
+        q.querySelectorAll(".opts button").forEach(x=>x.classList.remove("on"));
+        b.classList.add("on"); ansArr[i]=parseInt(b.dataset.v);
+        q.classList.remove("unanswered","flash"); onChange();
+      };
+    });
+    box.appendChild(q);
+  });
+}
+function countAnswered(arr){return arr.filter(x=>x!==null).length;}
+
+function updateSdq(){
+  const n=countAnswered(sdqAns);
+  document.getElementById("sdqCount").textContent=n+" / 25";
+  document.getElementById("sdqFill").style.width=(n/25*100)+"%";
+}
+function updateKars(){
+  const n=countAnswered(karsAns);
+  document.getElementById("karsCount").textContent=n+" / 18";
+  document.getElementById("karsFill").style.width=(n/18*100)+"%";
+}
+
+// ===== 미응답 검사 =====
+function firstUnanswered(listId, arr){
+  for(let i=0;i<arr.length;i++){
+    if(arr[i]===null){
+      const q=document.querySelector(`#${listId} .q[data-i="${i}"]`);
+      q.classList.add("unanswered","flash");
+      q.scrollIntoView({behavior:"smooth",block:"center"});
+      setTimeout(()=>q.classList.remove("flash"),600);
+      return i;
+    }
+  }
+  return -1;
+}
+
+// ===== 화면 전환 =====
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+document.getElementById("toSdq").onclick=()=>{ show("s-sdq"); };
+document.getElementById("toKars").onclick=()=>{
+  if(firstUnanswered("sdqList",sdqAns)>=0) return;
+  show("s-kars");
+};
+document.getElementById("toResult").onclick=()=>{
+  if(firstUnanswered("karsList",karsAns)>=0) return;
+  renderReport(); show("s-result");
+};
+document.getElementById("backEdit").onclick=()=>show("s-kars");
+document.getElementById("doPrint").onclick=()=>window.print();
+
+renderQuestions("sdqList",SDQ_ITEMS,SDQ_OPTS,sdqAns,updateSdq);
+renderQuestions("karsList",KARS_ITEMS,KARS_OPTS,karsAns,updateKars);
+updateSdq(); updateKars();
+
+// ===== 채점 =====
+function scoreSDQ(a){
+  // 응답 a[i] = 0,1,2 (검사지 1~3 기준 -1 환산과 동일)
+  const social=[1,4,9,17,20], hyper=[2,10,15,21,25], emotion=[3,8,13,16,24],
+        conduct=[5,7,12,18,22], peer=[6,11,14,19,23], reverse=[7,11,14,21,25];
+  const val=(itemNum)=>{
+    const raw=a[itemNum-1];                 // 0~2
+    return reverse.includes(itemNum) ? (2-raw) : raw;
+  };
+  const sum=(arr)=>arr.reduce((s,n)=>s+val(n),0);
+  const sc={social:sum(social),hyper:sum(hyper),emotion:sum(emotion),conduct:sum(conduct),peer:sum(peer)};
+  sc.total=sc.hyper+sc.emotion+sc.conduct+sc.peer;
+  return sc;
+}
+function judgeSDQ(key,v){
+  switch(key){
+    case "social":  return v>=6?"정상":(v===5?"경계선":"개입필요");      // 높을수록 정상
+    case "hyper":   return v<=5?"정상":(v===6?"경계선":"개입필요");
+    case "emotion": return v<=3?"정상":(v===4?"경계선":"개입필요");
+    case "conduct": return v<=2?"정상":(v===3?"경계선":"개입필요");
+    case "peer":    return v<=2?"정상":(v===3?"경계선":"개입필요");
+    case "total":   return v<=13?"정상":((v>=14&&v<=16)?"경계선":"개입필요");
+  }
+}
+function scoreKARS(a){
+  let ia=0,hi=0;
+  for(let i=1;i<=18;i++){
+    const itemValue=a[i-1];                 // 0~3
+    if(i%2===1) ia+=itemValue; else hi+=itemValue;
+  }
+  return {ia,hi,total:ia+hi};
+}
+function judgeKARS(key,v){
+  switch(key){
+    case "ia":    return v<=8?"정상":((v>=9&&v<=11)?"경계선":"개입필요");
+    case "hi":    return v<=9?"정상":((v>=10&&v<=12)?"경계선":"개입필요");
+    case "total": return v<=15?"정상":((v>=16&&v<=18)?"경계선":"개입필요");
+  }
+}
+const J=(t)=>t==="개입필요"?` class="judge danger"`:"";
+
+// ===== 결과지 렌더 =====
+function renderReport(){
+  const name=document.getElementById("f-name").value.trim();
+  const s=scoreSDQ(sdqAns), k=scoreKARS(karsAns);
+  const isPre = state.type==="사정";
+  const title = isPre ? "사정 평가 결과서" : "사후 평가 결과서";
+  const footer = isPre
+    ? "본 피검자는 위 검사 결과에 따른 개입을 적용하여 피검자가 정서적 안정 및 오감 능력이 향상 될 수 있도록 함"
+    : "본 피검자는 위 검사 결과, 사전 검사에 비해 정서적 안정 및 오감 능력이 향상된 것으로 나타남";
+
+  const sj={social:judgeSDQ("social",s.social),hyper:judgeSDQ("hyper",s.hyper),emotion:judgeSDQ("emotion",s.emotion),
+            conduct:judgeSDQ("conduct",s.conduct),peer:judgeSDQ("peer",s.peer),total:judgeSDQ("total",s.total)};
+  const kj={ia:judgeKARS("ia",k.ia),hi:judgeKARS("hi",k.hi),total:judgeKARS("total",k.total)};
+
+  document.getElementById("resultDoc").innerHTML=`
+  <div class="report">
+    <div class="rtitle">${title}</div>
+    <div class="rname">이 름 : <b>${name||"&nbsp;"}</b></div>
+
+    <!-- SDQ -->
+    <table class="rt">
+      <colgroup><col style="width:13%"><col style="width:40%"><col style="width:7%"><col style="width:18%"><col style="width:9%"><col style="width:13%"></colgroup>
+      <thead><tr><th>평가방법</th><th>범위 및 기준</th><th colspan="2">하위영역</th><th>점수</th><th>결과</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="method" rowspan="6"><span class="mtag">[ SDQ-kr ]</span><br>강점, 난점 설문지<br>(부모 보고형)</td>
+          <td class="critcell" rowspan="6">
+            <table class="crit">
+              <tr><th></th><th></th><th>정상</th><th>경계선</th><th>개입필요</th></tr>
+              <tr><td class="rk">강점</td><td class="rk">사회지향행동</td><td>6~10</td><td>5</td><td>0~4</td></tr>
+              <tr><td class="rk" rowspan="5">난점</td><td class="rk">과잉행동</td><td>0~5</td><td>6</td><td>7~10</td></tr>
+              <tr><td class="rk">정서증상</td><td>0~3</td><td>4</td><td>5~10</td></tr>
+              <tr><td class="rk">품행행동</td><td>0~2</td><td>3</td><td>4~10</td></tr>
+              <tr><td class="rk">또래문제</td><td>0~2</td><td>3</td><td>4~10</td></tr>
+              <tr><td class="rk">총 난점</td><td>0~13</td><td>14~16</td><td>17~40</td></tr>
+            </table>
+            <div class="desc">SDQ-kr는 아동의 사회정서적 발달 상태를 이해하고, 조기 개입이 필요한 영역을 파악하기 위한 검사입니다. 아동의 강점과 어려움을 함께 살펴봄으로써 건강한 성장을 위한 맞춤형 지원 방향을 모색할 수 있습니다.</div>
+          </td>
+          <td class="grp">강점</td><td>사회지향행동</td><td class="score">${s.social}</td><td${J(sj.social)}>${sj.social}</td>
+        </tr>
+        <tr><td class="grp" rowspan="5">난점</td><td>과잉행동</td><td class="score">${s.hyper}</td><td${J(sj.hyper)}>${sj.hyper}</td></tr>
+        <tr><td>정서증상</td><td class="score">${s.emotion}</td><td${J(sj.emotion)}>${sj.emotion}</td></tr>
+        <tr><td>품행문제</td><td class="score">${s.conduct}</td><td${J(sj.conduct)}>${sj.conduct}</td></tr>
+        <tr><td>또래문제</td><td class="score">${s.peer}</td><td${J(sj.peer)}>${sj.peer}</td></tr>
+        <tr><td>총 난점</td><td class="score">${s.total}</td><td${J(sj.total)}>${sj.total}</td></tr>
+      </tbody>
+    </table>
+
+    <!-- K-ARS -->
+    <table class="rt">
+      <colgroup><col style="width:13%"><col style="width:40%"><col style="width:7%"><col style="width:18%"><col style="width:9%"><col style="width:13%"></colgroup>
+      <thead><tr><th>평가방법</th><th>범위 및 기준</th><th colspan="2">하위영역</th><th>점수</th><th>결과</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="method" rowspan="3"><span class="mtag">[ K-ARS ]</span><br>한국판 ADHD 평가척도<br>(부모 보고형)</td>
+          <td class="critcell" rowspan="3">
+            <table class="crit">
+              <tr><th></th><th>정상</th><th>경계선</th><th>개입필요</th></tr>
+              <tr><td class="rk">총점(ADHD)</td><td>0~15</td><td>16~18</td><td>19~36</td></tr>
+              <tr><td class="rk">부주의(IA)</td><td>0~8</td><td>9~11</td><td>12~18</td></tr>
+              <tr><td class="rk">과잉행동-충동성(HI)</td><td>0~9</td><td>10~12</td><td>13~18</td></tr>
+            </table>
+            <div class="desc">K-ARS는 주의력결핍 과잉행동장애(ADHD)의 증상을 평가하기 위해 개발된 검사입니다. 종합적으로 증상을 평가하여 ADHD의 조기 진단에 기여합니다. (정상 범위 이상의 결과일 경우 상담 개입을 고려)</div>
+          </td>
+          <td class="grp">IA</td><td>부주의</td><td class="score">${k.ia}</td><td${J(kj.ia)}>${kj.ia}</td>
+        </tr>
+        <tr><td class="grp" rowspan="2">HI</td><td>과잉행동-충동성</td><td class="score">${k.hi}</td><td${J(kj.hi)}>${kj.hi}</td></tr>
+        <tr><td>총 점수</td><td class="score">${k.total}</td><td${J(kj.total)}>${kj.total}</td></tr>
+      </tbody>
+    </table>
+
+    <div class="rfoot"><span class="flabel">결과</span>${footer}</div>
+  </div>`;
+}
+</script>
+</body>
+</html>

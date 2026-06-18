@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>생각공작소</title>
+
+<!-- ═ PWA(홈 화면에 추가) ═ -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3a8a5f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="생각공작소">
+<link rel="apple-touch-icon" href="/saenggak/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/saenggak/android-icon-192x192.png">
+
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --green:#3a8a5f; --green-d:#2f6f4d;
+    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
+    --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:'Pretendard',-apple-system,sans-serif;
+    background:#fff; color:var(--g900);
+    word-break:keep-all; line-height:1.5;
+    min-height:100vh;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding:40px 24px 60px;}
+
+  /* 헤더 */
+  .head{display:flex; align-items:center; gap:14px; margin-bottom:8px;}
+  .logo{
+    width:52px; height:52px; border-radius:16px;
+    background:var(--green); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; flex-shrink:0;
+  }
+  .head h1{font-size:26px; font-weight:700; letter-spacing:-.6px;}
+  .head .sub{font-size:15px; color:var(--g500); font-weight:500; margin-top:2px;}
+  .hello{margin:28px 2px 22px; font-size:19px; font-weight:600; color:var(--g700); letter-spacing:-.3px;}
+
+  /* 타일 격자 */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .tile{
+    display:flex; flex-direction:column; justify-content:space-between;
+    background:var(--g100); border:1.5px solid transparent;
+    border-radius:20px; padding:22px 20px; min-height:128px;
+    text-decoration:none; color:inherit; cursor:pointer;
+    transition:transform .08s, background .15s, border-color .15s;
+  }
+  .tile:active{transform:scale(.985); background:#eef0f3;}
+  .tile.primary{background:#eaf5ee;}
+  .tile.primary:active{background:#e1f0e7;}
+  .tile.soon{opacity:.62;}
+  .tile .ico{font-size:30px;}
+  .tile .name{font-size:18px; font-weight:700; letter-spacing:-.4px; margin-top:auto;}
+  .tile .desc{font-size:13.5px; color:var(--g500); font-weight:500; margin-top:3px;}
+  .tag{
+    align-self:flex-start; font-size:11.5px; font-weight:700;
+    color:var(--green); background:#fff; border-radius:8px;
+    padding:3px 8px; margin-top:6px;
+  }
+  .tag.soon{color:var(--g500); background:#fff;}
+
+  .foot{margin-top:36px; text-align:center; color:var(--g300); font-size:12.5px;}
+
+  /* ═ PIN 잠금 오버레이 ═ */
+  #gate{
+    position:fixed; inset:0; z-index:9999; background:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:40px 24px; padding-bottom:calc(40px + env(safe-area-inset-bottom));
+  }
+  #gate.hide{display:none;}
+  .gate-logo{
+    width:60px; height:60px; border-radius:18px; background:var(--green); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:30px; margin-bottom:18px;
+  }
+  .gate-title{font-size:19px; font-weight:700; letter-spacing:-.4px;}
+  .gate-sub{font-size:14px; color:var(--g500); font-weight:500; margin-top:6px;}
+  .gate-dots{display:flex; gap:14px; margin:28px 0 4px;}
+  .gate-dot{width:14px; height:14px; border-radius:50%; background:var(--g200); transition:background .12s, transform .12s;}
+  .gate-dot.on{background:var(--green); transform:scale(1.15);}
+  .gate-err{height:18px; font-size:13px; color:var(--red); font-weight:600; margin-top:8px; opacity:0; transition:opacity .15s;}
+  .gate-err.show{opacity:1;}
+  .gate-err.shake{animation:gshake .35s;}
+  @keyframes gshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+  .gate-pad{display:grid; grid-template-columns:repeat(3,72px); gap:14px; margin-top:22px;}
+  .gate-key{
+    height:64px; border-radius:18px; background:var(--g100); border:none; cursor:pointer;
+    font-family:inherit; font-size:26px; font-weight:600; color:var(--g900);
+    display:flex; align-items:center; justify-content:center; transition:background .1s, transform .08s;
+  }
+  .gate-key:active{background:var(--g200); transform:scale(.94);}
+  .gate-key.fn{font-size:15px; font-weight:600; color:var(--g500); background:transparent;}
+</style>
+</head>
+<body>
+
+<!-- ═ PIN 잠금: 기기당 1회. 메뉴 존재를 가리는 속도방지턱(보안 아님) ═ -->
+<div id="gate">
+  <div class="gate-logo">🧠</div>
+  <div class="gate-title">생각공작소</div>
+  <div class="gate-sub">PIN을 입력해요</div>
+  <div class="gate-dots">
+    <div class="gate-dot" data-i="0"></div>
+    <div class="gate-dot" data-i="1"></div>
+    <div class="gate-dot" data-i="2"></div>
+    <div class="gate-dot" data-i="3"></div>
+  </div>
+  <div class="gate-err" id="gateErr">PIN이 달라요</div>
+  <div class="gate-pad">
+    <button class="gate-key" data-k="1">1</button>
+    <button class="gate-key" data-k="2">2</button>
+    <button class="gate-key" data-k="3">3</button>
+    <button class="gate-key" data-k="4">4</button>
+    <button class="gate-key" data-k="5">5</button>
+    <button class="gate-key" data-k="6">6</button>
+    <button class="gate-key" data-k="7">7</button>
+    <button class="gate-key" data-k="8">8</button>
+    <button class="gate-key" data-k="9">9</button>
+    <span></span>
+    <button class="gate-key" data-k="0">0</button>
+    <button class="gate-key fn" data-k="del">지우기</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="head">
+    <div class="logo">🧠</div>
+    <div>
+      <h1>생각공작소</h1>
+      <div class="sub">심리상담센터 · 인천</div>
+    </div>
+  </div>
+
+  <div class="hello">무엇을 도와드릴까요?</div>
+
+  <div class="grid">
+
+    <a class="tile primary" href="./가격표.html">
+      <div class="ico">💳</div>
+      <div class="name">이용 안내 · 가격표</div>
+      <div class="desc">서비스 종류와 비용</div>
+    </a>
+
+    <a class="tile" href="https://blog.naver.com/" target="_blank" rel="noopener">
+      <div class="ico">📷</div>
+      <div class="name">활동 사진</div>
+      <div class="desc">센터 블로그</div>
+    </a>
+
+    <a class="tile" href="./검사_오감.html">
+      <div class="ico">📝</div>
+      <div class="name">심리검사</div>
+      <div class="desc">오감 사정평가 · 즉시 채점</div>
+    </a>
+
+    <a class="tile" href="https://think-fact0ry.github.io/saenggak/provider-map.html">
+      <div class="ico">🗺️</div>
+      <div class="name">제공인력 지도</div>
+      <div class="desc">선생님·대기 아동 위치</div>
+      <span class="tag">🔒 행정 전용</span>
+    </a>
+
+    <a class="tile soon" href="#">
+      <div class="ico">🗂️</div>
+      <div class="name">상담일지</div>
+      <div class="desc">회기 기록</div>
+      <span class="tag soon">준비 중</span>
+    </a>
+
+  </div>
+
+  <div class="foot">생각공작소 · think-factory.kr</div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  PIN 잠금 — 기기당 1회. 공개 소스라 진짜 보안 아님(소스 보면 우회 가능).
+//  목적 = URL을 우연히 연 사람에게 메뉴를 가리는 속도방지턱.
+//
+//  ▼▼▼ 유성이 여기만 채우면 됨 ▼▼▼
+//  1) 원하는 4자리 PIN의 SHA-256 해시를 구한다 (PIN 자체는 채팅·코드에 적지 말 것):
+//       python -c "import hashlib;print(hashlib.sha256('1234'.encode()).hexdigest())"
+//     ('1234' 자리에 진짜 PIN을 넣어 실행 → 64자리 해시가 나옴)
+//  2) 그 해시를 아래 PIN_HASH 따옴표 안에 붙여넣는다.
+//  ※ PIN_HASH가 비어 있으면 잠금이 꺼진 채로 동작(설정 전 안전).
+//  ※ PIN을 바꾸면(해시 교체) 모든 기기가 다음 진입 때 PIN을 다시 물음.
+var PIN_HASH = "8d0a8cbf9d1e53373e02a4ad80e49b2853259c854de49349cd776a7569c47142";
+// ▲▲▲ 여기까지 ▲▲▲
+
+var UNLOCK_KEY = 'tf_tablet_pin_ok';
+async function sha256(s){
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 확인 가능
+
+(function(){
+  var gate = document.getElementById('gate');
+  function unlock(){ gate.classList.add('hide'); }
+
+  // PIN 미설정 → 잠금 끔(설정 전 페이지가 막히지 않게)
+  if (!PIN_HASH) { unlock(); return; }
+  // 이 기기에서 이미 풀었고 PIN이 안 바뀌었으면 통과
+  try { if (localStorage.getItem(UNLOCK_KEY) === PIN_HASH) { unlock(); return; } } catch(e){}
+
+  var dots = Array.prototype.slice.call(document.querySelectorAll('.gate-dot'));
+  var err = document.getElementById('gateErr');
+  var entry = '';
+
+  function render(){
+    dots.forEach(function(d,i){ d.classList.toggle('on', i < entry.length); });
+  }
+  function fail(){
+    err.classList.add('show','shake');
+    setTimeout(function(){ err.classList.remove('shake'); }, 360);
+    entry = ''; render();
+  }
+  async function submit(){
+    var ok = false;
+    try { ok = (await sha256(entry)) === PIN_HASH; }
+    catch(e){ err.textContent = '이 기기에선 PIN 확인이 안 돼요'; fail(); return; }
+    if (ok){ try{ localStorage.setItem(UNLOCK_KEY, PIN_HASH); }catch(e){} unlock(); }
+    else { err.textContent = 'PIN이 달라요'; fail(); }
+  }
+  function press(k){
+    if (k === 'del'){ entry = entry.slice(0,-1); err.classList.remove('show'); render(); return; }
+    if (entry.length >= 4) return;
+    err.classList.remove('show');
+    entry += k; render();
+    if (entry.length === 4) submit();
+  }
+
+  document.querySelector('.gate-pad').addEventListener('click', function(e){
+    var btn = e.target.closest('.gate-key'); if (!btn) return;
+    press(btn.getAttribute('data-k'));
+  });
+  // 물리 키보드(태블릿 외장 키보드)도 지원
+  document.addEventListener('keydown', function(e){
+    if (gate.classList.contains('hide')) return;
+    if (/^[0-9]$/.test(e.key)) press(e.key);
+    else if (e.key === 'Backspace') press('del');
+  });
+  render();
+})();
+</script>
+</body>
+</html>
