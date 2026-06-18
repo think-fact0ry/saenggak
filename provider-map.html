@@ -390,6 +390,14 @@ var CONFIG = {
 var map, markers = [], overlays = [], infoWindow;
 var currentData = null;
 var michuholCenter = null;   // 미추홀 센터(주안로 128) 좌표 — 지오코딩 1회로 채워 시작 중심에 사용
+// 4개 센터(빨간 테두리 흰 원 마커로 표시). 주소→좌표 1회 변환. ⚠️ 서구·연수·남동(행복마음) 주소 받으면 addr 채울 것
+var CENTERS = [
+  { name:'미추홀 센터', addr:'인천 미추홀구 주안로 128', isMichuhol:true }
+  // { name:'서구 센터',   addr:'' },
+  // { name:'연수 센터',   addr:'' },
+  // { name:'남동 센터(행복마음)', addr:'' },
+];
+var centerPoints = [];   // [{name, pos}] — 지오코딩 완료분
 var showAssigned = true, showWaiting = true, showHome = true;
 var routeFrom = null, routeTo = null;
 var placesService = null;  // services.Places 인스턴스
@@ -484,11 +492,17 @@ function initMap() {
   placesService = new kakao.maps.services.Places();
   geocoder = new kakao.maps.services.Geocoder();
 
-  // 시작 중심을 미추홀 센터로 — 주소→좌표 1회 변환(지도/데이터 로드와 병렬, 빠름). 실패 시 fitBounds 중심 폴백
-  geocoder.addressSearch('인천 미추홀구 주안로 128', function(res, status){
-    if (status === kakao.maps.services.Status.OK && res[0]) {
-      michuholCenter = new kakao.maps.LatLng(res[0].y, res[0].x);
-    }
+  // 4개 센터 좌표 — 주소→좌표 1회 변환(지도/데이터 로드와 병렬, 빠름). 미추홀은 시작 중심에도 사용
+  CENTERS.forEach(function(c){
+    if (!c.addr) return;
+    geocoder.addressSearch(c.addr, function(res, status){
+      if (status === kakao.maps.services.Status.OK && res[0]) {
+        var pos = new kakao.maps.LatLng(res[0].y, res[0].x);
+        centerPoints.push({ name:c.name, pos:pos });
+        if (c.isMichuhol) michuholCenter = pos;
+        renderMarkers();   // 지오코딩 완료분 즉시 반영(데이터 이미 로드됐으면 마커로 표시)
+      }
+    });
   });
 
   // 임의 지점 선택: PC 우클릭 + 모바일 롱프레스
@@ -713,6 +727,13 @@ function renderMarkers() {
       addMarker(g.lat, g.lng, 'waiting', g.items.length, buildGroupedWaitingIW(g.items, hLat, hLng));
     });
   }
+
+  // ── 4개 센터 표시 ── 집 마커보다 작은 빨간 테두리 흰 원. 집보다 위(z+1), 줌 가림은 집 링과 동일 임계
+  // ALL모드: 집 링 z=isOverview()?6:0 → 센터 z=7/1(축소 시 위로, 확대 시 자식마커에 가릴 수 있음=집과 동일).
+  // 단일모드: 집 채움마커 z=10 → 센터 z=11(위).
+  var allMode = !!(d.allProviders && d.allProviders.length > 0);
+  var centerZ = allMode ? (isOverview() ? 7 : 1) : 11;
+  centerPoints.forEach(function(c){ addCenterMarker(c.pos, c.name, centerZ); });
 }
 
 // markerH = 마커가 점(latlng) 위로 솟은 픽셀 높이. 이걸로 라벨을 마커 위에 '바짝' 붙인다(#5).
@@ -803,6 +824,20 @@ function addHomeRingMarker(lat,lng,iwContent,z){
   var img=getRingImage();
   var m=new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:z||0});
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
+  markers.push(m);
+}
+
+// 센터 마커 — 작은 빨간 테두리 흰 원(집 마커보다 작게). 18x18, 중심 정렬
+function markerCenter(){ return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="#fff" stroke="#ef4444" stroke-width="2"/></svg>'); }
+var _centerImg = null;
+function getCenterImage(){
+  if (!_centerImg) _centerImg = new kakao.maps.MarkerImage(markerCenter(), new kakao.maps.Size(18,18), {offset:new kakao.maps.Point(9,9)});
+  return _centerImg;
+}
+function addCenterMarker(pos, name, z){
+  var m = new kakao.maps.Marker({position:pos, image:getCenterImage(), map:map, zIndex:z});
+  var iw = '<div class="iw"><div class="iw-title">'+esc(name)+'<span class="iw-badge" style="background:#fee2e2;color:#dc2626">센터</span></div></div>';
+  kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iw);infoWindow.open(map,m)});
   markers.push(m);
 }
 
