@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>서식함 · 생각공작소</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
   :root{
     --green:#3a8a5f; --green-d:#2f6f4d;
@@ -13,34 +14,65 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;}
-  .wrap{max-width:720px;margin:0 auto;padding:20px 22px 48px;}
-  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin:0 0 4px -4px;border-radius:12px;border:none;background:transparent;text-decoration:none;font-size:22px;color:var(--g700);cursor:pointer;}
+  .wrap{max-width:720px;margin:0 auto;padding:14px 22px 120px;}
+
+  .top{display:flex;align-items:center;gap:6px;}
+  .top-sp{flex:1;}
+  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin-left:-4px;border-radius:12px;border:none;background:transparent;text-decoration:none;font-size:22px;color:var(--g700);cursor:pointer;}
   .back:active{background:var(--g100);}
+  .gear{width:40px;height:40px;border-radius:12px;border:none;background:transparent;font-size:20px;color:var(--g500);cursor:pointer;}
+  .gear:active{background:var(--g100);}
+
   h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:6px 2px 4px;}
   .sub{font-size:14px;color:var(--g500);font-weight:500;margin:0 2px 22px;}
 
   /* 목차 */
   .list{display:flex;flex-direction:column;gap:10px;}
-  .item{display:flex;align-items:center;gap:14px;background:var(--g100);border:1.5px solid transparent;border-radius:16px;padding:18px 18px;cursor:pointer;transition:transform .08s,background .15s;}
+  .item{display:flex;align-items:center;gap:14px;background:var(--g100);border:1.5px solid transparent;border-radius:16px;padding:18px;cursor:pointer;transition:transform .08s,background .15s;}
   .item:active{transform:scale(.99);background:#eef0f3;}
   .item .ico{font-size:24px;flex-shrink:0;}
   .item .meta{flex:1;min-width:0;}
   .item .nm{font-size:16px;font-weight:700;letter-spacing:-.3px;}
   .item .dt{font-size:12.5px;color:var(--g500);margin-top:2px;}
   .item .arrow{color:var(--g300);font-size:20px;}
+  .msg{text-align:center;color:var(--g500);font-size:14px;padding:40px 16px;}
+  .msg.err{color:var(--red);}
 
   /* 미리보기 */
   #preview{display:none;}
   #preview.on{display:block;}
-  .pv-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .pv-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
   .pv-name{flex:1;font-size:16px;font-weight:700;letter-spacing:-.3px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .pv-frame{width:100%;height:62vh;border:1.5px solid var(--g200);border-radius:14px;background:var(--g100);}
-  .btn{display:block;width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:16px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;margin-top:14px;text-align:center;transition:.12s;}
-  .btn:active{transform:scale(.99);background:var(--green-d);}
-  .btn.ghost{background:var(--g100);color:var(--g700);}
+  #pdfBox{background:var(--g100);border-radius:14px;padding:10px;min-height:40vh;}
+  .pv-page{display:block;width:100%;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.12);margin-bottom:10px;}
+  .pv-page:last-child{margin-bottom:0;}
+  .pv-loading{padding:50px 16px;text-align:center;color:var(--g500);font-size:14px;}
 
-  .msg{text-align:center;color:var(--g500);font-size:14px;padding:40px 16px;}
-  .msg.err{color:var(--red);}
+  /* 하단 액션바 (수정·저장·출력) */
+  .pv-actions{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+    background:rgba(255,255,255,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border-top:1px solid var(--g200);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  }
+  .pbtn{display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-size:13px;font-weight:700;
+    padding:11px 4px;border-radius:14px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.1s;}
+  .pbtn span{font-size:20px;}
+  .pbtn:active{transform:scale(.97);background:var(--g100);}
+  .pbtn.primary{background:var(--green);border-color:var(--green);color:#fff;}
+  .pbtn.primary:active{background:var(--green-d);}
+
+  .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:15px;border-radius:14px;border:none;background:var(--green);color:#fff;cursor:pointer;}
+  .btn:active{background:var(--green-d);}
+
+  /* 프린터 안내 모달 */
+  .modal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:24px;}
+  .modal.on{display:flex;}
+  .modal-card{background:#fff;border-radius:18px;padding:22px 20px;max-width:380px;width:100%;}
+  .modal-t{font-size:18px;font-weight:700;letter-spacing:-.4px;margin-bottom:12px;}
+  .modal-b{font-size:14px;color:var(--g700);line-height:1.7;margin-bottom:16px;}
+  .modal-b b{color:var(--g900);}
 
   /* PIN 게이트 (키패드) */
   #gate{position:fixed;inset:0;z-index:9999;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;padding-bottom:calc(40px + env(safe-area-inset-bottom));}
@@ -60,7 +92,6 @@
   .gate-key:active{background:var(--g200);transform:scale(.94);}
   .gate-key.fn{font-size:15px;font-weight:600;color:var(--g500);background:transparent;}
 
-  /* 로딩 */
   #load{position:fixed;inset:0;z-index:500;background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center;}
   #load.on{display:flex;}
   .spin{width:34px;height:34px;border:3px solid var(--g200);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite;}
@@ -70,20 +101,43 @@
 <body>
 
 <div class="wrap">
-  <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+  <div class="top">
+    <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+    <div class="top-sp"></div>
+    <button class="gear" onclick="openGuide()" aria-label="프린터 설정 안내">⚙️</button>
+  </div>
   <h1>서식함</h1>
-  <div class="sub">최신 양식을 미리 보고 바로 출력해요.</div>
+  <div class="sub">양식을 눌러 보고, 수정·저장·출력해요.</div>
 
   <div id="list" class="list"></div>
   <div id="listMsg" class="msg" style="display:none"></div>
 
   <div id="preview">
     <div class="pv-head">
-      <button class="back" onclick="backToList()" aria-label="목록으로" style="margin:0 0 0 -4px">‹</button>
+      <button class="back" onclick="backToList()" aria-label="목록으로" style="margin-left:-4px">‹</button>
       <div class="pv-name" id="pvName"></div>
     </div>
-    <iframe class="pv-frame" id="pvFrame" title="양식 미리보기"></iframe>
-    <button class="btn" id="pvPrint">🖨️ 인쇄 / 출력</button>
+    <div id="pdfBox"></div>
+    <div class="pv-actions">
+      <button class="pbtn" onclick="editForm()"><span>✏️</span>수정</button>
+      <button class="pbtn" onclick="saveForm()"><span>📥</span>저장</button>
+      <button class="pbtn primary" onclick="printForm()"><span>🖨️</span>출력</button>
+    </div>
+  </div>
+</div>
+
+<!-- 프린터 안내 -->
+<div id="guide" class="modal">
+  <div class="modal-card">
+    <div class="modal-t">프린터 처음 추가하기</div>
+    <div class="modal-b">
+      출력했는데 프린터가 안 보이면:<br><br>
+      1) 프린터와 태블릿이 <b>같은 와이파이</b>인지 확인해요.<br>
+      2) <b>아이패드</b>: AirPrint 되는 프린터면 인쇄 화면에 자동으로 떠요.<br>
+      3) <b>갤럭시탭</b>: 설정 → 연결 → 기타 연결 설정 → 인쇄 에서 프린터를 추가해요(제조사 플러그인 설치).<br><br>
+      한 번 추가하면 다음부턴 출력할 때 바로 떠요.
+    </div>
+    <button class="btn" onclick="closeGuide()">닫기</button>
   </div>
 </div>
 
@@ -117,7 +171,9 @@
 <script>
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbwAyTXgNRYg3hRUUwWRbilNx_pGAvvAqfwoKduWCCwxQT2502oQKY1lKiqclze1ko3QNw/exec';
 var TOKEN_KEY = 'tf_forms_token';
-var curBlobUrl = null;
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+var curBlobUrl = null, curName = '양식';
 
 function getToken(){ try { return localStorage.getItem(TOKEN_KEY) || ''; } catch(e){ return ''; } }
 function setToken(t){ try { localStorage.setItem(TOKEN_KEY, (t||'').trim()); } catch(e){} }
@@ -134,6 +190,118 @@ function gasGet(action, params){
     return r.json();
   });
 }
+
+// ── 목차 ──
+function loadList(){
+  if (!getToken()){ openGate(); return; }
+  showLoad(true);
+  document.getElementById('listMsg').style.display = 'none';
+  gasGet('list').then(function(d){
+    showLoad(false);
+    if (d && d.error === 'Unauthorized'){ setToken(''); openGate(); return; }
+    if (d && d.error){ return showListMsg('불러오기 실패: ' + d.error, true); }
+    renderList((d && d.files) || []);
+  }).catch(function(){ showLoad(false); showListMsg('네트워크 오류예요. 와이파이를 확인해 주세요.', true); });
+}
+function showListMsg(t, err){
+  var el = document.getElementById('listMsg');
+  el.textContent = t; el.className = 'msg' + (err ? ' err' : ''); el.style.display = 'block';
+  document.getElementById('list').innerHTML = '';
+}
+function renderList(files){
+  var box = document.getElementById('list');
+  box.innerHTML = '';
+  if (!files.length){ return showListMsg('아직 등록된 양식이 없어요.', false); }
+  files.forEach(function(f){
+    var dt = (f.modified || '').slice(0,10).replace(/-/g, '.');
+    var el = document.createElement('div');
+    el.className = 'item';
+    el.innerHTML = '<div class="ico">📄</div><div class="meta"><div class="nm"></div><div class="dt">'+dt+'</div></div><div class="arrow">›</div>';
+    el.querySelector('.nm').textContent = f.name;
+    el.onclick = function(){ openForm(f); };
+    box.appendChild(el);
+  });
+}
+
+// ── 미리보기 (PDF.js로 박스 안에 그림) ──
+function b64ToBytes(b64){
+  var bin = atob(b64), n = bin.length, u = new Uint8Array(n);
+  for (var i=0;i<n;i++) u[i] = bin.charCodeAt(i);
+  return u;
+}
+function openForm(f){
+  showLoad(true);
+  gasGet('file', { id: f.id, name: f.name }).then(function(d){
+    showLoad(false);
+    if (!d || d.error){ alert('양식을 여는 데 실패했어요' + (d && d.error ? '\n' + d.error : '')); return; }
+    if (curBlobUrl){ URL.revokeObjectURL(curBlobUrl); curBlobUrl = null; }
+    var bytes = b64ToBytes(d.b64);
+    curName = d.name || f.name || '양식';
+    curBlobUrl = URL.createObjectURL(new Blob([bytes], { type:'application/pdf' }));  // 저장·출력용(원본)
+    document.getElementById('list').style.display = 'none';
+    document.getElementById('listMsg').style.display = 'none';
+    document.getElementById('pvName').textContent = curName;
+    document.getElementById('preview').classList.add('on');
+    window.scrollTo(0, 0);
+    renderPdf(bytes).catch(function(){
+      document.getElementById('pdfBox').innerHTML = '<div class="pv-loading">미리보기를 못 그렸어요.<br>저장·출력은 됩니다.</div>';
+    });
+  }).catch(function(){ showLoad(false); alert('네트워크 오류예요. 와이파이를 확인해 주세요.'); });
+}
+function renderPdf(bytes){
+  var box = document.getElementById('pdfBox');
+  box.innerHTML = '<div class="pv-loading">미리보기 그리는 중…</div>';
+  if (!window.pdfjsLib) return Promise.reject('no pdfjs');
+  return pdfjsLib.getDocument({ data: bytes }).promise.then(function(pdf){
+    box.innerHTML = '';
+    var cssW = box.clientWidth - 20 || 600;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var chain = Promise.resolve();
+    for (var p = 1; p <= pdf.numPages; p++){
+      (function(pageNum){
+        chain = chain.then(function(){
+          return pdf.getPage(pageNum).then(function(page){
+            var base = page.getViewport({ scale: 1 });
+            var vp = page.getViewport({ scale: (cssW / base.width) * dpr });
+            var canvas = document.createElement('canvas');
+            canvas.className = 'pv-page';
+            canvas.width = Math.floor(vp.width);
+            canvas.height = Math.floor(vp.height);
+            box.appendChild(canvas);
+            return page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+          });
+        });
+      })(p);
+    }
+    return chain;
+  });
+}
+
+// ── 버튼 ──
+function editForm(){ if (curBlobUrl) window.open(curBlobUrl, '_blank'); }   // 기기 PDF뷰어 펜
+function saveForm(){
+  if (!curBlobUrl) return;
+  var a = document.createElement('a');
+  a.href = curBlobUrl;
+  a.download = curName.replace(/[\\/:*?"<>|]/g, '_') + '.pdf';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function printForm(){
+  if (!curBlobUrl) return;
+  var w = window.open(curBlobUrl, '_blank');     // 원본 PDF를 기기 뷰어/인쇄로
+  if (!w){ window.location.href = curBlobUrl; return; }
+  try { w.addEventListener('load', function(){ setTimeout(function(){ try { w.print(); } catch(e){} }, 400); }); } catch(e){}
+}
+function backToList(){
+  document.getElementById('preview').classList.remove('on');
+  document.getElementById('pdfBox').innerHTML = '';
+  if (curBlobUrl){ URL.revokeObjectURL(curBlobUrl); curBlobUrl = null; }
+  document.getElementById('list').style.display = 'flex';
+}
+
+// ── 프린터 안내 ──
+function openGuide(){ document.getElementById('guide').classList.add('on'); }
+function closeGuide(){ document.getElementById('guide').classList.remove('on'); }
 
 // ── PIN 게이트 (키패드, 4자리 채우면 자동 제출 → 서버 검증) ──
 var gateEntry = '';
@@ -156,7 +324,7 @@ function gateSubmit(){
     .then(function(r){ return r.json(); })
     .then(function(d){
       showLoad(false);
-      if (d && d.error){ gateFail('암호가 맞지 않아요'); return; }   // Unauthorized 등
+      if (d && d.error){ gateFail('암호가 맞지 않아요'); return; }
       setToken(pin);
       document.getElementById('gate').classList.remove('on');
       renderList((d && d.files) || []);
@@ -179,67 +347,6 @@ document.addEventListener('keydown', function(e){
   if (/^[0-9]$/.test(e.key)) gatePress(e.key);
   else if (e.key === 'Backspace') gatePress('del');
 });
-
-// ── 목차 ──
-function loadList(){
-  if (!getToken()){ openGate(); return; }
-  showLoad(true);
-  document.getElementById('listMsg').style.display = 'none';
-  gasGet('list').then(function(d){
-    showLoad(false);
-    if (d && d.error === 'Unauthorized'){ setToken(''); openGate(); return; }
-    if (d && d.error){ return showListMsg('불러오기 실패: ' + d.error, true); }
-    renderList((d && d.files) || []);
-  }).catch(function(e){ showLoad(false); showListMsg('네트워크 오류예요. 와이파이를 확인해 주세요.', true); });
-}
-function showListMsg(t, err){
-  var el = document.getElementById('listMsg');
-  el.textContent = t; el.className = 'msg' + (err ? ' err' : ''); el.style.display = 'block';
-  document.getElementById('list').innerHTML = '';
-}
-function renderList(files){
-  var box = document.getElementById('list');
-  box.innerHTML = '';
-  if (!files.length){ return showListMsg('아직 등록된 양식이 없어요.', false); }
-  files.forEach(function(f){
-    var dt = (f.modified || '').slice(0,10).replace(/-/g, '.');
-    var el = document.createElement('div');
-    el.className = 'item';
-    el.innerHTML = '<div class="ico">📄</div><div class="meta"><div class="nm"></div><div class="dt">'+dt+'</div></div><div class="arrow">›</div>';
-    el.querySelector('.nm').textContent = f.name;
-    el.onclick = function(){ openForm(f); };
-    box.appendChild(el);
-  });
-}
-
-// ── 미리보기 + 출력 ──
-function openForm(f){
-  showLoad(true);
-  gasGet('file', { id: f.id, name: f.name }).then(function(d){
-    showLoad(false);
-    if (!d || d.error){ alert('양식을 여는 데 실패했어요.' + (d && d.error ? '\n' + d.error : '')); return; }
-    if (curBlobUrl){ URL.revokeObjectURL(curBlobUrl); curBlobUrl = null; }
-    var blob = b64ToBlob(d.b64, d.mime || 'application/pdf');
-    curBlobUrl = URL.createObjectURL(blob);
-    document.getElementById('pvName').textContent = f.name;
-    document.getElementById('pvFrame').src = curBlobUrl;
-    document.getElementById('preview').classList.add('on');
-    document.getElementById('list').style.display = 'none';
-    document.getElementById('pvPrint').onclick = function(){ if (curBlobUrl) window.open(curBlobUrl, '_blank'); };
-    window.scrollTo(0,0);
-  }).catch(function(e){ showLoad(false); alert('네트워크 오류예요. 와이파이를 확인해 주세요.'); });
-}
-function backToList(){
-  document.getElementById('preview').classList.remove('on');
-  document.getElementById('pvFrame').src = 'about:blank';
-  if (curBlobUrl){ URL.revokeObjectURL(curBlobUrl); curBlobUrl = null; }
-  document.getElementById('list').style.display = 'flex';
-}
-function b64ToBlob(b64, mime){
-  var bin = atob(b64), len = bin.length, bytes = new Uint8Array(len);
-  for (var i=0;i<len;i++) bytes[i] = bin.charCodeAt(i);
-  return new Blob([bytes], { type: mime || 'application/pdf' });
-}
 
 loadList();
 </script>
