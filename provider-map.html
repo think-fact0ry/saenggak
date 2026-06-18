@@ -728,12 +728,9 @@ function renderMarkers() {
     });
   }
 
-  // ── 4개 센터 표시 ── 집 마커보다 작은 빨간 테두리 흰 원. 집보다 위(z+1), 줌 가림은 집 링과 동일 임계
-  // ALL모드: 집 링 z=isOverview()?6:0 → 센터 z=7/1(축소 시 위로, 확대 시 자식마커에 가릴 수 있음=집과 동일).
-  // 단일모드: 집 채움마커 z=10 → 센터 z=11(위).
-  var allMode = !!(d.allProviders && d.allProviders.length > 0);
-  var centerZ = allMode ? (isOverview() ? 7 : 1) : 11;
-  centerPoints.forEach(function(c){ addCenterMarker(c.pos, c.name, centerZ); });
+  // ── 4개 센터 표시 ── 집 마커보다 작은 빨간 테두리 흰 원. 항상 맨 위(z=12)로 올려
+  // 안 가려지게 + 탭하면 항상 '○○ 센터'만 뜨게(아래 깔린 아동 마커가 클릭 가로채 주소/동 노출되는 것 차단)
+  centerPoints.forEach(function(c){ addCenterMarker(c.pos, c.name, 12); });
 }
 
 // markerH = 마커가 점(latlng) 위로 솟은 픽셀 높이. 이걸로 라벨을 마커 위에 '바짝' 붙인다(#5).
