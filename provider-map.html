@@ -740,7 +740,7 @@ function fitBounds() {
   map.setBounds(b,60);
   // 좁은 화면(태블릿·모바일)에선 마커가 넓게 퍼져 setBounds가 과하게 축소돼 첫 화면이 너무 멀어짐
   // → 시작 레벨에 상한을 둬 적당히 줌인된 상태로 시작(이후 사용자가 자유롭게 축소 가능). 숫자↓=더 확대
-  if (window.innerWidth <= 768 && map.getLevel() > 6) map.setLevel(6);
+  if (window.innerWidth <= 768 && map.getLevel() > 7) map.setLevel(7);
 }
 
 // ══ 마커 SVG ══

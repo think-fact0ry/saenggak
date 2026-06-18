@@ -106,6 +106,20 @@
     opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
   }
   .net-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ═ 홈 화면 추가(설치) 안내 바 — 크롬 자동 설치바가 안 떠도 직접 띄움 ═ */
+  .install-bar{
+    position:fixed; left:12px; right:12px; bottom:calc(14px + env(safe-area-inset-bottom));
+    z-index:300; display:none; align-items:center; gap:10px;
+    background:var(--green); color:#fff; border-radius:16px;
+    padding:13px 14px 13px 18px; box-shadow:0 8px 24px rgba(58,138,95,.35);
+  }
+  .install-bar.show{display:flex;}
+  .install-bar .t{flex:1; font-size:14.5px; font-weight:600; letter-spacing:-.3px; line-height:1.4;}
+  .install-bar button{font-family:inherit; cursor:pointer; border:none;}
+  .install-bar .add{font-size:14px; font-weight:700; border-radius:11px; padding:10px 16px; background:#fff; color:var(--green-d);}
+  .install-bar .add:active{background:#eef0f3;}
+  .install-bar .x{background:transparent; color:#fff; font-size:20px; padding:4px 6px; opacity:.85;}
 </style>
 </head>
 <body>
@@ -196,6 +210,12 @@
 
 </div>
 
+<div class="install-bar" id="installBar">
+  <div class="t">홈 화면에 앱으로 추가할까요?</div>
+  <button class="add" id="installBtn">추가</button>
+  <button class="x" id="installX" aria-label="닫기">×</button>
+</div>
+
 <div class="net-toast" id="netToast">와이파이가 연결되면 볼 수 있어요</div>
 
 <script>
@@ -273,6 +293,30 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 }
+
+// ─ 홈 화면 추가(설치) — 크롬 자동 설치바가 쿨다운으로 안 떠도 우리 버튼으로 설치 가능 ─
+// beforeinstallprompt를 가로채 우리 바를 띄우고, '추가' 누르면 네이티브 설치창 호출.
+(function(){
+  var bar = document.getElementById('installBar');
+  var btn = document.getElementById('installBtn');
+  var x   = document.getElementById('installX');
+  var deferred = null;
+  function installed(){
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  }
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();              // 크롬 기본 미니바 억제 → 우리 바로 통일
+    deferred = e;
+    if (!installed()) bar.classList.add('show');
+  });
+  btn.addEventListener('click', function(){
+    if (!deferred) { bar.classList.remove('show'); return; }
+    deferred.prompt();
+    deferred.userChoice.then(function(){ deferred = null; bar.classList.remove('show'); });
+  });
+  x.addEventListener('click', function(){ bar.classList.remove('show'); });   // 이번 세션만 닫기
+  window.addEventListener('appinstalled', function(){ bar.classList.remove('show'); deferred = null; });
+})();
 
 // 오프라인이면 인터넷 필요한 타일(활동 이야기·제공인력 지도)은 이동 막고 안내.
 // 가격표·심리검사는 서비스워커가 캐시해 와이파이 없어도 열림.
