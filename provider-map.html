@@ -389,6 +389,7 @@ var CONFIG = {
 
 var map, markers = [], overlays = [], infoWindow;
 var currentData = null;
+var michuholCenter = null;   // 미추홀 센터(주안로 128) 좌표 — 지오코딩 1회로 채워 시작 중심에 사용
 var showAssigned = true, showWaiting = true, showHome = true;
 var routeFrom = null, routeTo = null;
 var placesService = null;  // services.Places 인스턴스
@@ -483,6 +484,13 @@ function initMap() {
   placesService = new kakao.maps.services.Places();
   geocoder = new kakao.maps.services.Geocoder();
 
+  // 시작 중심을 미추홀 센터로 — 주소→좌표 1회 변환(지도/데이터 로드와 병렬, 빠름). 실패 시 fitBounds 중심 폴백
+  geocoder.addressSearch('인천 미추홀구 주안로 128', function(res, status){
+    if (status === kakao.maps.services.Status.OK && res[0]) {
+      michuholCenter = new kakao.maps.LatLng(res[0].y, res[0].x);
+    }
+  });
+
   // 임의 지점 선택: PC 우클릭 + 모바일 롱프레스
   var mapEl = document.getElementById('map');
   kakao.maps.event.addListener(map, 'rightclick', function(mouseEvent) { handleMapPointPick(mouseEvent.latLng); });
@@ -551,6 +559,7 @@ function fetchGAS(action, params) {
 var providerList = [];
 function loadProviders() {
   showLoading(true);
+  loadAllProviders();   // mapdata(마커)를 즉시 병렬 로드 — providers(목록)와 독립이라 순차 2왕복→동시 1왕복으로 단축
   fetchGAS('providers').then(function(list) {
     list.sort(function(a, b){ return String(a.name||'').localeCompare(String(b.name||''), 'ko'); }); // ㄱㄴㄷ 순
     providerList = list;
@@ -560,9 +569,9 @@ function loadProviders() {
     sel.appendChild(optAll);
     list.forEach(function(p) { var o=document.createElement('option'); o.value=p.name; o.textContent=p.name; sel.appendChild(o); });
     sel.value = '__ALL__';
-    showLoading(false);
-    loadAllProviders();
-  }).catch(function(e) { showLoading(false); showToast('목록 로드 실패: '+e.message); });
+    // mapdata가 먼저 왔다면: 드롭다운 카운트 + 마커 재렌더(배정추천은 providerList가 있어야 IW에 들어감)
+    if (currentData) { updateProviderCounts(currentData.assigned); renderMarkers(); }
+  }).catch(function(e) { showToast('목록 로드 실패: '+e.message); });
 }
 
 // ══ 데이터 로드 ══
@@ -739,8 +748,11 @@ function fitBounds() {
   markers.forEach(function(m){b.extend(m.getPosition())});
   map.setBounds(b,60);
   // 좁은 화면(태블릿·모바일)에선 마커가 넓게 퍼져 setBounds가 과하게 축소돼 첫 화면이 너무 멀어짐
-  // → 시작 레벨에 상한을 둬 적당히 줌인된 상태로 시작(이후 사용자가 자유롭게 축소 가능). 숫자↓=더 확대
-  if (window.innerWidth <= 768 && map.getLevel() > 8) map.setLevel(8);
+  // → 시작 레벨 상한(숫자↓=더 확대) + 시작 중심을 미추홀 센터로 고정. PC(>768)는 기존 fitBounds 그대로
+  if (window.innerWidth <= 768) {
+    if (map.getLevel() > 8) map.setLevel(8);
+    if (michuholCenter) map.setCenter(michuholCenter);
+  }
 }
 
 // ══ 마커 SVG ══
