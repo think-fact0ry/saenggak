@@ -48,9 +48,28 @@
   .pv-page:last-child{margin-bottom:0;}
   .pv-loading{padding:50px 16px;text-align:center;color:var(--g500);font-size:14px;}
 
-  /* 하단 액션바 (수정·저장·출력) */
+  /* 편집(전체화면) */
+  #preview.editing{position:fixed;inset:0;z-index:80;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:calc(52px + env(safe-area-inset-top)) 8px calc(78px + env(safe-area-inset-bottom));margin:0;max-width:none;}
+  #preview.editing .pv-head{display:none;}
+  #preview.editing #pdfBox{background:#fff;border-radius:0;padding:0;}
+  #pdfBox.draw .pv-page{touch-action:none;cursor:crosshair;box-shadow:0 1px 8px rgba(0,0,0,.18);}
+
+  #editTools{display:none;}
+  #preview.editing #editTools{
+    display:flex;align-items:center;gap:8px;position:fixed;top:0;left:0;right:0;z-index:90;
+    background:rgba(255,255,255,.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--g200);padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));
+  }
+  #editTools button{font-family:inherit;font-size:14px;font-weight:700;padding:9px 13px;border-radius:11px;
+    border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;}
+  #editTools button:active{background:var(--g100);}
+  #editTools .et-sp{flex:1;}
+  #editTools .et-done{background:var(--green);border-color:var(--green);color:#fff;}
+
+  /* 하단 액션바 */
   .pv-actions{
-    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    position:fixed;left:0;right:0;bottom:0;z-index:85;
     display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
     background:rgba(255,255,255,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
     border-top:1px solid var(--g200);
@@ -64,15 +83,14 @@
   .pbtn.primary:active{background:var(--green-d);}
   .pbtn.on{background:var(--green);border-color:var(--green);color:#fff;}
 
-  /* 펜(그리기) 모드 */
-  #pdfBox.draw .pv-page{touch-action:none;cursor:crosshair;}
-  #clearBtn{position:fixed;right:14px;top:60px;z-index:60;display:none;background:#fff;border:1.5px solid var(--g200);
-    border-radius:99px;padding:8px 14px;font-family:inherit;font-size:13px;font-weight:700;color:var(--g700);
-    box-shadow:0 2px 10px rgba(0,0,0,.14);cursor:pointer;}
-  #clearBtn.on{display:block;}
-
   .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:15px;border-radius:14px;border:none;background:var(--green);color:#fff;cursor:pointer;}
   .btn:active{background:var(--green-d);}
+
+  /* 토스트 */
+  #toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);
+    z-index:400;background:var(--g900);color:#fff;font-size:14px;font-weight:600;padding:11px 18px;border-radius:12px;
+    box-shadow:0 6px 20px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 
   /* 프린터 안내 모달 */
   .modal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:24px;}
@@ -105,14 +123,14 @@
   .spin{width:34px;height:34px;border:3px solid var(--g200);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg);}}
 
-  /* 인쇄: 화면의 PDF(#pdfBox)만 인쇄, 나머지 UI 숨김 */
+  /* 인쇄: 화면의 PDF(#pdfBox)만, 펜 자국 포함(캔버스에 그려져 있음) */
   @media print {
     body * { visibility: hidden !important; }
     #pdfBox, #pdfBox * { visibility: visible !important; }
     #pdfBox { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: #fff; }
     .pv-page { box-shadow: none !important; border-radius: 0 !important; margin: 0 !important; page-break-after: always; }
     .pv-page:last-child { page-break-after: auto; }
-    .pv-actions, .pv-head, .gear, .top, h1, .sub, #clearBtn { display: none !important; }
+    .pv-actions, .pv-head, .gear, .top, h1, .sub, #editTools, #toast { display: none !important; }
   }
   @page { margin: 0; }
 </style>
@@ -136,6 +154,13 @@
       <button class="back" onclick="backToList()" aria-label="목록으로" style="margin-left:-4px">‹</button>
       <div class="pv-name" id="pvName"></div>
     </div>
+    <div id="editTools">
+      <button onclick="undoStroke()">↩ 되돌리기</button>
+      <button onclick="redoStroke()">↪ 다시</button>
+      <button onclick="clearMarks()">🗑 전체</button>
+      <div class="et-sp"></div>
+      <button class="et-done" onclick="editForm()">완료</button>
+    </div>
     <div id="pdfBox"></div>
     <div class="pv-actions">
       <button class="pbtn" id="editBtn" onclick="editForm()"><span>✏️</span>수정</button>
@@ -144,6 +169,8 @@
     </div>
   </div>
 </div>
+
+<div id="toast"></div>
 
 <!-- 프린터 안내 -->
 <div id="guide" class="modal">
@@ -185,8 +212,6 @@
   </div>
 </div>
 
-<button id="clearBtn" onclick="clearMarks()">↩ 펜 지우기</button>
-
 <div id="load"><div class="spin"></div></div>
 
 <script>
@@ -194,11 +219,16 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbwAyTXgNRYg3hRUUwWRbilNx_
 var TOKEN_KEY = 'tf_forms_token';
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
-var curBlobUrl = null, curName = '양식', curBytes = null, drawMode = false;
+var curName = '양식', curBytes = null, curFormId = null;
+var drawMode = false;
+var pageData = [];     // [{canvas(보이는것), base(PDF만 사본)}]
+var strokes = [];      // [{page, pts:[{x,y}]}]  전 페이지 공통(그린 순서)
+var redoStack = [];
 
 function getToken(){ try { return localStorage.getItem(TOKEN_KEY) || ''; } catch(e){ return ''; } }
 function setToken(t){ try { localStorage.setItem(TOKEN_KEY, (t||'').trim()); } catch(e){} }
 function showLoad(on){ document.getElementById('load').classList.toggle('on', !!on); }
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(function(){ t.classList.remove('on'); }, 1800); }
 
 function gasUrl(action, params){
   var u = GAS_URL + '?action=' + action + '&t=' + encodeURIComponent(getToken());
@@ -244,7 +274,7 @@ function renderList(files){
   });
 }
 
-// ── 미리보기 (PDF.js로 박스 안에 그림) ──
+// ── 양식 열기 + PDF 렌더 ──
 function b64ToBytes(b64){
   var bin = atob(b64), n = bin.length, u = new Uint8Array(n);
   for (var i=0;i<n;i++) u[i] = bin.charCodeAt(i);
@@ -255,24 +285,24 @@ function openForm(f){
   gasGet('file', { id: f.id, name: f.name }).then(function(d){
     showLoad(false);
     if (!d || d.error){ alert('양식을 여는 데 실패했어요' + (d && d.error ? '\n' + d.error : '')); return; }
-    if (curBlobUrl){ URL.revokeObjectURL(curBlobUrl); curBlobUrl = null; }
     curBytes = b64ToBytes(d.b64);
     curName = d.name || f.name || '양식';
-    curBlobUrl = URL.createObjectURL(new Blob([curBytes], { type:'application/pdf' }));  // 저장용 원본
-    setDrawMode(false);
+    curFormId = f.id;
+    setEdit(false);
     document.getElementById('list').style.display = 'none';
     document.getElementById('listMsg').style.display = 'none';
     document.getElementById('pvName').textContent = curName;
     document.getElementById('preview').classList.add('on');
     window.scrollTo(0, 0);
-    renderPdf(curBytes.slice(0)).catch(function(){
-      document.getElementById('pdfBox').innerHTML = '<div class="pv-loading">미리보기를 못 그렸어요.<br>저장·출력은 됩니다.</div>';
+    renderPdf(curBytes.slice(0)).then(function(){ loadMarks(); }).catch(function(){
+      document.getElementById('pdfBox').innerHTML = '<div class="pv-loading">미리보기를 못 그렸어요.<br>출력은 됩니다.</div>';
     });
   }).catch(function(){ showLoad(false); alert('네트워크 오류예요. 와이파이를 확인해 주세요.'); });
 }
 function renderPdf(bytes){
   var box = document.getElementById('pdfBox');
   box.innerHTML = '<div class="pv-loading">미리보기 그리는 중…</div>';
+  pageData = [];
   if (!window.pdfjsLib) return Promise.reject('no pdfjs');
   return pdfjsLib.getDocument({ data: bytes }).promise.then(function(pdf){
     box.innerHTML = '';
@@ -289,7 +319,12 @@ function renderPdf(bytes){
             canvas.width = Math.floor(vp.width);
             canvas.height = Math.floor(vp.height);
             box.appendChild(canvas);
-            return page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+            return page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise.then(function(){
+              var b = document.createElement('canvas');
+              b.width = canvas.width; b.height = canvas.height;
+              b.getContext('2d').drawImage(canvas, 0, 0);   // PDF만(펜 없는) 사본 → undo/지우기용
+              pageData.push({ canvas: canvas, base: b });
+            });
           });
         });
       })(p);
@@ -298,59 +333,86 @@ function renderPdf(bytes){
   });
 }
 
-// ── 버튼 ──
-//  수정 = 박스 안에서 바로 펜으로 쓰기(앱 안, Chrome 안 엶). 출력하면 펜 자국까지 함께 인쇄됨.
-function setDrawMode(on){
+// ── 펜(그리기) ──
+function setEdit(on){
   drawMode = on;
+  document.getElementById('preview').classList.toggle('editing', on);
   document.getElementById('pdfBox').classList.toggle('draw', on);
   var b = document.getElementById('editBtn'); if (b) b.classList.toggle('on', on);
-  document.getElementById('clearBtn').classList.toggle('on', on);
+  if (on) window.scrollTo(0, 0);
 }
-function editForm(){ setDrawMode(!drawMode); }
-function clearMarks(){ if (curBytes) renderPdf(curBytes.slice(0)); }   // 페이지 다시 그려 펜 자국 지움
+function editForm(){ setEdit(!drawMode); }
 
-// 펜 그리기: 펜 모드일 때 캔버스 위에 직접 그림 → 캔버스 픽셀이 되어 인쇄에 포함
+function penStyle(ctx, c){ ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, c.width/520); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; }
+function drawStroke(s){
+  var c = pageData[s.page] && pageData[s.page].canvas; if (!c) return;
+  var ctx = c.getContext('2d'); penStyle(ctx, c);
+  var pts = s.pts; if (!pts.length) return;
+  ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+  for (var i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
+  if (pts.length === 1) ctx.lineTo(pts[0].x+0.1, pts[0].y+0.1);   // 점 하나도 보이게
+  ctx.stroke();
+}
+function recompositePage(idx){
+  var pd = pageData[idx]; if (!pd) return;
+  var ctx = pd.canvas.getContext('2d');
+  ctx.clearRect(0,0,pd.canvas.width,pd.canvas.height);
+  ctx.drawImage(pd.base, 0, 0);
+  for (var i=0;i<strokes.length;i++) if (strokes[i].page === idx) drawStroke(strokes[i]);
+}
+function recompositeAll(){ for (var i=0;i<pageData.length;i++) recompositePage(i); }
+function undoStroke(){ if (!strokes.length) return; var s = strokes.pop(); redoStack.push(s); recompositePage(s.page); }
+function redoStroke(){ if (!redoStack.length) return; var s = redoStack.pop(); strokes.push(s); drawStroke(s); }
+function clearMarks(){ strokes = []; redoStack = []; recompositeAll(); }
+
 (function(){
   var box = document.getElementById('pdfBox');
-  var drawing = false, ctx = null, cv = null;
+  var drawing = false, cur = null;
+  function pageOf(c){ for (var i=0;i<pageData.length;i++) if (pageData[i].canvas === c) return i; return -1; }
   function pt(e, c){ var r = c.getBoundingClientRect(); return { x:(e.clientX-r.left)*(c.width/r.width), y:(e.clientY-r.top)*(c.height/r.height) }; }
   box.addEventListener('pointerdown', function(e){
     if (!drawMode) return;
     var c = e.target && e.target.closest ? e.target.closest('canvas.pv-page') : null;
-    if (!c) return;
-    cv = c; ctx = c.getContext('2d');
+    var idx = c ? pageOf(c) : -1; if (idx < 0) return;
     var p = pt(e, c);
-    ctx.strokeStyle = '#16357a'; ctx.lineWidth = Math.max(2, c.width/520); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.beginPath(); ctx.moveTo(p.x, p.y); drawing = true;
-    try { c.setPointerCapture(e.pointerId); } catch(_){}
+    cur = { page: idx, pts: [p] };
+    var ctx = c.getContext('2d'); penStyle(ctx, c); ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    drawing = true; try { c.setPointerCapture(e.pointerId); } catch(_){}
     e.preventDefault();
   });
   box.addEventListener('pointermove', function(e){
-    if (!drawing || !ctx) return;
-    var p = pt(e, cv); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault();
+    if (!drawing || !cur) return;
+    var c = pageData[cur.page].canvas, p = pt(e, c);
+    cur.pts.push(p);
+    var ctx = c.getContext('2d'); ctx.lineTo(p.x, p.y); ctx.stroke();
+    e.preventDefault();
   });
-  function end(){ drawing = false; ctx = null; cv = null; }
+  function end(){ if (drawing && cur && cur.pts.length){ strokes.push(cur); redoStack = []; } drawing = false; cur = null; }
   box.addEventListener('pointerup', end);
   box.addEventListener('pointercancel', end);
 })();
 
+// ── 저장(기록)·출력 ──
+function marksKey(){ return 'tf_forms_marks_' + (curFormId || ''); }
 function saveForm(){
-  if (!curBlobUrl) return;
-  var a = document.createElement('a');
-  a.href = curBlobUrl;
-  a.download = curName.replace(/[\\/:*?"<>|]/g, '_') + '.pdf';
-  document.body.appendChild(a); a.click(); a.remove();
+  if (!curFormId) return;
+  try { localStorage.setItem(marksKey(), JSON.stringify(strokes)); } catch(e){}
+  toast(strokes.length ? '작성 내용을 저장했어요' : '깨끗한 상태로 저장했어요');
+}
+function loadMarks(){
+  strokes = []; redoStack = [];
+  try { var raw = localStorage.getItem(marksKey()); if (raw){ strokes = JSON.parse(raw) || []; } } catch(e){ strokes = []; }
+  recompositeAll();
 }
 function printForm(){
   if (!document.getElementById('preview').classList.contains('on')) return;
-  // 화면에 그린 PDF만 인쇄(아래 @media print) → 기기 인쇄 대화상자(대상·페이지·레이아웃) 바로 뜸
-  window.print();
+  window.print();   // 화면의 PDF(+펜 자국)만 인쇄 → 기기 인쇄 대화상자
 }
 function backToList(){
-  setDrawMode(false);
+  setEdit(false);
   document.getElementById('preview').classList.remove('on');
   document.getElementById('pdfBox').innerHTML = '';
-  if (curBlobUrl){ URL.revokeObjectURL(curBlobUrl); curBlobUrl = null; }
+  pageData = []; strokes = []; redoStack = []; curFormId = null;
   document.getElementById('list').style.display = 'flex';
 }
 
