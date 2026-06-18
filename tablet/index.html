@@ -106,6 +106,7 @@
     opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
   }
   .net-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .net-toast.upd{background:var(--green);}   /* 업데이트 안내(초록) */
 
   /* ═ 홈 화면 추가(설치) 안내 바 — 크롬 자동 설치바가 안 떠도 직접 띄움 ═ */
   .install-bar{
@@ -206,7 +207,7 @@
 
   </div>
 
-  <div class="foot">생각공작소 · think-factory.kr</div>
+  <div class="foot">생각공작소 · think-factory.kr <span id="ver" style="opacity:.8"></span></div>
 
 </div>
 
@@ -217,6 +218,7 @@
 </div>
 
 <div class="net-toast" id="netToast">와이파이가 연결되면 볼 수 있어요</div>
+<div class="net-toast upd" id="updateToast">✓ 새 버전으로 업데이트했어요</div>
 
 <script>
 // ════════════════════════════════════════════════════════════════
@@ -289,9 +291,30 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   render();
 })();
 
-// 서비스워커 등록 (Android 설치 배너 조건 + 오프라인). 실패해도 앱 동작엔 지장 없음.
+// ════ 버전 표시 + 자동 업데이트 ════
+// APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
+var APP_VERSION = '26.06.18';
+(function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
+
+// 자동 업데이트:
+//  · 앱을 새로 열면 network-first 서비스워커가 항상 최신을 받아옴(기본).
+//  · 앱을 켜둔 채 다시 돌아와도(포그라운드) 새 버전을 확인 → 있으면 허브만 조용히 새로고침.
+//    (허브는 메뉴라 안전. 검사 폼·지도 등 작업 페이지는 이 새로고침에 휩쓸리지 않음 — 거긴 '열 때' 최신화)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+  var hadController = !!navigator.serviceWorker.controller;   // true면 '갱신'(첫 설치 아님)
+  var reloadedForUpdate = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function(){
+    if (reloadedForUpdate || !hadController) return;          // 첫 설치는 새로고침 불필요
+    reloadedForUpdate = true;
+    var t = document.getElementById('updateToast'); if (t) t.classList.add('show');
+    setTimeout(function(){ location.reload(); }, 1100);       // 잠깐 안내 후 최신으로
+  });
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      reg.update();                                            // 열 때 즉시 새 버전 확인
+      document.addEventListener('visibilitychange', function(){ if (!document.hidden) reg.update(); }); // 포그라운드 복귀 시 확인
+    }).catch(function(){});
+  });
 }
 
 // ─ 홈 화면 추가(설치) — 크롬 자동 설치바가 쿨다운으로 안 떠도 우리 버튼으로 설치 가능 ─
