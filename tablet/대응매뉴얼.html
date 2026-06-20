@@ -253,8 +253,13 @@ function groupOf(title){
   for(var i=0;i<GROUPS.length;i++){ for(var j=0;j<GROUPS[i].keys.length;j++){ if(title.indexOf(GROUPS[i].keys[j])>=0) return i; } }
   return -1;
 }
-// 자주 찾는 항목(큐레이션) — 추후 실제 검색로그 집계로 대체 예정(유성 기기 제외)
-var CHIPS = ['환불','일정 변경','수업 중단','현금영수증','등급 변경','연장·재신청','체험 수업','국민행복카드','신청 방법','세액공제'];
+// 자주 찾는 항목(큐레이션) — {t:보이는 라벨, q:실제 검색어(본문에 존재해야 매칭)}
+// 추후 실제 검색로그 집계로 대체 예정(유성 기기 제외)
+var CHIPS = [
+  {t:'환불',q:'환불'},{t:'일정 변경',q:'일정'},{t:'수업 중단',q:'중단'},
+  {t:'현금영수증',q:'현금영수증'},{t:'등급 변경',q:'등급'},{t:'연장·재신청',q:'연장'},
+  {t:'체험 수업',q:'체험'},{t:'국민행복카드',q:'행복카드'},{t:'신청 방법',q:'신청'},{t:'세액공제',q:'세액공제'}
+];
 
 function getToken(){ try{ return localStorage.getItem(TOKEN_KEY)||''; }catch(e){ return ''; } }
 function setToken(t){ try{ localStorage.setItem(TOKEN_KEY,(t||'').trim()); }catch(e){} }
@@ -369,8 +374,8 @@ function closeSearch(){ document.getElementById('searchPanel').classList.remove(
 function buildChips(){
   var box=document.getElementById('chips'); box.innerHTML='';
   CHIPS.forEach(function(c){
-    var b=document.createElement('button'); b.className='chip'; b.textContent=c;
-    b.onclick=function(){ var s=document.getElementById('search'); s.value=c; runSearch(c); };
+    var b=document.createElement('button'); b.className='chip'; b.textContent=c.t;
+    b.onclick=function(){ var s=document.getElementById('search'); s.value=c.q; runSearch(c.q); };
     box.appendChild(b);
   });
 }
