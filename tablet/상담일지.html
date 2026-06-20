@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>상담일지 — 생각공작소</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --green:#3a8a5f; --green-d:#2f6f4d; --green-l:#eaf5ee;
+    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g400:#b0b8c1; --g300:#d1d6db;
+    --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}  /* 하단 = 고정 버튼 자리 */
+  .back{
+    display:flex; align-items:center; justify-content:center;
+    width:40px; height:40px; margin:0 0 4px -4px; border-radius:12px;
+    border:none; background:transparent; text-decoration:none;
+    font-size:22px; color:var(--g700); cursor:pointer;
+  }
+  .back:active{background:var(--g100);}
+
+  h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 2px 6px;}
+  .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 2px 22px;}
+
+  /* 입력 */
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:14px;font-weight:600;color:var(--g700);margin:0 2px 8px;}
+  .field .opt{font-weight:500;color:var(--g400);}   /* 선택 항목 표시 */
+  .field input,.field textarea{
+    width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:14px;
+    border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;
+  }
+  .field textarea{font-size:16px;line-height:1.65;resize:vertical;min-height:240px;}
+  .field input::placeholder,.field textarea::placeholder{color:var(--g400);font-weight:500;}
+  .field input:focus,.field textarea:focus{background:#fff;border-color:var(--green);}
+  .row{display:flex;gap:12px;}
+  .row .field{flex:1;}
+  .toggle{display:flex;gap:10px;}
+  .toggle button{flex:1;font-family:inherit;font-size:16px;font-weight:600;padding:15px;border-radius:14px;border:2px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
+  .toggle button.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);}
+
+  /* 하단 고정 액션(키보드 위에 유지 — 디자인원칙 §5) */
+  .footbar{
+    position:fixed;left:0;right:0;bottom:0;background:#fff;
+    padding:12px 22px calc(12px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--g100);
+  }
+  .footbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px;}
+  .btn{
+    flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;
+    border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;
+  }
+  .btn:active{transform:scale(.985);background:var(--green-d);}
+  .btn:disabled{background:var(--g200);color:var(--g500);cursor:default;transform:none;}
+  .btn.ghost{background:var(--g100);color:var(--g700);flex:0 0 auto;padding-left:22px;padding-right:22px;}
+
+  .note{text-align:center;font-size:13.5px;margin:12px 2px 0;color:var(--g500);min-height:18px;}
+  .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
+
+  /* 완료 */
+  .done{text-align:center;padding:60px 10px 20px;}
+  .done .ico{width:64px;height:64px;margin:0 auto 18px;border-radius:50%;background:var(--green-l);display:flex;align-items:center;justify-content:center;}
+  .done .ico svg{width:32px;height:32px;color:var(--green);}
+  .done h2{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:8px;}
+  .done p{font-size:15px;color:var(--g500);font-weight:500;}
+</style>
+</head>
+<body>
+
+<!-- ═══ 화면 1: 내담자 + 상담 정보 ═══ -->
+<div class="screen active" id="s-info">
+  <div class="wrap">
+    <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+    <h1>상담일지</h1>
+    <p class="sub">내담자와 회기 정보를 먼저 적어요. 다음 화면에서 일지를 작성해요.</p>
+
+    <div class="field">
+      <label>내담자 이름</label>
+      <input id="f-name" type="text" placeholder="홍길동" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>생년월일</label>
+      <input id="f-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>성별 <span class="opt">(선택)</span></label>
+        <div class="toggle" id="f-sex">
+          <button type="button" data-v="남">남</button>
+          <button type="button" data-v="여">여</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>연락처 <span class="opt">(선택)</span></label>
+        <input id="f-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="field">
+      <!-- ⚠️ 신원 STUB: 신원층(SMS 가입+세션) 붙으면 이 칸은 사라지고 로그인된 상담사로 자동 채움 -->
+      <label>상담사</label>
+      <input id="f-counselor" type="text" placeholder="이름" autocomplete="off">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>상담일</label>
+        <input id="f-date" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>회기 <span class="opt">(선택)</span></label>
+        <input id="f-session" type="text" inputmode="numeric" placeholder="3" autocomplete="off">
+      </div>
+    </div>
+  </div>
+  <div class="footbar">
+    <div class="inner">
+      <button class="btn" id="toWrite" disabled>다음</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 화면 2: 일지 작성 ═══ -->
+<div class="screen" id="s-write">
+  <div class="wrap">
+    <button class="back" id="backInfo" aria-label="이전">‹</button>
+    <h1 id="writeTitle">일지 작성</h1>
+    <p class="sub" id="writeSub"></p>
+
+    <div class="field">
+      <label>주호소 <span class="opt">(선택)</span></label>
+      <input id="f-complaint" type="text" placeholder="이번 회기의 주된 호소를 한 줄로" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>키워드 <span class="opt">(선택)</span></label>
+      <input id="f-keywords" type="text" placeholder="쉼표로 구분해요 — 예: 불안, 수면, 또래관계" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>본문</label>
+      <textarea id="f-content" placeholder="회기 내용을 적어요."></textarea>
+    </div>
+    <div class="note" id="saveNote"></div>
+  </div>
+  <div class="footbar">
+    <div class="inner">
+      <button class="btn ghost" id="toInfo2">이전</button>
+      <button class="btn" id="doSave" disabled>저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 화면 3: 완료 ═══ -->
+<div class="screen" id="s-done">
+  <div class="wrap">
+    <div class="done">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2>일지를 저장했어요</h2>
+      <p id="doneSub"></p>
+    </div>
+  </div>
+  <div class="footbar">
+    <div class="inner">
+      <button class="btn ghost" id="goHome">홈</button>
+      <button class="btn" id="newJournal">새 일지 쓰기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  상담일지 폼 — 11_플랫폼 GAS(action:'journal')로 저장. 검사_오감과 같은 배포 URL.
+//  ⚠️ 11에 _saveJournal_ push + 재배포 후에 저장이 동작(현재 배포본엔 검사 핸들러만).
+//  ⚠️ 상담사 = 신원 STUB(이름 직접 입력). 신원층(SMS 가입+세션) 붙으면 세션값으로 교체.
+//     상세 = docs/결정기록_2026-06-21_상담일지_신원설계.md
+// ════════════════════════════════════════════════════════════
+const GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";
+
+const $ = id => document.getElementById(id);
+const state = { sex:"" };
+
+// ── 화면 전환 ──
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+
+// ── 날짜 자동서식(0000. 00. 00) ──
+function bindDate(el){
+  el.oninput=()=>{
+    let d=el.value.replace(/\D/g,"").slice(0,8);
+    let out=d.slice(0,4);
+    if(d.length>4) out+=". "+d.slice(4,6);
+    if(d.length>6) out+=". "+d.slice(6,8);
+    el.value=out; validateInfo();
+  };
+}
+bindDate($("f-birth"));
+bindDate($("f-date"));
+
+// 상담일 기본값 = 오늘
+(function(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  $("f-date").value = d.getFullYear()+". "+p(d.getMonth()+1)+". "+p(d.getDate());
+})();
+
+// 전화 자동 하이픈
+$("f-phone").oninput=()=>{
+  let d=$("f-phone").value.replace(/\D/g,"").slice(0,11);
+  if(d.length<4) $("f-phone").value=d;
+  else if(d.length<8) $("f-phone").value=d.slice(0,3)+"-"+d.slice(3);
+  else $("f-phone").value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7);
+};
+// 회기 = 숫자만
+$("f-session").oninput=()=>{ $("f-session").value=$("f-session").value.replace(/\D/g,"").slice(0,3); };
+
+// 성별 토글
+document.querySelectorAll("#f-sex button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("#f-sex button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); state.sex=b.dataset.v;
+  };
+});
+
+// ── 검증 ──
+function validateInfo(){
+  const ok = $("f-name").value.trim()
+    && $("f-birth").value.replace(/\D/g,"").length===8
+    && $("f-counselor").value.trim()
+    && $("f-date").value.replace(/\D/g,"").length===8;
+  $("toWrite").disabled=!ok;
+}
+$("f-name").oninput=validateInfo;
+$("f-counselor").oninput=validateInfo;
+validateInfo();
+
+function validateWrite(){ $("doSave").disabled = !$("f-content").value.trim(); }
+$("f-content").oninput=validateWrite;
+validateWrite();
+
+// ── 화면 이동 ──
+$("toWrite").onclick=()=>{
+  const name=$("f-name").value.trim();
+  const sess=$("f-session").value.trim();
+  $("writeSub").textContent = name + (sess ? " · "+sess+"회기" : "");
+  show("s-write");
+};
+$("toInfo2").onclick=()=>show("s-info");
+$("backInfo").onclick=()=>show("s-info");
+
+// ── 저장 ──
+// 멱등 stamp = 이 작성의 고정 시각(첫 전송·재시도 동일) → 서버 dedup 보조축.
+let journalStamp = "";
+function nowStamp(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
+function ymd(v){  // '0000. 00. 00' → '0000-00-00'
+  const d=String(v||"").replace(/\D/g,"").slice(0,8);
+  return d.length===8 ? d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8) : "";
+}
+function buildPayload(){
+  return {
+    action:"journal",
+    child:{ name:$("f-name").value.trim(), birth:$("f-birth").value, sex:state.sex, phone:$("f-phone").value },
+    date: ymd($("f-date").value),
+    session: $("f-session").value.trim(),
+    counselor: $("f-counselor").value.trim(),   // ⚠️ 신원 STUB
+    content: $("f-content").value.trim(),
+    complaint: $("f-complaint").value.trim(),
+    keywords: $("f-keywords").value.trim(),
+    via:"태블릿",
+    stamp: journalStamp
+  };
+}
+
+let _saving=false;
+function save(retry){
+  if(_saving) return;
+  _saving=true;
+  const note=$("saveNote"); note.textContent="저장하고 있어요…";
+  $("doSave").disabled=true;
+  if(!journalStamp) journalStamp=nowStamp();
+  // body가 문자열 → text/plain → CORS 프리플라이트 없이 cross-origin POST
+  fetch(GAS_EXEC, {method:"POST", body: JSON.stringify(buildPayload())})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d && d.ok){
+        $("doneSub").textContent = $("f-name").value.trim() + (d.dup ? " · 이미 저장된 회기예요" : " · 잘 저장했어요");
+        note.textContent=""; show("s-done");
+      } else throw new Error((d && d.error) || "저장 실패");
+    })
+    .catch(err=>{
+      console.error("상담일지 저장 실패:", err);
+      _saving=false; $("doSave").disabled=false;
+      if(retry){ setTimeout(()=>{ _saving=false; save(false); }, 1500); return; }  // 1회 자동 재시도
+      note.innerHTML='저장이 안 됐어요. <button class="lk" id="retrySave">다시 저장</button>';
+      const b=$("retrySave"); if(b) b.onclick=()=>save(true);
+    });
+}
+$("doSave").onclick=()=>save(true);
+
+// ── 완료 후 ──
+$("goHome").onclick=()=>{ location.href="./index.html"; };
+$("newJournal").onclick=()=>{
+  // 같은 상담사·같은 날 유지하고 내담자/일지만 비움(연속 작성 편의)
+  ["f-name","f-birth","f-phone","f-complaint","f-keywords","f-content","f-session"].forEach(id=>$(id).value="");
+  document.querySelectorAll("#f-sex button").forEach(x=>x.classList.remove("on")); state.sex="";
+  journalStamp=""; _saving=false;
+  validateInfo(); validateWrite();
+  show("s-info");
+};
+
+// 작성 중(본문에 글이 있으면) 이전/홈으로 나갈 때 확인
+function guardLeave(e){
+  if($("f-content").value.trim() && !confirm("지금 나가면 작성한 일지가 사라져요. 나갈까요?")) e.preventDefault();
+}
+$("backInfo").addEventListener("click", guardLeave, true);
+</script>
+</body>
+</html>
