@@ -99,10 +99,10 @@
     margin:32px 0 8px;padding-left:11px;border-left:3px solid var(--green);line-height:1.3;}
   .doc p.lbl strong{font-weight:800;color:var(--green-d);}
   .doc p.lbl em{font-weight:500;color:var(--g500);font-style:normal;}
-  /* 대사 화자(담당자/보호자) 색 구분 */
+  /* 대사 화자(담당자/보호자) 색 구분 — 한 블록에 섞여도 단어별로 */
   .spk{font-weight:800;}
-  .say-staff .spk{color:var(--green-d);}
-  .say-parent .spk{color:#2f6f9e;}
+  .spk-staff{color:var(--green-d);}
+  .spk-parent{color:#2f6f9e;}
   .doc p.qa{font-size:15.5px;font-weight:700;color:var(--g900);margin:14px 0 4px;}
   .doc p.qa + blockquote{margin-top:4px;}
 
@@ -268,6 +268,21 @@ var CHIPS = [
   {t:'체험 수업',q:'체험'},{t:'국민행복카드',q:'행복카드'},{t:'신청 방법',q:'신청'},{t:'세액공제',q:'세액공제'}
 ];
 
+// 대표(유성) 기기: 주소에 ?owner=1 로 한 번 열면 이 기기는 검색 집계에서 영구 제외
+(function(){ try{ if(/[?&]owner=1/.test(location.search)) localStorage.setItem('tf_no_log','1'); }catch(e){} })();
+function noLog(){ try{ return localStorage.getItem('tf_no_log')==='1'; }catch(e){ return false; } }
+var searchSource='type', lastTop=null;
+function logSearch(q){
+  if(noLog()) return;
+  q=(q||'').trim(); if(q.length<2) return;
+  try{ fetch(GAS_URL+'?action=logsearch&t='+encodeURIComponent(getToken())+'&q='+encodeURIComponent(q),{redirect:'follow'}); }catch(e){}
+}
+function fetchTop(){
+  fetch(GAS_URL+'?action=topsearches&t='+encodeURIComponent(getToken()),{redirect:'follow'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d && d.terms){ lastTop=d.terms; buildChips(lastTop); } }).catch(function(){});
+}
+
 function getToken(){ try{ return localStorage.getItem(TOKEN_KEY)||''; }catch(e){ return ''; } }
 function setToken(t){ try{ localStorage.setItem(TOKEN_KEY,(t||'').trim()); }catch(e){} }
 function showLoad(on){ document.getElementById('load').classList.toggle('on',!!on); }
@@ -314,14 +329,17 @@ function styleBlockquotes(doc){
   doc.querySelectorAll('blockquote').forEach(function(bq){
     var t = bq.textContent.trim();
     var cls = '';
-    if(/^담당자\s*[:：]/.test(t)) cls='say-staff';
+    if(/^담당자\s*[:：]/.test(t) || /^["“]/.test(t)) cls='say-staff';   // 담당자 대사 + 라벨 없는 따옴표 답변
     else if(/^보호자/.test(t) || /^이용자/.test(t)) cls='say-parent';
     else if(/^[_(]/.test(t)) cls='note';
     if(cls) bq.classList.add(cls);
-    // 화자 단어(담당자:/보호자:)에 색 입히기 — 더 잘 읽히게
+    // 한 블록에 보호자·담당자가 섞여도 각 줄의 화자 단어를 색칠(담당자=초록·보호자=파랑)
     if(cls==='say-staff' || cls==='say-parent'){
-      var p = bq.querySelector('p');
-      if(p) p.innerHTML = p.innerHTML.replace(/^(\s*)(담당자|이용자 보호자|보호자)(\s*[:：])/, '$1<span class="spk">$2$3</span>');
+      bq.querySelectorAll('p').forEach(function(p){
+        p.innerHTML = p.innerHTML
+          .replace(/^(\s*)(담당자)(\s*[:：])/, '$1<span class="spk spk-staff">$2$3</span>')
+          .replace(/^(\s*)(이용자 보호자|보호자)(\s*[:：])/, '$1<span class="spk spk-parent">$2$3</span>');
+      });
     }
   });
 }
@@ -381,15 +399,24 @@ function jumpTo(id){
 // ── 검색 패널 ──
 function openSearch(){
   document.getElementById('searchPanel').classList.add('on');
-  var s=document.getElementById('search'); s.value=''; runSearch('');
+  var s=document.getElementById('search'); s.value=''; searchSource='type'; runSearch('');
+  buildChips(lastTop);   // 캐시 즉시 표시
+  fetchTop();            // 최신 상위어 갱신
   setTimeout(function(){ s.focus(); }, 120);
 }
 function closeSearch(){ document.getElementById('searchPanel').classList.remove('on'); }
-function buildChips(){
+function buildChips(topTerms){
   var box=document.getElementById('chips'); box.innerHTML='';
-  CHIPS.forEach(function(c){
+  var title=document.querySelector('.chip-title');
+  var list=[];
+  if(topTerms && topTerms.length>=3){
+    if(title) title.textContent='많이 찾는 항목';
+    topTerms.forEach(function(q){ list.push({t:q, q:q}); });
+  } else if(title){ title.textContent='자주 찾는 항목'; }
+  CHIPS.forEach(function(c){ if(list.length>=10) return; if(!list.some(function(x){return x.q===c.q;})) list.push(c); });
+  list.forEach(function(c){
     var b=document.createElement('button'); b.className='chip'; b.textContent=c.t;
-    b.onclick=function(){ var s=document.getElementById('search'); s.value=c.q; runSearch(c.q); };
+    b.onclick=function(){ searchSource='chip'; var s=document.getElementById('search'); s.value=c.q; runSearch(c.q); };
     box.appendChild(b);
   });
 }
@@ -408,11 +435,11 @@ function runSearch(q){
     b.innerHTML='<div class="rt"></div><div class="rg"></div>';
     b.querySelector('.rt').textContent=s.title;
     b.querySelector('.rg').textContent=gname;
-    b.onclick=function(){ jumpTo(s.id); };
+    b.onclick=function(){ if(searchSource==='type') logSearch(document.getElementById('search').value); jumpTo(s.id); };
     res.appendChild(b);
   });
 }
-document.getElementById('search').addEventListener('input', function(){ runSearch(this.value); });
+document.getElementById('search').addEventListener('input', function(){ searchSource='type'; runSearch(this.value); });
 
 function setupScrollSpy(){
   if(!('IntersectionObserver' in window)) return;
