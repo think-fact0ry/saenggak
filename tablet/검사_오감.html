@@ -494,11 +494,13 @@ function buildPayload(){
     service:"오감", draw, by:"보호자", via:"태블릿", "실시일시": examStamp,
     tools:[
       { tool:"SDQ-kr", toolVer:"1", scoreVer:"sdq-kr-v1",
+        items: SDQ_ITEMS, opts: SDQ_OPTS,        // 문항정의 등록용 — 문항 고치면 toolVer 올릴 것
         answers: sdqAns.map((a,i)=>({q:i+1,a})),
         subscores:{social:s.social,hyper:s.hyper,emotion:s.emotion,conduct:s.conduct,peer:s.peer},
         total:s.total,
         judge:{social:judgeSDQ("social",s.social),hyper:judgeSDQ("hyper",s.hyper),emotion:judgeSDQ("emotion",s.emotion),conduct:judgeSDQ("conduct",s.conduct),peer:judgeSDQ("peer",s.peer),total:judgeSDQ("total",s.total)} },
       { tool:"K-ARS", toolVer:"1", scoreVer:"kars-v1",
+        items: KARS_ITEMS, opts: KARS_OPTS,       // 문항 고치면 toolVer 올릴 것
         answers: karsAns.map((a,i)=>({q:i+1,a})),
         subscores:{ia:k.ia,hi:k.hi}, total:k.total,
         judge:{ia:judgeKARS("ia",k.ia),hi:judgeKARS("hi",k.hi),total:judgeKARS("total",k.total)} }
