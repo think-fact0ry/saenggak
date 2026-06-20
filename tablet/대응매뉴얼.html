@@ -26,8 +26,9 @@
   .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:none;background:transparent;text-decoration:none;font-size:25px;color:var(--g700);cursor:pointer;flex-shrink:0;}
   .back:active{background:var(--g100);}
   .bar-title{font-size:17px;font-weight:700;letter-spacing:-.4px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .icon-btn{display:flex;align-items:center;justify-content:center;width:42px;height:40px;border-radius:12px;border:none;background:transparent;font-size:20px;color:var(--g700);cursor:pointer;flex-shrink:0;}
+  .icon-btn{display:flex;align-items:center;justify-content:center;width:42px;height:40px;border-radius:12px;border:none;background:transparent;font-size:21px;color:var(--g700);cursor:pointer;flex-shrink:0;}
   .icon-btn:active{background:var(--g100);}
+  .icon-btn svg{width:22px;height:22px;}
 
   .layout{display:flex;max-width:1120px;margin:0 auto;}
 
@@ -81,7 +82,7 @@
 
   .doc h1{font-size:24px;font-weight:800;letter-spacing:-.7px;margin:2px 0 14px;}
   .doc h1+blockquote{margin-top:0;}
-  .doc h2{font-size:20px;font-weight:800;letter-spacing:-.5px;margin:40px 0 14px;
+  .doc h2{font-size:20px;font-weight:800;letter-spacing:-.5px;margin:56px 0 14px;
     padding-bottom:9px;border-bottom:2px solid var(--g900);scroll-margin-top:calc(var(--bar) + 12px);}
   .group-head + h2{margin-top:10px;}     /* 대분류 헤더 바로 뒤 첫 섹션은 가깝게 */
   .doc h3{font-size:16.5px;font-weight:700;letter-spacing:-.3px;margin:30px 0 10px;color:var(--green-d);
@@ -192,8 +193,12 @@
 <div class="bar">
   <a class="back" href="./index.html" aria-label="홈으로">‹</a>
   <div class="bar-title">전화 응대 매뉴얼</div>
-  <button class="icon-btn" onclick="openSearch()" aria-label="검색">🔍</button>
-  <button class="icon-btn toc" onclick="toggleToc()" aria-label="목차">☰</button>
+  <button class="icon-btn" onclick="openSearch()" aria-label="검색">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+  </button>
+  <button class="icon-btn toc" onclick="toggleToc()" aria-label="목차">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
 </div>
 
 <!-- 검색 패널 -->
