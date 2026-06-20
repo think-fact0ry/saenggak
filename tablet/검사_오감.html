@@ -180,6 +180,7 @@
       <button class="btn ghost" id="backEdit">수정</button>
       <button class="btn" id="doPrint">인쇄 / PDF 저장</button>
     </div>
+    <div id="saveNote" class="noprint" style="text-align:center;font-size:13px;margin-top:10px;color:var(--g500);"></div>
   </div>
 </div>
 
@@ -342,6 +343,8 @@ document.getElementById("toKars").onclick=()=>{
 document.getElementById("toResult").onclick=()=>{
   if(firstUnanswered("karsList",karsAns)>=0) return;
   renderReport(); show("s-result");
+  if(!examStamp) examStamp=nowStamp();   // 이 실시의 고정 시각(멱등키) — 첫 결과보기 때 1회
+  saveExam(true);                 // 결과 표시 후 백그라운드 적립 (화면을 막지 않음)
 };
 document.getElementById("backEdit").onclick=()=>show("s-kars");
 document.getElementById("doPrint").onclick=()=>window.print();
@@ -464,6 +467,65 @@ function renderReport(){
 
     <div class="rfoot"><span class="flabel">결과</span>${footer}</div>
   </div>`;
+}
+
+// ===== 검사 자산화 저장 (11_플랫폼 GAS로 POST) =====
+//  메일·발송 없음(유성 2026-06-21). 제출 시 raw응답+채점결과만 적립 = 종단 자산.
+//  GAS_EXEC = scripts/11 웹앱 배포 후 /exec URL을 채운다(미설정이면 저장 건너뜀 — 폼은 정상 동작).
+const GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";
+
+// 실시일시 = 검사당 1회 고정(첫 전송·재시도 동일) → 서버 멱등 dedup 키. 기기 로컬시각(태블릿=서울).
+let examStamp = "";
+function nowStamp(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
+
+function buildPayload(){
+  const s=scoreSDQ(sdqAns), k=scoreKARS(karsAns);
+  const draw = state.type==="사후" ? "사후" : "사전";   // 사정평가 = 사전
+  return {
+    child:{
+      name: document.getElementById("f-name").value.trim(),
+      birth: document.getElementById("f-birth").value,   // 서버가 숫자만 추출(8자리)
+      sex: state.sex,
+      phone: document.getElementById("f-phone").value
+    },
+    service:"오감", draw, by:"보호자", via:"태블릿", "실시일시": examStamp,
+    tools:[
+      { tool:"SDQ-kr", toolVer:"1", scoreVer:"sdq-kr-v1",
+        answers: sdqAns.map((a,i)=>({q:i+1,a})),
+        subscores:{social:s.social,hyper:s.hyper,emotion:s.emotion,conduct:s.conduct,peer:s.peer},
+        total:s.total,
+        judge:{social:judgeSDQ("social",s.social),hyper:judgeSDQ("hyper",s.hyper),emotion:judgeSDQ("emotion",s.emotion),conduct:judgeSDQ("conduct",s.conduct),peer:judgeSDQ("peer",s.peer),total:judgeSDQ("total",s.total)} },
+      { tool:"K-ARS", toolVer:"1", scoreVer:"kars-v1",
+        answers: karsAns.map((a,i)=>({q:i+1,a})),
+        subscores:{ia:k.ia,hi:k.hi}, total:k.total,
+        judge:{ia:judgeKARS("ia",k.ia),hi:judgeKARS("hi",k.hi),total:judgeKARS("total",k.total)} }
+    ]
+  };
+}
+
+let _saved=false;   // 한 번만 적립(같은 실시 중복 방지). 수정 후 재보기는 첫 버전 유지 = 재제출 엣지(결정기록 4번 비핵심)
+function saveExam(retry){
+  if(_saved) return;
+  if(!GAS_EXEC){ console.warn("GAS_EXEC 미설정 — 저장 건너뜀(배포 후 /exec URL 채우기)"); return; }
+  const note=document.getElementById("saveNote");
+  // body가 문자열 → Content-Type text/plain 기본 → CORS 프리플라이트 없이 cross-origin POST 가능
+  fetch(GAS_EXEC, {method:"POST", body: JSON.stringify(buildPayload())})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d && d.ok){ _saved=true; if(note) note.textContent=""; }
+      else throw new Error((d && d.error) || "저장 실패");
+    })
+    .catch(err=>{
+      console.error("검사 저장 실패:", err);
+      if(retry){ setTimeout(()=>saveExam(false), 1500); return; }   // 1회 자동 재시도
+      if(note){
+        note.innerHTML='결과 저장에 실패했어요. <button id="retrySave" style="font:inherit;color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;padding:0;">다시 저장</button>';
+        const b=document.getElementById("retrySave"); if(b) b.onclick=()=>saveExam(true);
+      }
+    });
 }
 </script>
 
