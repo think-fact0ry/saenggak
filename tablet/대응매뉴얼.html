@@ -40,7 +40,9 @@
   .toc-group:first-of-type{margin-top:2px;border-top:none;}
   nav a{display:block;text-decoration:none;color:var(--g700);font-size:14.5px;font-weight:600;
     padding:8px 12px;border-radius:9px;letter-spacing:-.3px;line-height:1.35;}
-  nav a.sub{font-size:13px;font-weight:500;color:var(--g500);padding:6px 12px 6px 24px;}
+  nav a.sub{font-size:13px;font-weight:500;color:var(--g500);padding:6px 12px 6px 24px;margin-top:0;}
+  nav a:not(.sub){margin-top:8px;}      /* 섹션(H2)끼리는 띄우고, 하위(분기 등)는 바짝 */
+  nav .toc-group + a{margin-top:0;}
   nav a:active{background:var(--g100);}
   nav a.active{background:var(--green-l);color:var(--green-d);font-weight:700;}
 
@@ -87,15 +89,20 @@
   .doc h4{font-size:15px;font-weight:700;margin:18px 0 7px;}
   .doc p{margin:7px 0;}
   .doc ul,.doc ol{margin:7px 0 10px;padding-left:19px;}
-  .doc li{margin:4px 0;}
+  .doc li{margin:8px 0;}
   .doc li::marker{color:var(--g500);}
   .doc hr{display:none;}
   .doc a{color:var(--green-d);text-decoration:underline;}
 
-  /* 라벨 리듬: '자주 묻는 질문' 같은 라벨은 앞 블록과 크게 띄우고, 그 아래 Q는 바짝 */
-  .doc p.lbl{font-size:12.5px;font-weight:800;letter-spacing:.3px;color:var(--g500);margin:30px 0 6px;}
-  .doc p.lbl strong{font-weight:800;color:var(--g500);}
+  /* 라벨(증상 예시·대응 절차·메모·자주 묻는 질문 …) = 스캔 앵커. 초록 강조 + 좌측 바 */
+  .doc p.lbl{font-size:13.5px;font-weight:800;letter-spacing:-.2px;color:var(--green-d);
+    margin:32px 0 8px;padding-left:11px;border-left:3px solid var(--green);line-height:1.3;}
+  .doc p.lbl strong{font-weight:800;color:var(--green-d);}
   .doc p.lbl em{font-weight:500;color:var(--g500);font-style:normal;}
+  /* 대사 화자(담당자/보호자) 색 구분 */
+  .spk{font-weight:800;}
+  .say-staff .spk{color:var(--green-d);}
+  .say-parent .spk{color:#2f6f9e;}
   .doc p.qa{font-size:15.5px;font-weight:700;color:var(--g900);margin:14px 0 4px;}
   .doc p.qa + blockquote{margin-top:4px;}
 
@@ -106,7 +113,7 @@
   .doc blockquote em{color:var(--g500);font-style:normal;font-size:13.5px;}
   .doc blockquote.say-staff{background:var(--green-l);border-left-color:var(--green);}
   .doc blockquote.say-parent{background:var(--g100);border-left-color:var(--g300);color:var(--g700);}
-  .doc blockquote.note{background:var(--amber-l);border-left-color:var(--amber);font-size:14.5px;color:#8a5a00;}
+  .doc blockquote.note{background:var(--amber-l);border-left-color:var(--amber);font-size:14.5px;color:#8a5a00;margin:16px 0;}
   .doc blockquote.note em{color:#8a5a00;}
 
   /* 콜아웃 라벨 */
@@ -127,7 +134,7 @@
   .tbl{border:1px solid var(--g200);border-radius:12px;overflow:hidden;margin:11px 0;}
   .tbl table{width:100%;border-collapse:collapse;table-layout:auto;font-size:13.5px;}
   .tbl th,.tbl td{border-bottom:1px solid var(--g200);border-right:1px solid var(--g200);
-    padding:9px 10px;text-align:left;vertical-align:top;word-break:break-word;line-height:1.45;}
+    padding:9px 10px;text-align:left;vertical-align:top;word-break:keep-all;overflow-wrap:normal;line-height:1.45;}
   .tbl tr:last-child td{border-bottom:none;}
   .tbl th:last-child,.tbl td:last-child{border-right:none;}
   .tbl th{background:var(--g100);font-weight:700;}
@@ -306,9 +313,16 @@ function wrapTables(doc){
 function styleBlockquotes(doc){
   doc.querySelectorAll('blockquote').forEach(function(bq){
     var t = bq.textContent.trim();
-    if(/^담당자\s*[:：]/.test(t)) bq.classList.add('say-staff');
-    else if(/^보호자/.test(t) || /^이용자/.test(t)) bq.classList.add('say-parent');
-    else if(/^[_(]/.test(t)) bq.classList.add('note');
+    var cls = '';
+    if(/^담당자\s*[:：]/.test(t)) cls='say-staff';
+    else if(/^보호자/.test(t) || /^이용자/.test(t)) cls='say-parent';
+    else if(/^[_(]/.test(t)) cls='note';
+    if(cls) bq.classList.add(cls);
+    // 화자 단어(담당자:/보호자:)에 색 입히기 — 더 잘 읽히게
+    if(cls==='say-staff' || cls==='say-parent'){
+      var p = bq.querySelector('p');
+      if(p) p.innerHTML = p.innerHTML.replace(/^(\s*)(담당자|이용자 보호자|보호자)(\s*[:：])/, '$1<span class="spk">$2$3</span>');
+    }
   });
 }
 function styleLabels(doc){
