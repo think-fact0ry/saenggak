@@ -309,7 +309,8 @@ function render(md){
   if(!md){ return showErr('매뉴얼 내용이 비어 있어요.'); }
   marked.setOptions({ gfm:true, breaks:false });
   var doc = document.getElementById('doc');
-  doc.innerHTML = marked.parse(md);
+  // "→ 즉시 보고"가 화살표와 뒷글자로 갈라져 줄바꿈되지 않게 → 와 다음 글자를 붙임(줄바꿈은 화살표 앞에서)
+  doc.innerHTML = marked.parse(md).replace(/→ /g, "→ ");
   wrapTables(doc);
   styleBlockquotes(doc);
   styleLabels(doc);
