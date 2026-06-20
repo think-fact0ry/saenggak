@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>전화 응대 매뉴얼 · 생각공작소</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+  :root{
+    --green:#3a8a5f; --green-d:#2f6f4d; --green-l:#eaf5ee;
+    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
+    --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452; --amber:#c77700;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.6;}
+
+  /* ── 상단 바 ── */
+  .bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--g200);padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));}
+  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:none;background:transparent;text-decoration:none;font-size:24px;color:var(--g700);cursor:pointer;flex-shrink:0;}
+  .back:active{background:var(--g100);}
+  .bar-title{font-size:17px;font-weight:700;letter-spacing:-.4px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .menu-btn{display:none;width:40px;height:40px;border-radius:12px;border:none;background:transparent;font-size:21px;color:var(--g700);cursor:pointer;}
+  .menu-btn:active{background:var(--g100);}
+
+  .layout{display:flex;max-width:1100px;margin:0 auto;}
+
+  /* ── 좌측 목차 ── */
+  aside{width:280px;flex-shrink:0;border-right:1px solid var(--g200);
+    height:calc(100vh - 53px - env(safe-area-inset-top));position:sticky;
+    top:calc(53px + env(safe-area-inset-top));overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 10px 60px;}
+  .search-wrap{position:sticky;top:0;background:#fff;padding:2px 4px 10px;z-index:2;}
+  .search{width:100%;font-family:inherit;font-size:15px;font-weight:500;padding:11px 14px;border-radius:12px;
+    border:1.5px solid var(--g200);background:var(--g100);color:var(--g900);outline:none;}
+  .search:focus{border-color:var(--green);background:#fff;}
+  .search::placeholder{color:var(--g500);}
+  nav a{display:block;text-decoration:none;color:var(--g700);font-size:14.5px;font-weight:600;
+    padding:9px 12px;border-radius:10px;letter-spacing:-.3px;line-height:1.4;}
+  nav a.sub{font-size:13.5px;font-weight:500;color:var(--g500);padding-left:24px;}
+  nav a:active{background:var(--g100);}
+  nav a.active{background:var(--green-l);color:var(--green-d);}
+  nav a.hide{display:none;}
+  .toc-empty{color:var(--g500);font-size:13.5px;padding:12px;text-align:center;}
+
+  /* ── 본문 ── */
+  main{flex:1;min-width:0;padding:22px 26px 140px;max-width:760px;}
+  .doc h1{font-size:25px;font-weight:800;letter-spacing:-.7px;margin:4px 0 14px;}
+  .doc h2{font-size:21px;font-weight:700;letter-spacing:-.5px;margin:34px 0 12px;padding-top:10px;
+    border-top:1px solid var(--g200);scroll-margin-top:70px;}
+  .doc h2:first-of-type{border-top:none;}
+  .doc h3{font-size:17px;font-weight:700;letter-spacing:-.3px;margin:24px 0 10px;color:var(--green-d);scroll-margin-top:70px;}
+  .doc h4{font-size:15.5px;font-weight:700;margin:18px 0 8px;}
+  .doc p{margin:9px 0;font-size:15.5px;}
+  .doc ul,.doc ol{margin:9px 0 9px 4px;padding-left:20px;}
+  .doc li{margin:5px 0;font-size:15.5px;}
+  .doc strong{font-weight:700;}
+  .doc hr{border:none;border-top:1px solid var(--g200);margin:22px 0;}
+  .doc a{color:var(--green-d);text-decoration:underline;}
+
+  /* 대사·안내 = blockquote */
+  .doc blockquote{background:var(--g100);border-left:4px solid var(--g300);border-radius:0 12px 12px 0;
+    padding:11px 16px;margin:10px 0;font-size:15.5px;color:var(--g900);}
+  .doc blockquote p{margin:5px 0;}
+  .doc blockquote em{color:var(--g500);font-style:normal;font-size:14px;}
+  /* 담당자/보호자 대사 — JS가 클래스 입힘 */
+  .doc blockquote.say-staff{background:var(--green-l);border-left-color:var(--green);}
+  .doc blockquote.say-parent{background:var(--g100);border-left-color:var(--g300);}
+  .doc blockquote.note{background:#fff8ec;border-left-color:var(--amber);}
+  .doc blockquote.note em{color:var(--amber);}
+
+  /* 메모·보고 양식 = code block */
+  .doc pre{background:var(--g900);color:#e8edf2;border-radius:12px;padding:14px 16px;margin:11px 0;
+    overflow-x:auto;font-size:13.5px;line-height:1.7;
+    font-family:'Pretendard',-apple-system,sans-serif;white-space:pre-wrap;word-break:break-word;}
+  .doc code{font-family:inherit;}
+  .doc :not(pre)>code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:14px;}
+
+  /* 표 */
+  .doc table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;}
+  .doc th,.doc td{border:1px solid var(--g200);padding:9px 11px;text-align:left;vertical-align:top;}
+  .doc th{background:var(--g100);font-weight:700;}
+
+  /* 검색 하이라이트 */
+  mark{background:#fff3a0;color:inherit;border-radius:3px;padding:0 1px;}
+
+  /* ── 모바일 ── */
+  @media (max-width:820px){
+    aside{position:fixed;top:0;left:0;bottom:0;width:86%;max-width:340px;height:100%;z-index:60;
+      background:#fff;border-right:1px solid var(--g200);box-shadow:6px 0 24px rgba(0,0,0,.12);
+      transform:translateX(-102%);transition:transform .22s;padding-top:calc(16px + env(safe-area-inset-top));}
+    aside.open{transform:translateX(0);}
+    .menu-btn{display:flex;}
+    main{padding:18px 18px 140px;}
+    .scrim{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s;}
+    .scrim.on{opacity:1;pointer-events:auto;}
+  }
+
+  /* 게이트 */
+  #gate{position:fixed;inset:0;z-index:9999;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;padding-bottom:calc(40px + env(safe-area-inset-bottom));}
+  #gate.on{display:flex;}
+  .gate-logo{width:60px;height:60px;border-radius:18px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px;}
+  .gate-title{font-size:19px;font-weight:700;letter-spacing:-.4px;}
+  .gate-sub{font-size:14px;color:var(--g500);font-weight:500;margin-top:6px;}
+  .gate-dots{display:flex;gap:14px;margin:28px 0 4px;}
+  .gate-dot{width:14px;height:14px;border-radius:50%;background:var(--g200);transition:background .12s,transform .12s;}
+  .gate-dot.on{background:var(--green);transform:scale(1.15);}
+  .gate-err{height:18px;font-size:13px;color:var(--red);font-weight:600;margin-top:8px;opacity:0;transition:opacity .15s;}
+  .gate-err.show{opacity:1;}
+  .gate-err.shake{animation:gshake .35s;}
+  @keyframes gshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+  .gate-pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px;margin-top:22px;}
+  .gate-key{height:64px;border-radius:18px;background:var(--g100);border:none;cursor:pointer;font-family:inherit;font-size:26px;font-weight:600;color:var(--g900);display:flex;align-items:center;justify-content:center;transition:background .1s,transform .08s;}
+  .gate-key:active{background:var(--g200);transform:scale(.94);}
+  .gate-key.fn{font-size:15px;font-weight:600;color:var(--g500);background:transparent;}
+
+  #load{position:fixed;inset:0;z-index:500;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;}
+  #load.on{display:flex;}
+  .spin{width:34px;height:34px;border:3px solid var(--g200);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .errmsg{text-align:center;color:var(--g500);font-size:14.5px;padding:60px 20px;}
+  .errmsg.bad{color:var(--red);}
+
+  @media print{
+    .bar,aside,.menu-btn,#gate,#load,.scrim{display:none !important;}
+    main{max-width:none;padding:0;}
+    .doc h2{border-top:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+  <div class="bar-title">전화 응대 매뉴얼</div>
+  <button class="menu-btn" onclick="toggleToc()" aria-label="목차">☰</button>
+</div>
+
+<div class="layout">
+  <aside id="toc">
+    <div class="search-wrap">
+      <input class="search" id="search" type="search" placeholder="🔍 상황·단어로 찾기 (예: 환불, 일정)" autocomplete="off">
+    </div>
+    <nav id="nav"></nav>
+    <div class="toc-empty" id="tocEmpty" style="display:none">찾는 항목이 없어요</div>
+  </aside>
+  <div class="scrim" id="scrim" onclick="toggleToc(false)"></div>
+  <main>
+    <div class="doc" id="doc"></div>
+    <div class="errmsg" id="errmsg" style="display:none"></div>
+  </main>
+</div>
+
+<!-- PIN 게이트 (서식함과 같은 암호 4자리 · 기기당 1회) -->
+<div id="gate">
+  <div class="gate-logo">📞</div>
+  <div class="gate-title">전화 응대 매뉴얼</div>
+  <div class="gate-sub">암호 4자리를 입력해요</div>
+  <div class="gate-dots"><div class="gate-dot"></div><div class="gate-dot"></div><div class="gate-dot"></div><div class="gate-dot"></div></div>
+  <div class="gate-err" id="gateErr">암호가 맞지 않아요</div>
+  <div class="gate-pad">
+    <button class="gate-key" data-k="1">1</button>
+    <button class="gate-key" data-k="2">2</button>
+    <button class="gate-key" data-k="3">3</button>
+    <button class="gate-key" data-k="4">4</button>
+    <button class="gate-key" data-k="5">5</button>
+    <button class="gate-key" data-k="6">6</button>
+    <button class="gate-key" data-k="7">7</button>
+    <button class="gate-key" data-k="8">8</button>
+    <button class="gate-key" data-k="9">9</button>
+    <span></span>
+    <button class="gate-key" data-k="0">0</button>
+    <button class="gate-key fn" data-k="del">지우기</button>
+  </div>
+</div>
+
+<div id="load"><div class="spin"></div></div>
+
+<script>
+// 서식함(13)과 같은 GAS·같은 TABLET_TOKEN(서식함 암호)을 재사용.
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwAyTXgNRYg3hRUUwWRbilNx_pGAvvAqfwoKduWCCwxQT2502oQKY1lKiqclze1ko3QNw/exec';
+var TOKEN_KEY = 'tf_forms_token';
+
+function getToken(){ try{ return localStorage.getItem(TOKEN_KEY)||''; }catch(e){ return ''; } }
+function setToken(t){ try{ localStorage.setItem(TOKEN_KEY,(t||'').trim()); }catch(e){} }
+function showLoad(on){ document.getElementById('load').classList.toggle('on',!!on); }
+
+function fetchManual(token){
+  return fetch(GAS_URL + '?action=manual&t=' + encodeURIComponent(token), { redirect:'follow' })
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+}
+
+// ── 본문 로드 ──
+function loadManual(){
+  if(!getToken()){ openGate(); return; }
+  showLoad(true);
+  fetchManual(getToken()).then(function(d){
+    showLoad(false);
+    if(d && d.error==='Unauthorized'){ setToken(''); openGate(); return; }
+    if(d && d.error){ return showErr('불러오기 실패: '+d.error); }
+    render((d && d.md) || '');
+  }).catch(function(){ showLoad(false); showErr('네트워크 오류예요. 와이파이를 확인해 주세요.'); });
+}
+function showErr(t){ var e=document.getElementById('errmsg'); e.textContent=t; e.className='errmsg bad'; e.style.display='block'; }
+
+var sections = [];   // [{id, title, level, headEl, text}]
+
+function render(md){
+  if(!md){ return showErr('매뉴얼 내용이 비어 있어요.'); }
+  marked.setOptions({ gfm:true, breaks:false });
+  var html = marked.parse(md);
+  var doc = document.getElementById('doc');
+  doc.innerHTML = html;
+
+  styleBlockquotes(doc);
+  buildToc(doc);
+  setupScrollSpy();
+}
+
+// 담당자/보호자 대사·참고 메모에 색 입히기
+function styleBlockquotes(doc){
+  doc.querySelectorAll('blockquote').forEach(function(bq){
+    var t = bq.textContent.trim();
+    if(/^담당자\s*[:：]/.test(t)) bq.classList.add('say-staff');
+    else if(/^보호자/.test(t) || /^이용자/.test(t)) bq.classList.add('say-parent');
+    else if(/^[_(]/.test(t) || /참고|검토|확인|점검/.test(t.slice(0,12))) bq.classList.add('note');
+  });
+}
+
+// 목차 생성 + 본문 검색용 섹션 텍스트 수집
+function buildToc(doc){
+  var nav = document.getElementById('nav');
+  nav.innerHTML = ''; sections = [];
+  var heads = doc.querySelectorAll('h2, h3');
+  heads.forEach(function(h, i){
+    var id = 'sec-' + i;
+    h.id = id;
+    // 이 헤딩~다음 헤딩 사이 텍스트 수집(검색용)
+    var text = h.textContent + ' ';
+    var n = h.nextElementSibling;
+    while(n && !/^H[23]$/.test(n.tagName)){ text += n.textContent + ' '; n = n.nextElementSibling; }
+    var level = h.tagName === 'H3' ? 3 : 2;
+    var a = document.createElement('a');
+    a.href = '#' + id;
+    a.textContent = h.textContent.replace(/^[📞🚨⚠️❌✅🧾💱🎄\s]+/, '').trim() || h.textContent;
+    if(level===3) a.className = 'sub';
+    a.onclick = function(e){ e.preventDefault(); jumpTo(id); };
+    nav.appendChild(a);
+    sections.push({ id:id, navEl:a, headEl:h, level:level, text:text.toLowerCase() });
+  });
+}
+
+function jumpTo(id){
+  var el = document.getElementById(id);
+  if(el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  if(window.matchMedia('(max-width:820px)').matches) toggleToc(false);
+}
+
+// 검색: 섹션 텍스트로 목차 필터
+function onSearch(){
+  var q = document.getElementById('search').value.trim().toLowerCase();
+  var shown = 0;
+  sections.forEach(function(s){
+    var hit = !q || s.text.indexOf(q) >= 0;
+    s.navEl.classList.toggle('hide', !hit);
+    if(hit) shown++;
+  });
+  document.getElementById('tocEmpty').style.display = (q && shown===0) ? 'block' : 'none';
+}
+
+// 스크롤 시 현재 섹션 목차 강조
+function setupScrollSpy(){
+  if(!('IntersectionObserver' in window)) return;
+  var byId = {};
+  sections.forEach(function(s){ byId[s.id] = s.navEl; });
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        document.querySelectorAll('nav a.active').forEach(function(a){ a.classList.remove('active'); });
+        var a = byId[en.target.id]; if(a){ a.classList.add('active'); a.scrollIntoView({ block:'nearest' }); }
+      }
+    });
+  }, { rootMargin:'-60px 0px -75% 0px', threshold:0 });
+  sections.forEach(function(s){ obs.observe(s.headEl); });
+}
+
+// 모바일 목차 토글
+function toggleToc(force){
+  var open = (force===undefined) ? !document.getElementById('toc').classList.contains('open') : force;
+  document.getElementById('toc').classList.toggle('open', open);
+  document.getElementById('scrim').classList.toggle('on', open);
+}
+
+document.getElementById('search').addEventListener('input', onSearch);
+
+// ── PIN 게이트 (서식함과 동일 — 4자리 채우면 서버 검증) ──
+var gateEntry = '';
+function openGate(){ gateEntry=''; gateDraw(); document.getElementById('gate').classList.add('on'); }
+function gateDraw(){ var d=document.querySelectorAll('#gate .gate-dot'); for(var i=0;i<d.length;i++) d[i].classList.toggle('on', i<gateEntry.length); }
+function gateFail(msg){ var e=document.getElementById('gateErr'); if(msg) e.textContent=msg; e.classList.add('show','shake'); setTimeout(function(){ e.classList.remove('shake'); },360); gateEntry=''; gateDraw(); }
+function gateSubmit(){
+  var pin = gateEntry;
+  showLoad(true);
+  fetchManual(pin).then(function(d){
+    showLoad(false);
+    if(d && d.error){ gateFail('암호가 맞지 않아요'); return; }
+    setToken(pin);
+    document.getElementById('gate').classList.remove('on');
+    render((d && d.md) || '');
+  }).catch(function(){ showLoad(false); gateFail('연결이 안 돼요. 와이파이를 확인해요'); });
+}
+function gatePress(k){
+  var err = document.getElementById('gateErr');
+  if(k==='del'){ gateEntry = gateEntry.slice(0,-1); err.classList.remove('show'); gateDraw(); return; }
+  if(gateEntry.length >= 4) return;
+  err.classList.remove('show');
+  gateEntry += k; gateDraw();
+  if(gateEntry.length === 4) gateSubmit();
+}
+document.querySelector('#gate .gate-pad').addEventListener('click', function(e){
+  var b = e.target.closest('.gate-key'); if(b) gatePress(b.getAttribute('data-k'));
+});
+document.addEventListener('keydown', function(e){
+  if(!document.getElementById('gate').classList.contains('on')) return;
+  if(/^[0-9]$/.test(e.key)) gatePress(e.key);
+  else if(e.key==='Backspace') gatePress('del');
+});
+
+loadManual();
+</script>
+</body>
+</html>
