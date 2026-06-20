@@ -40,7 +40,7 @@
   .hello{margin:28px 2px 22px; font-size:19px; font-weight:600; color:var(--g700); letter-spacing:-.3px;}
 
   /* 타일 격자 */
-  .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; grid-auto-rows:1fr;}  /* 모든 타일 동일 높이 */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}  /* 이름이 모두 1줄이라 타일 높이 자동 동일 */
   .tile{
     position:relative;
     display:flex; flex-direction:column; justify-content:flex-start;
@@ -55,7 +55,8 @@
   .tile.soon{opacity:.62;}
   .tile .ico{font-size:30px; color:var(--green); display:flex; margin-bottom:16px;}
   .tile .ico svg{width:30px; height:30px;}
-  .tile .name{font-size:18px; font-weight:700; letter-spacing:-.4px; margin-top:0;}
+  .tile .name{font-size:16px; font-weight:700; letter-spacing:-.5px; margin-top:0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}  /* 1줄 고정 — 띄어쓰기 많아도 안 넘어감 */
   .lock{position:absolute; top:14px; right:14px; color:var(--g300); display:flex;}
   .lock svg{width:16px; height:16px; display:block;}
   .tile .desc{font-size:13.5px; color:var(--g500); font-weight:500; margin-top:3px;}
@@ -164,7 +165,7 @@
 
     <a class="tile primary" href="./가격표.html">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
-      <div class="name">이용 안내 · 가격표</div>
+      <div class="name">이용 안내 가격표</div>
       <div class="desc">서비스 종류와 비용</div>
     </a>
 
@@ -295,7 +296,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.21b';
+var APP_VERSION = '26.06.21c';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
