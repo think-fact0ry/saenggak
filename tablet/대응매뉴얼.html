@@ -53,11 +53,14 @@
     transform:translateY(-110%);transition:transform .2s;padding-top:env(safe-area-inset-top);max-height:88vh;overflow-y:auto;}
   #searchPanel.on{transform:translateY(0);}
   .sp-top{display:flex;align-items:center;gap:8px;padding:8px 12px;}
-  .search{flex:1;font-family:inherit;font-size:16px;font-weight:500;padding:12px 15px;border-radius:13px;
+  .search{flex:1;min-width:0;font-family:inherit;font-size:16px;font-weight:500;padding:12px 15px;border-radius:13px;
     border:1.5px solid var(--g200);background:var(--g100);color:var(--g900);outline:none;}
   .search:focus{border-color:var(--green);background:#fff;}
   .search::placeholder{color:var(--g500);}
-  .sp-close{border:none;background:transparent;font-size:16px;font-weight:700;color:var(--g500);padding:10px 6px;cursor:pointer;flex-shrink:0;}
+  .sp-close{border:none;background:transparent;color:var(--g500);cursor:pointer;flex-shrink:0;
+    width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;}
+  .sp-close:active{background:var(--g100);}
+  .sp-close svg{width:22px;height:22px;}
   .sp-body{padding:4px 14px 18px;}
   .chip-title{font-size:12.5px;font-weight:800;color:var(--g500);margin:6px 2px 10px;letter-spacing:.2px;}
   .chips{display:flex;flex-wrap:wrap;gap:8px;}
@@ -204,8 +207,10 @@
 <!-- 검색 패널 -->
 <div id="searchPanel">
   <div class="sp-top">
-    <input class="search" id="search" type="search" placeholder="찾는 단어 입력 (예: 환불, 일정)" autocomplete="off">
-    <button class="sp-close" onclick="closeSearch()">닫기</button>
+    <input class="search" id="search" type="search" placeholder="검색어 입력" autocomplete="off">
+    <button class="sp-close" onclick="closeSearch()" aria-label="닫기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>
   <div class="sp-body">
     <div id="chipWrap">
