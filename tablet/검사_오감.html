@@ -481,6 +481,14 @@ function nowStamp(){
   return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
 }
 
+// 도구버전 = 문항+보기 내용의 지문(해시). 문항을 고치면 자동으로 새 버전 → 옛 문구 보존(수동 X).
+//  안 바뀌면 같은 버전 = 기존 문항정의 재사용. djb2 32-bit, 도구 버전 식별엔 충분.
+function instrumentVer(items, opts){
+  const str = JSON.stringify(items)+""+JSON.stringify(opts);
+  let h=5381; for(let i=0;i<str.length;i++){ h=((h<<5)+h+str.charCodeAt(i))|0; }
+  return "v"+(h>>>0).toString(16).padStart(8,"0");
+}
+
 function buildPayload(){
   const s=scoreSDQ(sdqAns), k=scoreKARS(karsAns);
   const draw = state.type==="사후" ? "사후" : "사전";   // 사정평가 = 사전
@@ -493,14 +501,14 @@ function buildPayload(){
     },
     service:"오감", draw, by:"보호자", via:"태블릿", "실시일시": examStamp,
     tools:[
-      { tool:"SDQ-kr", toolVer:"1", scoreVer:"sdq-kr-v1",
-        items: SDQ_ITEMS, opts: SDQ_OPTS,        // 문항정의 등록용 — 문항 고치면 toolVer 올릴 것
+      { tool:"SDQ-kr", toolVer: instrumentVer(SDQ_ITEMS, SDQ_OPTS), scoreVer:"sdq-kr-v1",
+        items: SDQ_ITEMS, opts: SDQ_OPTS,        // 문항 고치면 toolVer 자동 변경(내용 해시) → 옛 문구 보존
         answers: sdqAns.map((a,i)=>({q:i+1,a})),
         subscores:{social:s.social,hyper:s.hyper,emotion:s.emotion,conduct:s.conduct,peer:s.peer},
         total:s.total,
         judge:{social:judgeSDQ("social",s.social),hyper:judgeSDQ("hyper",s.hyper),emotion:judgeSDQ("emotion",s.emotion),conduct:judgeSDQ("conduct",s.conduct),peer:judgeSDQ("peer",s.peer),total:judgeSDQ("total",s.total)} },
-      { tool:"K-ARS", toolVer:"1", scoreVer:"kars-v1",
-        items: KARS_ITEMS, opts: KARS_OPTS,       // 문항 고치면 toolVer 올릴 것
+      { tool:"K-ARS", toolVer: instrumentVer(KARS_ITEMS, KARS_OPTS), scoreVer:"kars-v1",
+        items: KARS_ITEMS, opts: KARS_OPTS,       // 문항 고치면 toolVer 자동 변경(내용 해시)
         answers: karsAns.map((a,i)=>({q:i+1,a})),
         subscores:{ia:k.ia,hi:k.hi}, total:k.total,
         judge:{ia:judgeKARS("ia",k.ia),hi:judgeKARS("hi",k.hi),total:judgeKARS("total",k.total)} }
