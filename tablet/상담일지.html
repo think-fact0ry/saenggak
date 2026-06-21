@@ -68,6 +68,7 @@
   .month-nav{display:flex;align-items:center;justify-content:center;gap:18px;margin:4px 0 22px;}
   .month-nav button{width:42px;height:42px;border-radius:12px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .month-nav button:active{background:var(--g100);}
+  .month-nav button:disabled{opacity:.35;cursor:default;}
   .month-nav .ym{font-size:18px;font-weight:700;letter-spacing:-.3px;min-width:130px;text-align:center;}
 
   /* 회차 그리드 */
@@ -220,6 +221,19 @@
 //  ⚠️ PIN 게이트 = 안심 UX + 가벼운 억제(로컬). 진짜 보호 = 기기 OS 잠금 + 서버 세션검증.
 // ════════════════════════════════════════════════════════════
 const GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";
+// ── 디자인·시연용 demo 모드(?demo=1): 신원·GAS 우회 + 가짜 데이터. 일반(?demo 없는) 진입엔 영향 없음. ──
+const DEMO = (function(){ try{ return new URLSearchParams(location.search).get('demo')==='1'; }catch(e){ return false; } })();
+const MOCK_CLIENTS = [
+  {name:'김서준', birth:'20200911', service:'아청심', center:'미추'},
+  {name:'김서준', birth:'20190304', service:'아청심', center:'서구'},   // 동명이인(생년월일로 구분) 데모
+  {name:'이하늘', birth:'20190103', service:'성인심리', center:'서구'},
+  {name:'박지호', birth:'20210505', service:'정신토탈', center:'남동구'},
+  {name:'최예린', birth:'20180722', service:'아청심', center:'연수'},
+  {name:'정우진', birth:'20200214', service:'아청심', center:'미추'}
+];
+const MOCK_ROUNDS = {
+  '김서준': { 1:{date:'2026-06-03', content:'블록 쌓기 활동에 집중하는 모습. 눈맞춤이 늘었고, 차례 기다리기는 아직 어려워함.'}, 2:{date:'2026-06-10', content:'역할놀이 진행. 또래에게 먼저 다가가 인사함. 감정표현 어휘가 늘어남.'} }
+};
 const SESS_KEY = "tf_staff_v1";
 const UNLOCK_KEY = "tf_staff_unlocked";
 const GATE_MS = 6 * 3600 * 1000;
@@ -249,6 +263,7 @@ function bindDate(el){ el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0
 function normPhone(v){ return String(v||"").replace(/\D/g,"").replace(/^0+/,""); }
 function ymd(v){ const d=String(v||"").replace(/\D/g,"").slice(0,8); return d.length===8 ? d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8) : ""; }
 function fmtBirth(b8){ const d=String(b8||"").replace(/\D/g,""); return d.length===8 ? d.slice(0,4)+"."+d.slice(4,6)+"."+d.slice(6,8) : d; }
+function svcFull(s){ s=String(s||""); if(s.indexOf('아동')>=0||s.indexOf('아청')>=0) return '아동청소년 심리지원 서비스'; if(s.indexOf('성인')>=0) return '성인심리상담 서비스'; if(s.indexOf('정신')>=0) return '정신건강 토탈케어 서비스'; if(s.indexOf('오감')>=0) return '오감쑥쑥 바우처 서비스'; return s; }
 
 // ════ 공통 POST ════
 function post(obj){ return fetch(GAS_EXEC, {method:"POST", body:JSON.stringify(obj)}).then(r=>{ if(!r.ok) throw new Error("서버 오류 "+r.status); return r.json(); }); }
@@ -311,6 +326,7 @@ function needGate(s){ const u=(()=>{ try{ return sessionStorage.getItem(UNLOCK_K
 
 // ════ 부팅 라우팅 ════
 function boot(){
+  if(DEMO){ enterApp(); return; }   // 디자인·시연: 신원 우회
   const s=loadSess();
   if(!s || !s.session){ show("s-signup1"); $("su-name").focus(); return; }
   if(!s.pinHash){ show("s-signup3"); return; }
@@ -327,11 +343,12 @@ let curRound = 0;             // 1~4
 let roundData = {};           // {round: {date, content}}
 
 function enterApp(){
-  const s=loadSess(); $("whoTag").textContent = "상담사 " + (s ? s.name : "");
+  const s=loadSess(); $("whoTag").textContent = "상담사 " + (DEMO ? "데모" : (s ? s.name : ""));
   show("s-clients"); loadClients();
 }
 
 function loadClients(){
+  if(DEMO){ allClients = MOCK_CLIENTS.slice(); $("cs-note").textContent=""; renderClients(""); return; }
   const note=$("cs-note"); note.className="note"; note.textContent="담당 내담자를 불러오고 있어요…";
   $("cs-list").innerHTML=""; $("cs-count").textContent="";
   const s=loadSess()||{};
@@ -350,7 +367,7 @@ function renderClients(q){
   if(!list.length){ box.innerHTML='<div class="empty">'+(allClients.length? "찾는 이름이 없어요" : "담당 내담자가 없어요")+'</div>'; return; }
   list.forEach(c=>{
     const el=document.createElement("div"); el.className="client-card";
-    el.innerHTML='<div><div class="nm">'+c.name+'</div><div class="meta">'+(c.service||"")+(c.center? " · "+c.center : "")+'</div></div>'
+    el.innerHTML='<div><div class="nm">'+c.name+'</div><div class="meta">'+svcFull(c.service)+' · '+fmtBirth(c.birth)+'</div></div>'
       +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
     el.onclick=()=>selectClient(c);
     box.appendChild(el);
@@ -363,7 +380,7 @@ function thisMonth(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return 
 function selectClient(c){ curClient=c; openMonth(thisMonth()); }
 $("m-back").onclick=()=>{ show("s-clients"); };
 $("m-prev").onclick=()=>openMonth(shiftMonth(curYm,-1));
-$("m-next").onclick=()=>openMonth(shiftMonth(curYm,1));
+$("m-next").onclick=()=>{ if(curYm >= thisMonth()) return; openMonth(shiftMonth(curYm,1)); };
 function shiftMonth(ym, delta){
   let y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10)-1+delta;
   y += Math.floor(m/12); m = ((m%12)+12)%12;
@@ -373,11 +390,13 @@ function ymLabel(ym){ return ym.slice(0,4)+"년 "+parseInt(ym.slice(5,7),10)+"�
 
 function openMonth(ym){
   curYm=ym; if(!curClient) return;
-  $("m-subject").innerHTML='<div class="nm">'+curClient.name+' <span style="font-size:14px;color:var(--g500);font-weight:500;">('+fmtBirth(curClient.birth)+')</span></div><div class="meta">'+(curClient.service||"")+(curClient.center? " · "+curClient.center : "")+'</div>';
+  $("m-subject").innerHTML='<div class="nm">'+curClient.name+' <span style="font-size:14px;color:var(--g500);font-weight:500;">('+fmtBirth(curClient.birth)+')</span></div><div class="meta">'+svcFull(curClient.service)+'</div>';
   $("m-ym").textContent = ymLabel(ym);
+  $("m-next").disabled = (ym >= thisMonth());   // 미래 월로 못 넘어가게
   $("m-rounds").innerHTML='';
   $("m-note").className="note"; $("m-note").textContent="불러오는 중…";
   show("s-month");
+  if(DEMO){ roundData = JSON.parse(JSON.stringify(MOCK_ROUNDS[curClient.name]||{})); $("m-note").textContent=""; renderRounds(); return; }
   const s=loadSess()||{};
   post({action:"journal_get", staffId:s.staffId, session:s.session, child:{name:curClient.name, birth:curClient.birth}, ym}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
@@ -418,7 +437,9 @@ function openRound(r){
 let _saving=false;
 $("w-save").onclick=()=>saveRound(true);
 function saveRound(retry){
-  if(_saving) return; _saving=true;
+  if(_saving) return;
+  if(DEMO){ roundData[curRound]={date:ymd($("w-date").value), content:$("w-content").value.trim()}; toast(curRound+"회차 저장(데모)"); openMonth(curYm); return; }
+  _saving=true;
   const note=$("w-note"); note.className="note"; note.textContent="저장하고 있어요…"; $("w-save").disabled=true;
   const s=loadSess()||{};
   const body={ action:"journal", staffId:s.staffId, session:s.session,
