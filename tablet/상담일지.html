@@ -16,59 +16,97 @@
   .screen{display:none;}
   .screen.active{display:block;}
   .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}
-  .back{
-    display:flex; align-items:center; justify-content:center;
-    width:40px; height:40px; margin:0 0 4px -4px; border-radius:12px;
-    border:none; background:transparent; text-decoration:none;
-    font-size:22px; color:var(--g700); cursor:pointer;
-  }
+  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin:0 0 4px -4px;border-radius:12px;border:none;background:transparent;text-decoration:none;font-size:22px;color:var(--g700);cursor:pointer;}
   .back:active{background:var(--g100);}
-
   h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 2px 6px;}
   .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 2px 22px;}
   .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:8px;padding:5px 11px;margin:0 2px 18px;}
+  .head-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 
+  /* 입력 공통 */
   .field{margin-bottom:18px;}
   .field label{display:block;font-size:14px;font-weight:600;color:var(--g700);margin:0 2px 8px;}
-  .field .opt{font-weight:500;color:var(--g400);}
-  .field input,.field textarea{
-    width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:14px;
-    border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;
-  }
-  .field textarea{font-size:16px;line-height:1.65;resize:vertical;min-height:240px;}
+  .field input,.field textarea{width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
+  .field textarea{font-size:16px;line-height:1.65;resize:vertical;min-height:300px;}
   .field input::placeholder,.field textarea::placeholder{color:var(--g400);font-weight:500;}
   .field input:focus,.field textarea:focus{background:#fff;border-color:var(--green);}
   .field input.pin{letter-spacing:14px;text-align:center;font-size:22px;}
-  .row{display:flex;gap:12px;}
-  .row .field{flex:1;}
-  .toggle{display:flex;gap:10px;}
-  .toggle button{flex:1;font-family:inherit;font-size:16px;font-weight:600;padding:15px;border-radius:14px;border:2px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
-  .toggle button.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);}
 
-  .footbar{
-    position:fixed;left:0;right:0;bottom:0;background:#fff;
-    padding:12px 22px calc(12px + env(safe-area-inset-bottom));
-    border-top:1px solid var(--g100);
-  }
+  /* 하단 고정 버튼 */
+  .footbar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:12px 22px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--g100);}
   .footbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px;}
-  .btn{
-    flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;
-    border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;
-  }
+  .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;}
   .btn:active{transform:scale(.985);background:var(--green-d);}
   .btn:disabled{background:var(--g200);color:var(--g500);cursor:default;transform:none;}
-  .btn.ghost{background:var(--g100);color:var(--g700);flex:0 0 auto;padding-left:22px;padding-right:22px;}
 
   .note{text-align:center;font-size:13.5px;margin:12px 2px 0;color:var(--g500);min-height:18px;}
   .note.err{color:var(--red);font-weight:600;}
   .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
   .stub{text-align:center;font-size:12.5px;color:var(--g400);margin-top:10px;}
 
-  .done{text-align:center;padding:60px 10px 20px;}
-  .done .ico{width:64px;height:64px;margin:0 auto 18px;border-radius:50%;background:var(--green-l);display:flex;align-items:center;justify-content:center;}
-  .done .ico svg{width:32px;height:32px;color:var(--green);}
-  .done h2{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:8px;}
-  .done p{font-size:15px;color:var(--g500);font-weight:500;}
+  /* 내담자 검색 + 목록 */
+  .search{position:relative;margin-bottom:16px;}
+  .search input{width:100%;font-family:inherit;font-size:16px;padding:15px 16px 15px 46px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
+  .search input:focus{background:#fff;border-color:var(--green);}
+  .search .ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--g400);display:flex;}
+  .search .ico svg{width:20px;height:20px;}
+  .count{font-size:13.5px;color:var(--g500);font-weight:600;margin:0 2px 10px;}
+  .client-list{display:flex;flex-direction:column;gap:10px;}
+  .client-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:16px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:.12s;}
+  .client-card:active{border-color:var(--green);background:#F6FAF6;}
+  .client-card .nm{font-size:16.5px;font-weight:700;letter-spacing:-.3px;}
+  .client-card .meta{font-size:13px;color:var(--g500);font-weight:500;}
+  .client-card .chev{color:var(--g300);display:flex;}
+  .empty{text-align:center;color:var(--g400);font-size:14px;font-weight:500;padding:40px 0;}
+
+  /* 내담자 헤더(월·작성 화면 공통) */
+  .subject{margin:6px 2px 18px;}
+  .subject .nm{font-size:20px;font-weight:700;letter-spacing:-.4px;}
+  .subject .meta{font-size:13.5px;color:var(--g500);font-weight:500;margin-top:3px;}
+
+  /* 월 네비 */
+  .month-nav{display:flex;align-items:center;justify-content:center;gap:18px;margin:4px 0 22px;}
+  .month-nav button{width:42px;height:42px;border-radius:12px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .month-nav button:active{background:var(--g100);}
+  .month-nav .ym{font-size:18px;font-weight:700;letter-spacing:-.3px;min-width:130px;text-align:center;}
+
+  /* 회차 그리드 */
+  .round-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .round{position:relative;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:22px 16px;cursor:pointer;text-align:center;transition:.12s;}
+  .round:active{transform:scale(.985);}
+  .round .rn{font-size:16px;font-weight:700;}
+  .round .st{font-size:12.5px;font-weight:600;color:var(--g400);margin-top:6px;}
+  .round.done{border-color:var(--green);background:var(--green-l);}
+  .round.done .rn{color:var(--green-d);}
+  .round.done .st{color:var(--green-d);}
+
+  /* 완료 토스트 */
+  .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--g900);color:#fff;font-size:14px;font-weight:600;padding:11px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.2s;z-index:200;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* 008 월 상담일지 출력 */
+  #report008{color:#000;}
+  .r008{max-width:760px;margin:0 auto;}
+  .r-title{text-align:center;font-size:28px;font-weight:800;letter-spacing:-1px;margin:12px 0 2px;}
+  .r-period{font-size:20px;font-weight:600;}
+  .r-sub{text-align:right;font-size:12.5px;color:#333;margin-bottom:8px;}
+  .r-who{font-size:13px;color:var(--g500);font-weight:600;margin-bottom:10px;}
+  .r-tbl{width:100%;border-collapse:collapse;}
+  .r-tbl th,.r-tbl td{border:1.2px solid #000;padding:8px 10px;font-size:13px;vertical-align:top;}
+  .r-tbl th{background:#f2f2f2;text-align:center;font-weight:700;}
+  .rc-h{width:18%;}
+  .r-tbl td.rc{text-align:center;font-weight:600;vertical-align:middle;width:18%;}
+  .r-tbl td.rd{height:110px;line-height:1.65;}
+  .r-bigo-tbl{margin-top:-1.2px;}
+  .r-bigo{height:90px;}
+  @media print{
+    @page{size:A4 portrait;margin:14mm;}
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .noprint{display:none!important;}
+    .wrap{max-width:none;padding:0;}
+    .footbar{display:none!important;}
+    #report008{padding:0;}
+  }
 </style>
 </head>
 <body>
@@ -78,19 +116,11 @@
   <div class="wrap">
     <h1>처음 오셨네요</h1>
     <p class="sub">상담일지를 쓰려면 본인 확인을 한 번만 할게요. 명부에 등록된 이름과 전화번호를 적어 주세요.</p>
-    <div class="field">
-      <label>이름</label>
-      <input id="su-name" type="text" placeholder="홍길동" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>전화번호</label>
-      <input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off">
-    </div>
+    <div class="field"><label>이름</label><input id="su-name" type="text" placeholder="홍길동" autocomplete="off"></div>
+    <div class="field"><label>전화번호</label><input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off"></div>
     <div class="note" id="su1Note"></div>
   </div>
-  <div class="footbar"><div class="inner">
-    <button class="btn" id="su1Btn" disabled>인증번호 받기</button>
-  </div></div>
+  <div class="footbar"><div class="inner"><button class="btn" id="su1Btn" disabled>인증번호 받기</button></div></div>
 </div>
 
 <!-- ═══ 가입 2: OTP ═══ -->
@@ -99,16 +129,11 @@
     <button class="back" id="su2Back" aria-label="이전">‹</button>
     <h1>인증번호 확인</h1>
     <p class="sub" id="su2Sub">문자로 받은 6자리 숫자를 적어 주세요.</p>
-    <div class="field">
-      <label>인증번호</label>
-      <input id="su-code" type="text" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off">
-    </div>
+    <div class="field"><label>인증번호</label><input id="su-code" type="text" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off"></div>
     <div class="note" id="su2Note"></div>
     <div class="stub" id="su2Stub"></div>
   </div>
-  <div class="footbar"><div class="inner">
-    <button class="btn" id="su2Btn" disabled>확인</button>
-  </div></div>
+  <div class="footbar"><div class="inner"><button class="btn" id="su2Btn" disabled>확인</button></div></div>
 </div>
 
 <!-- ═══ 가입 3: PIN 설정 ═══ -->
@@ -116,134 +141,90 @@
   <div class="wrap">
     <h1>비밀번호 설정</h1>
     <p class="sub">앱을 열 때 쓸 4자리 숫자를 정해 주세요. 이 기기에서만 써요.</p>
-    <div class="field">
-      <label>비밀번호 4자리</label>
-      <input id="su-pin1" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>한 번 더</label>
-      <input id="su-pin2" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
-    </div>
+    <div class="field"><label>비밀번호 4자리</label><input id="su-pin1" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+    <div class="field"><label>한 번 더</label><input id="su-pin2" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>
     <div class="note" id="su3Note"></div>
   </div>
-  <div class="footbar"><div class="inner">
-    <button class="btn" id="su3Btn" disabled>시작하기</button>
-  </div></div>
+  <div class="footbar"><div class="inner"><button class="btn" id="su3Btn" disabled>시작하기</button></div></div>
 </div>
 
 <!-- ═══ 게이트: PIN 입력(재진입) ═══ -->
 <div class="screen" id="s-gate">
   <div class="wrap">
-    <h1 id="gateHi">다시 오셨네요</h1>
-    <p class="sub" id="gateSub">비밀번호 4자리를 적어 주세요.</p>
-    <div class="field">
-      <input id="g-pin" class="pin" type="password" inputmode="numeric" maxlength="4" placeholder="● ● ● ●" autocomplete="off" autofocus>
-    </div>
+    <h1>다시 오셨네요</h1>
+    <p class="sub">비밀번호 4자리를 적어 주세요.</p>
+    <div class="field"><input id="g-pin" class="pin" type="password" inputmode="numeric" maxlength="4" placeholder="● ● ● ●" autocomplete="off"></div>
     <div class="note" id="gateNote"></div>
   </div>
 </div>
 
-<!-- ═══ 폼 1: 내담자 + 상담 정보 ═══ -->
-<div class="screen" id="s-info">
+<!-- ═══ 내담자 선택(하이브리드: 검색 + 목록) ═══ -->
+<div class="screen" id="s-clients">
   <div class="wrap">
     <a class="back" href="./index.html" aria-label="홈으로">‹</a>
-    <h1>상담일지</h1>
-    <span class="who" id="whoTag"></span>
-    <p class="sub">내담자와 회기 정보를 먼저 적어요. 다음 화면에서 일지를 작성해요.</p>
-
-    <div class="field">
-      <label>내담자 이름</label>
-      <input id="f-name" type="text" placeholder="홍길동" autocomplete="off">
+    <div class="head-row"><h1>상담일지</h1><span class="who" id="whoTag"></span></div>
+    <div class="search">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input id="cs-search" type="text" placeholder="이름으로 찾기" autocomplete="off">
     </div>
-    <div class="field">
-      <label>생년월일</label>
-      <input id="f-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off">
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>성별</label>
-        <div class="toggle" id="f-sex">
-          <button type="button" data-v="남">남</button>
-          <button type="button" data-v="여">여</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>연락처 <span class="opt">(선택)</span></label>
-        <input id="f-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off">
-      </div>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>상담일</label>
-        <input id="f-date" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off">
-      </div>
-      <div class="field">
-        <label>회기 <span class="opt">(선택)</span></label>
-        <input id="f-session" type="text" inputmode="numeric" placeholder="3" autocomplete="off">
-      </div>
-    </div>
+    <div class="count" id="cs-count"></div>
+    <div class="client-list" id="cs-list"></div>
+    <div class="note" id="cs-note"></div>
   </div>
-  <div class="footbar"><div class="inner">
-    <button class="btn" id="toWrite" disabled>다음</button>
-  </div></div>
 </div>
 
-<!-- ═══ 폼 2: 일지 작성 ═══ -->
+<!-- ═══ 월 / 회차 그리드 ═══ -->
+<div class="screen" id="s-month">
+  <div class="wrap">
+    <button class="back" id="m-back" aria-label="목록">‹</button>
+    <div class="subject" id="m-subject"></div>
+    <div class="month-nav">
+      <button id="m-prev" aria-label="이전 달">‹</button>
+      <div class="ym" id="m-ym"></div>
+      <button id="m-next" aria-label="다음 달">›</button>
+    </div>
+    <div class="round-grid" id="m-rounds"></div>
+    <div class="note" id="m-note"></div>
+  </div>
+  <div class="footbar"><div class="inner"><button class="btn" id="m-print">이번 달 상담일지 출력</button></div></div>
+</div>
+
+<!-- ═══ 008 출력 미리보기 ═══ -->
+<div class="screen" id="s-print">
+  <div class="wrap">
+    <button class="back noprint" id="p-back" aria-label="뒤로">‹</button>
+    <div id="report008"></div>
+  </div>
+  <div class="footbar noprint"><div class="inner"><button class="btn" id="p-do">인쇄 / PDF 저장</button></div></div>
+</div>
+
+<!-- ═══ 회차 상세내용 입력·수정 ═══ -->
 <div class="screen" id="s-write">
   <div class="wrap">
-    <button class="back" id="backInfo" aria-label="이전">‹</button>
-    <h1>일지 작성</h1>
-    <p class="sub" id="writeSub"></p>
-
-    <div class="field">
-      <label>주호소 <span class="opt">(선택)</span></label>
-      <input id="f-complaint" type="text" placeholder="이번 회기의 주된 호소를 한 줄로" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>키워드 <span class="opt">(선택)</span></label>
-      <input id="f-keywords" type="text" placeholder="쉼표로 구분해요 — 예: 불안, 수면, 또래관계" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>본문</label>
-      <textarea id="f-content" placeholder="회기 내용을 적어요."></textarea>
-    </div>
-    <div class="note" id="saveNote"></div>
+    <button class="back" id="w-back" aria-label="회차">‹</button>
+    <div class="subject" id="w-subject"></div>
+    <div class="field"><label>상담일</label><input id="w-date" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
+    <div class="field"><label>상세내용</label><textarea id="w-content" placeholder="서비스 세부 내용 및 이용자 상태평가 등을 적어요."></textarea></div>
+    <div class="note" id="w-note"></div>
   </div>
-  <div class="footbar"><div class="inner">
-    <button class="btn ghost" id="toInfo2">이전</button>
-    <button class="btn" id="doSave" disabled>저장</button>
-  </div></div>
+  <div class="footbar"><div class="inner"><button class="btn" id="w-save" disabled>저장</button></div></div>
 </div>
 
-<!-- ═══ 완료 ═══ -->
-<div class="screen" id="s-done">
-  <div class="wrap">
-    <div class="done">
-      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <h2>일지를 저장했어요</h2>
-      <p id="doneSub"></p>
-    </div>
-  </div>
-  <div class="footbar"><div class="inner">
-    <button class="btn ghost" id="goHome">홈</button>
-    <button class="btn" id="newJournal">새 일지 쓰기</button>
-  </div></div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
 // ════════════════════════════════════════════════════════════
-//  상담일지 — 제공인력 신원(가입 + PIN 게이트) + 일지 작성.
-//  저장·신원 모두 11_플랫폼 GAS(검사_오감과 같은 배포 URL). 설계 = docs/결정기록_2026-06-21_상담일지_신원설계.md
-//  ⚠️ SMS = STUB → 가입 2단계에 인증번호(devCode)가 화면에 보임. 알리고 키 연결되면 사라짐.
-//  ⚠️ PIN 게이트 = 안심 UX + 가벼운 억제(로컬 검증). 지문(WebAuthn)은 다음. 진짜 보호 = 기기 OS 잠금 + 서버 세션검증.
+//  상담일지 — 제공인력 신원(가입+PIN게이트) + 008 양식 모델(내담자→월/회차→상세내용).
+//  저장·신원·조회 모두 11_플랫폼 GAS(검사_오감과 같은 배포 URL).
+//  ⚠️ SMS = STUB → 가입 2단계에 인증번호가 화면에 보임. 알리고 키 연결되면 사라짐.
+//  ⚠️ PIN 게이트 = 안심 UX + 가벼운 억제(로컬). 진짜 보호 = 기기 OS 잠금 + 서버 세션검증.
 // ════════════════════════════════════════════════════════════
 const GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";
-const SESS_KEY = "tf_staff_v1";       // localStorage: {staffId, session, name, device, pinHash, lastAuth}
-const UNLOCK_KEY = "tf_staff_unlocked"; // sessionStorage: 이 실행에서 게이트 통과함(완전종료 시 사라짐)
-const GATE_MS = 6 * 3600 * 1000;      // 마지막 인증 후 6시간 지나면 재인증
+const SESS_KEY = "tf_staff_v1";
+const UNLOCK_KEY = "tf_staff_unlocked";
+const GATE_MS = 6 * 3600 * 1000;
 
 const $ = id => document.getElementById(id);
-let pendingPhone = "";  // 가입 중 정규화 전화(verify에 사용)
 
 // ── 세션 저장소 ──
 function loadSess(){ try{ return JSON.parse(localStorage.getItem(SESS_KEY) || "null"); }catch(e){ return null; } }
@@ -260,73 +241,47 @@ async function sha256(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-// ── 화면 전환 ──
-function show(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  $(id).classList.add("active");
-  window.scrollTo(0,0);
-}
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }
 
-// ── 전화/날짜 자동서식 ──
-function bindPhone(el){
-  el.oninput=()=>{
-    let d=el.value.replace(/\D/g,"").slice(0,11);
-    if(d.length<4) el.value=d;
-    else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3);
-    else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7);
-    el.dispatchEvent(new Event("fmt"));
-  };
-}
-function bindDate(el){
-  el.oninput=()=>{
-    let d=el.value.replace(/\D/g,"").slice(0,8);
-    let out=d.slice(0,4);
-    if(d.length>4) out+=". "+d.slice(4,6);
-    if(d.length>6) out+=". "+d.slice(6,8);
-    el.value=out; el.dispatchEvent(new Event("fmt"));
-  };
-}
+// ── 자동서식 헬퍼 ──
+function bindPhone(el){ el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,11); if(d.length<4) el.value=d; else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3); else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7); el.dispatchEvent(new Event("fmt")); }; }
+function bindDate(el){ el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,8); let out=d.slice(0,4); if(d.length>4) out+=". "+d.slice(4,6); if(d.length>6) out+=". "+d.slice(6,8); el.value=out; el.dispatchEvent(new Event("fmt")); }; }
 function normPhone(v){ return String(v||"").replace(/\D/g,"").replace(/^0+/,""); }
 function ymd(v){ const d=String(v||"").replace(/\D/g,"").slice(0,8); return d.length===8 ? d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8) : ""; }
+function fmtBirth(b8){ const d=String(b8||"").replace(/\D/g,""); return d.length===8 ? d.slice(0,4)+"."+d.slice(4,6)+"."+d.slice(6,8) : d; }
 
-// ════ 가입 1: 이름·전화 → OTP 발송 ════
+// ════ 공통 POST ════
+function post(obj){ return fetch(GAS_EXEC, {method:"POST", body:JSON.stringify(obj)}).then(r=>{ if(!r.ok) throw new Error("서버 오류 "+r.status); return r.json(); }); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
+
+// ════ 가입 1: 이름·전화 → OTP ════
 bindPhone($("su-phone"));
 function v1(){ $("su1Btn").disabled = !($("su-name").value.trim() && $("su-phone").value.replace(/\D/g,"").length>=10); }
 $("su-name").oninput=v1; $("su-phone").addEventListener("fmt",v1);
 $("su1Btn").onclick=()=>{
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
-  const note=$("su1Note"); note.className="note"; note.textContent="확인하고 있어요…";
-  $("su1Btn").disabled=true;
-  post({action:"staff_start", name, phone})
-    .then(d=>{
-      $("su1Btn").disabled=false;
-      if(d && d.ok){
-        pendingPhone = normPhone(phone);
-        $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
-        $("su2Stub").textContent = d.devCode ? ("테스트 인증번호: " + d.devCode + " (문자 연결 전 임시 표시)") : "";
-        note.textContent=""; show("s-signup2"); $("su-code").focus();
-      } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
-    })
-    .catch(()=>{ $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
+  const note=$("su1Note"); note.className="note"; note.textContent="확인하고 있어요…"; $("su1Btn").disabled=true;
+  post({action:"staff_start", name, phone}).then(d=>{
+    $("su1Btn").disabled=false;
+    if(d && d.ok){
+      $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
+      $("su2Stub").textContent = d.devCode ? ("테스트 인증번호: " + d.devCode + " (문자 연결 전 임시 표시)") : "";
+      note.textContent=""; show("s-signup2"); $("su-code").focus();
+    } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
+  }).catch(()=>{ $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
 };
 
-// ════ 가입 2: OTP 확인 → 등록 → PIN 설정 ════
+// ════ 가입 2: OTP → 등록 → PIN ════
 $("su-code").oninput=()=>{ $("su-code").value=$("su-code").value.replace(/\D/g,"").slice(0,6); $("su2Btn").disabled=$("su-code").value.length!==6; };
 $("su2Back").onclick=()=>show("s-signup1");
 $("su2Btn").onclick=()=>{
-  const note=$("su2Note"); note.className="note"; note.textContent="확인하고 있어요…";
-  $("su2Btn").disabled=true;
+  const note=$("su2Note"); note.className="note"; note.textContent="확인하고 있어요…"; $("su2Btn").disabled=true;
   const device=getDevice();
-  post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device})
-    .then(d=>{
-      $("su2Btn").disabled=false;
-      if(d && d.ok){
-        // 세션 저장(PIN은 다음 화면에서). lastAuth는 PIN 설정 완료 때 찍음.
-        saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:"", lastAuth:0 });
-        note.textContent=""; show("s-signup3"); $("su-pin1").focus();
-      } else { note.className="note err"; note.textContent=(d&&d.error)||"인증번호가 달라요"; }
-    })
-    .catch(()=>{ $("su2Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요"; });
+  post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device}).then(d=>{
+    $("su2Btn").disabled=false;
+    if(d && d.ok){ saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:"", lastAuth:0 }); note.textContent=""; show("s-signup3"); $("su-pin1").focus(); }
+    else { note.className="note err"; note.textContent=(d&&d.error)||"인증번호가 달라요"; }
+  }).catch(()=>{ $("su2Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요"; });
 };
 
 // ════ 가입 3: PIN 설정 ════
@@ -337,13 +292,11 @@ $("su3Btn").onclick=async()=>{
   const note=$("su3Note");
   if($("su-pin1").value!==$("su-pin2").value){ note.className="note err"; note.textContent="두 번 입력한 숫자가 달라요"; return; }
   const s=loadSess(); if(!s) return;
-  s.pinHash = await sha256(s.device + ":" + $("su-pin1").value);  // 기기id 섞어 해시(다른 기기로 복사 무의미)
-  s.lastAuth = Date.now();
-  saveSess(s); markUnlocked();
-  enterApp();
+  s.pinHash = await sha256(s.device + ":" + $("su-pin1").value);
+  s.lastAuth = Date.now(); saveSess(s); markUnlocked(); enterApp();
 };
 
-// ════ 게이트: 재진입 PIN ════
+// ════ 게이트 ════
 $("g-pin").oninput=async()=>{
   $("g-pin").value=$("g-pin").value.replace(/\D/g,"").slice(0,4);
   if($("g-pin").value.length!==4) return;
@@ -353,101 +306,157 @@ $("g-pin").oninput=async()=>{
   if(h===s.pinHash){ s.lastAuth=Date.now(); saveSess(s); markUnlocked(); $("g-pin").value=""; note.textContent=""; enterApp(); }
   else { note.className="note err"; note.textContent="비밀번호가 달라요"; $("g-pin").value=""; }
 };
-
 function markUnlocked(){ try{ sessionStorage.setItem(UNLOCK_KEY,"1"); }catch(e){} }
-function needGate(s){
-  const unlocked = (()=>{ try{ return sessionStorage.getItem(UNLOCK_KEY)==="1"; }catch(e){ return false; } })();
-  return !unlocked || (Date.now() - (s.lastAuth||0) > GATE_MS);
-}
+function needGate(s){ const u=(()=>{ try{ return sessionStorage.getItem(UNLOCK_KEY)==="1"; }catch(e){ return false; } })(); return !u || (Date.now()-(s.lastAuth||0) > GATE_MS); }
 
 // ════ 부팅 라우팅 ════
 function boot(){
   const s=loadSess();
   if(!s || !s.session){ show("s-signup1"); $("su-name").focus(); return; }
-  if(!s.pinHash){ show("s-signup3"); return; }     // 가입은 됐는데 PIN 미설정(중단 복구)
+  if(!s.pinHash){ show("s-signup3"); return; }
   if(needGate(s)){ show("s-gate"); setTimeout(()=>$("g-pin").focus(),100); return; }
   enterApp();
 }
+function sessExpired(){ show("s-gate"); setTimeout(()=>$("g-pin").focus(),100); }
 
-// ════ 폼 진입 ════
+// ════ 앱 진입 → 담당 내담자 ════
+let allClients = [];          // 담당 내담자 [{name,birth,service,center}]
+let curClient = null;         // 선택된 내담자
+let curYm = "";               // 'YYYY-MM'
+let curRound = 0;             // 1~4
+let roundData = {};           // {round: {date, content}}
+
 function enterApp(){
-  const s=loadSess();
-  $("whoTag").textContent = "상담사 " + (s ? s.name : "");
-  show("s-info");
+  const s=loadSess(); $("whoTag").textContent = "상담사 " + (s ? s.name : "");
+  show("s-clients"); loadClients();
 }
 
-// ── 폼: 내담자/상담 메타 ──
-const fstate = { sex:"" };
-bindPhone($("f-phone"));
-bindDate($("f-birth")); bindDate($("f-date"));
-(function(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); $("f-date").value=d.getFullYear()+". "+p(d.getMonth()+1)+". "+p(d.getDate()); })();
-$("f-session").oninput=()=>{ $("f-session").value=$("f-session").value.replace(/\D/g,"").slice(0,3); };
-document.querySelectorAll("#f-sex button").forEach(b=>{
-  b.onclick=()=>{ document.querySelectorAll("#f-sex button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); fstate.sex=b.dataset.v; vInfo(); };
-});
-function vInfo(){
-  $("toWrite").disabled = !($("f-name").value.trim() && $("f-birth").value.replace(/\D/g,"").length===8 && fstate.sex && $("f-date").value.replace(/\D/g,"").length===8);
-}
-$("f-name").oninput=vInfo; $("f-birth").addEventListener("fmt",vInfo); $("f-date").addEventListener("fmt",vInfo);
-vInfo();
-
-$("toWrite").onclick=()=>{
-  const sess=$("f-session").value.trim();
-  $("writeSub").textContent=$("f-name").value.trim()+(sess?" · "+sess+"회기":"");
-  show("s-write");
-};
-$("toInfo2").onclick=()=>show("s-info");
-$("backInfo").onclick=()=>show("s-info");   // 화면 전환은 본문 유지(소실 아님) — 이탈 경고는 beforeunload가 담당
-
-// ── 폼: 일지 작성/저장 ──
-function vWrite(){ $("doSave").disabled = !$("f-content").value.trim(); }
-$("f-content").oninput=vWrite; vWrite();
-
-let journalStamp="";
-function nowStamp(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()); }
-function buildPayload(){
+function loadClients(){
+  const note=$("cs-note"); note.className="note"; note.textContent="담당 내담자를 불러오고 있어요…";
+  $("cs-list").innerHTML=""; $("cs-count").textContent="";
   const s=loadSess()||{};
-  return {
-    action:"journal",
-    staffId:s.staffId, session:s.session,           // 서버 세션검증 + 상담사 확정
-    child:{ name:$("f-name").value.trim(), birth:$("f-birth").value, sex:fstate.sex, phone:$("f-phone").value },
-    date: ymd($("f-date").value), session_no:$("f-session").value.trim(),
-    content:$("f-content").value.trim(), complaint:$("f-complaint").value.trim(), keywords:$("f-keywords").value.trim(),
-    via:"태블릿", stamp: journalStamp
-  };
+  post({action:"staff_clients", staffId:s.staffId, session:s.session}).then(d=>{
+    if(d && d.code==="auth"){ sessExpired(); return; }
+    if(d && d.ok){ allClients = d.clients||[]; note.textContent=""; renderClients(""); }
+    else { note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; }
+  }).catch(()=>{ note.className="note err"; note.textContent="연결이 안 됐어요"; });
 }
+
+function renderClients(q){
+  q = (q||"").trim();
+  const list = q ? allClients.filter(c=>c.name.indexOf(q)>=0) : allClients;
+  $("cs-count").textContent = "담당 " + allClients.length + "명";
+  const box=$("cs-list"); box.innerHTML="";
+  if(!list.length){ box.innerHTML='<div class="empty">'+(allClients.length? "찾는 이름이 없어요" : "담당 내담자가 없어요")+'</div>'; return; }
+  list.forEach(c=>{
+    const el=document.createElement("div"); el.className="client-card";
+    el.innerHTML='<div><div class="nm">'+c.name+'</div><div class="meta">'+(c.service||"")+(c.center? " · "+c.center : "")+'</div></div>'
+      +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+    el.onclick=()=>selectClient(c);
+    box.appendChild(el);
+  });
+}
+$("cs-search").oninput=()=>renderClients($("cs-search").value);
+
+// ════ 월 / 회차 그리드 ════
+function thisMonth(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return d.getFullYear()+"-"+p(d.getMonth()+1); }
+function selectClient(c){ curClient=c; openMonth(thisMonth()); }
+$("m-back").onclick=()=>{ show("s-clients"); };
+$("m-prev").onclick=()=>openMonth(shiftMonth(curYm,-1));
+$("m-next").onclick=()=>openMonth(shiftMonth(curYm,1));
+function shiftMonth(ym, delta){
+  let y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10)-1+delta;
+  y += Math.floor(m/12); m = ((m%12)+12)%12;
+  return y+"-"+String(m+1).padStart(2,'0');
+}
+function ymLabel(ym){ return ym.slice(0,4)+"년 "+parseInt(ym.slice(5,7),10)+"월"; }
+
+function openMonth(ym){
+  curYm=ym; if(!curClient) return;
+  $("m-subject").innerHTML='<div class="nm">'+curClient.name+' <span style="font-size:14px;color:var(--g500);font-weight:500;">('+fmtBirth(curClient.birth)+')</span></div><div class="meta">'+(curClient.service||"")+(curClient.center? " · "+curClient.center : "")+'</div>';
+  $("m-ym").textContent = ymLabel(ym);
+  $("m-rounds").innerHTML='';
+  $("m-note").className="note"; $("m-note").textContent="불러오는 중…";
+  show("s-month");
+  const s=loadSess()||{};
+  post({action:"journal_get", staffId:s.staffId, session:s.session, child:{name:curClient.name, birth:curClient.birth}, ym}).then(d=>{
+    if(d && d.code==="auth"){ sessExpired(); return; }
+    roundData = {};
+    if(d && d.ok){ (d.rounds||[]).forEach(r=>{ roundData[r.round]={date:r.date, content:r.content}; }); $("m-note").textContent=""; }
+    else { $("m-note").className="note err"; $("m-note").textContent=(d&&d.error)||"조회 실패"; }
+    renderRounds();
+  }).catch(()=>{ $("m-note").className="note err"; $("m-note").textContent="연결이 안 됐어요"; });
+}
+function renderRounds(){
+  const box=$("m-rounds"); box.innerHTML="";
+  for(let r=1;r<=4;r++){
+    const has = !!(roundData[r] && roundData[r].content);
+    const el=document.createElement("div"); el.className="round"+(has?" done":"");
+    el.innerHTML='<div class="rn">'+r+'회차</div><div class="st">'+(has? "작성됨" : "비어 있음")+'</div>';
+    el.onclick=()=>openRound(r);
+    box.appendChild(el);
+  }
+}
+
+// ════ 회차 상세내용 입력·수정 ════
+bindDate($("w-date"));
+$("w-content").oninput=()=>{ $("w-save").disabled = !$("w-content").value.trim(); };
+$("w-back").onclick=()=>{ if($("w-content").value.trim() && $("w-content").value.trim()!==(roundData[curRound]&&roundData[curRound].content||"") && !confirm("저장하지 않은 내용이 있어요. 나갈까요?")) return; openMonth(curYm); };
+
+function openRound(r){
+  curRound=r;
+  const ex = roundData[r] || {};
+  $("w-subject").innerHTML='<div class="nm">'+curClient.name+' · '+r+'회차</div><div class="meta">'+ymLabel(curYm)+'</div>';
+  // 상담일: 기존 값 있으면 그것, 없으면 비움(상담사가 그 회차 날짜 입력)
+  $("w-date").value = ex.date ? ex.date.replace(/-/g,". ") : "";
+  $("w-content").value = ex.content || "";
+  $("w-save").disabled = !$("w-content").value.trim();
+  $("w-note").className="note"; $("w-note").textContent="";
+  show("s-write");
+}
+
 let _saving=false;
-function save(retry){
+$("w-save").onclick=()=>saveRound(true);
+function saveRound(retry){
   if(_saving) return; _saving=true;
-  const note=$("saveNote"); note.className="note"; note.textContent="저장하고 있어요…"; $("doSave").disabled=true;
-  if(!journalStamp) journalStamp=nowStamp();
-  post(buildPayload())   // session=세션토큰, session_no=회기차수(키 분리)
-    .then(d=>{
-      if(d && d.ok){ $("doneSub").textContent=$("f-name").value.trim()+(d.dup?" · 이미 저장된 회기예요":" · 잘 저장했어요"); note.textContent=""; _saving=false; show("s-done"); return; }
-      if(d && d.code==="auth"){ note.className="note err"; note.textContent="로그인이 풀렸어요. 다시 인증해 주세요"; _saving=false; setTimeout(()=>{ show("s-gate"); $("g-pin").focus(); },1200); return; }
-      throw new Error((d&&d.error)||"저장 실패");
-    })
-    .catch(err=>{
-      _saving=false; note.className="note err";
-      if(retry){ note.textContent="다시 시도하고 있어요…"; setTimeout(()=>save(false),1500); return; }  // 버튼 계속 비활성(중복 발사 방지)
-      $("doSave").disabled=false;
-      note.innerHTML='저장이 안 됐어요. <button class="lk" id="retrySave">다시 저장</button>';
-      const b=$("retrySave"); if(b) b.onclick=()=>save(true);
-    });
+  const note=$("w-note"); note.className="note"; note.textContent="저장하고 있어요…"; $("w-save").disabled=true;
+  const s=loadSess()||{};
+  const body={ action:"journal", staffId:s.staffId, session:s.session,
+    child:{ name:curClient.name, birth:curClient.birth }, service:curClient.service||"",
+    ym:curYm, round:curRound, date:ymd($("w-date").value), content:$("w-content").value.trim() };
+  post(body).then(d=>{
+    if(d && d.ok){ _saving=false; roundData[curRound]={date:body.date, content:body.content}; toast(curRound+"회차 저장했어요"); openMonth(curYm); return; }
+    if(d && d.code==="auth"){ _saving=false; sessExpired(); return; }
+    throw new Error((d&&d.error)||"저장 실패");
+  }).catch(err=>{
+    _saving=false; note.className="note err";
+    if(retry){ note.textContent="다시 시도하고 있어요…"; setTimeout(()=>saveRound(false),1500); return; }
+    $("w-save").disabled=false;
+    note.innerHTML='저장이 안 됐어요. <button class="lk" id="retrySave">다시 저장</button>';
+    const b=$("retrySave"); if(b) b.onclick=()=>saveRound(true);
+  });
 }
-$("doSave").onclick=()=>save(true);
-$("goHome").onclick=()=>{ $("f-content").value=""; location.href="./index.html"; };
-$("newJournal").onclick=()=>{
-  ["f-name","f-birth","f-phone","f-complaint","f-keywords","f-content","f-session"].forEach(id=>$(id).value="");
-  document.querySelectorAll("#f-sex button").forEach(x=>x.classList.remove("on")); fstate.sex="";
-  journalStamp=""; _saving=false; vInfo(); vWrite(); show("s-info");
-};
 
-// ── 공통 POST(text/plain → CORS 프리플라이트 없음) ──
-function post(obj){ return fetch(GAS_EXEC, {method:"POST", body:JSON.stringify(obj)}).then(r=>{ if(!r.ok) throw new Error("서버 오류 "+r.status); return r.json(); }); }
+// ════ 008 월 상담일지 출력 ════
+function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+$("m-print").onclick=()=>build008();
+$("p-back").onclick=()=>show("s-month");
+$("p-do").onclick=()=>window.print();
+function build008(){
+  let rows="";
+  for(let r=1;r<=4;r++){ const c=(roundData[r]&&roundData[r].content)||""; rows+='<tr><td class="rc">'+r+'회차</td><td class="rd">'+escapeHtml(c).replace(/\n/g,"<br>")+'</td></tr>'; }
+  $("report008").innerHTML='<div class="r008">'
+    +'<div class="r-title">상담일지 <span class="r-period">['+ymLabel(curYm)+']</span></div>'
+    +'<div class="r-sub">*서비스 세부 내용 및 이용자에 대한 상태평가 등</div>'
+    +'<div class="r-who noprint">이용자: '+curClient.name+' ('+fmtBirth(curClient.birth)+')</div>'
+    +'<table class="r-tbl"><thead><tr><th class="rc-h">제공회차</th><th>상세내용</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<table class="r-tbl r-bigo-tbl"><tr><th>비고란 (특이사항, 종결사항 등을 기록)</th></tr><tr><td class="r-bigo"></td></tr></table>'
+    +'</div>';
+  show("s-print");
+}
 
-// 본문 작성 중 페이지 이탈(홈·닫기·새로고침) 시 경고 — 화면 전환은 값이 유지되므로 제외.
-window.addEventListener("beforeunload", e=>{ if($("f-content").value.trim()){ e.preventDefault(); e.returnValue=""; } });
+// 상세내용 작성 중 페이지 이탈(홈·닫기·새로고침) 경고 — 화면 전환은 값 유지라 제외.
+window.addEventListener("beforeunload", e=>{ const a=document.querySelector(".screen.active"); if(a && a.id==="s-write" && $("w-content").value.trim()){ e.preventDefault(); e.returnValue=""; } });
 
 boot();
 </script>
