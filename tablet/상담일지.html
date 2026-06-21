@@ -15,7 +15,7 @@
   body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;}
   .screen{display:none;}
   .screen.active{display:block;}
-  .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}  /* 하단 = 고정 버튼 자리 */
+  .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}
   .back{
     display:flex; align-items:center; justify-content:center;
     width:40px; height:40px; margin:0 0 4px -4px; border-radius:12px;
@@ -26,11 +26,11 @@
 
   h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 2px 6px;}
   .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 2px 22px;}
+  .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:8px;padding:5px 11px;margin:0 2px 18px;}
 
-  /* 입력 */
   .field{margin-bottom:18px;}
   .field label{display:block;font-size:14px;font-weight:600;color:var(--g700);margin:0 2px 8px;}
-  .field .opt{font-weight:500;color:var(--g400);}   /* 선택 항목 표시 */
+  .field .opt{font-weight:500;color:var(--g400);}
   .field input,.field textarea{
     width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:14px;
     border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;
@@ -38,13 +38,13 @@
   .field textarea{font-size:16px;line-height:1.65;resize:vertical;min-height:240px;}
   .field input::placeholder,.field textarea::placeholder{color:var(--g400);font-weight:500;}
   .field input:focus,.field textarea:focus{background:#fff;border-color:var(--green);}
+  .field input.pin{letter-spacing:14px;text-align:center;font-size:22px;}
   .row{display:flex;gap:12px;}
   .row .field{flex:1;}
   .toggle{display:flex;gap:10px;}
   .toggle button{flex:1;font-family:inherit;font-size:16px;font-weight:600;padding:15px;border-radius:14px;border:2px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
   .toggle button.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);}
 
-  /* 하단 고정 액션(키보드 위에 유지 — 디자인원칙 §5) */
   .footbar{
     position:fixed;left:0;right:0;bottom:0;background:#fff;
     padding:12px 22px calc(12px + env(safe-area-inset-bottom));
@@ -60,9 +60,10 @@
   .btn.ghost{background:var(--g100);color:var(--g700);flex:0 0 auto;padding-left:22px;padding-right:22px;}
 
   .note{text-align:center;font-size:13.5px;margin:12px 2px 0;color:var(--g500);min-height:18px;}
+  .note.err{color:var(--red);font-weight:600;}
   .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
+  .stub{text-align:center;font-size:12.5px;color:var(--g400);margin-top:10px;}
 
-  /* 완료 */
   .done{text-align:center;padding:60px 10px 20px;}
   .done .ico{width:64px;height:64px;margin:0 auto 18px;border-radius:50%;background:var(--green-l);display:flex;align-items:center;justify-content:center;}
   .done .ico svg{width:32px;height:32px;color:var(--green);}
@@ -72,11 +73,82 @@
 </head>
 <body>
 
-<!-- ═══ 화면 1: 내담자 + 상담 정보 ═══ -->
-<div class="screen active" id="s-info">
+<!-- ═══ 가입 1: 이름·전화 ═══ -->
+<div class="screen" id="s-signup1">
+  <div class="wrap">
+    <h1>처음 오셨네요</h1>
+    <p class="sub">상담일지를 쓰려면 본인 확인을 한 번만 할게요. 명부에 등록된 이름과 전화번호를 적어 주세요.</p>
+    <div class="field">
+      <label>이름</label>
+      <input id="su-name" type="text" placeholder="홍길동" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>전화번호</label>
+      <input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off">
+    </div>
+    <div class="note" id="su1Note"></div>
+  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn" id="su1Btn" disabled>인증번호 받기</button>
+  </div></div>
+</div>
+
+<!-- ═══ 가입 2: OTP ═══ -->
+<div class="screen" id="s-signup2">
+  <div class="wrap">
+    <button class="back" id="su2Back" aria-label="이전">‹</button>
+    <h1>인증번호 확인</h1>
+    <p class="sub" id="su2Sub">문자로 받은 6자리 숫자를 적어 주세요.</p>
+    <div class="field">
+      <label>인증번호</label>
+      <input id="su-code" type="text" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off">
+    </div>
+    <div class="note" id="su2Note"></div>
+    <div class="stub" id="su2Stub"></div>
+  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn" id="su2Btn" disabled>확인</button>
+  </div></div>
+</div>
+
+<!-- ═══ 가입 3: PIN 설정 ═══ -->
+<div class="screen" id="s-signup3">
+  <div class="wrap">
+    <h1>비밀번호 설정</h1>
+    <p class="sub">앱을 열 때 쓸 4자리 숫자를 정해 주세요. 이 기기에서만 써요.</p>
+    <div class="field">
+      <label>비밀번호 4자리</label>
+      <input id="su-pin1" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>한 번 더</label>
+      <input id="su-pin2" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+    </div>
+    <div class="note" id="su3Note"></div>
+  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn" id="su3Btn" disabled>시작하기</button>
+  </div></div>
+</div>
+
+<!-- ═══ 게이트: PIN 입력(재진입) ═══ -->
+<div class="screen" id="s-gate">
+  <div class="wrap">
+    <h1 id="gateHi">다시 오셨네요</h1>
+    <p class="sub" id="gateSub">비밀번호 4자리를 적어 주세요.</p>
+    <div class="field">
+      <input id="g-pin" class="pin" type="password" inputmode="numeric" maxlength="4" placeholder="● ● ● ●" autocomplete="off" autofocus>
+    </div>
+    <div class="note" id="gateNote"></div>
+  </div>
+</div>
+
+<!-- ═══ 폼 1: 내담자 + 상담 정보 ═══ -->
+<div class="screen" id="s-info">
   <div class="wrap">
     <a class="back" href="./index.html" aria-label="홈으로">‹</a>
     <h1>상담일지</h1>
+    <span class="who" id="whoTag"></span>
     <p class="sub">내담자와 회기 정보를 먼저 적어요. 다음 화면에서 일지를 작성해요.</p>
 
     <div class="field">
@@ -89,7 +161,7 @@
     </div>
     <div class="row">
       <div class="field">
-        <label>성별 <span class="opt">(선택)</span></label>
+        <label>성별</label>
         <div class="toggle" id="f-sex">
           <button type="button" data-v="남">남</button>
           <button type="button" data-v="여">여</button>
@@ -99,12 +171,6 @@
         <label>연락처 <span class="opt">(선택)</span></label>
         <input id="f-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off">
       </div>
-    </div>
-
-    <div class="field">
-      <!-- ⚠️ 신원 STUB: 신원층(SMS 가입+세션) 붙으면 이 칸은 사라지고 로그인된 상담사로 자동 채움 -->
-      <label>상담사</label>
-      <input id="f-counselor" type="text" placeholder="이름" autocomplete="off">
     </div>
     <div class="row">
       <div class="field">
@@ -117,18 +183,16 @@
       </div>
     </div>
   </div>
-  <div class="footbar">
-    <div class="inner">
-      <button class="btn" id="toWrite" disabled>다음</button>
-    </div>
-  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn" id="toWrite" disabled>다음</button>
+  </div></div>
 </div>
 
-<!-- ═══ 화면 2: 일지 작성 ═══ -->
+<!-- ═══ 폼 2: 일지 작성 ═══ -->
 <div class="screen" id="s-write">
   <div class="wrap">
     <button class="back" id="backInfo" aria-label="이전">‹</button>
-    <h1 id="writeTitle">일지 작성</h1>
+    <h1>일지 작성</h1>
     <p class="sub" id="writeSub"></p>
 
     <div class="field">
@@ -145,15 +209,13 @@
     </div>
     <div class="note" id="saveNote"></div>
   </div>
-  <div class="footbar">
-    <div class="inner">
-      <button class="btn ghost" id="toInfo2">이전</button>
-      <button class="btn" id="doSave" disabled>저장</button>
-    </div>
-  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn ghost" id="toInfo2">이전</button>
+    <button class="btn" id="doSave" disabled>저장</button>
+  </div></div>
 </div>
 
-<!-- ═══ 화면 3: 완료 ═══ -->
+<!-- ═══ 완료 ═══ -->
 <div class="screen" id="s-done">
   <div class="wrap">
     <div class="done">
@@ -162,25 +224,41 @@
       <p id="doneSub"></p>
     </div>
   </div>
-  <div class="footbar">
-    <div class="inner">
-      <button class="btn ghost" id="goHome">홈</button>
-      <button class="btn" id="newJournal">새 일지 쓰기</button>
-    </div>
-  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn ghost" id="goHome">홈</button>
+    <button class="btn" id="newJournal">새 일지 쓰기</button>
+  </div></div>
 </div>
 
 <script>
 // ════════════════════════════════════════════════════════════
-//  상담일지 폼 — 11_플랫폼 GAS(action:'journal')로 저장. 검사_오감과 같은 배포 URL.
-//  ⚠️ 11에 _saveJournal_ push + 재배포 후에 저장이 동작(현재 배포본엔 검사 핸들러만).
-//  ⚠️ 상담사 = 신원 STUB(이름 직접 입력). 신원층(SMS 가입+세션) 붙으면 세션값으로 교체.
-//     상세 = docs/결정기록_2026-06-21_상담일지_신원설계.md
+//  상담일지 — 제공인력 신원(가입 + PIN 게이트) + 일지 작성.
+//  저장·신원 모두 11_플랫폼 GAS(검사_오감과 같은 배포 URL). 설계 = docs/결정기록_2026-06-21_상담일지_신원설계.md
+//  ⚠️ SMS = STUB → 가입 2단계에 인증번호(devCode)가 화면에 보임. 알리고 키 연결되면 사라짐.
+//  ⚠️ PIN 게이트 = 안심 UX + 가벼운 억제(로컬 검증). 지문(WebAuthn)은 다음. 진짜 보호 = 기기 OS 잠금 + 서버 세션검증.
 // ════════════════════════════════════════════════════════════
 const GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";
+const SESS_KEY = "tf_staff_v1";       // localStorage: {staffId, session, name, device, pinHash, lastAuth}
+const UNLOCK_KEY = "tf_staff_unlocked"; // sessionStorage: 이 실행에서 게이트 통과함(완전종료 시 사라짐)
+const GATE_MS = 6 * 3600 * 1000;      // 마지막 인증 후 6시간 지나면 재인증
 
 const $ = id => document.getElementById(id);
-const state = { sex:"" };
+let pendingPhone = "";  // 가입 중 정규화 전화(verify에 사용)
+
+// ── 세션 저장소 ──
+function loadSess(){ try{ return JSON.parse(localStorage.getItem(SESS_KEY) || "null"); }catch(e){ return null; } }
+function saveSess(s){ localStorage.setItem(SESS_KEY, JSON.stringify(s)); }
+function getDevice(){
+  let s = loadSess();
+  if (s && s.device) return s.device;
+  let d = "";
+  try { d = (crypto.randomUUID ? crypto.randomUUID() : ("d"+Date.now()+Math.random())).replace(/-/g,""); } catch(e){ d = "d"+Date.now(); }
+  return d;
+}
+async function sha256(str){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
 
 // ── 화면 전환 ──
 function show(id){
@@ -189,137 +267,189 @@ function show(id){
   window.scrollTo(0,0);
 }
 
-// ── 날짜 자동서식(0000. 00. 00) ──
+// ── 전화/날짜 자동서식 ──
+function bindPhone(el){
+  el.oninput=()=>{
+    let d=el.value.replace(/\D/g,"").slice(0,11);
+    if(d.length<4) el.value=d;
+    else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3);
+    else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7);
+    el.dispatchEvent(new Event("fmt"));
+  };
+}
 function bindDate(el){
   el.oninput=()=>{
     let d=el.value.replace(/\D/g,"").slice(0,8);
     let out=d.slice(0,4);
     if(d.length>4) out+=". "+d.slice(4,6);
     if(d.length>6) out+=". "+d.slice(6,8);
-    el.value=out; validateInfo();
+    el.value=out; el.dispatchEvent(new Event("fmt"));
   };
 }
-bindDate($("f-birth"));
-bindDate($("f-date"));
+function normPhone(v){ return String(v||"").replace(/\D/g,"").replace(/^0+/,""); }
+function ymd(v){ const d=String(v||"").replace(/\D/g,"").slice(0,8); return d.length===8 ? d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8) : ""; }
 
-// 상담일 기본값 = 오늘
-(function(){
-  const d=new Date(), p=n=>String(n).padStart(2,'0');
-  $("f-date").value = d.getFullYear()+". "+p(d.getMonth()+1)+". "+p(d.getDate());
-})();
-
-// 전화 자동 하이픈
-$("f-phone").oninput=()=>{
-  let d=$("f-phone").value.replace(/\D/g,"").slice(0,11);
-  if(d.length<4) $("f-phone").value=d;
-  else if(d.length<8) $("f-phone").value=d.slice(0,3)+"-"+d.slice(3);
-  else $("f-phone").value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7);
+// ════ 가입 1: 이름·전화 → OTP 발송 ════
+bindPhone($("su-phone"));
+function v1(){ $("su1Btn").disabled = !($("su-name").value.trim() && $("su-phone").value.replace(/\D/g,"").length>=10); }
+$("su-name").oninput=v1; $("su-phone").addEventListener("fmt",v1);
+$("su1Btn").onclick=()=>{
+  const name=$("su-name").value.trim(), phone=$("su-phone").value;
+  const note=$("su1Note"); note.className="note"; note.textContent="확인하고 있어요…";
+  $("su1Btn").disabled=true;
+  post({action:"staff_start", name, phone})
+    .then(d=>{
+      $("su1Btn").disabled=false;
+      if(d && d.ok){
+        pendingPhone = normPhone(phone);
+        $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
+        $("su2Stub").textContent = d.devCode ? ("테스트 인증번호: " + d.devCode + " (문자 연결 전 임시 표시)") : "";
+        note.textContent=""; show("s-signup2"); $("su-code").focus();
+      } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
+    })
+    .catch(()=>{ $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
 };
-// 회기 = 숫자만
-$("f-session").oninput=()=>{ $("f-session").value=$("f-session").value.replace(/\D/g,"").slice(0,3); };
 
-// 성별 토글
-document.querySelectorAll("#f-sex button").forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll("#f-sex button").forEach(x=>x.classList.remove("on"));
-    b.classList.add("on"); state.sex=b.dataset.v;
-  };
-});
+// ════ 가입 2: OTP 확인 → 등록 → PIN 설정 ════
+$("su-code").oninput=()=>{ $("su-code").value=$("su-code").value.replace(/\D/g,"").slice(0,6); $("su2Btn").disabled=$("su-code").value.length!==6; };
+$("su2Back").onclick=()=>show("s-signup1");
+$("su2Btn").onclick=()=>{
+  const note=$("su2Note"); note.className="note"; note.textContent="확인하고 있어요…";
+  $("su2Btn").disabled=true;
+  const device=getDevice();
+  post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device})
+    .then(d=>{
+      $("su2Btn").disabled=false;
+      if(d && d.ok){
+        // 세션 저장(PIN은 다음 화면에서). lastAuth는 PIN 설정 완료 때 찍음.
+        saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:"", lastAuth:0 });
+        note.textContent=""; show("s-signup3"); $("su-pin1").focus();
+      } else { note.className="note err"; note.textContent=(d&&d.error)||"인증번호가 달라요"; }
+    })
+    .catch(()=>{ $("su2Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요"; });
+};
 
-// ── 검증 ──
-function validateInfo(){
-  const ok = $("f-name").value.trim()
-    && $("f-birth").value.replace(/\D/g,"").length===8
-    && $("f-counselor").value.trim()
-    && $("f-date").value.replace(/\D/g,"").length===8;
-  $("toWrite").disabled=!ok;
+// ════ 가입 3: PIN 설정 ════
+function v3(){ $("su3Btn").disabled = !($("su-pin1").value.length===4 && $("su-pin2").value.length===4); }
+$("su-pin1").oninput=()=>{ $("su-pin1").value=$("su-pin1").value.replace(/\D/g,"").slice(0,4); v3(); };
+$("su-pin2").oninput=()=>{ $("su-pin2").value=$("su-pin2").value.replace(/\D/g,"").slice(0,4); v3(); };
+$("su3Btn").onclick=async()=>{
+  const note=$("su3Note");
+  if($("su-pin1").value!==$("su-pin2").value){ note.className="note err"; note.textContent="두 번 입력한 숫자가 달라요"; return; }
+  const s=loadSess(); if(!s) return;
+  s.pinHash = await sha256(s.device + ":" + $("su-pin1").value);  // 기기id 섞어 해시(다른 기기로 복사 무의미)
+  s.lastAuth = Date.now();
+  saveSess(s); markUnlocked();
+  enterApp();
+};
+
+// ════ 게이트: 재진입 PIN ════
+$("g-pin").oninput=async()=>{
+  $("g-pin").value=$("g-pin").value.replace(/\D/g,"").slice(0,4);
+  if($("g-pin").value.length!==4) return;
+  const s=loadSess(); if(!s){ show("s-signup1"); return; }
+  const h=await sha256(s.device + ":" + $("g-pin").value);
+  const note=$("gateNote");
+  if(h===s.pinHash){ s.lastAuth=Date.now(); saveSess(s); markUnlocked(); $("g-pin").value=""; note.textContent=""; enterApp(); }
+  else { note.className="note err"; note.textContent="비밀번호가 달라요"; $("g-pin").value=""; }
+};
+
+function markUnlocked(){ try{ sessionStorage.setItem(UNLOCK_KEY,"1"); }catch(e){} }
+function needGate(s){
+  const unlocked = (()=>{ try{ return sessionStorage.getItem(UNLOCK_KEY)==="1"; }catch(e){ return false; } })();
+  return !unlocked || (Date.now() - (s.lastAuth||0) > GATE_MS);
 }
-$("f-name").oninput=validateInfo;
-$("f-counselor").oninput=validateInfo;
-validateInfo();
 
-function validateWrite(){ $("doSave").disabled = !$("f-content").value.trim(); }
-$("f-content").oninput=validateWrite;
-validateWrite();
+// ════ 부팅 라우팅 ════
+function boot(){
+  const s=loadSess();
+  if(!s || !s.session){ show("s-signup1"); $("su-name").focus(); return; }
+  if(!s.pinHash){ show("s-signup3"); return; }     // 가입은 됐는데 PIN 미설정(중단 복구)
+  if(needGate(s)){ show("s-gate"); setTimeout(()=>$("g-pin").focus(),100); return; }
+  enterApp();
+}
 
-// ── 화면 이동 ──
+// ════ 폼 진입 ════
+function enterApp(){
+  const s=loadSess();
+  $("whoTag").textContent = "상담사 " + (s ? s.name : "");
+  show("s-info");
+}
+
+// ── 폼: 내담자/상담 메타 ──
+const fstate = { sex:"" };
+bindPhone($("f-phone"));
+bindDate($("f-birth")); bindDate($("f-date"));
+(function(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); $("f-date").value=d.getFullYear()+". "+p(d.getMonth()+1)+". "+p(d.getDate()); })();
+$("f-session").oninput=()=>{ $("f-session").value=$("f-session").value.replace(/\D/g,"").slice(0,3); };
+document.querySelectorAll("#f-sex button").forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll("#f-sex button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); fstate.sex=b.dataset.v; vInfo(); };
+});
+function vInfo(){
+  $("toWrite").disabled = !($("f-name").value.trim() && $("f-birth").value.replace(/\D/g,"").length===8 && fstate.sex && $("f-date").value.replace(/\D/g,"").length===8);
+}
+$("f-name").oninput=vInfo; $("f-birth").addEventListener("fmt",vInfo); $("f-date").addEventListener("fmt",vInfo);
+vInfo();
+
 $("toWrite").onclick=()=>{
-  const name=$("f-name").value.trim();
   const sess=$("f-session").value.trim();
-  $("writeSub").textContent = name + (sess ? " · "+sess+"회기" : "");
+  $("writeSub").textContent=$("f-name").value.trim()+(sess?" · "+sess+"회기":"");
   show("s-write");
 };
 $("toInfo2").onclick=()=>show("s-info");
-$("backInfo").onclick=()=>show("s-info");
+$("backInfo").onclick=()=>show("s-info");   // 화면 전환은 본문 유지(소실 아님) — 이탈 경고는 beforeunload가 담당
 
-// ── 저장 ──
-// 멱등 stamp = 이 작성의 고정 시각(첫 전송·재시도 동일) → 서버 dedup 보조축.
-let journalStamp = "";
-function nowStamp(){
-  const d=new Date(), p=n=>String(n).padStart(2,'0');
-  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
-}
-function ymd(v){  // '0000. 00. 00' → '0000-00-00'
-  const d=String(v||"").replace(/\D/g,"").slice(0,8);
-  return d.length===8 ? d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8) : "";
-}
+// ── 폼: 일지 작성/저장 ──
+function vWrite(){ $("doSave").disabled = !$("f-content").value.trim(); }
+$("f-content").oninput=vWrite; vWrite();
+
+let journalStamp="";
+function nowStamp(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()); }
 function buildPayload(){
+  const s=loadSess()||{};
   return {
     action:"journal",
-    child:{ name:$("f-name").value.trim(), birth:$("f-birth").value, sex:state.sex, phone:$("f-phone").value },
-    date: ymd($("f-date").value),
-    session: $("f-session").value.trim(),
-    counselor: $("f-counselor").value.trim(),   // ⚠️ 신원 STUB
-    content: $("f-content").value.trim(),
-    complaint: $("f-complaint").value.trim(),
-    keywords: $("f-keywords").value.trim(),
-    via:"태블릿",
-    stamp: journalStamp
+    staffId:s.staffId, session:s.session,           // 서버 세션검증 + 상담사 확정
+    child:{ name:$("f-name").value.trim(), birth:$("f-birth").value, sex:fstate.sex, phone:$("f-phone").value },
+    date: ymd($("f-date").value), session_no:$("f-session").value.trim(),
+    content:$("f-content").value.trim(), complaint:$("f-complaint").value.trim(), keywords:$("f-keywords").value.trim(),
+    via:"태블릿", stamp: journalStamp
   };
 }
-
 let _saving=false;
 function save(retry){
-  if(_saving) return;
-  _saving=true;
-  const note=$("saveNote"); note.textContent="저장하고 있어요…";
-  $("doSave").disabled=true;
+  if(_saving) return; _saving=true;
+  const note=$("saveNote"); note.className="note"; note.textContent="저장하고 있어요…"; $("doSave").disabled=true;
   if(!journalStamp) journalStamp=nowStamp();
-  // body가 문자열 → text/plain → CORS 프리플라이트 없이 cross-origin POST
-  fetch(GAS_EXEC, {method:"POST", body: JSON.stringify(buildPayload())})
-    .then(r=>r.json())
+  post(buildPayload())   // session=세션토큰, session_no=회기차수(키 분리)
     .then(d=>{
-      if(d && d.ok){
-        $("doneSub").textContent = $("f-name").value.trim() + (d.dup ? " · 이미 저장된 회기예요" : " · 잘 저장했어요");
-        note.textContent=""; show("s-done");
-      } else throw new Error((d && d.error) || "저장 실패");
+      if(d && d.ok){ $("doneSub").textContent=$("f-name").value.trim()+(d.dup?" · 이미 저장된 회기예요":" · 잘 저장했어요"); note.textContent=""; _saving=false; show("s-done"); return; }
+      if(d && d.code==="auth"){ note.className="note err"; note.textContent="로그인이 풀렸어요. 다시 인증해 주세요"; _saving=false; setTimeout(()=>{ show("s-gate"); $("g-pin").focus(); },1200); return; }
+      throw new Error((d&&d.error)||"저장 실패");
     })
     .catch(err=>{
-      console.error("상담일지 저장 실패:", err);
-      _saving=false; $("doSave").disabled=false;
-      if(retry){ setTimeout(()=>{ _saving=false; save(false); }, 1500); return; }  // 1회 자동 재시도
+      _saving=false; note.className="note err";
+      if(retry){ note.textContent="다시 시도하고 있어요…"; setTimeout(()=>save(false),1500); return; }  // 버튼 계속 비활성(중복 발사 방지)
+      $("doSave").disabled=false;
       note.innerHTML='저장이 안 됐어요. <button class="lk" id="retrySave">다시 저장</button>';
       const b=$("retrySave"); if(b) b.onclick=()=>save(true);
     });
 }
 $("doSave").onclick=()=>save(true);
-
-// ── 완료 후 ──
-$("goHome").onclick=()=>{ location.href="./index.html"; };
+$("goHome").onclick=()=>{ $("f-content").value=""; location.href="./index.html"; };
 $("newJournal").onclick=()=>{
-  // 같은 상담사·같은 날 유지하고 내담자/일지만 비움(연속 작성 편의)
   ["f-name","f-birth","f-phone","f-complaint","f-keywords","f-content","f-session"].forEach(id=>$(id).value="");
-  document.querySelectorAll("#f-sex button").forEach(x=>x.classList.remove("on")); state.sex="";
-  journalStamp=""; _saving=false;
-  validateInfo(); validateWrite();
-  show("s-info");
+  document.querySelectorAll("#f-sex button").forEach(x=>x.classList.remove("on")); fstate.sex="";
+  journalStamp=""; _saving=false; vInfo(); vWrite(); show("s-info");
 };
 
-// 작성 중(본문에 글이 있으면) 이전/홈으로 나갈 때 확인
-function guardLeave(e){
-  if($("f-content").value.trim() && !confirm("지금 나가면 작성한 일지가 사라져요. 나갈까요?")) e.preventDefault();
-}
-$("backInfo").addEventListener("click", guardLeave, true);
+// ── 공통 POST(text/plain → CORS 프리플라이트 없음) ──
+function post(obj){ return fetch(GAS_EXEC, {method:"POST", body:JSON.stringify(obj)}).then(r=>{ if(!r.ok) throw new Error("서버 오류 "+r.status); return r.json(); }); }
+
+// 본문 작성 중 페이지 이탈(홈·닫기·새로고침) 시 경고 — 화면 전환은 값이 유지되므로 제외.
+window.addEventListener("beforeunload", e=>{ if($("f-content").value.trim()){ e.preventDefault(); e.returnValue=""; } });
+
+boot();
 </script>
 </body>
 </html>
