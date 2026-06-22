@@ -103,7 +103,53 @@
   .seg button{flex:1;font-family:inherit;font-size:16px;font-weight:600;padding:13px 0;border-radius:12px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
   .seg button.on{border-color:var(--green);background:var(--green-l);color:var(--green-d);font-weight:700;}
   .seg button.danger.on{border-color:var(--red);background:#FEF2F3;color:var(--red);}
+  .seg button.warn.on{border-color:#e8a317;background:#fff8ea;color:#b07a12;}
   .seg button:active{transform:scale(.97);}
+
+  /* 작성 폼: 인라인 행(라벨 좌·입력 우) */
+  .irow{display:flex;align-items:center;gap:14px;padding:15px 2px;border-bottom:1px solid var(--g100);}
+  .irow>label{flex:0 0 76px;font-size:14.5px;font-weight:600;color:var(--g700);}
+  .irow input.flat{flex:1;min-width:0;width:100%;font-family:inherit;font-size:16.5px;padding:2px 0;border:none;background:transparent;outline:none;color:var(--g900);}
+  .irow input.flat::placeholder{color:var(--g400);font-weight:500;}
+  .irow.seg-row .seg{flex:1;}
+
+  /* 작성 폼: 풀폭 블록(태그·회기내용·평가) */
+  .block{padding:16px 2px;border-bottom:1px solid var(--g100);}
+  .blabel{display:block;font-size:14.5px;font-weight:600;color:var(--g700);margin:0 0 11px;}
+  .blabel .opt{font-size:12.5px;font-weight:500;color:var(--g400);margin-left:5px;}
+  .block textarea{width:100%;font-family:inherit;font-size:16px;line-height:1.65;padding:14px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;resize:vertical;min-height:150px;transition:.15s;}
+  .block textarea.sm{min-height:80px;margin-top:12px;}
+  .block textarea:focus{background:#fff;border-color:var(--green);}
+  .block textarea::placeholder{color:var(--g400);font-weight:500;}
+
+  /* 회기 평가 슬라이더(모니터링 14 패턴) */
+  .sl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;}
+  .sl-val{font-size:15px;font-weight:700;color:var(--green-d);}
+  .sl-val.empty{color:var(--g400);font-weight:500;}
+  .scale-label{display:flex;justify-content:space-between;font-size:12px;color:var(--g500);margin-top:2px;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;outline:none;margin:4px 0;cursor:pointer;}
+  input[type=range]::-webkit-slider-runnable-track{height:6px;background:var(--g200);border-radius:99px;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;margin-top:-10px;border-radius:50%;background:#fff;border:3px solid var(--g300);box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:grab;}
+  input[type=range].touched::-webkit-slider-thumb{border-color:var(--green);}
+  input[type=range]::-moz-range-track{height:6px;background:var(--g200);border-radius:99px;}
+  input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--g300);box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:grab;}
+  input[type=range].touched::-moz-range-thumb{border-color:var(--green);}
+
+  /* 회기 카드 삭제(X) */
+  .client-card .cc-main{flex:1;min-width:0;}
+  .client-card .del{flex:0 0 auto;width:36px;height:36px;border-radius:11px;border:none;background:var(--g100);color:var(--g500);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .client-card .del:active{background:#FDECEE;color:var(--red);}
+
+  /* 토스식 확인 모달(바텀시트) */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end;justify-content:center;z-index:300;}
+  .modal-bg.show{display:flex;}
+  .modal{background:#fff;width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:28px 22px calc(20px + env(safe-area-inset-bottom));}
+  .modal h3{font-size:19px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px;}
+  .modal p{font-size:14.5px;color:var(--g500);font-weight:500;line-height:1.55;margin-bottom:22px;}
+  .modal .mbtns{display:flex;gap:10px;}
+  .modal .mbtns button{flex:1;font-family:inherit;font-size:16.5px;font-weight:700;padding:16px;border-radius:14px;border:none;cursor:pointer;}
+  .modal .mclose{background:var(--g100);color:var(--g700);}
+  .modal .mdel{background:var(--red);color:#fff;}
 
   /* 완료 토스트 */
   .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--g900);color:#fff;font-size:14px;font-weight:600;padding:11px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.2s;z-index:200;}
@@ -156,10 +202,10 @@
     <h1>인증번호 확인</h1>
     <p class="sub" id="su2Sub">문자로 받은 6자리 숫자를 적어 주세요.</p>
     <div class="field"><label>인증번호</label><input id="su-code" type="text" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off"></div>
+    <p class="sub" style="margin-top:-10px;">6자리를 다 적으면 자동으로 넘어가요.</p>
     <div class="note" id="su2Note"></div>
     <div class="stub" id="su2Stub"></div>
   </div>
-  <div class="footbar"><div class="inner"><button class="btn" id="su2Btn" disabled>확인</button></div></div>
 </div>
 
 <!-- ═══ 가입 3: PIN 설정 ═══ -->
@@ -274,28 +320,28 @@
     <button class="back" id="gw-back" aria-label="회기">‹</button>
     <div class="subject" id="gw-subject"></div>
 
-    <div class="field"><label>상담일자</label><input id="gw-date" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
-    <div class="field"><label>주호소</label><input id="gw-complaint" type="text" placeholder="내담자가 호소하는 핵심 어려움" autocomplete="off"></div>
+    <div class="irow"><label>상담일자</label><input id="gw-date" class="flat" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
+    <div class="irow"><label>주호소</label><input id="gw-complaint" class="flat" type="text" placeholder="핵심 어려움" autocomplete="off"></div>
 
-    <div class="field">
-      <label>호소 태그 <span style="color:var(--g400);font-weight:500;">(고르면 좋아요)</span></label>
+    <div class="block">
+      <label class="blabel">호소 태그 <span class="opt">고르면 좋아요</span></label>
       <div class="chips" id="gw-tags"></div>
     </div>
 
-    <div class="field"><label>회기 내용</label><textarea id="gw-content" placeholder="이번 회기에서 다룬 내용과 내담자의 반응을 적어요."></textarea></div>
-
-    <div class="field">
-      <label>회기 평가</label>
-      <div class="hint">이번 회기 상태나 진전을 1~5로 표시해요. 1 낮음 · 5 높음</div>
-      <div class="seg" id="gw-score"></div>
+    <div class="block">
+      <label class="blabel">회기 내용</label>
+      <textarea id="gw-content" placeholder="이번 회기에서 다룬 내용과 내담자의 반응을 적어요."></textarea>
     </div>
-    <div class="field"><textarea id="gw-opinion" class="sm" placeholder="평가 소견을 적어요 (선택)"></textarea></div>
 
-    <div class="field">
-      <label>위험 신호</label>
-      <div class="seg" id="gw-risk"></div>
+    <div class="block">
+      <div class="sl-top"><label class="blabel" style="margin:0;">회기 평가</label><span class="sl-val empty" id="gw-score-val">선택 안 함</span></div>
+      <input id="gw-score" type="range" min="1" max="5" step="1" value="3">
+      <div class="scale-label"><span>1 낮음</span><span>5 높음</span></div>
+      <textarea id="gw-opinion" class="sm" placeholder="평가 소견 (선택)"></textarea>
     </div>
-    <div class="field" id="gw-riskbox" style="display:none;"><textarea id="gw-risknote" class="sm" placeholder="어떤 위험 신호인지, 어떻게 대응했는지 적어요."></textarea></div>
+
+    <div class="irow seg-row"><label>위험 신호</label><div class="seg" id="gw-risk"></div></div>
+    <div class="block" id="gw-riskbox" style="display:none;border-bottom:none;"><textarea id="gw-risknote" class="sm" style="margin-top:0;" placeholder="어떤 위험 신호인지, 어떻게 대응했는지 적어요."></textarea></div>
 
     <div class="note" id="gw-note"></div>
   </div>
@@ -315,6 +361,15 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ═══ 회기 삭제 확인(토스식 바텀시트) ═══ -->
+<div class="modal-bg" id="delModal">
+  <div class="modal">
+    <h3 id="delTitle">회기 기록을 지울까요?</h3>
+    <p>뒤 회기 번호가 하나씩 당겨져요. 되돌릴 수 없어요.</p>
+    <div class="mbtns"><button class="mclose" id="delClose">닫기</button><button class="mdel" id="delDo">삭제</button></div>
+  </div>
+</div>
 
 <script>
 // ════════════════════════════════════════════════════════════
@@ -397,18 +452,17 @@ let su2Busy=false;
 function doVerify(){
   if(su2Busy || $("su-code").value.length!==6) return;
   su2Busy=true;
-  const note=$("su2Note"); note.className="note"; note.textContent="확인 중…"; $("su2Btn").disabled=true;
+  const note=$("su2Note"); note.className="note"; note.textContent="확인 중…";
   const device=getDevice();
   post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device}).then(d=>{
     su2Busy=false;
     if(d && d.ok){ saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:"", lastAuth:0 }); note.textContent=""; show("s-signup3"); $("su-pin1").focus(); }
-    else { note.className="note err"; note.textContent=(d&&d.error)||"인증번호가 달라요"; $("su-code").value=""; $("su2Btn").disabled=true; $("su-code").focus(); }  // 틀리면 비우고 재입력 → 6자리 차면 자동 재시도
-  }).catch(()=>{ su2Busy=false; note.className="note err"; note.textContent="연결이 안 됐어요"; $("su2Btn").disabled=false; });
+    else { note.className="note err"; note.textContent=(d&&d.error)||"인증번호가 달라요"; $("su-code").value=""; $("su-code").focus(); }  // 틀리면 비우고 재입력 → 6자리 차면 자동 재확인
+  }).catch(()=>{ su2Busy=false; note.className="note err"; note.textContent="연결이 안 됐어요"; });
 }
-// 6자리 채우면 버튼 없이 자동 확인 (확인 버튼은 보조).
-$("su-code").oninput=()=>{ $("su-code").value=$("su-code").value.replace(/\D/g,"").slice(0,6); const full=$("su-code").value.length===6; $("su2Btn").disabled=!full; if(full) doVerify(); };
+// 6자리 채우면 자동 확인 (확인 버튼 없음).
+$("su-code").oninput=()=>{ $("su-code").value=$("su-code").value.replace(/\D/g,"").slice(0,6); if($("su-code").value.length===6) doVerify(); };
 $("su2Back").onclick=()=>show("s-signup1");
-$("su2Btn").onclick=doVerify;
 
 // ════ 가입 3: PIN 설정 ════
 function v3(){ $("su3Btn").disabled = !($("su-pin1").value.length===4 && $("su-pin2").value.length===4); }
@@ -651,9 +705,10 @@ function renderGRounds(){
     const it=gRounds[r]||{};
     const sub=[it.date, it.complaint].filter(Boolean).join(" · ") || "기록 있음";
     const el=document.createElement("div"); el.className="client-card";
-    el.innerHTML='<div><div class="nm">'+r+'회기</div><div class="meta">'+escapeHtml(sub)+'</div></div>'
-      +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
-    el.onclick=()=>openGRound(r);
+    el.innerHTML='<div class="cc-main"><div class="nm">'+r+'회기</div><div class="meta">'+escapeHtml(sub)+'</div></div>'
+      +'<button class="del" aria-label="'+r+'회기 삭제">✕</button>';
+    el.querySelector(".cc-main").onclick=()=>openGRound(r);
+    el.querySelector(".del").onclick=(ev)=>{ ev.stopPropagation(); askDeleteRound(r); };
     box.appendChild(el);
   });
 }
@@ -675,18 +730,21 @@ function renderTags(){
     box.appendChild(b);
   });
 }
-function renderScore(){
-  const box=$("gw-score"); box.innerHTML="";
-  for(let i=1;i<=5;i++){
-    const b=document.createElement("button"); b.type="button"; if(String(i)===gScore) b.className="on"; b.textContent=i;
-    b.onclick=()=>{ gScore = (gScore===String(i)) ? "" : String(i); renderScore(); };   // 다시 누르면 해제(선택 항목)
-    box.appendChild(b);
-  }
+// 회기 평가 = 1~5 슬라이더(선택). 안 만지면 ""(선택 안 함), 만지면 그 값. (모니터링 14 패턴)
+function setScoreUI(){
+  const sl=$("gw-score"), val=$("gw-score-val");
+  if(gScore===""){ sl.value=3; sl.classList.remove("touched"); val.textContent="선택 안 함"; val.classList.add("empty"); }
+  else { sl.value=gScore; sl.classList.add("touched"); val.textContent=gScore+" / 5"; val.classList.remove("empty"); }
 }
+$("gw-score").addEventListener("input",()=>{ gScore=String($("gw-score").value); setScoreUI(); });
+// 썸이 이미 있는 위치(가운데 3)를 탭하면 input이 안 떠 값이 안 잡히는 문제 → 누르는 순간 현재값을 확정.
+$("gw-score").addEventListener("pointerdown",()=>{ if(gScore===""){ gScore=String($("gw-score").value); setScoreUI(); } });
 function renderRisk(){
   const box=$("gw-risk"); box.innerHTML="";
   RISK_OPTS.forEach(o=>{
-    const b=document.createElement("button"); b.type="button"; let cls=(o===gRisk?"on":""); if(o==="위기") cls=(cls+" danger").trim(); b.className=cls; b.textContent=o;
+    const b=document.createElement("button"); b.type="button"; let cls=(o===gRisk?"on":"");
+    if(o==="관찰") cls=(cls+" warn").trim(); if(o==="위기") cls=(cls+" danger").trim();
+    b.className=cls; b.textContent=o;
     b.onclick=()=>{ gRisk=o; if(o==="없음") $("gw-risknote").value=""; renderRisk(); toggleRiskBox(); validateGW(); };
     box.appendChild(b);
   });
@@ -711,7 +769,7 @@ function openGRound(r){
   $("gw-complaint").value = ex.complaint || "";
   gTagsSel = new Set(ex.tags ? String(ex.tags).split(",").map(t=>t.trim()).filter(Boolean) : []); renderTags();
   $("gw-content").value = ex.content || "";
-  gScore = (Number(ex.score)>=1 && Number(ex.score)<=5) ? String(Number(ex.score)) : ""; renderScore();
+  gScore = (Number(ex.score)>=1 && Number(ex.score)<=5) ? String(Number(ex.score)) : ""; setScoreUI();
   $("gw-opinion").value = ex.opinion || "";
   gRisk = ex.risk || "없음"; renderRisk(); toggleRiskBox();
   $("gw-risknote").value = ex.riskNote || "";
@@ -732,19 +790,42 @@ function saveGRound(retry){
   const local=Object.assign({}, payload, { tags:payload.tags.join(", ") });   // 목록 캐시용(tags 문자열로 통일)
   if(DEMO){ gRounds[round]=local; gwLoaded=gwSnapshot(); toast(round+"회기 저장(데모)"); renderGRounds(); show("s-grounds"); return; }
   _gsaving=true;
-  const note=$("gw-note"); note.className="note"; note.textContent="저장하고 있어요…"; $("gw-save").disabled=true;
+  const note=$("gw-note"), btn=$("gw-save"); note.className="note"; note.textContent=""; btn.disabled=true; btn.textContent="저장하고 있어요";  // 버튼에 상태 표시(별도 텍스트 X)
   const s=loadSess()||{};
   post(Object.assign({ action:"gjournal", staffId:s.staffId, session:s.session, via:"태블릿" }, payload)).then(d=>{
-    if(d && d.ok){ _gsaving=false; gRounds[round]=local; gwLoaded=gwSnapshot(); toast(round+"회기 저장했어요"); renderGRounds(); show("s-grounds"); return; }
-    if(d && d.code==="auth"){ _gsaving=false; sessExpired(); return; }
+    if(d && d.ok){ _gsaving=false; btn.textContent="저장"; gRounds[round]=local; gwLoaded=gwSnapshot(); toast(round+"회기 저장했어요"); renderGRounds(); show("s-grounds"); return; }
+    if(d && d.code==="auth"){ _gsaving=false; btn.textContent="저장"; sessExpired(); return; }
     throw new Error((d&&d.error)||"저장 실패");
   }).catch(err=>{
-    _gsaving=false; note.className="note err";
-    if(retry){ note.textContent="다시 시도하고 있어요…"; setTimeout(()=>saveGRound(false),1500); return; }
-    $("gw-save").disabled=false;
+    _gsaving=false;
+    if(retry){ setTimeout(()=>saveGRound(false),1500); return; }   // 1차 자동 재시도(버튼은 "저장하고 있어요" 유지)
+    btn.disabled=false; btn.textContent="저장"; note.className="note err";
     note.innerHTML='저장이 안 됐어요. <button class="lk" id="gretry">다시 저장</button>';
     const b=$("gretry"); if(b) b.onclick=()=>saveGRound(true);
   });
+}
+
+// ── 회기 삭제(토스식 확인 → 백엔드 삭제 + 뒤 회기 당기기) ──
+let _delRound=0;
+function askDeleteRound(r){ _delRound=r; $("delTitle").textContent=r+"회기 기록을 지울까요?"; $("delModal").classList.add("show"); }
+$("delClose").onclick=()=>$("delModal").classList.remove("show");
+$("delModal").onclick=(e)=>{ if(e.target===$("delModal")) $("delModal").classList.remove("show"); };   // 배경 탭 = 닫기
+$("delDo").onclick=()=>doDeleteRound();
+function applyRounds(list){ gRounds={}; (list||[]).forEach(x=>{ gRounds[x.round]=x; }); }
+function doDeleteRound(){
+  const r=_delRound; $("delModal").classList.remove("show");
+  if(DEMO){   // 데모: 당기기 재현
+    const arr=Object.keys(gRounds).map(Number).sort((a,b)=>a-b).filter(x=>x!==r);
+    const ng={}; arr.forEach((old,i)=>{ ng[i+1]=gRounds[old]; }); gRounds=ng;
+    toast(r+"회기 삭제(데모)"); renderGRounds(); return;
+  }
+  const s=loadSess()||{};
+  $("gr-note").className="note"; $("gr-note").textContent="삭제하고 있어요…";
+  post({action:"gjournal_delete", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}, round:r}).then(d=>{
+    if(d && d.code==="auth"){ sessExpired(); return; }
+    if(d && d.ok){ applyRounds(d.rounds); $("gr-note").textContent=""; renderGRounds(); toast("삭제했어요"); }
+    else { $("gr-note").className="note err"; $("gr-note").textContent=(d&&d.error)||"삭제를 못 했어요"; }
+  }).catch(()=>{ $("gr-note").className="note err"; $("gr-note").textContent="연결이 안 됐어요"; });
 }
 
 // 작성 중 페이지 이탈(홈·닫기·새로고침) 경고 — 008(s-write)·일반(s-gwrite) 공통. 화면 전환은 값 유지라 제외.
