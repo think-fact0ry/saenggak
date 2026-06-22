@@ -81,6 +81,30 @@
   .round.done .rn{color:var(--green-d);}
   .round.done .st{color:var(--green-d);}
 
+  /* 모드 선택 카드 */
+  .mode-list{display:flex;flex-direction:column;gap:12px;}
+  .mode-card{text-align:left;width:100%;font-family:inherit;background:#fff;border:1.5px solid var(--g200);border-radius:18px;padding:22px 20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:.12s;}
+  .mode-card:active{border-color:var(--green);background:#F6FAF6;transform:scale(.99);}
+  .mode-card .mc-tl{font-size:18px;font-weight:700;letter-spacing:-.3px;color:var(--g900);}
+  .mode-card .mc-ds{font-size:14px;color:var(--g500);font-weight:500;margin-top:6px;line-height:1.5;}
+
+  /* 폼 보조 */
+  .hint{font-size:12.5px;color:var(--g500);font-weight:500;margin:0 2px 9px;}
+  .field textarea.sm{min-height:92px;}
+
+  /* 호소 태그 칩 */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{font-family:inherit;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
+  .chip.on{border-color:var(--green);background:var(--green-l);color:var(--green-d);}
+  .chip:active{transform:scale(.96);}
+
+  /* 세그먼트(평가척도·위험) */
+  .seg{display:flex;gap:8px;}
+  .seg button{flex:1;font-family:inherit;font-size:16px;font-weight:600;padding:13px 0;border-radius:12px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
+  .seg button.on{border-color:var(--green);background:var(--green-l);color:var(--green-d);font-weight:700;}
+  .seg button.danger.on{border-color:var(--red);background:#FEF2F3;color:var(--red);}
+  .seg button:active{transform:scale(.97);}
+
   /* 완료 토스트 */
   .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--g900);color:#fff;font-size:14px;font-weight:600;padding:11px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.2s;z-index:200;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -160,11 +184,30 @@
   </div>
 </div>
 
+<!-- ═══ 모드 선택: 바우처(008) / 일반 ═══ -->
+<div class="screen" id="s-mode">
+  <div class="wrap">
+    <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+    <div class="head-row"><h1>상담일지</h1><span class="who" id="whoTag2"></span></div>
+    <p class="sub">어떤 상담일지를 쓸까요?</p>
+    <div class="mode-list">
+      <button class="mode-card" id="mode-voucher">
+        <div class="mc-tl">바우처 상담일지</div>
+        <div class="mc-ds">아동청소년·성인·정신토탈 — 담당 아이를 골라 회차별로 적어요.</div>
+      </button>
+      <button class="mode-card" id="mode-general">
+        <div class="mc-tl">일반 상담일지</div>
+        <div class="mc-ds">바우처가 아닌 상담 — 내담자를 직접 적고 회기별로 기록해요.</div>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ 내담자 선택(하이브리드: 검색 + 목록) ═══ -->
 <div class="screen" id="s-clients">
   <div class="wrap">
-    <a class="back" href="./index.html" aria-label="홈으로">‹</a>
-    <div class="head-row"><h1>상담일지</h1><span class="who" id="whoTag"></span></div>
+    <button class="back" id="cl-back" aria-label="이전">‹</button>
+    <div class="head-row"><h1>바우처 상담일지</h1><span class="who" id="whoTag"></span></div>
     <div class="search">
       <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input id="cs-search" type="text" placeholder="이름으로 찾기" autocomplete="off">
@@ -198,6 +241,65 @@
     <div id="report008"></div>
   </div>
   <div class="footbar noprint"><div class="inner"><button class="btn" id="p-do">인쇄 / PDF 저장</button></div></div>
+</div>
+
+<!-- ═══ [일반] 내담자 직접입력 ═══ -->
+<div class="screen" id="s-gclient">
+  <div class="wrap">
+    <button class="back" id="gc-back" aria-label="이전">‹</button>
+    <h1>일반 상담일지</h1>
+    <p class="sub">내담자 정보를 적어 주세요. 이름과 생년월일로 회기를 모아 둘게요.</p>
+    <div class="field"><label>이름</label><input id="gc-name" type="text" placeholder="홍길동" autocomplete="off"></div>
+    <div class="field"><label>생년월일</label><input id="gc-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
+    <div class="note" id="gc-note"></div>
+  </div>
+  <div class="footbar"><div class="inner"><button class="btn" id="gc-btn" disabled>회기 보기</button></div></div>
+</div>
+
+<!-- ═══ [일반] 회기 목록 ═══ -->
+<div class="screen" id="s-grounds">
+  <div class="wrap">
+    <button class="back" id="gr-back" aria-label="이전">‹</button>
+    <div class="subject" id="gr-subject"></div>
+    <div class="count" id="gr-count"></div>
+    <div class="client-list" id="gr-list"></div>
+    <div class="note" id="gr-note"></div>
+  </div>
+  <div class="footbar"><div class="inner"><button class="btn" id="gr-new">새 회기 작성</button></div></div>
+</div>
+
+<!-- ═══ [일반] 회기 기록 폼(7칸) ═══ -->
+<div class="screen" id="s-gwrite">
+  <div class="wrap">
+    <button class="back" id="gw-back" aria-label="회기">‹</button>
+    <div class="subject" id="gw-subject"></div>
+
+    <div class="field"><label>상담일자</label><input id="gw-date" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
+    <div class="field"><label>주호소</label><input id="gw-complaint" type="text" placeholder="내담자가 호소하는 핵심 어려움" autocomplete="off"></div>
+
+    <div class="field">
+      <label>호소 태그 <span style="color:var(--g400);font-weight:500;">(고르면 좋아요)</span></label>
+      <div class="chips" id="gw-tags"></div>
+    </div>
+
+    <div class="field"><label>회기 내용</label><textarea id="gw-content" placeholder="이번 회기에서 다룬 내용과 내담자의 반응을 적어요."></textarea></div>
+
+    <div class="field">
+      <label>회기 평가</label>
+      <div class="hint">이번 회기 상태나 진전을 1~5로 표시해요. 1 낮음 · 5 높음</div>
+      <div class="seg" id="gw-score"></div>
+    </div>
+    <div class="field"><textarea id="gw-opinion" class="sm" placeholder="평가 소견을 적어요 (선택)"></textarea></div>
+
+    <div class="field">
+      <label>위험 신호</label>
+      <div class="seg" id="gw-risk"></div>
+    </div>
+    <div class="field" id="gw-riskbox" style="display:none;"><textarea id="gw-risknote" class="sm" placeholder="어떤 위험 신호인지, 어떻게 대응했는지 적어요."></textarea></div>
+
+    <div class="note" id="gw-note"></div>
+  </div>
+  <div class="footbar"><div class="inner"><button class="btn" id="gw-save" disabled>저장</button></div></div>
 </div>
 
 <!-- ═══ 회차 상세내용 입력·수정 ═══ -->
@@ -348,9 +450,15 @@ let curRound = 0;             // 1~4
 let roundData = {};           // {round: {date, content}}
 
 function enterApp(){
-  const s=loadSess(); $("whoTag").textContent = "상담사 " + (DEMO ? "데모" : (s ? s.name : ""));
-  show("s-clients"); loadClients();
+  const s=loadSess(); const who = "상담사 " + (DEMO ? "데모" : (s ? s.name : ""));
+  $("whoTag").textContent = who; $("whoTag2").textContent = who;
+  show("s-mode");
 }
+
+// ════ 모드 선택 → 008(바우처) / 일반 ════
+$("mode-voucher").onclick=()=>{ show("s-clients"); loadClients(); };
+$("mode-general").onclick=()=>{ resetGClient(); show("s-gclient"); $("gc-name").focus(); };
+$("cl-back").onclick=()=>show("s-mode");
 
 function loadClients(){
   if(DEMO){ allClients = MOCK_CLIENTS.slice(); $("cs-note").textContent=""; renderClients(""); return; }
@@ -481,8 +589,166 @@ function build008(){
   show("s-print");
 }
 
-// 상세내용 작성 중 페이지 이탈(홈·닫기·새로고침) 경고 — 화면 전환은 값 유지라 제외.
-window.addEventListener("beforeunload", e=>{ const a=document.querySelector(".screen.active"); if(a && a.id==="s-write" && $("w-content").value.trim()){ e.preventDefault(); e.returnValue=""; } });
+// ════════════════════════════════════════════════════════════
+//  [일반] 비바우처 상담일지 — 내담자 직접입력 → 회기 목록 → 7칸 폼 → 저장(gjournal).
+//  008(바우처)과 별개 트랙. 담당 게이트 없음(대표도 작성). 출력은 다음 슬라이스.
+// ════════════════════════════════════════════════════════════
+// 호소 태그 = AI가 먹을 구조화 칸(쓰며 승격할 1차 제안 세트). 자유 주호소가 핵심, 태그는 빠른 분류 보조.
+const COMPLAINT_TAGS = ['불안','우울','분노·공격성','대인관계','가족갈등','학업·직무','자존감','수면','트라우마','발달','행동문제','기타'];
+const RISK_OPTS = ['없음','관찰','위기'];
+const DEMO_GROUNDS = {};   // 일반은 직접입력이라 데모도 빈 시작 — 흐름만 확인
+
+let gClient = null;        // {name, birth8}
+let gRounds = {};          // {회기번호: {date,complaint,tags,content,score,opinion,risk,riskNote}}
+let gCurRound = 0;
+let gTagsSel = new Set();
+let gScore = "";           // "" | "1"~"5"
+let gRisk = "없음";
+let gwLoaded = "";         // 폼 진입 시점 스냅샷(이탈 경고용)
+let _gsaving = false;
+
+function resetGClient(){ gClient=null; gRounds={}; $("gc-name").value=""; $("gc-birth").value=""; $("gc-note").textContent=""; vgc(); }
+
+// ── 내담자 직접입력 ──
+bindDate($("gc-birth"));
+function vgc(){ $("gc-btn").disabled = !($("gc-name").value.trim() && ymd($("gc-birth").value)); }
+$("gc-name").oninput=vgc; $("gc-birth").addEventListener("fmt",vgc);
+$("gc-back").onclick=()=>show("s-mode");
+$("gc-btn").onclick=()=>{
+  const name=$("gc-name").value.trim(), birth=ymd($("gc-birth").value);
+  if(!name || !birth) return;
+  gClient={ name, birth:birth.replace(/-/g,"") };   // birth8(YYYYMMDD)
+  loadGRounds();
+};
+
+// ── 회기 목록 ──
+function loadGRounds(){
+  $("gr-subject").innerHTML='<div class="nm">'+escapeHtml(gClient.name)+' <span style="font-size:14px;color:var(--g500);font-weight:500;">('+fmtBirth(gClient.birth)+')</span></div><div class="meta">일반 상담</div>';
+  $("gr-list").innerHTML=""; $("gr-count").textContent="";
+  $("gr-note").className="note"; $("gr-note").textContent="불러오는 중…";
+  show("s-grounds");
+  if(DEMO){ gRounds = JSON.parse(JSON.stringify(DEMO_GROUNDS[gClient.name]||{})); $("gr-note").textContent=""; renderGRounds(); return; }
+  const s=loadSess()||{};
+  post({action:"gjournal_get", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}}).then(d=>{
+    if(d && d.code==="auth"){ sessExpired(); return; }
+    gRounds={};
+    if(d && d.ok){ (d.rounds||[]).forEach(r=>{ gRounds[r.round]=r; }); $("gr-note").textContent=""; }
+    else { $("gr-note").className="note err"; $("gr-note").textContent=(d&&d.error)||"조회를 못 했어요"; }
+    renderGRounds();
+  }).catch(()=>{ $("gr-note").className="note err"; $("gr-note").textContent="연결이 안 됐어요"; });
+}
+function renderGRounds(){
+  const rounds=Object.keys(gRounds).map(Number).sort((a,b)=>a-b);
+  $("gr-count").textContent = rounds.length ? "기록 "+rounds.length+"회기" : "";
+  const box=$("gr-list"); box.innerHTML="";
+  if(!rounds.length){ box.innerHTML='<div class="empty">아직 기록이 없어요. 새 회기를 적어 보세요.</div>'; return; }
+  rounds.forEach(r=>{
+    const it=gRounds[r]||{};
+    const sub=[it.date, it.complaint].filter(Boolean).join(" · ") || "기록 있음";
+    const el=document.createElement("div"); el.className="client-card";
+    el.innerHTML='<div><div class="nm">'+r+'회기</div><div class="meta">'+escapeHtml(sub)+'</div></div>'
+      +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+    el.onclick=()=>openGRound(r);
+    box.appendChild(el);
+  });
+}
+$("gr-back").onclick=()=>show("s-gclient");
+$("gr-new").onclick=()=>{ const rs=Object.keys(gRounds).map(Number); openGRound(rs.length?Math.max.apply(null,rs)+1:1); };
+
+// ── 7칸 폼 ──
+bindDate($("gw-date"));
+$("gw-complaint").oninput=validateGW;
+$("gw-content").oninput=validateGW;
+$("gw-date").addEventListener("fmt",validateGW);
+$("gw-risknote").oninput=validateGW;
+
+function renderTags(){
+  const box=$("gw-tags"); box.innerHTML="";
+  COMPLAINT_TAGS.forEach(t=>{
+    const b=document.createElement("button"); b.type="button"; b.className="chip"+(gTagsSel.has(t)?" on":""); b.textContent=t;
+    b.onclick=()=>{ if(gTagsSel.has(t)) gTagsSel.delete(t); else gTagsSel.add(t); b.classList.toggle("on"); };
+    box.appendChild(b);
+  });
+}
+function renderScore(){
+  const box=$("gw-score"); box.innerHTML="";
+  for(let i=1;i<=5;i++){
+    const b=document.createElement("button"); b.type="button"; if(String(i)===gScore) b.className="on"; b.textContent=i;
+    b.onclick=()=>{ gScore = (gScore===String(i)) ? "" : String(i); renderScore(); };   // 다시 누르면 해제(선택 항목)
+    box.appendChild(b);
+  }
+}
+function renderRisk(){
+  const box=$("gw-risk"); box.innerHTML="";
+  RISK_OPTS.forEach(o=>{
+    const b=document.createElement("button"); b.type="button"; let cls=(o===gRisk?"on":""); if(o==="위기") cls=(cls+" danger").trim(); b.className=cls; b.textContent=o;
+    b.onclick=()=>{ gRisk=o; if(o==="없음") $("gw-risknote").value=""; renderRisk(); toggleRiskBox(); validateGW(); };
+    box.appendChild(b);
+  });
+}
+function toggleRiskBox(){ $("gw-riskbox").style.display = (gRisk!=="없음") ? "block" : "none"; }
+
+// 회기번호(gCurRound)는 진입 시 확정(새 회기=max+1, 기존=그 번호) — 폼에서 못 바꿈(다른 회기 덮어쓰기 방지).
+function gwSnapshot(){ return JSON.stringify([ymd($("gw-date").value), $("gw-complaint").value.trim(), Array.from(gTagsSel).sort(), $("gw-content").value.trim(), gScore, $("gw-opinion").value.trim(), gRisk, $("gw-risknote").value.trim()]); }
+function validateGW(){
+  const dateOk = !!ymd($("gw-date").value);
+  const roundOk = gCurRound>=1 && gCurRound<=999;
+  const hasText = !!($("gw-complaint").value.trim() || $("gw-content").value.trim());   // 백엔드: 주호소 OR 회기내용 필수
+  const riskOk = (gRisk==="없음") || !!$("gw-risknote").value.trim();                    // 위험 표시 시 상세 필수
+  $("gw-save").disabled = !(dateOk && roundOk && hasText && riskOk);
+}
+
+function openGRound(r){
+  gCurRound=r;
+  const ex=gRounds[r]||{};
+  $("gw-subject").innerHTML='<div class="nm">'+escapeHtml(gClient.name)+' · '+r+'회기</div><div class="meta">'+fmtBirth(gClient.birth)+'</div>';
+  $("gw-date").value = ex.date ? ex.date.replace(/-/g,". ") : "";
+  $("gw-complaint").value = ex.complaint || "";
+  gTagsSel = new Set(ex.tags ? String(ex.tags).split(",").map(t=>t.trim()).filter(Boolean) : []); renderTags();
+  $("gw-content").value = ex.content || "";
+  gScore = (Number(ex.score)>=1 && Number(ex.score)<=5) ? String(Number(ex.score)) : ""; renderScore();
+  $("gw-opinion").value = ex.opinion || "";
+  gRisk = ex.risk || "없음"; renderRisk(); toggleRiskBox();
+  $("gw-risknote").value = ex.riskNote || "";
+  $("gw-note").className="note"; $("gw-note").textContent="";
+  validateGW();
+  gwLoaded = gwSnapshot();
+  show("s-gwrite"); window.scrollTo(0,0);
+}
+$("gw-back").onclick=()=>{ if(gwSnapshot()!==gwLoaded && !confirm("저장하지 않은 내용이 있어요. 나갈까요?")) return; show("s-grounds"); };
+
+$("gw-save").onclick=()=>saveGRound(true);
+function saveGRound(retry){
+  if(_gsaving) return;
+  const round=gCurRound;
+  const payload={ child:{ name:gClient.name, birth:gClient.birth }, date:ymd($("gw-date").value), round:round,
+    complaint:$("gw-complaint").value.trim(), tags:Array.from(gTagsSel), content:$("gw-content").value.trim(),
+    score:gScore, opinion:$("gw-opinion").value.trim(), risk:gRisk, riskNote:$("gw-risknote").value.trim() };
+  const local=Object.assign({}, payload, { tags:payload.tags.join(", ") });   // 목록 캐시용(tags 문자열로 통일)
+  if(DEMO){ gRounds[round]=local; gwLoaded=gwSnapshot(); toast(round+"회기 저장(데모)"); renderGRounds(); show("s-grounds"); return; }
+  _gsaving=true;
+  const note=$("gw-note"); note.className="note"; note.textContent="저장하고 있어요…"; $("gw-save").disabled=true;
+  const s=loadSess()||{};
+  post(Object.assign({ action:"gjournal", staffId:s.staffId, session:s.session, via:"태블릿" }, payload)).then(d=>{
+    if(d && d.ok){ _gsaving=false; gRounds[round]=local; gwLoaded=gwSnapshot(); toast(round+"회기 저장했어요"); renderGRounds(); show("s-grounds"); return; }
+    if(d && d.code==="auth"){ _gsaving=false; sessExpired(); return; }
+    throw new Error((d&&d.error)||"저장 실패");
+  }).catch(err=>{
+    _gsaving=false; note.className="note err";
+    if(retry){ note.textContent="다시 시도하고 있어요…"; setTimeout(()=>saveGRound(false),1500); return; }
+    $("gw-save").disabled=false;
+    note.innerHTML='저장이 안 됐어요. <button class="lk" id="gretry">다시 저장</button>';
+    const b=$("gretry"); if(b) b.onclick=()=>saveGRound(true);
+  });
+}
+
+// 작성 중 페이지 이탈(홈·닫기·새로고침) 경고 — 008(s-write)·일반(s-gwrite) 공통. 화면 전환은 값 유지라 제외.
+window.addEventListener("beforeunload", e=>{
+  const a=document.querySelector(".screen.active"); if(!a) return;
+  const dirty = (a.id==="s-write" && $("w-content").value.trim())
+             || (a.id==="s-gwrite" && gwSnapshot()!==gwLoaded);
+  if(dirty){ e.preventDefault(); e.returnValue=""; }
+});
 
 boot();
 </script>
