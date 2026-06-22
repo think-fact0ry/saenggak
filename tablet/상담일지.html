@@ -498,7 +498,15 @@ function boot(){
   if(needGate(s)){ show("s-gate"); setTimeout(()=>$("g-pin").focus(),100); return; }
   enterApp();
 }
-function sessExpired(){ show("s-gate"); setTimeout(()=>$("g-pin").focus(),100); }
+// 서버가 세션 거부(code:auth) = 서버 토큰이 죽음(만료/재발급/불일치). PIN(로컬)으론 못 살림 → OTP 재인증.
+//  (boot의 6시간 PIN 게이트와 다름 — 그건 서버 세션 살아있는 로컬 잠금. 이건 서버 토큰 자체가 죽은 것.)
+function sessExpired(){
+  const s=loadSess()||{};
+  s.session=""; saveSess(s);                      // 죽은 토큰 비움 → 재진입도 가입으로
+  if(s.name) $("su-name").value=s.name;           // 이름 미리 채움(편의), 전화는 다시 입력
+  const note=$("su1Note"); if(note){ note.className="note"; note.textContent="다시 한 번 본인 확인이 필요해요. 전화번호를 적어 주세요."; }
+  show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100);
+}
 
 // ════ 앱 진입 → 담당 내담자 ════
 let allClients = [];          // 담당 내담자 [{name,birth,service,center}]
