@@ -217,7 +217,7 @@
 // ════════════════════════════════════════════════════════════
 //  상담일지 — 제공인력 신원(가입+PIN게이트) + 008 양식 모델(내담자→월/회차→상세내용).
 //  저장·신원·조회 모두 11_플랫폼 GAS(검사_오감과 같은 배포 URL).
-//  ⚠️ SMS = STUB → 가입 2단계에 인증번호가 화면에 보임. 알리고 키 연결되면 사라짐.
+//  SMS = 알리고 연결 — 인증번호는 문자로만 옴(화면 노출 없음).
 //  ⚠️ PIN 게이트 = 안심 UX + 가벼운 억제(로컬). 진짜 보호 = 기기 OS 잠금 + 서버 세션검증.
 // ════════════════════════════════════════════════════════════
 const GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";
@@ -280,7 +280,6 @@ $("su1Btn").onclick=()=>{
     $("su1Btn").disabled=false;
     if(d && d.ok){
       $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
-      $("su2Stub").textContent = d.devCode ? ("테스트 인증번호: " + d.devCode + " (문자 연결 전 임시 표시)") : "";
       note.textContent=""; show("s-signup2"); $("su-code").focus();
     } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
   }).catch(()=>{ $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
