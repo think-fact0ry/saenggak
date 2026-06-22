@@ -326,6 +326,10 @@
 const GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";
 // ── 디자인·시연용 demo 모드(?demo=1): 신원·GAS 우회 + 가짜 데이터. 일반(?demo 없는) 진입엔 영향 없음. ──
 const DEMO = (function(){ try{ return new URLSearchParams(location.search).get('demo')==='1'; }catch(e){ return false; } })();
+// ── 일반(비바우처) 상담일지 노출 게이트(?ga=1 또는 demo) ──
+//  보존기간·동의 법무 확인 전까지 상담사에겐 안 보임(008만) → 실데이터 수집 0. 유성 테스트만 ?ga=1로 통과.
+//  ⚠️ 보안 아님(공개 소스라 URL 알면 접근) — 상담사 우발 사용 차단용. 법무 OK 후 이 게이트 제거 = 정식 오픈.
+const GA_ON = DEMO || (function(){ try{ return new URLSearchParams(location.search).get('ga')==='1'; }catch(e){ return false; } })();
 const MOCK_CLIENTS = [
   {name:'김서준', birth:'20200911', service:'아청심', center:'미추'},
   {name:'김서준', birth:'20190304', service:'아청심', center:'서구'},   // 동명이인(생년월일로 구분) 데모
@@ -452,13 +456,14 @@ let roundData = {};           // {round: {date, content}}
 function enterApp(){
   const s=loadSess(); const who = "상담사 " + (DEMO ? "데모" : (s ? s.name : ""));
   $("whoTag").textContent = who; $("whoTag2").textContent = who;
+  if(!GA_ON){ $("mode-general").style.display="none"; show("s-clients"); loadClients(); return; }  // 법무 전 상담사 = 008 단독(기존 흐름 그대로)
   show("s-mode");
 }
 
 // ════ 모드 선택 → 008(바우처) / 일반 ════
 $("mode-voucher").onclick=()=>{ show("s-clients"); loadClients(); };
 $("mode-general").onclick=()=>{ resetGClient(); show("s-gclient"); $("gc-name").focus(); };
-$("cl-back").onclick=()=>show("s-mode");
+$("cl-back").onclick=()=>{ if(GA_ON) show("s-mode"); else location.href="./index.html"; };
 
 function loadClients(){
   if(DEMO){ allClients = MOCK_CLIENTS.slice(); $("cs-note").textContent=""; renderClients(""); return; }
