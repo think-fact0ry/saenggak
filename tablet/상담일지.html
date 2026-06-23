@@ -52,7 +52,8 @@
   .search .ico svg{width:20px;height:20px;}
   .count{font-size:13.5px;color:var(--g500);font-weight:600;margin:0 2px 10px;}
   .client-list{display:flex;flex-direction:column;gap:10px;}
-  .client-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:16px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:.12s;}
+  .client-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:16px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:transform .2s cubic-bezier(.2,.7,.3,1),border-color .12s,background .12s;}
+  #gw-opinion{margin-top:10px;}
   .client-card:active{border-color:var(--green);background:#F6FAF6;}
   .client-card .nm{font-size:16.5px;font-weight:700;letter-spacing:-.3px;}
   .client-card .meta{font-size:13px;color:var(--g500);font-weight:500;}
@@ -63,6 +64,7 @@
   .btn.ghost:active{background:var(--g200);}
   .icobtn{width:38px;height:38px;border-radius:11px;border:none;background:var(--g100);color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .icobtn:active{background:var(--g200);}
+  .icobtn.on{background:var(--green-l);color:var(--green-d);}
   .icobtn svg{width:19px;height:19px;}
   .client-card .cc-main{flex:1;min-width:0;}
   .client-card .cmemo{flex:0 1 auto;max-width:44%;text-align:right;font-size:12.5px;color:var(--green-d);font-weight:600;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;}
@@ -71,7 +73,7 @@
   .client-list.editing .client-card{cursor:grab;touch-action:none;}            /* 박스 전체를 잡아 끌 수 있게 */
   .client-list.editing .client-card .drag{display:flex;}
   .client-list.editing .client-card .chev,.client-list.editing .client-card .cmemo{display:none;}  /* 편집 중엔 메모·화살표 숨겨 드래그에 집중 */
-  .client-card.dragging{position:fixed;z-index:400;margin:0;box-shadow:0 14px 34px rgba(0,0,0,.22);border-color:var(--green);background:#fff;}  /* 손가락 따라 떠다님 */
+  .client-card.dragging{position:fixed;z-index:400;margin:0;transition:none;box-shadow:0 14px 34px rgba(0,0,0,.22);border-color:var(--green);background:#fff;}  /* 손가락 따라 떠다님(자기는 transition 없음, 주변만 FLIP 애니메이션) */
   .gcl-ph{border:2px dashed var(--green);border-radius:16px;background:#F6FAF6;}  /* 들어갈 자리 표시 */
   /* 초기상담(인테이크) 진입 카드 + 섹션 구분(2026-06-23 슬라이스 B) */
   .intake-card{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-family:inherit;text-align:left;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:15px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:14px;transition:.12s;}
@@ -85,7 +87,7 @@
   .sec-div{font-size:13.5px;font-weight:700;color:var(--green-d);margin:20px 2px 4px;padding-top:14px;border-top:1px solid var(--g100);}
 
   /* 내담자 헤더(월·작성 화면 공통) */
-  .subject{margin:6px 2px 18px;}
+  .subject{margin:4px 2px 12px;}
   .subject .nm{font-size:20px;font-weight:700;letter-spacing:-.4px;}
   .subject .meta{font-size:13.5px;color:var(--g500);font-weight:500;margin-top:3px;}
 
@@ -125,7 +127,7 @@
 
   /* 세그먼트(평가척도·위험) */
   .seg{display:flex;gap:8px;}
-  .seg button{flex:1;font-family:inherit;font-size:16px;font-weight:600;padding:13px 0;border-radius:12px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
+  .seg button{flex:1;font-family:inherit;font-size:14.5px;font-weight:600;padding:9px 0;border-radius:10px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
   .seg button.on{border-color:var(--green);background:var(--green-l);color:var(--green-d);font-weight:700;}
   .seg button.danger.on{border-color:var(--red);background:#FEF2F3;color:var(--red);}
   .seg button.warn.on{border-color:#e8a317;background:#fff8ea;color:#b07a12;}
@@ -139,11 +141,11 @@
   .irow.seg-row .seg{flex:1;}
 
   /* 작성 폼: 풀폭 블록(태그·회기내용·평가) */
-  .block{padding:16px 2px;border-bottom:1px solid var(--g100);}
-  .blabel{display:block;font-size:14.5px;font-weight:600;color:var(--g700);margin:0 0 11px;}
+  .block{padding:12px 2px;border-bottom:1px solid var(--g100);}
+  .blabel{display:block;font-size:14px;font-weight:600;color:var(--g700);margin:0 0 7px;}
   .blabel .opt{font-size:12.5px;font-weight:500;color:var(--g400);margin-left:5px;}
   .block textarea{width:100%;font-family:inherit;font-size:16px;line-height:1.65;padding:14px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;resize:vertical;min-height:150px;transition:.15s;}
-  .block textarea.sm{min-height:80px;margin-top:12px;}
+  .block textarea.sm{min-height:64px;margin-top:0;}
   .block textarea:focus{background:#fff;border-color:var(--green);}
   .block textarea::placeholder{color:var(--g400);font-weight:500;}
 
@@ -212,7 +214,7 @@
   <div class="wrap">
     <a class="back" href="./index.html" aria-label="홈으로">‹</a>
     <h1>반가워요</h1>
-    <p class="sub">상담일지를 쓰려면 본인 확인을 한 번만 할게요.</p>
+    <p class="sub">상담일지를 쓰려면 본인 확인을 할게요.</p>
     <div class="field"><label>이름</label><input id="su-name" type="text" placeholder="홍길동" autocomplete="off"></div>
     <div class="field"><label>전화번호</label><input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off"></div>
     <div class="note" id="su1Note"></div>
@@ -310,15 +312,17 @@
     <button class="back noprint" id="p-back" aria-label="뒤로">‹</button>
     <div id="report008"></div>
   </div>
-  <div class="footbar noprint"><div class="inner"><button class="btn" id="p-do">인쇄 / PDF 저장</button></div></div>
+  <div class="footbar noprint"><div class="inner"><button class="btn" id="p-do">출력 / PDF 저장</button></div></div>
 </div>
 
 <!-- ═══ [일반] 내담자 명단(회기 모아둔 곳) ═══ -->
 <div class="screen" id="s-gclients">
   <div class="wrap">
-    <button class="back" id="gcl-back" aria-label="이전">‹</button>
-    <div class="head-row"><h1>일반 상담일지</h1></div>
-    <p class="sub">상담하던 분을 골라 회기를 이어 적어요.</p>
+    <div class="head-row">
+      <button class="back" id="gcl-back" aria-label="이전" style="margin:0 0 0 -4px;">‹</button>
+      <button class="icobtn" id="gcl-edit" aria-label="순서 수정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
+    </div>
+    <h1 style="margin-top:2px;">일반 상담일지</h1>
     <div class="search">
       <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input id="gcl-search" type="text" placeholder="이름으로 찾기" autocomplete="off">
@@ -327,7 +331,7 @@
     <div class="client-list" id="gcl-list"></div>
     <div class="note" id="gcl-note"></div>
   </div>
-  <div class="footbar"><div class="inner"><button class="btn ghost" id="gcl-edit">순서 수정</button><button class="btn" id="gcl-new">새 내담자</button></div></div>
+  <div class="footbar"><div class="inner"><button class="btn" id="gcl-new">새 내담자</button><button class="btn" id="gcl-done" style="display:none;">완료</button></div></div>
 </div>
 
 <!-- ═══ [일반] 내담자 직접입력 ═══ -->
@@ -396,6 +400,7 @@
 
     <div class="block"><label class="blabel">상담 목표</label><textarea id="gi-goal" class="sm" placeholder="상담으로 바라는 것"></textarea></div>
 
+    <div class="sec-div">위험 점검</div>
     <div class="irow seg-row"><label>자살 사고</label><div class="seg" id="gi-risksui"></div></div>
     <div class="irow seg-row"><label>과거 시도력</label><div class="seg" id="gi-riskpast"></div></div>
     <div class="block" id="gi-riskbox" style="display:none;border-bottom:none;"><textarea id="gi-risknote" class="sm" style="margin-top:0;" placeholder="위험 신호 상세·대응"></textarea></div>
@@ -520,8 +525,8 @@ async function sha256(str){
 function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }
 
 // ── 자동서식 헬퍼 ──
-function bindPhone(el){ el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,11); if(d.length<4) el.value=d; else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3); else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7); el.dispatchEvent(new Event("fmt")); }; }
-function bindDate(el){ el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,8); let out=d.slice(0,4); if(d.length>4) out+=". "+d.slice(4,6); if(d.length>6) out+=". "+d.slice(6,8); el.value=out; el.dispatchEvent(new Event("fmt")); }; }
+function bindPhone(el){ el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,11); if(d.length<4) el.value=d; else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3); else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7); el.dispatchEvent(new Event("fmt")); if(d.length===11) el.blur(); }; }   // 11자리 다 채우면 키패드 닫힘(원칙 §5)
+function bindDate(el){ el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,8); let out=d.slice(0,4); if(d.length>4) out+=". "+d.slice(4,6); if(d.length>6) out+=". "+d.slice(6,8); el.value=out; el.dispatchEvent(new Event("fmt")); if(d.length===8) el.blur(); }; }   // 8자리 다 채우면 키패드 닫힘
 function normPhone(v){ return String(v||"").replace(/\D/g,"").replace(/^0+/,""); }
 function ymd(v){ const d=String(v||"").replace(/\D/g,"").slice(0,8); return d.length===8 ? d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8) : ""; }
 function fmtBirth(b8){ const d=String(b8||"").replace(/\D/g,""); return d.length===8 ? d.slice(0,4)+"."+d.slice(4,6)+"."+d.slice(6,8) : d; }
@@ -556,18 +561,27 @@ function doVerify(){
   const device=getDevice();
   post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device}).then(d=>{
     su2Busy=false;
-    if(d && d.ok){ saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:"", lastAuth:0 }); note.textContent=""; show("s-signup3"); $("su-pin1").focus(); }
+    if(d && d.ok){
+      const prev=loadSess()||{};
+      const same = prev.staffId && prev.staffId===d.staffId;   // 같은 사람의 재인증인가
+      const keepPin = same ? (prev.pinHash||"") : "";          // 다른 사람이면 이전 PIN 안 물려받음
+      if(!same) clearClientCaches();                           // 상담사 바뀜 → 이전 캐시 비움(PII)
+      saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:keepPin, lastAuth: same?(prev.lastAuth||0):0 });
+      note.textContent="";
+      if(d.isNew && !keepPin){ show("s-signup3"); $("su-pin1").focus(); }   // 첫 등록 + 이 기기에 물려받은 PIN 없음 → 1회 설정
+      else { markUnlocked(); enterApp(); }                                  // 다른 기기/재인증 = PIN 설정 생략(유성)
+    }
     else { note.className="note err"; note.textContent=(d&&d.error)||"인증번호가 달라요"; $("su-code").value=""; $("su-code").focus(); }  // 틀리면 비우고 재입력 → 6자리 차면 자동 재확인
   }).catch(()=>{ su2Busy=false; note.className="note err"; note.textContent="연결이 안 됐어요"; });
 }
 // 6자리 채우면 자동 확인 (확인 버튼 없음).
-$("su-code").oninput=()=>{ $("su-code").value=$("su-code").value.replace(/\D/g,"").slice(0,6); if($("su-code").value.length===6) doVerify(); };
+$("su-code").oninput=()=>{ $("su-code").value=$("su-code").value.replace(/\D/g,"").slice(0,6); if($("su-code").value.length===6){ $("su-code").blur(); doVerify(); } };   // 6자리 = 키패드 닫고 자동 확인
 $("su2Back").onclick=()=>show("s-signup1");
 
 // ════ 가입 3: PIN 설정 ════
 function v3(){ $("su3Btn").disabled = !($("su-pin1").value.length===4 && $("su-pin2").value.length===4); }
-$("su-pin1").oninput=()=>{ $("su-pin1").value=$("su-pin1").value.replace(/\D/g,"").slice(0,4); v3(); };
-$("su-pin2").oninput=()=>{ $("su-pin2").value=$("su-pin2").value.replace(/\D/g,"").slice(0,4); v3(); };
+$("su-pin1").oninput=()=>{ $("su-pin1").value=$("su-pin1").value.replace(/\D/g,"").slice(0,4); v3(); if($("su-pin1").value.length===4) $("su-pin2").focus(); };   // 4자리 = 다음 칸으로
+$("su-pin2").oninput=()=>{ $("su-pin2").value=$("su-pin2").value.replace(/\D/g,"").slice(0,4); v3(); if($("su-pin2").value.length===4) $("su-pin2").blur(); };   // 4자리 = 키패드 닫힘
 $("su3Btn").onclick=async()=>{
   const note=$("su3Note");
   if($("su-pin1").value!==$("su-pin2").value){ note.className="note err"; note.textContent="두 번 입력한 숫자가 달라요"; return; }
@@ -580,6 +594,7 @@ $("su3Btn").onclick=async()=>{
 $("g-pin").oninput=async()=>{
   $("g-pin").value=$("g-pin").value.replace(/\D/g,"").slice(0,4);
   if($("g-pin").value.length!==4) return;
+  $("g-pin").blur();   // 4자리 = 키패드 닫고 자동 확인
   const s=loadSess(); if(!s){ show("s-signup1"); return; }
   const h=await sha256(s.device + ":" + $("g-pin").value);
   const note=$("gateNote");
@@ -594,19 +609,21 @@ function boot(){
   if(DEMO){ enterApp(); return; }   // 디자인·시연: 신원 우회
   const s=loadSess();
   if(!s || !s.session){ show("s-signup1"); $("su-name").focus(); return; }
-  if(!s.pinHash){ show("s-signup3"); return; }
-  if(needGate(s)){ show("s-gate"); setTimeout(()=>$("g-pin").focus(),100); return; }
-  enterApp();
+  if(s.pinHash && needGate(s)){ show("s-gate"); setTimeout(()=>$("g-pin").focus(),100); return; }   // PIN 있는 기기(첫 기기)만 게이트
+  enterApp();   // PIN 없는 기기(다른 기기 가입)는 바로 진입
 }
 // 서버가 세션 거부(code:auth) = 서버 토큰이 죽음(만료/재발급/불일치). PIN(로컬)으론 못 살림 → OTP 재인증.
 //  (boot의 6시간 PIN 게이트와 다름 — 그건 서버 세션 살아있는 로컬 잠금. 이건 서버 토큰 자체가 죽은 것.)
 function sessExpired(){
   const s=loadSess()||{};
   s.session=""; saveSess(s);                      // 죽은 토큰 비움 → 재진입도 가입으로
+  clearClientCaches();                            // 다른 상담사 재인증 시 이전 상담사 명단·기록 깜빡임(PII) 방지
   if(s.name) $("su-name").value=s.name;           // 이름 미리 채움(편의), 전화는 다시 입력
   const note=$("su1Note"); if(note){ note.className="note"; note.textContent="다시 한 번 본인 확인이 필요해요. 전화번호를 적어 주세요."; }
   show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100);
 }
+// 상담사 식별이 바뀔 수 있는 시점(세션만료·다른 상담사 가입)에 메모리 캐시 비우기 — 공유 태블릿 PII 보호.
+function clearClientCaches(){ allClients=[]; gClients=[]; gRoundsCache={}; gIntake=null; gIntakeReady=false; gCurKey=""; gClient=null; }
 
 // ════ 앱 진입 → 담당 내담자 ════
 let allClients = [];          // 담당 내담자 [{name,birth,service,center}]
@@ -629,14 +646,15 @@ $("cl-back").onclick=()=>{ if(GA_ON) show("s-mode"); else location.href="./index
 
 function loadClients(){
   if(DEMO){ allClients = MOCK_CLIENTS.slice(); $("cs-note").textContent=""; renderClients(""); return; }
-  const note=$("cs-note"); note.className="note"; note.textContent="담당 내담자를 불러오고 있어요…";
-  $("cs-list").innerHTML=""; $("cs-count").textContent="";
+  const note=$("cs-note");
+  if(allClients.length){ renderClients($("cs-search").value); note.className="note"; note.textContent=""; }   // 이미 불러온 적 있으면 즉시(스피너 X) → 아래서 조용히 갱신
+  else { note.className="note"; note.textContent="담당 내담자를 불러오고 있어요…"; $("cs-list").innerHTML=""; $("cs-count").textContent=""; }
   const s=loadSess()||{};
   post({action:"staff_clients", staffId:s.staffId, session:s.session}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
-    if(d && d.ok){ allClients = d.clients||[]; note.textContent=""; renderClients(""); }
-    else { note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; }
-  }).catch(()=>{ note.className="note err"; note.textContent="연결이 안 됐어요"; });
+    if(d && d.ok){ allClients = d.clients||[]; note.textContent=""; renderClients($("cs-search").value); }
+    else if(!allClients.length){ note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; }
+  }).catch(()=>{ if(!allClients.length){ note.className="note err"; note.textContent="연결이 안 됐어요"; } });
 }
 
 function renderClients(q){
@@ -784,6 +802,8 @@ let giTagsSel = new Set();
 let giLoaded = "";         // s-gintake 진입 스냅샷(이탈 경고)
 const DEMO_GINTAKE = {};   // 데모는 빈 시작(폼 흐름만)
 let gRounds = {};          // {회기번호: {date,complaint,tags,content,score,opinion,risk,riskNote}}
+let gRoundsCache = {};     // name|birth → gRounds(메모리만, localStorage 아님). 재진입 시 즉시 표시 + 백그라운드 갱신
+let gCurKey = "";          // 현재 내담자 캐시 키
 let gCurRound = 0;
 let gTagsSel = new Set();
 let gScore = "";           // "" | "1"~"5"
@@ -829,13 +849,13 @@ $("gcl-search").oninput=()=>{ if(!gEditMode) renderGClients($("gcl-search").valu
 $("gcl-back").onclick=()=>{ if(gEditMode){ finishGEdit(); return; } show("s-mode"); };   // 편집 중 뒤로 = 먼저 저장(드래그 유실 방지)
 $("gcl-new").onclick=()=>{ resetGClient(); show("s-gclient"); $("gc-name").focus(); };
 
-// 순서수정 모드(토스 계좌순서식) — 드래그 핸들 노출, 완료 시 저장
+// 순서수정 모드 — 우상단 햄버거(☰)로 진입, [완료]로 종료(드래그 변경은 종료 시 저장)
 function updateGEditUI(){
-  const editing=gEditMode, eb=$("gcl-edit");
+  const editing=gEditMode;
   $("gcl-list").classList.toggle("editing", editing);
-  eb.textContent = editing ? "완료" : "순서 수정";
-  eb.classList.toggle("ghost", !editing);   // 편집 중 = 풀폭 그린 완료(왼쪽 작은 버튼 X), 평소 = 작은 ghost
+  $("gcl-edit").classList.toggle("on", editing);          // 햄버거 활성 표시
   $("gcl-new").style.display = editing ? "none" : "";
+  $("gcl-done").style.display = editing ? "" : "none";
   const sr=$("gcl-search").parentNode; if(sr) sr.style.display = editing ? "none" : "";
 }
 function finishGEdit(){ gEditMode=false; updateGEditUI(); if(gReorderDirty) saveGOrder(); }   // 저장은 saveGOrder가 성공 시에만 dirty 해제
@@ -845,6 +865,7 @@ $("gcl-edit").onclick=()=>{
   if(gClients.length<2){ toast("내담자가 2명 이상일 때 순서를 바꿀 수 있어요"); return; }
   gEditMode=true; updateGEditUI();
 };
+$("gcl-done").onclick=()=>finishGEdit();
 function saveGOrder(){
   const ids=Array.prototype.map.call($("gcl-list").querySelectorAll(".client-card"), el=>el.dataset.cid).filter(Boolean);
   const pos={}; ids.forEach((id,i)=>pos[id]=i);
@@ -869,20 +890,23 @@ function enableDrag(card){
     const list=card.parentNode;
     const rect=card.getBoundingClientRect();
     const offsetY=e.clientY-rect.top;
-    let moved=false;
+    let moved=false, lastAnchor=undefined;
     const ph=document.createElement("div"); ph.className="gcl-ph"; ph.style.height=rect.height+"px";
     list.insertBefore(ph, card);                          // 원래 자리에 자리표시
     card.classList.add("dragging");                       // fixed로 띄움
     card.style.width=rect.width+"px"; card.style.left=rect.left+"px"; card.style.top=(e.clientY-offsetY)+"px";
     try{ card.setPointerCapture(e.pointerId); }catch(_){}
     const move=(ev)=>{
-      moved=true;
-      card.style.top=(ev.clientY-offsetY)+"px";
+      card.style.top=(ev.clientY-offsetY)+"px";           // 손가락 따라 항상 갱신(부드러운 추적)
       const y=ev.clientY;
       const sibs=Array.prototype.slice.call(list.querySelectorAll(".client-card:not(.dragging)"));
-      let placed=false;
-      for(const sib of sibs){ const r=sib.getBoundingClientRect(); if(y < r.top + r.height/2){ list.insertBefore(ph, sib); placed=true; break; } }
-      if(!placed) list.appendChild(ph);
+      let anchor=null;
+      for(const sib of sibs){ const r=sib.getBoundingClientRect(); if(y < r.top + r.height/2){ anchor=sib; break; } }
+      if(anchor===lastAnchor) return;                     // 들어갈 자리 그대로 → reflow·애니메이션 생략(프레임 튐 방지)
+      lastAnchor=anchor; moved=true;
+      const firsts=sibs.map(s=>s.getBoundingClientRect().top);   // FLIP: 이동 전 위치
+      if(anchor) list.insertBefore(ph, anchor); else list.appendChild(ph);
+      sibs.forEach((s,i)=>{ const dy=firsts[i]-s.getBoundingClientRect().top; if(dy){ s.style.transition="none"; s.style.transform="translateY("+dy+"px)"; requestAnimationFrame(()=>{ s.style.transition=""; s.style.transform=""; }); } });   // 새 위치로 스르륵(CSS transition)
     };
     const up=()=>{
       document.removeEventListener("pointermove",move);
@@ -891,6 +915,7 @@ function enableDrag(card){
       list.insertBefore(card, ph); list.removeChild(ph);  // 자리표시 위치에 안착
       card.classList.remove("dragging");
       card.style.width=card.style.left=card.style.top="";
+      Array.prototype.forEach.call(list.querySelectorAll(".client-card"), s=>{ s.style.transform=""; s.style.transition=""; });  // FLIP 잔여 정리
       gDragActive=false;
       if(moved) gReorderDirty=true;                       // 실제로 움직였을 때만(단순 탭 헛저장 방지)
     };
@@ -978,13 +1003,15 @@ function updateIntakeCard(){
 }
 function loadGIntakeStatus(){
   gIntake=null; gIntakeReady=false;
+  const key=gClient.name+"|"+gClient.birth;
   if(DEMO){ gIntake=DEMO_GINTAKE[gClient.name]||null; gIntakeReady=true; updateIntakeCard(); return; }
   $("gr-intake-st").textContent="확인 중…"; $("gr-intake").classList.remove("done");
   const s=loadSess()||{};
   post({action:"gintake_get", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}}).then(d=>{
+    if(key!==gCurKey) return;   // 그새 다른 내담자로 이동 → 엉뚱한 카드 갱신 방지
     if(d && d.ok){ gIntake=d.intake||null; gIntakeReady=true; updateIntakeCard(); }   // 성공해야 ready=true(=실존 확정) → 빈 폼이 기존 덮어쓰는 레이스 차단
     else $("gr-intake-st").textContent="불러오지 못했어요 · 다시 들어오면 재시도";        // 실패 시 ready 안 함(탭하면 재시도 안내)
-  }).catch(()=>{ $("gr-intake-st").textContent="불러오지 못했어요 · 다시 들어오면 재시도"; });
+  }).catch(()=>{ if(key===gCurKey) $("gr-intake-st").textContent="불러오지 못했어요 · 다시 들어오면 재시도"; });
 }
 function renderSeg(boxId, opts, cur, onPick){
   const box=$(boxId); box.innerHTML="";
@@ -1074,19 +1101,20 @@ $("gc-btn").onclick=()=>{
 // ── 회기 목록 ──
 function loadGRounds(){
   refreshGSubjects();
-  $("gr-list").innerHTML=""; $("gr-count").textContent="";
-  $("gr-note").className="note"; $("gr-note").textContent="불러오는 중…";
   show("s-grounds");
-  loadGIntakeStatus();   // 초기상담 카드 상태(백그라운드, 스피너 없음)
+  const key = gClient.name+"|"+gClient.birth;
+  gCurKey = key;                 // 먼저 설정(loadGIntakeStatus·콜백 가드가 참조)
+  loadGIntakeStatus();           // 초기상담 카드 상태(백그라운드, 스피너 없음)
   if(DEMO){ gRounds = JSON.parse(JSON.stringify(DEMO_GROUNDS[gClient.name]||{})); $("gr-note").textContent=""; renderGRounds(); return; }
+  if(gRoundsCache[key]){ gRounds=gRoundsCache[key]; $("gr-note").className="note"; $("gr-note").textContent=""; renderGRounds(); }   // 캐시(메모리) 즉시 — 재진입 스피너 없음
+  else { gRounds={}; $("gr-list").innerHTML=""; $("gr-count").textContent=""; $("gr-note").className="note"; $("gr-note").textContent="불러오는 중…"; }
   const s=loadSess()||{};
   post({action:"gjournal_get", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
-    gRounds={};
-    if(d && d.ok){ (d.rounds||[]).forEach(r=>{ gRounds[r.round]=r; }); $("gr-note").textContent=""; }
-    else { $("gr-note").className="note err"; $("gr-note").textContent=(d&&d.error)||"조회를 못 했어요"; }
-    renderGRounds();
-  }).catch(()=>{ $("gr-note").className="note err"; $("gr-note").textContent="연결이 안 됐어요"; });
+    if(key!==gCurKey) return;    // 그새 다른 내담자로 이동 → 엉뚱한 캐시 슬롯에 쓰지 않기(레이스)
+    if(d && d.ok){ const ng={}; (d.rounds||[]).forEach(r=>{ ng[r.round]=r; }); gRounds=ng; gRoundsCache[key]=ng; $("gr-note").textContent=""; renderGRounds(); }
+    else if(!gRoundsCache[key]){ $("gr-note").className="note err"; $("gr-note").textContent=(d&&d.error)||"조회를 못 했어요"; }
+  }).catch(()=>{ if(key===gCurKey && !gRoundsCache[key]){ $("gr-note").className="note err"; $("gr-note").textContent="연결이 안 됐어요"; } });
 }
 function renderGRounds(){
   const rounds=Object.keys(gRounds).map(Number).sort((a,b)=>a-b);
@@ -1185,7 +1213,7 @@ function saveGRound(retry){
   const note=$("gw-note"), btn=$("gw-save"); note.className="note"; note.textContent=""; btn.disabled=true; btn.textContent="저장하고 있어요";  // 버튼에 상태 표시(별도 텍스트 X)
   const s=loadSess()||{};
   post(Object.assign({ action:"gjournal", staffId:s.staffId, session:s.session, via:"태블릿" }, payload)).then(d=>{
-    if(d && d.ok){ _gsaving=false; btn.textContent="저장"; gRounds[round]=local; gwLoaded=gwSnapshot(); toast(round+"회기 저장했어요"); renderGRounds(); show("s-grounds"); return; }
+    if(d && d.ok){ _gsaving=false; btn.textContent="저장"; gRounds[round]=local; if(gCurKey) gRoundsCache[gCurKey]=gRounds; gwLoaded=gwSnapshot(); toast(round+"회기 저장했어요"); renderGRounds(); show("s-grounds"); return; }
     if(d && d.code==="auth"){ _gsaving=false; btn.textContent="저장"; sessExpired(); return; }
     throw new Error((d&&d.error)||"저장 실패");
   }).catch(err=>{
@@ -1203,7 +1231,7 @@ function askDeleteRound(r){ _delRound=r; $("delTitle").textContent=r+"회기 기
 $("delClose").onclick=()=>$("delModal").classList.remove("show");
 $("delModal").onclick=(e)=>{ if(e.target===$("delModal")) $("delModal").classList.remove("show"); };   // 배경 탭 = 닫기
 $("delDo").onclick=()=>doDeleteRound();
-function applyRounds(list){ gRounds={}; (list||[]).forEach(x=>{ gRounds[x.round]=x; }); }
+function applyRounds(list){ gRounds={}; (list||[]).forEach(x=>{ gRounds[x.round]=x; }); if(gCurKey) gRoundsCache[gCurKey]=gRounds; }
 function doDeleteRound(){
   const r=_delRound; $("delModal").classList.remove("show");
   if(DEMO){   // 데모: 당기기 재현
