@@ -405,8 +405,6 @@
     <div class="irow seg-row"><label>과거 시도력</label><div class="seg" id="gi-riskpast"></div></div>
     <div class="block" id="gi-riskbox" style="display:none;border-bottom:none;"><textarea id="gi-risknote" class="sm" style="margin-top:0;" placeholder="위험 신호 상세·대응"></textarea></div>
 
-    <div class="block"><label class="blabel">상담자 첫인상 <span class="opt">선택</span></label><textarea id="gi-impression" class="sm" placeholder="외모·태도·언어/비언어 인상"></textarea></div>
-
     <div id="gi-child" style="display:none;">
       <div class="sec-div">아동·청소년</div>
       <div class="block"><label class="blabel">발달사</label><textarea id="gi-dev" class="sm" placeholder="임신·출산, 발달 이정표(운동·언어·사회성), 치료 이력"></textarea></div>
@@ -525,8 +523,15 @@ async function sha256(str){
 function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }
 
 // ── 자동서식 헬퍼 ──
-function bindPhone(el){ el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,11); if(d.length<4) el.value=d; else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3); else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7); el.dispatchEvent(new Event("fmt")); if(d.length===11) el.blur(); }; }   // 11자리 다 채우면 키패드 닫힘(원칙 §5)
-function bindDate(el){ el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,8); let out=d.slice(0,4); if(d.length>4) out+=". "+d.slice(4,6); if(d.length>6) out+=". "+d.slice(6,8); el.value=out; el.dispatchEvent(new Event("fmt")); if(d.length===8) el.blur(); }; }   // 8자리 다 채우면 키패드 닫힘
+// 고정길이 자동닫힘 — 단, *고치러 다시 연 경우*(포커스 시점에 이미 가득)엔 안 닫음(수정 방해 방지). 원칙 §5.
+function bindPhone(el){
+  el.addEventListener("focus",()=>{ el._wasFull = el.value.replace(/\D/g,"").length>=11; });
+  el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,11); if(d.length<4) el.value=d; else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3); else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7); el.dispatchEvent(new Event("fmt")); if(d.length===11 && !el._wasFull) el.blur(); };
+}
+function bindDate(el){
+  el.addEventListener("focus",()=>{ el._wasFull = el.value.replace(/\D/g,"").length>=8; });
+  el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,8); let out=d.slice(0,4); if(d.length>4) out+=". "+d.slice(4,6); if(d.length>6) out+=". "+d.slice(6,8); el.value=out; el.dispatchEvent(new Event("fmt")); if(d.length===8 && !el._wasFull) el.blur(); };
+}
 function normPhone(v){ return String(v||"").replace(/\D/g,"").replace(/^0+/,""); }
 function ymd(v){ const d=String(v||"").replace(/\D/g,"").slice(0,8); return d.length===8 ? d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8) : ""; }
 function fmtBirth(b8){ const d=String(b8||"").replace(/\D/g,""); return d.length===8 ? d.slice(0,4)+"."+d.slice(4,6)+"."+d.slice(6,8) : d; }
@@ -1031,7 +1036,7 @@ function renderGiTags(){
   const box=$("gi-tags"); box.innerHTML="";
   COMPLAINT_TAGS.forEach(t=>{ const b=document.createElement("button"); b.type="button"; b.className="chip"+(giTagsSel.has(t)?" on":""); b.textContent=t; b.onclick=()=>{ if(giTagsSel.has(t)) giTagsSel.delete(t); else giTagsSel.add(t); b.classList.toggle("on"); }; box.appendChild(b); });
 }
-function giSnapshot(){ return JSON.stringify([giType,$("gi-referral").value.trim(),$("gi-complaint").value.trim(),Array.from(giTagsSel).sort(),$("gi-onset").value.trim(),$("gi-family").value.trim(),giPrevTx,$("gi-prevmemo").value.trim(),$("gi-goal").value.trim(),giRiskSui,giRiskPast,$("gi-risknote").value.trim(),$("gi-impression").value.trim(),$("gi-dev").value.trim(),$("gi-guardian").value.trim(),$("gi-school").value.trim()]); }
+function giSnapshot(){ return JSON.stringify([giType,$("gi-referral").value.trim(),$("gi-complaint").value.trim(),Array.from(giTagsSel).sort(),$("gi-onset").value.trim(),$("gi-family").value.trim(),giPrevTx,$("gi-prevmemo").value.trim(),$("gi-goal").value.trim(),giRiskSui,giRiskPast,$("gi-risknote").value.trim(),$("gi-dev").value.trim(),$("gi-guardian").value.trim(),$("gi-school").value.trim()]); }
 function openGIntake(){
   if(!gIntakeReady){ toast("초기상담을 불러오는 중이에요. 잠깐만요"); return; }   // 로드 완료 전엔 안 열림(덮어쓰기 방지)
   const x=gIntake||{};
@@ -1042,7 +1047,6 @@ function openGIntake(){
   giPrevTx=x.prevTx||"없음"; $("gi-prevmemo").value=x.prevTxMemo||"";
   $("gi-goal").value=x.goal||"";
   giRiskSui=x.riskSuicide||"없음"; giRiskPast=x.riskPast||"없음"; $("gi-risknote").value=x.riskNote||"";
-  $("gi-impression").value=x.impression||"";
   $("gi-dev").value=x.dev||""; $("gi-guardian").value=x.guardian||""; $("gi-school").value=x.school||"";
   $("gi-subject").innerHTML='<div class="nm">'+escapeHtml(gClient.name)+' · 초기상담</div><div class="meta">'+fmtBirth(gClient.birth)+'</div>';
   renderGiType(); renderGiTags(); renderGiPrev(); renderGiRisk(); toggleGiRiskBox();
@@ -1061,8 +1065,7 @@ function saveGIntake(retry){
     tags:Array.from(giTagsSel), onset:$("gi-onset").value.trim(), family:$("gi-family").value.trim(),
     prevTx:giPrevTx, prevTxMemo:$("gi-prevmemo").value.trim(), goal:$("gi-goal").value.trim(),
     riskSuicide:giRiskSui, riskPast:giRiskPast, riskNote:$("gi-risknote").value.trim(),
-    impression:$("gi-impression").value.trim(), dev:$("gi-dev").value.trim(),
-    guardian:$("gi-guardian").value.trim(), school:$("gi-school").value.trim() };
+    dev:$("gi-dev").value.trim(), guardian:$("gi-guardian").value.trim(), school:$("gi-school").value.trim() };
   if(!payload.referral && !payload.complaint && !payload.onset && !payload.family && !payload.goal){
     $("gi-note").className="note err"; $("gi-note").textContent="의뢰경위·주호소·상담목표 중 하나는 적어 주세요"; return;
   }

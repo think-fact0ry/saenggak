@@ -178,7 +178,7 @@
     <div id="resultDoc"></div>
     <div class="print-row noprint">
       <button class="btn ghost" id="backEdit">수정</button>
-      <button class="btn" id="doPrint">인쇄 / PDF 저장</button>
+      <button class="btn" id="doPrint">출력 / PDF 저장</button>
     </div>
     <div id="saveNote" class="noprint" style="text-align:center;font-size:13px;margin-top:10px;color:var(--g500);"></div>
   </div>
@@ -254,23 +254,27 @@ function bindToggle(id, key){
 bindToggle("f-sex","sex");
 bindToggle("f-type","type");
 
-// 생년월일 자동서식
+// 생년월일 자동서식 — 다 채우면 키패드 닫힘(고치러 다시 연 경우엔 안 닫음). 상담일지 bindDate와 동일 규칙(원칙 §5)
 const birth=document.getElementById("f-birth");
+birth.addEventListener("focus",()=>{ birth._wasFull = birth.value.replace(/\D/g,"").length>=8; });
 birth.oninput=()=>{
   let d=birth.value.replace(/\D/g,"").slice(0,8);
   let out=d.slice(0,4);
   if(d.length>4) out+=". "+d.slice(4,6);
   if(d.length>6) out+=". "+d.slice(6,8);
   birth.value=out; validateIntro();
+  if(d.length===8 && !birth._wasFull) birth.blur();
 };
-// 전화 자동 하이픈
+// 전화 자동 하이픈 — 동일 규칙
 const phone=document.getElementById("f-phone");
+phone.addEventListener("focus",()=>{ phone._wasFull = phone.value.replace(/\D/g,"").length>=11; });
 phone.oninput=()=>{
   let d=phone.value.replace(/\D/g,"").slice(0,11);
   if(d.length<4) phone.value=d;
   else if(d.length<8) phone.value=d.slice(0,3)+"-"+d.slice(3);
   else phone.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7);
   validateIntro();
+  if(d.length===11 && !phone._wasFull) phone.blur();
 };
 document.getElementById("f-name").oninput=validateIntro;
 
