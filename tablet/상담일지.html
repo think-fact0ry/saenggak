@@ -73,6 +73,16 @@
   .client-list.editing .client-card .chev,.client-list.editing .client-card .cmemo{display:none;}  /* 편집 중엔 메모·화살표 숨겨 드래그에 집중 */
   .client-card.dragging{position:fixed;z-index:400;margin:0;box-shadow:0 14px 34px rgba(0,0,0,.22);border-color:var(--green);background:#fff;}  /* 손가락 따라 떠다님 */
   .gcl-ph{border:2px dashed var(--green);border-radius:16px;background:#F6FAF6;}  /* 들어갈 자리 표시 */
+  /* 초기상담(인테이크) 진입 카드 + 섹션 구분(2026-06-23 슬라이스 B) */
+  .intake-card{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-family:inherit;text-align:left;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:15px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:14px;transition:.12s;}
+  .intake-card:active{border-color:var(--green);background:#F6FAF6;}
+  .intake-card.done{border-color:var(--green);background:#F6FAF6;}
+  .intake-card .ic-main{flex:1;min-width:0;}
+  .intake-card .ic-tl{font-size:16px;font-weight:700;letter-spacing:-.3px;}
+  .intake-card .ic-st{font-size:12.5px;color:var(--g500);font-weight:500;margin-top:3px;}
+  .intake-card.done .ic-st{color:var(--green-d);}
+  .intake-card .chev{color:var(--g300);display:flex;}
+  .sec-div{font-size:13.5px;font-weight:700;color:var(--green-d);margin:20px 2px 4px;padding-top:14px;border-top:1px solid var(--g100);}
 
   /* 내담자 헤더(월·작성 화면 공통) */
   .subject{margin:6px 2px 18px;}
@@ -341,6 +351,10 @@
       <button class="icobtn" id="gr-edit" aria-label="내담자 정보·메모 수정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
     </div>
     <div class="subject" id="gr-subject"></div>
+    <button class="intake-card" id="gr-intake">
+      <div class="ic-main"><div class="ic-tl">초기상담 기록</div><div class="ic-st" id="gr-intake-st">처음 정보를 한 번 적어 둬요</div></div>
+      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </button>
     <div class="count" id="gr-count"></div>
     <div class="client-list" id="gr-list"></div>
     <div class="note" id="gr-note"></div>
@@ -359,6 +373,45 @@
     <div class="note" id="ge-note"></div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="ge-save">저장</button></div></div>
+</div>
+
+<!-- ═══ [일반] 초기상담 기록(인테이크, 내담자당 1회) ═══ -->
+<div class="screen" id="s-gintake">
+  <div class="wrap">
+    <button class="back" id="gi-back" aria-label="이전">‹</button>
+    <div class="subject" id="gi-subject"></div>
+
+    <div class="irow seg-row"><label>내담자</label><div class="seg" id="gi-type"></div></div>
+
+    <div class="block"><label class="blabel">의뢰·내방 경위</label><textarea id="gi-referral" class="sm" placeholder="자발 / 가족·기관 의뢰, 왜 지금 오게 됐는지"></textarea></div>
+
+    <div class="irow"><label>주호소</label><input id="gi-complaint" class="flat" type="text" placeholder="가장 힘든 점" autocomplete="off"></div>
+    <div class="block"><label class="blabel">호소 태그 <span class="opt">고르면 좋아요</span></label><div class="chips" id="gi-tags"></div></div>
+
+    <div class="block"><label class="blabel">문제 발생·경과</label><textarea id="gi-onset" class="sm" placeholder="언제·어떤 계기로 시작했고 어떻게 지내왔는지"></textarea></div>
+    <div class="block"><label class="blabel">가족·배경</label><textarea id="gi-family" class="sm" placeholder="동거 가족, 관계, 특이사항"></textarea></div>
+
+    <div class="irow seg-row"><label>이전 상담·치료</label><div class="seg" id="gi-prevtx"></div></div>
+    <div class="block" id="gi-prevbox" style="display:none;border-bottom:none;"><textarea id="gi-prevmemo" class="sm" style="margin-top:0;" placeholder="이전 상담·치료·복약 내용"></textarea></div>
+
+    <div class="block"><label class="blabel">상담 목표</label><textarea id="gi-goal" class="sm" placeholder="상담으로 바라는 것"></textarea></div>
+
+    <div class="irow seg-row"><label>자살 사고</label><div class="seg" id="gi-risksui"></div></div>
+    <div class="irow seg-row"><label>과거 시도력</label><div class="seg" id="gi-riskpast"></div></div>
+    <div class="block" id="gi-riskbox" style="display:none;border-bottom:none;"><textarea id="gi-risknote" class="sm" style="margin-top:0;" placeholder="위험 신호 상세·대응"></textarea></div>
+
+    <div class="block"><label class="blabel">상담자 첫인상 <span class="opt">선택</span></label><textarea id="gi-impression" class="sm" placeholder="외모·태도·언어/비언어 인상"></textarea></div>
+
+    <div id="gi-child" style="display:none;">
+      <div class="sec-div">아동·청소년</div>
+      <div class="block"><label class="blabel">발달사</label><textarea id="gi-dev" class="sm" placeholder="임신·출산, 발달 이정표(운동·언어·사회성), 치료 이력"></textarea></div>
+      <div class="block"><label class="blabel">보호자 정보</label><textarea id="gi-guardian" class="sm" placeholder="주 양육자, 양육 방식, 보호자 특이사항"></textarea></div>
+      <div class="block"><label class="blabel">학교·기관</label><textarea id="gi-school" class="sm" placeholder="학년·담임, 학업, 또래관계, 특수교육"></textarea></div>
+    </div>
+
+    <div class="note" id="gi-note"></div>
+  </div>
+  <div class="footbar"><div class="inner"><button class="btn" id="gi-save">저장</button></div></div>
 </div>
 
 <!-- ═══ [일반] 회기 기록 폼(7칸) ═══ -->
@@ -724,6 +777,12 @@ let gEditMode = false;     // 명단 순서수정 모드
 let gReorderDirty = false; // 드래그로 순서 바뀜 → 완료 시 저장
 let geOrig = {name:"",birth:"",memo:""};   // s-gedit 진입 시점 값(변경 감지·자동저장 판단)
 let gDragActive = false;   // 드래그 진행 중(멀티터치 동시 드래그 차단 — 단일 드래그 모델)
+let gIntake = null;        // 현재 내담자 초기상담(있으면 객체, 없으면 null)
+let gIntakeReady = false;  // gintake_get 완료 여부(완료 전 카드 탭 차단 — 빈 폼이 기존 기록 덮어쓰는 레이스 방지)
+let giType="성인", giPrevTx="없음", giRiskSui="없음", giRiskPast="없음";
+let giTagsSel = new Set();
+let giLoaded = "";         // s-gintake 진입 스냅샷(이탈 경고)
+const DEMO_GINTAKE = {};   // 데모는 빈 시작(폼 흐름만)
 let gRounds = {};          // {회기번호: {date,complaint,tags,content,score,opinion,risk,riskNote}}
 let gCurRound = 0;
 let gTagsSel = new Set();
@@ -911,6 +970,93 @@ function pushGUpdate(s, payload, retry){
   }).catch(()=>{ if(retry){ setTimeout(()=>pushGUpdate(s,payload,false),1500); return; } toast("메모 저장이 늦어요. 연결을 확인해 주세요"); });
 }
 
+// ── 초기상담(인테이크, 내담자당 1회) ──
+function updateIntakeCard(){
+  const st=$("gr-intake-st"), card=$("gr-intake");
+  if(gIntake){ st.textContent="작성됨 · 눌러서 보기·수정"; card.classList.add("done"); }
+  else { st.textContent="아직 없어요 · 눌러서 작성"; card.classList.remove("done"); }
+}
+function loadGIntakeStatus(){
+  gIntake=null; gIntakeReady=false;
+  if(DEMO){ gIntake=DEMO_GINTAKE[gClient.name]||null; gIntakeReady=true; updateIntakeCard(); return; }
+  $("gr-intake-st").textContent="확인 중…"; $("gr-intake").classList.remove("done");
+  const s=loadSess()||{};
+  post({action:"gintake_get", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}}).then(d=>{
+    if(d && d.ok){ gIntake=d.intake||null; gIntakeReady=true; updateIntakeCard(); }   // 성공해야 ready=true(=실존 확정) → 빈 폼이 기존 덮어쓰는 레이스 차단
+    else $("gr-intake-st").textContent="불러오지 못했어요 · 다시 들어오면 재시도";        // 실패 시 ready 안 함(탭하면 재시도 안내)
+  }).catch(()=>{ $("gr-intake-st").textContent="불러오지 못했어요 · 다시 들어오면 재시도"; });
+}
+function renderSeg(boxId, opts, cur, onPick){
+  const box=$(boxId); box.innerHTML="";
+  opts.forEach(o=>{ const b=document.createElement("button"); b.type="button";
+    let cls=(o===cur?"on":"");
+    if(o==="있음" && o===cur && (boxId==="gi-risksui"||boxId==="gi-riskpast")) cls+=" danger";
+    b.className=cls.trim(); b.textContent=o; b.onclick=()=>onPick(o); box.appendChild(b); });
+}
+function renderGiType(){ renderSeg("gi-type", ["성인","아동·청소년","가족"], giType, o=>{ giType=o; renderGiType(); const child=(o.indexOf("아동")>=0||o.indexOf("청소년")>=0); $("gi-child").style.display=child?"block":"none"; if(!child){ $("gi-dev").value=""; $("gi-guardian").value=""; $("gi-school").value=""; } }); }
+function renderGiPrev(){ renderSeg("gi-prevtx", ["없음","있음"], giPrevTx, o=>{ giPrevTx=o; renderGiPrev(); $("gi-prevbox").style.display=(o==="있음")?"block":"none"; if(o==="없음") $("gi-prevmemo").value=""; }); }
+function toggleGiRiskBox(){ const on=(giRiskSui==="있음"||giRiskPast==="있음"); $("gi-riskbox").style.display=on?"block":"none"; if(!on) $("gi-risknote").value=""; }
+function renderGiRisk(){
+  renderSeg("gi-risksui", ["없음","있음"], giRiskSui, o=>{ giRiskSui=o; renderGiRisk(); toggleGiRiskBox(); });
+  renderSeg("gi-riskpast", ["없음","있음"], giRiskPast, o=>{ giRiskPast=o; renderGiRisk(); toggleGiRiskBox(); });
+}
+function renderGiTags(){
+  const box=$("gi-tags"); box.innerHTML="";
+  COMPLAINT_TAGS.forEach(t=>{ const b=document.createElement("button"); b.type="button"; b.className="chip"+(giTagsSel.has(t)?" on":""); b.textContent=t; b.onclick=()=>{ if(giTagsSel.has(t)) giTagsSel.delete(t); else giTagsSel.add(t); b.classList.toggle("on"); }; box.appendChild(b); });
+}
+function giSnapshot(){ return JSON.stringify([giType,$("gi-referral").value.trim(),$("gi-complaint").value.trim(),Array.from(giTagsSel).sort(),$("gi-onset").value.trim(),$("gi-family").value.trim(),giPrevTx,$("gi-prevmemo").value.trim(),$("gi-goal").value.trim(),giRiskSui,giRiskPast,$("gi-risknote").value.trim(),$("gi-impression").value.trim(),$("gi-dev").value.trim(),$("gi-guardian").value.trim(),$("gi-school").value.trim()]); }
+function openGIntake(){
+  if(!gIntakeReady){ toast("초기상담을 불러오는 중이에요. 잠깐만요"); return; }   // 로드 완료 전엔 안 열림(덮어쓰기 방지)
+  const x=gIntake||{};
+  giType=x.type||"성인";
+  $("gi-referral").value=x.referral||""; $("gi-complaint").value=x.complaint||"";
+  giTagsSel=new Set(x.tags?String(x.tags).split(",").map(t=>t.trim()).filter(Boolean):[]);
+  $("gi-onset").value=x.onset||""; $("gi-family").value=x.family||"";
+  giPrevTx=x.prevTx||"없음"; $("gi-prevmemo").value=x.prevTxMemo||"";
+  $("gi-goal").value=x.goal||"";
+  giRiskSui=x.riskSuicide||"없음"; giRiskPast=x.riskPast||"없음"; $("gi-risknote").value=x.riskNote||"";
+  $("gi-impression").value=x.impression||"";
+  $("gi-dev").value=x.dev||""; $("gi-guardian").value=x.guardian||""; $("gi-school").value=x.school||"";
+  $("gi-subject").innerHTML='<div class="nm">'+escapeHtml(gClient.name)+' · 초기상담</div><div class="meta">'+fmtBirth(gClient.birth)+'</div>';
+  renderGiType(); renderGiTags(); renderGiPrev(); renderGiRisk(); toggleGiRiskBox();
+  $("gi-prevbox").style.display=(giPrevTx==="있음")?"block":"none";
+  $("gi-child").style.display=(giType.indexOf("아동")>=0||giType.indexOf("청소년")>=0)?"block":"none";
+  $("gi-note").className="note"; $("gi-note").textContent=""; $("gi-save").disabled=false; $("gi-save").textContent="저장";
+  giLoaded=giSnapshot(); show("s-gintake"); window.scrollTo(0,0);
+}
+$("gr-intake").onclick=openGIntake;
+$("gi-back").onclick=()=>{ if(giSnapshot()!==giLoaded && !confirm("저장하지 않은 내용이 있어요. 나갈까요?")) return; show("s-grounds"); };
+let _gisaving=false;
+function saveGIntake(retry){
+  if(_gisaving) return;
+  const payload={ child:{name:gClient.name, birth:gClient.birth}, type:giType,
+    referral:$("gi-referral").value.trim(), complaint:$("gi-complaint").value.trim(),
+    tags:Array.from(giTagsSel), onset:$("gi-onset").value.trim(), family:$("gi-family").value.trim(),
+    prevTx:giPrevTx, prevTxMemo:$("gi-prevmemo").value.trim(), goal:$("gi-goal").value.trim(),
+    riskSuicide:giRiskSui, riskPast:giRiskPast, riskNote:$("gi-risknote").value.trim(),
+    impression:$("gi-impression").value.trim(), dev:$("gi-dev").value.trim(),
+    guardian:$("gi-guardian").value.trim(), school:$("gi-school").value.trim() };
+  if(!payload.referral && !payload.complaint && !payload.onset && !payload.family && !payload.goal){
+    $("gi-note").className="note err"; $("gi-note").textContent="의뢰경위·주호소·상담목표 중 하나는 적어 주세요"; return;
+  }
+  const cacheLocal=Object.assign({}, payload, {tags:payload.tags.join(", ")});
+  if(DEMO){ gIntake=cacheLocal; updateIntakeCard(); giLoaded=giSnapshot(); toast("초기상담 저장(데모)"); show("s-grounds"); return; }
+  _gisaving=true;
+  const note=$("gi-note"), btn=$("gi-save"); note.className="note"; note.textContent=""; btn.disabled=true; btn.textContent="저장하고 있어요";
+  const s=loadSess()||{};
+  post(Object.assign({action:"gintake_save", staffId:s.staffId, session:s.session}, payload)).then(d=>{
+    if(d && d.ok){ _gisaving=false; btn.disabled=false; btn.textContent="저장"; gIntake=cacheLocal; updateIntakeCard(); giLoaded=giSnapshot(); toast("초기상담을 저장했어요"); show("s-grounds"); return; }
+    if(d && d.code==="auth"){ _gisaving=false; btn.disabled=false; btn.textContent="저장"; sessExpired(); return; }
+    throw new Error((d&&d.error)||"저장 실패");
+  }).catch(()=>{
+    _gisaving=false;
+    if(retry){ setTimeout(()=>saveGIntake(false),1500); return; }
+    btn.disabled=false; btn.textContent="저장"; note.className="note err"; note.innerHTML='저장이 안 됐어요. <button class="lk" id="giretry">다시 저장</button>';
+    const b=$("giretry"); if(b) b.onclick=()=>saveGIntake(true);
+  });
+}
+$("gi-save").onclick=()=>saveGIntake(true);
+
 function resetGClient(){ gClient=null; gRounds={}; $("gc-name").value=""; $("gc-birth").value=""; $("gc-note").textContent=""; vgc(); }
 
 // ── 내담자 직접입력 ──
@@ -931,6 +1077,7 @@ function loadGRounds(){
   $("gr-list").innerHTML=""; $("gr-count").textContent="";
   $("gr-note").className="note"; $("gr-note").textContent="불러오는 중…";
   show("s-grounds");
+  loadGIntakeStatus();   // 초기상담 카드 상태(백그라운드, 스피너 없음)
   if(DEMO){ gRounds = JSON.parse(JSON.stringify(DEMO_GROUNDS[gClient.name]||{})); $("gr-note").textContent=""; renderGRounds(); return; }
   const s=loadSess()||{};
   post({action:"gjournal_get", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}}).then(d=>{
@@ -951,7 +1098,7 @@ function renderGRounds(){
     const sub=[it.date, it.complaint].filter(Boolean).join(" · ") || "기록 있음";
     const el=document.createElement("div"); el.className="client-card";
     el.innerHTML='<div class="cc-main"><div class="nm">'+r+'회기</div><div class="meta">'+escapeHtml(sub)+'</div></div>'
-      +'<button class="del" aria-label="'+r+'회기 삭제">✕</button>';
+      +'<button class="del" aria-label="'+r+'회기 삭제"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg></button>';
     el.querySelector(".cc-main").onclick=()=>openGRound(r);
     el.querySelector(".del").onclick=(ev)=>{ ev.stopPropagation(); askDeleteRound(r); };
     box.appendChild(el);
@@ -1077,7 +1224,8 @@ function doDeleteRound(){
 window.addEventListener("beforeunload", e=>{
   const a=document.querySelector(".screen.active"); if(!a) return;
   const dirty = (a.id==="s-write" && $("w-content").value.trim())
-             || (a.id==="s-gwrite" && gwSnapshot()!==gwLoaded);
+             || (a.id==="s-gwrite" && gwSnapshot()!==gwLoaded)
+             || (a.id==="s-gintake" && giSnapshot()!==giLoaded);
   if(dirty){ e.preventDefault(); e.returnValue=""; }
 });
 
