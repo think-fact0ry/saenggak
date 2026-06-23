@@ -58,18 +58,21 @@
   .client-card .meta{font-size:13px;color:var(--g500);font-weight:500;}
   .client-card .chev{color:var(--g300);display:flex;}
   .empty{text-align:center;color:var(--g400);font-size:14px;font-weight:500;padding:40px 0;}
-  /* 일반 내담자 명단 관리(2026-06-23): 메모·드래그 정렬·연필 */
+  /* 일반 내담자 명단 관리(2026-06-23): 메모(우측)·드래그 정렬(들어올림)·연필. 아이콘=라인 SVG(이모지 금지, 원칙 §4) */
   .btn.ghost{flex:0 0 auto;padding:17px 22px;background:var(--g100);color:var(--g700);}
   .btn.ghost:active{background:var(--g200);}
-  .icobtn{width:38px;height:38px;border-radius:11px;border:none;background:var(--g100);color:var(--g700);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .icobtn{width:38px;height:38px;border-radius:11px;border:none;background:var(--g100);color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .icobtn:active{background:var(--g200);}
+  .icobtn svg{width:19px;height:19px;}
   .client-card .cc-main{flex:1;min-width:0;}
-  .client-card .cc-main .memo{font-size:12.5px;color:var(--green-d);font-weight:600;margin-top:4px;line-height:1.4;}
-  .client-card .drag{display:none;color:var(--g300);font-size:22px;line-height:1;cursor:grab;touch-action:none;padding:0 8px 0 0;user-select:none;}
-  .client-list.editing .client-card{cursor:default;}
-  .client-list.editing .client-card .drag{display:flex;align-items:center;}
-  .client-list.editing .client-card .chev{display:none;}
-  .client-card.dragging{opacity:.7;box-shadow:0 10px 28px rgba(0,0,0,.18);border-color:var(--green);}
+  .client-card .cmemo{flex:0 1 auto;max-width:44%;text-align:right;font-size:12.5px;color:var(--green-d);font-weight:600;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;}
+  .client-card .drag{display:none;color:var(--g300);cursor:grab;touch-action:none;padding:0 10px 0 2px;align-items:center;}
+  .client-card .drag svg{width:22px;height:22px;}
+  .client-list.editing .client-card{cursor:grab;touch-action:none;}            /* 박스 전체를 잡아 끌 수 있게 */
+  .client-list.editing .client-card .drag{display:flex;}
+  .client-list.editing .client-card .chev,.client-list.editing .client-card .cmemo{display:none;}  /* 편집 중엔 메모·화살표 숨겨 드래그에 집중 */
+  .client-card.dragging{position:fixed;z-index:400;margin:0;box-shadow:0 14px 34px rgba(0,0,0,.22);border-color:var(--green);background:#fff;}  /* 손가락 따라 떠다님 */
+  .gcl-ph{border:2px dashed var(--green);border-radius:16px;background:#F6FAF6;}  /* 들어갈 자리 표시 */
 
   /* 내담자 헤더(월·작성 화면 공통) */
   .subject{margin:6px 2px 18px;}
@@ -335,7 +338,7 @@
   <div class="wrap">
     <div class="head-row" style="margin-bottom:2px;">
       <button class="back" id="gr-back" aria-label="이전">‹</button>
-      <button class="icobtn" id="gr-edit" aria-label="내담자 정보·메모 수정">✏️</button>
+      <button class="icobtn" id="gr-edit" aria-label="내담자 정보·메모 수정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
     </div>
     <div class="subject" id="gr-subject"></div>
     <div class="count" id="gr-count"></div>
@@ -350,10 +353,9 @@
   <div class="wrap">
     <button class="back" id="ge-back" aria-label="이전">‹</button>
     <h1>내담자 정보</h1>
-    <p class="sub">이름·생년월일을 고치거나, 이 분이 누구였는지 메모를 남겨요.</p>
     <div class="field"><label>이름</label><input id="ge-name" type="text" placeholder="홍길동" autocomplete="off"></div>
     <div class="field"><label>생년월일</label><input id="ge-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
-    <div class="field"><label>메모</label><textarea id="ge-memo" class="sm" placeholder="예: ○○초 2학년, 분리불안으로 어머니가 의뢰. 주 양육자는 어머니."></textarea></div>
+    <div class="field"><label>메모</label><textarea id="ge-memo" class="sm" placeholder="예: OO초 2학년 / OOO아파트 / OO구 OO동 / 우울로 인해 의뢰"></textarea></div>
     <div class="note" id="ge-note"></div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="ge-save">저장</button></div></div>
@@ -720,6 +722,8 @@ let gClient = null;        // {name, birth8(YYYYMMDD), child_id?, memo?}
 let gClients = [];         // 일반 내담자 명단 [{child_id,name,birth,memo,order,rounds,lastDate}]
 let gEditMode = false;     // 명단 순서수정 모드
 let gReorderDirty = false; // 드래그로 순서 바뀜 → 완료 시 저장
+let geOrig = {name:"",birth:"",memo:""};   // s-gedit 진입 시점 값(변경 감지·자동저장 판단)
+let gDragActive = false;   // 드래그 진행 중(멀티터치 동시 드래그 차단 — 단일 드래그 모델)
 let gRounds = {};          // {회기번호: {date,complaint,tags,content,score,opinion,risk,riskNote}}
 let gCurRound = 0;
 let gTagsSel = new Set();
@@ -733,14 +737,15 @@ function loadGClients(){
   gEditMode=false; gReorderDirty=false; updateGEditUI();
   if($("gcl-search")) $("gcl-search").value="";
   if(DEMO){ gClients=DEMO_GCLIENTS.slice(); $("gcl-note").textContent=""; renderGClients(""); return; }
-  const note=$("gcl-note"); note.className="note"; note.textContent="내담자를 불러오고 있어요…";
-  $("gcl-list").innerHTML=""; $("gcl-count").textContent="";
+  const note=$("gcl-note");
+  if(gClients.length){ renderGClients(""); note.className="note"; note.textContent=""; }   // 이미 불러온 적 있으면 즉시 표시(스피너 X) → 아래서 조용히 갱신
+  else { note.className="note"; note.textContent="내담자를 불러오고 있어요…"; $("gcl-list").innerHTML=""; $("gcl-count").textContent=""; }
   const s=loadSess()||{};
   post({action:"gclient_list", staffId:s.staffId, session:s.session}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
-    if(d && d.ok){ gClients=d.clients||[]; note.textContent=""; renderGClients(""); }
-    else { note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; }
-  }).catch(()=>{ note.className="note err"; note.textContent="연결이 안 됐어요"; });
+    if(d && d.ok){ gClients=d.clients||[]; note.textContent=""; if(!gEditMode) renderGClients($("gcl-search").value); }   // 편집 중이면 재렌더 보류(드래그 보호)
+    else if(!gClients.length){ note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; }
+  }).catch(()=>{ if(!gClients.length){ note.className="note err"; note.textContent="연결이 안 됐어요"; } });
 }
 function renderGClients(q){
   q=(q||"").trim();
@@ -751,9 +756,9 @@ function renderGClients(q){
   list.forEach(c=>{
     const el=document.createElement("div"); el.className="client-card"; el.dataset.cid=c.child_id||"";
     const sub=[fmtBirth(c.birth), (c.rounds?c.rounds+"회기":"")].filter(Boolean).join(" · ");
-    el.innerHTML='<span class="drag" aria-hidden="true">≡</span>'
-      +'<div class="cc-main"><div class="nm">'+escapeHtml(c.name)+'</div><div class="meta">'+escapeHtml(sub)+'</div>'
-      +(c.memo?'<div class="memo">'+escapeHtml(c.memo)+'</div>':'')+'</div>'
+    el.innerHTML='<span class="drag" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg></span>'
+      +'<div class="cc-main"><div class="nm">'+escapeHtml(c.name)+'</div><div class="meta">'+escapeHtml(sub)+'</div></div>'
+      +(c.memo?'<div class="cmemo">'+escapeHtml(c.memo)+'</div>':'')
       +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
     el.onclick=()=>{ if(!gEditMode) openGClient(c); };
     enableDrag(el);
@@ -767,9 +772,10 @@ $("gcl-new").onclick=()=>{ resetGClient(); show("s-gclient"); $("gc-name").focus
 
 // 순서수정 모드(토스 계좌순서식) — 드래그 핸들 노출, 완료 시 저장
 function updateGEditUI(){
-  const editing=gEditMode;
+  const editing=gEditMode, eb=$("gcl-edit");
   $("gcl-list").classList.toggle("editing", editing);
-  $("gcl-edit").textContent = editing ? "완료" : "순서 수정";
+  eb.textContent = editing ? "완료" : "순서 수정";
+  eb.classList.toggle("ghost", !editing);   // 편집 중 = 풀폭 그린 완료(왼쪽 작은 버튼 X), 평소 = 작은 ghost
   $("gcl-new").style.display = editing ? "none" : "";
   const sr=$("gcl-search").parentNode; if(sr) sr.style.display = editing ? "none" : "";
 }
@@ -792,30 +798,42 @@ function saveGOrder(){
     else toast("순서 저장을 못 했어요. 순서 수정에서 다시 시도해 주세요");   // dirty 유지
   }).catch(()=>toast("연결이 안 됐어요. 순서 수정에서 다시 시도해 주세요"));   // dirty 유지
 }
-// 포인터 기반 드래그 정렬(터치/태블릿) — 순서수정 모드에서 핸들(≡)로만.
-//  move/up은 document에 바인딩(핸들 밖에서 손 떼도 up 발생 → .dragging·리스너 누수 방지). 실제 위치 변할 때만 dirty.
+// 드래그 정렬(터치/태블릿) — 편집 모드에서 *박스 전체*를 잡으면 카드가 손가락을 따라 떠오르고(fixed),
+//  들어갈 자리에 점선 자리표시(placeholder)가 보임. 손 떼면 그 자리에 안착. move/up은 document 바인딩(어디서 떼도 정리).
 function enableDrag(card){
-  const handle=card.querySelector(".drag"); if(!handle) return;
-  handle.addEventListener("pointerdown",(e)=>{
+  card.addEventListener("pointerdown",(e)=>{
     if(!gEditMode) return;
+    if(gDragActive) return;                       // 이미 다른 카드 드래그 중 = 두 번째 손가락 무시(멀티터치 손상 방지)
+    if(e.button!=null && e.button!==0) return;
     e.preventDefault();
+    gDragActive=true;
     const list=card.parentNode;
-    card.classList.add("dragging");
-    try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+    const rect=card.getBoundingClientRect();
+    const offsetY=e.clientY-rect.top;
+    let moved=false;
+    const ph=document.createElement("div"); ph.className="gcl-ph"; ph.style.height=rect.height+"px";
+    list.insertBefore(ph, card);                          // 원래 자리에 자리표시
+    card.classList.add("dragging");                       // fixed로 띄움
+    card.style.width=rect.width+"px"; card.style.left=rect.left+"px"; card.style.top=(e.clientY-offsetY)+"px";
+    try{ card.setPointerCapture(e.pointerId); }catch(_){}
     const move=(ev)=>{
+      moved=true;
+      card.style.top=(ev.clientY-offsetY)+"px";
       const y=ev.clientY;
       const sibs=Array.prototype.slice.call(list.querySelectorAll(".client-card:not(.dragging)"));
-      let after=null;
-      for(const sib of sibs){ const r=sib.getBoundingClientRect(); if(y < r.top + r.height/2){ after=sib; break; } }
-      const before=card.nextSibling;
-      if(after) list.insertBefore(card, after); else list.appendChild(card);
-      if(card.nextSibling!==before) gReorderDirty=true;   // 위치가 실제로 바뀐 경우만(단순 탭 헛저장 방지)
+      let placed=false;
+      for(const sib of sibs){ const r=sib.getBoundingClientRect(); if(y < r.top + r.height/2){ list.insertBefore(ph, sib); placed=true; break; } }
+      if(!placed) list.appendChild(ph);
     };
     const up=()=>{
-      card.classList.remove("dragging");
       document.removeEventListener("pointermove",move);
       document.removeEventListener("pointerup",up);
       document.removeEventListener("pointercancel",up);
+      list.insertBefore(card, ph); list.removeChild(ph);  // 자리표시 위치에 안착
+      card.classList.remove("dragging");
+      card.style.width=card.style.left=card.style.top="";
+      gDragActive=false;
+      if(moved) gReorderDirty=true;                       // 실제로 움직였을 때만(단순 탭 헛저장 방지)
     };
     document.addEventListener("pointermove",move);
     document.addEventListener("pointerup",up);
@@ -831,26 +849,67 @@ function refreshGSubjects(){
 function vge(){ $("ge-save").disabled = !($("ge-name").value.trim() && ymd($("ge-birth").value)); }
 bindDate($("ge-birth"));
 $("ge-name").oninput=vge; $("ge-birth").addEventListener("fmt",vge);
-$("ge-back").onclick=()=>show("s-grounds");
 $("gr-edit").onclick=()=>{
   $("ge-name").value=gClient.name;
   $("ge-birth").value=fmtBirth(gClient.birth).replace(/\./g,". ");
   $("ge-memo").value=gClient.memo||"";
-  $("ge-note").className="note"; $("ge-note").textContent="";
+  geOrig={name:gClient.name, birth:gClient.birth, memo:gClient.memo||""};
+  $("ge-note").className="note"; $("ge-note").textContent=""; $("ge-save").textContent="저장";
   vge(); show("s-gedit");
 };
-$("ge-save").onclick=()=>{
-  const newName=$("ge-name").value.trim(), newBirth=ymd($("ge-birth").value).replace(/-/g,""), memo=$("ge-memo").value.trim();
-  if(!newName || newBirth.length!==8) return;
-  if(DEMO){ gClient.name=newName; gClient.birth=newBirth; gClient.memo=memo; refreshGSubjects(); toast("저장(데모)"); show("s-grounds"); return; }
-  const s=loadSess()||{}; const note=$("ge-note"), btn=$("ge-save");
-  note.className="note"; note.textContent=""; btn.disabled=true; btn.textContent="저장하고 있어요";   // 상태는 버튼에(§2.6 #4 — gw-save와 통일)
-  post({action:"gclient_update", staffId:s.staffId, session:s.session, child:{name:gClient.name,birth:gClient.birth}, newName, newBirth, memo}).then(d=>{
-    if(d && d.code==="auth"){ sessExpired(); return; }
-    if(d && d.ok){ btn.disabled=false; btn.textContent="저장"; gClient.name=d.child.name; gClient.birth=d.child.birth; gClient.memo=d.child.memo; refreshGSubjects(); toast("저장했어요"); show("s-grounds"); return; }
-    btn.disabled=false; btn.textContent="저장"; note.className="note err"; note.textContent=(d&&d.error)||"저장을 못 했어요";
-  }).catch(()=>{ btn.disabled=false; btn.textContent="저장"; note.className="note err"; note.textContent="연결이 안 됐어요"; });
+// 뒤로: 메모만 바뀜 = 자동 저장(낙관적, 바로 뒤로) / 이름·생년월일 바뀜 = 저장 안내 / 안 바뀜 = 그냥 뒤로
+$("ge-back").onclick=()=>{
+  const curName=$("ge-name").value.trim(), curBirth=ymd($("ge-birth").value).replace(/-/g,""), curMemo=$("ge-memo").value.trim();
+  const validId = curName && curBirth.length===8;
+  const nameChanged = validId && (curName!==geOrig.name || curBirth!==geOrig.birth);
+  const memoChanged = curMemo!==geOrig.memo;
+  if(nameChanged){
+    if(confirm("이름·생년월일이 바뀌었어요. 저장할까요?")){ saveGEditSync(); return; }
+    if(memoChanged) saveMemoOptimistic();   // 이름 변경은 버리되, 메모는 원래 이름으로 살림(gClient는 아직 원본)
+    show("s-grounds"); return;
+  }
+  if(memoChanged){ saveMemoOptimistic(); show("s-grounds"); return; }   // 메모만 = 자동 저장 + 바로 뒤로
+  show("s-grounds");
 };
+$("ge-save").onclick=()=>saveGEditSync();
+
+function applyGEditLocal(name,birth,memo){
+  gClient.name=name; gClient.birth=birth; gClient.memo=memo;
+  geOrig={name:name, birth:birth, memo:memo};
+  const gc=gClients.filter(c=>c.child_id && c.child_id===gClient.child_id)[0];
+  if(gc){ gc.name=name; gc.birth=birth; gc.memo=memo; }
+  refreshGSubjects();
+}
+// 이름·생년월일 포함 저장 = 동기(충돌 '이미 같은…' 에러를 화면에 보여줘야 하므로). 성공 시 뒤로.
+function saveGEditSync(){
+  const newName=$("ge-name").value.trim(), newBirth=ymd($("ge-birth").value).replace(/-/g,""), memo=$("ge-memo").value.trim();
+  const note=$("ge-note"), btn=$("ge-save");
+  if(!newName || newBirth.length!==8){ note.className="note err"; note.textContent="이름과 생년월일을 확인해 주세요"; return; }
+  if(DEMO){ applyGEditLocal(newName,newBirth,memo); toast("저장했어요(데모)"); show("s-grounds"); return; }
+  const s=loadSess()||{}, oldKey={name:gClient.name, birth:gClient.birth};
+  note.className="note"; note.textContent=""; btn.disabled=true; btn.textContent="저장하고 있어요";
+  post({action:"gclient_update", staffId:s.staffId, session:s.session, child:oldKey, newName, newBirth, memo}).then(d=>{
+    if(d && d.code==="auth"){ sessExpired(); return; }
+    btn.disabled=false; btn.textContent="저장";
+    if(d && d.ok){ applyGEditLocal(d.child.name,d.child.birth,d.child.memo); toast("저장했어요"); show("s-grounds"); return; }
+    note.className="note err"; note.textContent=(d&&d.error)||"저장을 못 했어요";   // 충돌 등 → 머무름
+  }).catch(()=>{ btn.disabled=false; btn.textContent="저장"; note.className="note err"; note.textContent="연결이 안 됐어요"; });
+}
+// 메모만 = 낙관적: 로컬 즉시 반영(이미 뒤로 감) + 서버는 백그라운드(1회 재시도). 이름·생년월일 안 바뀌어 충돌 없음.
+function saveMemoOptimistic(){
+  const memo=$("ge-memo").value.trim(), key={name:gClient.name, birth:gClient.birth};
+  applyGEditLocal(key.name, key.birth, memo);
+  if(DEMO) return;
+  pushGUpdate(loadSess()||{}, {child:key, newName:key.name, newBirth:key.birth, memo}, true);
+}
+function pushGUpdate(s, payload, retry){
+  post(Object.assign({action:"gclient_update", staffId:s.staffId, session:s.session}, payload)).then(d=>{
+    if(d && d.code==="auth"){ toast("로그인이 풀렸어요. 메모는 다시 저장해 주세요"); return; }
+    if(d && d.ok) return;
+    if(retry){ setTimeout(()=>pushGUpdate(s,payload,false),1500); return; }
+    toast("메모가 서버에 늦게 닿고 있어요");
+  }).catch(()=>{ if(retry){ setTimeout(()=>pushGUpdate(s,payload,false),1500); return; } toast("메모 저장이 늦어요. 연결을 확인해 주세요"); });
+}
 
 function resetGClient(){ gClient=null; gRounds={}; $("gc-name").value=""; $("gc-birth").value=""; $("gc-note").textContent=""; vgc(); }
 
