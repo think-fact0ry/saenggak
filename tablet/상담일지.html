@@ -58,6 +58,18 @@
   .client-card .meta{font-size:13px;color:var(--g500);font-weight:500;}
   .client-card .chev{color:var(--g300);display:flex;}
   .empty{text-align:center;color:var(--g400);font-size:14px;font-weight:500;padding:40px 0;}
+  /* 일반 내담자 명단 관리(2026-06-23): 메모·드래그 정렬·연필 */
+  .btn.ghost{flex:0 0 auto;padding:17px 22px;background:var(--g100);color:var(--g700);}
+  .btn.ghost:active{background:var(--g200);}
+  .icobtn{width:38px;height:38px;border-radius:11px;border:none;background:var(--g100);color:var(--g700);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .icobtn:active{background:var(--g200);}
+  .client-card .cc-main{flex:1;min-width:0;}
+  .client-card .cc-main .memo{font-size:12.5px;color:var(--green-d);font-weight:600;margin-top:4px;line-height:1.4;}
+  .client-card .drag{display:none;color:var(--g300);font-size:22px;line-height:1;cursor:grab;touch-action:none;padding:0 8px 0 0;user-select:none;}
+  .client-list.editing .client-card{cursor:default;}
+  .client-list.editing .client-card .drag{display:flex;align-items:center;}
+  .client-list.editing .client-card .chev{display:none;}
+  .client-card.dragging{opacity:.7;box-shadow:0 10px 28px rgba(0,0,0,.18);border-color:var(--green);}
 
   /* 내담자 헤더(월·작성 화면 공통) */
   .subject{margin:6px 2px 18px;}
@@ -288,6 +300,23 @@
   <div class="footbar noprint"><div class="inner"><button class="btn" id="p-do">인쇄 / PDF 저장</button></div></div>
 </div>
 
+<!-- ═══ [일반] 내담자 명단(회기 모아둔 곳) ═══ -->
+<div class="screen" id="s-gclients">
+  <div class="wrap">
+    <button class="back" id="gcl-back" aria-label="이전">‹</button>
+    <div class="head-row"><h1>일반 상담일지</h1></div>
+    <p class="sub">상담하던 분을 골라 회기를 이어 적어요.</p>
+    <div class="search">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input id="gcl-search" type="text" placeholder="이름으로 찾기" autocomplete="off">
+    </div>
+    <div class="count" id="gcl-count"></div>
+    <div class="client-list" id="gcl-list"></div>
+    <div class="note" id="gcl-note"></div>
+  </div>
+  <div class="footbar"><div class="inner"><button class="btn ghost" id="gcl-edit">순서 수정</button><button class="btn" id="gcl-new">새 내담자</button></div></div>
+</div>
+
 <!-- ═══ [일반] 내담자 직접입력 ═══ -->
 <div class="screen" id="s-gclient">
   <div class="wrap">
@@ -304,13 +333,30 @@
 <!-- ═══ [일반] 회기 목록 ═══ -->
 <div class="screen" id="s-grounds">
   <div class="wrap">
-    <button class="back" id="gr-back" aria-label="이전">‹</button>
+    <div class="head-row" style="margin-bottom:2px;">
+      <button class="back" id="gr-back" aria-label="이전">‹</button>
+      <button class="icobtn" id="gr-edit" aria-label="내담자 정보·메모 수정">✏️</button>
+    </div>
     <div class="subject" id="gr-subject"></div>
     <div class="count" id="gr-count"></div>
     <div class="client-list" id="gr-list"></div>
     <div class="note" id="gr-note"></div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="gr-new">새 회기 작성</button></div></div>
+</div>
+
+<!-- ═══ [일반] 내담자 정보·메모 수정(연필) ═══ -->
+<div class="screen" id="s-gedit">
+  <div class="wrap">
+    <button class="back" id="ge-back" aria-label="이전">‹</button>
+    <h1>내담자 정보</h1>
+    <p class="sub">이름·생년월일을 고치거나, 이 분이 누구였는지 메모를 남겨요.</p>
+    <div class="field"><label>이름</label><input id="ge-name" type="text" placeholder="홍길동" autocomplete="off"></div>
+    <div class="field"><label>생년월일</label><input id="ge-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
+    <div class="field"><label>메모</label><textarea id="ge-memo" class="sm" placeholder="예: ○○초 2학년, 분리불안으로 어머니가 의뢰. 주 양육자는 어머니."></textarea></div>
+    <div class="note" id="ge-note"></div>
+  </div>
+  <div class="footbar"><div class="inner"><button class="btn" id="ge-save">저장</button></div></div>
 </div>
 
 <!-- ═══ [일반] 회기 기록 폼(7칸) ═══ -->
@@ -523,7 +569,7 @@ function enterApp(){
 
 // ════ 모드 선택 → 008(바우처) / 일반 ════
 $("mode-voucher").onclick=()=>{ show("s-clients"); loadClients(); };
-$("mode-general").onclick=()=>{ resetGClient(); show("s-gclient"); $("gc-name").focus(); };
+$("mode-general").onclick=()=>{ show("s-gclients"); loadGClients(); };
 $("cl-back").onclick=()=>{ if(GA_ON) show("s-mode"); else location.href="./index.html"; };
 
 function loadClients(){
@@ -556,6 +602,7 @@ $("cs-search").oninput=()=>renderClients($("cs-search").value);
 
 // ════ 월 / 회차 그리드 ════
 function thisMonth(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return d.getFullYear()+"-"+p(d.getMonth()+1); }
+function todayYmd(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
 function selectClient(c){ curClient=c; openMonth(thisMonth()); }
 $("m-back").onclick=()=>{ show("s-clients"); };
 $("m-prev").onclick=()=>openMonth(shiftMonth(curYm,-1));
@@ -663,8 +710,16 @@ function build008(){
 const COMPLAINT_TAGS = ['불안','우울','분노·공격성','대인관계','가족갈등','학업·직무','자존감','수면','트라우마','발달','행동문제','기타'];
 const RISK_OPTS = ['없음','관찰','위기'];
 const DEMO_GROUNDS = {};   // 일반은 직접입력이라 데모도 빈 시작 — 흐름만 확인
+const DEMO_GCLIENTS = [    // 명단·정렬·메모·연필 UX 미리보기용(?demo=1)
+  {child_id:'C9001', name:'이서연', birth:'19920305', memo:'직장 스트레스·불면. 자발 내방.', order:1, rounds:3, lastDate:'2026-06-18'},
+  {child_id:'C9002', name:'박도윤', birth:'20150812', memo:'분리불안, 어머니 의뢰', order:2, rounds:1, lastDate:'2026-06-20'},
+  {child_id:'C9003', name:'정민호', birth:'19850120', memo:'', order:3, rounds:5, lastDate:'2026-06-15'}
+];
 
-let gClient = null;        // {name, birth8}
+let gClient = null;        // {name, birth8(YYYYMMDD), child_id?, memo?}
+let gClients = [];         // 일반 내담자 명단 [{child_id,name,birth,memo,order,rounds,lastDate}]
+let gEditMode = false;     // 명단 순서수정 모드
+let gReorderDirty = false; // 드래그로 순서 바뀜 → 완료 시 저장
 let gRounds = {};          // {회기번호: {date,complaint,tags,content,score,opinion,risk,riskNote}}
 let gCurRound = 0;
 let gTagsSel = new Set();
@@ -673,23 +728,147 @@ let gRisk = "없음";
 let gwLoaded = "";         // 폼 진입 시점 스냅샷(이탈 경고용)
 let _gsaving = false;
 
+// ── 일반 내담자 명단(회기 모아둔 곳) ──
+function loadGClients(){
+  gEditMode=false; gReorderDirty=false; updateGEditUI();
+  if($("gcl-search")) $("gcl-search").value="";
+  if(DEMO){ gClients=DEMO_GCLIENTS.slice(); $("gcl-note").textContent=""; renderGClients(""); return; }
+  const note=$("gcl-note"); note.className="note"; note.textContent="내담자를 불러오고 있어요…";
+  $("gcl-list").innerHTML=""; $("gcl-count").textContent="";
+  const s=loadSess()||{};
+  post({action:"gclient_list", staffId:s.staffId, session:s.session}).then(d=>{
+    if(d && d.code==="auth"){ sessExpired(); return; }
+    if(d && d.ok){ gClients=d.clients||[]; note.textContent=""; renderGClients(""); }
+    else { note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; }
+  }).catch(()=>{ note.className="note err"; note.textContent="연결이 안 됐어요"; });
+}
+function renderGClients(q){
+  q=(q||"").trim();
+  const list = q ? gClients.filter(c=>c.name.indexOf(q)>=0) : gClients;
+  $("gcl-count").textContent = gClients.length ? ("내담자 "+gClients.length+"명") : "";
+  const box=$("gcl-list"); box.innerHTML="";
+  if(!list.length){ box.innerHTML='<div class="empty">'+(gClients.length?"찾는 이름이 없어요":"아직 내담자가 없어요. 새 내담자를 더해 보세요.")+'</div>'; return; }
+  list.forEach(c=>{
+    const el=document.createElement("div"); el.className="client-card"; el.dataset.cid=c.child_id||"";
+    const sub=[fmtBirth(c.birth), (c.rounds?c.rounds+"회기":"")].filter(Boolean).join(" · ");
+    el.innerHTML='<span class="drag" aria-hidden="true">≡</span>'
+      +'<div class="cc-main"><div class="nm">'+escapeHtml(c.name)+'</div><div class="meta">'+escapeHtml(sub)+'</div>'
+      +(c.memo?'<div class="memo">'+escapeHtml(c.memo)+'</div>':'')+'</div>'
+      +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+    el.onclick=()=>{ if(!gEditMode) openGClient(c); };
+    enableDrag(el);
+    box.appendChild(el);
+  });
+}
+function openGClient(c){ gClient={ name:c.name, birth:c.birth, child_id:c.child_id||"", memo:c.memo||"" }; loadGRounds(); }
+$("gcl-search").oninput=()=>{ if(!gEditMode) renderGClients($("gcl-search").value); };
+$("gcl-back").onclick=()=>{ if(gEditMode){ finishGEdit(); return; } show("s-mode"); };   // 편집 중 뒤로 = 먼저 저장(드래그 유실 방지)
+$("gcl-new").onclick=()=>{ resetGClient(); show("s-gclient"); $("gc-name").focus(); };
+
+// 순서수정 모드(토스 계좌순서식) — 드래그 핸들 노출, 완료 시 저장
+function updateGEditUI(){
+  const editing=gEditMode;
+  $("gcl-list").classList.toggle("editing", editing);
+  $("gcl-edit").textContent = editing ? "완료" : "순서 수정";
+  $("gcl-new").style.display = editing ? "none" : "";
+  const sr=$("gcl-search").parentNode; if(sr) sr.style.display = editing ? "none" : "";
+}
+function finishGEdit(){ gEditMode=false; updateGEditUI(); if(gReorderDirty) saveGOrder(); }   // 저장은 saveGOrder가 성공 시에만 dirty 해제
+$("gcl-edit").onclick=()=>{
+  if(gEditMode){ finishGEdit(); return; }
+  if($("gcl-search").value){ $("gcl-search").value=""; renderGClients(""); }   // 부분목록 정렬 방지
+  if(gClients.length<2){ toast("내담자가 2명 이상일 때 순서를 바꿀 수 있어요"); return; }
+  gEditMode=true; updateGEditUI();
+};
+function saveGOrder(){
+  const ids=Array.prototype.map.call($("gcl-list").querySelectorAll(".client-card"), el=>el.dataset.cid).filter(Boolean);
+  const pos={}; ids.forEach((id,i)=>pos[id]=i);
+  gClients.sort((a,b)=>{ const pa=(pos[a.child_id]==null?999:pos[a.child_id]), pb=(pos[b.child_id]==null?999:pos[b.child_id]); return pa-pb; });
+  if(DEMO){ gReorderDirty=false; toast("순서 저장(데모)"); return; }
+  const s=loadSess()||{};
+  post({action:"gclient_reorder", staffId:s.staffId, session:s.session, order:ids}).then(d=>{
+    if(d && d.code==="auth"){ sessExpired(); return; }   // dirty 유지 → 재인증 후 재시도 가능
+    if(d && d.ok){ gReorderDirty=false; toast("순서를 저장했어요"); }
+    else toast("순서 저장을 못 했어요. 순서 수정에서 다시 시도해 주세요");   // dirty 유지
+  }).catch(()=>toast("연결이 안 됐어요. 순서 수정에서 다시 시도해 주세요"));   // dirty 유지
+}
+// 포인터 기반 드래그 정렬(터치/태블릿) — 순서수정 모드에서 핸들(≡)로만.
+//  move/up은 document에 바인딩(핸들 밖에서 손 떼도 up 발생 → .dragging·리스너 누수 방지). 실제 위치 변할 때만 dirty.
+function enableDrag(card){
+  const handle=card.querySelector(".drag"); if(!handle) return;
+  handle.addEventListener("pointerdown",(e)=>{
+    if(!gEditMode) return;
+    e.preventDefault();
+    const list=card.parentNode;
+    card.classList.add("dragging");
+    try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+    const move=(ev)=>{
+      const y=ev.clientY;
+      const sibs=Array.prototype.slice.call(list.querySelectorAll(".client-card:not(.dragging)"));
+      let after=null;
+      for(const sib of sibs){ const r=sib.getBoundingClientRect(); if(y < r.top + r.height/2){ after=sib; break; } }
+      const before=card.nextSibling;
+      if(after) list.insertBefore(card, after); else list.appendChild(card);
+      if(card.nextSibling!==before) gReorderDirty=true;   // 위치가 실제로 바뀐 경우만(단순 탭 헛저장 방지)
+    };
+    const up=()=>{
+      card.classList.remove("dragging");
+      document.removeEventListener("pointermove",move);
+      document.removeEventListener("pointerup",up);
+      document.removeEventListener("pointercancel",up);
+    };
+    document.addEventListener("pointermove",move);
+    document.addEventListener("pointerup",up);
+    document.addEventListener("pointercancel",up);
+  });
+}
+
+// ── 내담자 정보·메모 수정(연필) ──
+function refreshGSubjects(){
+  const memo = gClient.memo ? escapeHtml(gClient.memo) : '일반 상담';
+  $("gr-subject").innerHTML='<div class="nm">'+escapeHtml(gClient.name)+' <span style="font-size:14px;color:var(--g500);font-weight:500;">('+fmtBirth(gClient.birth)+')</span></div><div class="meta">'+memo+'</div>';
+}
+function vge(){ $("ge-save").disabled = !($("ge-name").value.trim() && ymd($("ge-birth").value)); }
+bindDate($("ge-birth"));
+$("ge-name").oninput=vge; $("ge-birth").addEventListener("fmt",vge);
+$("ge-back").onclick=()=>show("s-grounds");
+$("gr-edit").onclick=()=>{
+  $("ge-name").value=gClient.name;
+  $("ge-birth").value=fmtBirth(gClient.birth).replace(/\./g,". ");
+  $("ge-memo").value=gClient.memo||"";
+  $("ge-note").className="note"; $("ge-note").textContent="";
+  vge(); show("s-gedit");
+};
+$("ge-save").onclick=()=>{
+  const newName=$("ge-name").value.trim(), newBirth=ymd($("ge-birth").value).replace(/-/g,""), memo=$("ge-memo").value.trim();
+  if(!newName || newBirth.length!==8) return;
+  if(DEMO){ gClient.name=newName; gClient.birth=newBirth; gClient.memo=memo; refreshGSubjects(); toast("저장(데모)"); show("s-grounds"); return; }
+  const s=loadSess()||{}; const note=$("ge-note"), btn=$("ge-save");
+  note.className="note"; note.textContent=""; btn.disabled=true; btn.textContent="저장하고 있어요";   // 상태는 버튼에(§2.6 #4 — gw-save와 통일)
+  post({action:"gclient_update", staffId:s.staffId, session:s.session, child:{name:gClient.name,birth:gClient.birth}, newName, newBirth, memo}).then(d=>{
+    if(d && d.code==="auth"){ sessExpired(); return; }
+    if(d && d.ok){ btn.disabled=false; btn.textContent="저장"; gClient.name=d.child.name; gClient.birth=d.child.birth; gClient.memo=d.child.memo; refreshGSubjects(); toast("저장했어요"); show("s-grounds"); return; }
+    btn.disabled=false; btn.textContent="저장"; note.className="note err"; note.textContent=(d&&d.error)||"저장을 못 했어요";
+  }).catch(()=>{ btn.disabled=false; btn.textContent="저장"; note.className="note err"; note.textContent="연결이 안 됐어요"; });
+};
+
 function resetGClient(){ gClient=null; gRounds={}; $("gc-name").value=""; $("gc-birth").value=""; $("gc-note").textContent=""; vgc(); }
 
 // ── 내담자 직접입력 ──
 bindDate($("gc-birth"));
 function vgc(){ $("gc-btn").disabled = !($("gc-name").value.trim() && ymd($("gc-birth").value)); }
 $("gc-name").oninput=vgc; $("gc-birth").addEventListener("fmt",vgc);
-$("gc-back").onclick=()=>show("s-mode");
+$("gc-back").onclick=()=>{ show("s-gclients"); loadGClients(); };
 $("gc-btn").onclick=()=>{
   const name=$("gc-name").value.trim(), birth=ymd($("gc-birth").value);
   if(!name || !birth) return;
-  gClient={ name, birth:birth.replace(/-/g,"") };   // birth8(YYYYMMDD)
+  gClient={ name, birth:birth.replace(/-/g,""), child_id:"", memo:"" };   // birth8(YYYYMMDD)
   loadGRounds();
 };
 
 // ── 회기 목록 ──
 function loadGRounds(){
-  $("gr-subject").innerHTML='<div class="nm">'+escapeHtml(gClient.name)+' <span style="font-size:14px;color:var(--g500);font-weight:500;">('+fmtBirth(gClient.birth)+')</span></div><div class="meta">일반 상담</div>';
+  refreshGSubjects();
   $("gr-list").innerHTML=""; $("gr-count").textContent="";
   $("gr-note").className="note"; $("gr-note").textContent="불러오는 중…";
   show("s-grounds");
@@ -719,7 +898,7 @@ function renderGRounds(){
     box.appendChild(el);
   });
 }
-$("gr-back").onclick=()=>show("s-gclient");
+$("gr-back").onclick=()=>{ show("s-gclients"); loadGClients(); };
 $("gr-new").onclick=()=>{ const rs=Object.keys(gRounds).map(Number); openGRound(rs.length?Math.max.apply(null,rs)+1:1); };
 
 // ── 7칸 폼 ──
@@ -772,7 +951,7 @@ function openGRound(r){
   gCurRound=r;
   const ex=gRounds[r]||{};
   $("gw-subject").innerHTML='<div class="nm">'+escapeHtml(gClient.name)+' · '+r+'회기</div><div class="meta">'+fmtBirth(gClient.birth)+'</div>';
-  $("gw-date").value = ex.date ? ex.date.replace(/-/g,". ") : "";
+  $("gw-date").value = (ex.date ? ex.date : todayYmd()).replace(/-/g,". ");   // 새 회기=오늘 자동(수정 가능)
   $("gw-complaint").value = ex.complaint || "";
   gTagsSel = new Set(ex.tags ? String(ex.tags).split(",").map(t=>t.trim()).filter(Boolean) : []); renderTags();
   $("gw-content").value = ex.content || "";
