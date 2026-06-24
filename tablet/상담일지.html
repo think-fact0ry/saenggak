@@ -592,6 +592,8 @@ const DEMO = (function(){ try{ return new URLSearchParams(location.search).get('
 //  보존기간·동의 법무 확인 전까지 상담사에겐 안 보임(008만) → 실데이터 수집 0. 유성 테스트만 ?ga=1로 통과.
 //  ⚠️ 보안 아님(공개 소스라 URL 알면 접근) — 상담사 우발 사용 차단용. 법무 OK 후 이 게이트 제거 = 정식 오픈.
 const GA_ON = DEMO || (function(){ try{ return new URLSearchParams(location.search).get('ga')==='1'; }catch(e){ return false; } })();
+const FROM_HUB = (function(){ try{ return new URLSearchParams(location.search).get('from')==='hub'; }catch(e){ return false; } })();   // 허브가 로그인하러 보냄 → 신원 끝나면 허브로 복귀(서약·일지 건너뜀)
+if(FROM_HUB){ try{ var _sb=document.querySelector('#s-signup1 .sub'); if(_sb) _sb.textContent='생각공작소를 쓰려면 본인 확인을 할게요.'; }catch(e){} }   // 앱 로그인 진입 = 상담일지가 아니라 앱 결로 문구
 const MOCK_CLIENTS = [
   {name:'김서준', birth:'20200911', service:'아청심', center:'미추'},
   {name:'김서준', birth:'20190304', service:'아청심', center:'서구'},   // 동명이인(생년월일로 구분) 데모
@@ -701,7 +703,7 @@ function doVerify(){
       const keepPin = same ? (prev.pinHash||"") : "";          // 다른 사람이면 이전 PIN 안 물려받음
       const keepOath = same ? !!prev.oath : false;             // 같은 상담사면 서약 유지(1회), 다른 사람은 다시 받음
       if(!same) clearClientCaches();                           // 상담사 바뀜 → 이전 캐시 비움(PII)
-      saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:keepPin, oath:keepOath, lastAuth: same?(prev.lastAuth||0):0 });
+      saveSess({ staffId:d.staffId, session:d.session, name:d.name, phone:$("su-phone").value, device, pinHash:keepPin, oath:keepOath, lastAuth: same?(prev.lastAuth||0):0 });
       note.textContent="";
       // 분실 재인증은 'PIN 쓰는 기기(keepPin 있음=첫 기기)'에서만 재설정 — PIN 없는 다른 기기엔 강요 X(§11). forgotPin은 양쪽서 소비(누수 차단)
       if((d.isNew && !keepPin) || (forgotPin && keepPin)){ forgotPin=false; show("s-signup3"); $("su-pin1").focus(); }   // 첫 등록 또는 비번분실 재인증 → PIN (재)설정
@@ -883,6 +885,7 @@ let curRound = 0;             // 1~4
 let roundData = {};           // {round: {date, content}}
 
 function enterApp(){
+  if(FROM_HUB && !DEMO){ location.replace('./index.html'); return; }   // 허브 로그인용 진입 = 신원만 끝내고 허브로(서약·일지는 상담일지 타일로 들어올 때). DEMO는 예외(시연 우회 방지)
   const s=loadSess();
   if(!DEMO && s && !s.oath){ showOath(); return; }   // 상담사 서약 1회 — 동의해야 상담일지 사용
   doEnterApp();
