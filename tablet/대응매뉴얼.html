@@ -13,7 +13,8 @@
     --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452; --amber:#c77700; --amber-l:#fff8ec;
     --bar:56px;
   }
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 롱프레스→구글검색 차단(ex9) */
+  input,textarea{-webkit-user-select:text;user-select:text;}
   html{scroll-behavior:smooth;}
   body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);
     word-break:keep-all;line-height:1.62;padding-top:calc(var(--bar) + env(safe-area-inset-top));

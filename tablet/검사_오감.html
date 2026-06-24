@@ -12,7 +12,8 @@
     --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
     --mint-h:#d8e4e2; --mint-l:#eef4ef;
   }
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 롱프레스→구글검색 차단(ex9) */
+  input,textarea{-webkit-user-select:text;user-select:text;}
   body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;}
   .screen{display:none;}
   .screen.active{display:block;}

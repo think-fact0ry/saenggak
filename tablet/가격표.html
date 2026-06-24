@@ -11,7 +11,8 @@
     --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
     --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
   }
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 롱프레스→구글검색 차단(ex9) */
+  input,textarea{-webkit-user-select:text;user-select:text;}
   body{
     font-family:'Pretendard',-apple-system,sans-serif;
     background:#fff; color:var(--g900);
