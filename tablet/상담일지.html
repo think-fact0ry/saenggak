@@ -16,10 +16,11 @@
   .screen{display:none;}
   .screen.active{display:block;}
   .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}
-  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin:0 0 4px -4px;border-radius:12px;border:none;background:transparent;text-decoration:none;font-size:22px;color:var(--g700);cursor:pointer;}
+  .back{display:flex;align-items:center;justify-content:flex-start;width:40px;height:40px;margin:0 0 4px 0;border-radius:12px;border:none;background:transparent;text-decoration:none;color:var(--g700);cursor:pointer;}   /* 좌측 정렬 = 제목·인풋과 같은 왼쪽 라인 */
+  .back svg{width:24px;height:24px;display:block;}
   .back:active{background:var(--g100);}
-  h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 2px 6px;}
-  .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 2px 22px;}
+  h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 0 6px;}
+  .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 0 22px;}
   .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:8px;padding:5px 11px;margin:0 2px 18px;}
   .head-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 
@@ -33,12 +34,12 @@
   .field input.pin{letter-spacing:14px;text-align:center;font-size:22px;}
 
   /* 토스식 입력 필드 (라벨·밑줄·X버튼·그린캐럿) — docs §5.5 */
-  .tfield{margin-bottom:30px;}
-  .tfield label{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin:0 0 6px;transition:color .15s;}
+  .tfield{margin-bottom:24px;}
+  .tfield label{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin:0 0 2px;transition:color .15s;}   /* 라벨↔인풋 간격 축소 */
   .tfield.focus label{color:var(--green);}
   .tin-wrap{position:relative;border-bottom:2px solid var(--g200);transition:border-color .15s;}
   .tfield.focus .tin-wrap{border-color:var(--green);}
-  .tin-wrap input{width:100%;border:none;background:none;outline:none;font-family:inherit;font-size:22px;font-weight:600;color:var(--g900);padding:4px 40px 11px 0;caret-color:var(--green);}
+  .tin-wrap input{width:100%;border:none;background:none;outline:none;font-family:inherit;font-size:22px;font-weight:600;color:var(--g900);padding:2px 40px 5px 0;caret-color:var(--green);}   /* 인풋↔밑줄 간격 축소 */
   .tin-wrap input::placeholder{color:var(--g300);font-weight:500;}
   .tin-wrap .clr{position:absolute;right:0;top:6px;width:24px;height:24px;border-radius:50%;background:var(--g300);border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;}
   .tfield.has-val .clr{display:flex;}
@@ -46,6 +47,9 @@
 
   /* 하단 고정 버튼 */
   .footbar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:12px 22px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--g100);transition:transform .25s cubic-bezier(.2,.7,.3,1);}   /* transform = 키패드 위로 올림 */
+  .footbar.kb{padding:0;border-top:none;}                  /* 키보드 위로 올라가면 좌우 여백 없이 꽉 차게(ex2) */
+  .footbar.kb .inner{max-width:none;gap:0;}
+  .footbar.kb .btn{border-radius:0;padding:19px;}
   .footbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px;}
   .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;}
   .btn:active{transform:scale(.985);background:var(--green-d);}
@@ -252,20 +256,20 @@
 <!-- ═══ 가입 1: 이름·전화 ═══ -->
 <div class="screen" id="s-signup1">
   <div class="wrap">
-    <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+    <a class="back" href="./index.html" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
     <h1>반가워요</h1>
     <p class="sub">상담일지를 쓰려면 본인 확인을 할게요.</p>
     <div class="tfield" id="tf-name">
       <label for="su-name">이름</label>
       <div class="tin-wrap">
-        <input id="su-name" type="text" placeholder="홍길동" autocomplete="name">
+        <input id="su-name" type="text" placeholder="홍길동" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
         <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
     </div>
     <div class="tfield" id="tf-phone">
       <label for="su-phone">전화번호</label>
       <div class="tin-wrap">
-        <input id="su-phone" type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel">
+        <input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
         <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
     </div>
@@ -277,7 +281,7 @@
 <!-- ═══ 가입 2: OTP ═══ -->
 <div class="screen" id="s-signup2">
   <div class="wrap">
-    <button class="back" id="su2Back" aria-label="이전">‹</button>
+    <button class="back" id="su2Back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <h1>인증번호 확인</h1>
     <p class="sub" id="su2Sub">문자로 받은 6자리 숫자를 적어 주세요.</p>
     <div class="field"><label>인증번호</label><input id="su-code" type="text" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off"></div>
@@ -314,7 +318,7 @@
 <!-- ═══ 모드 선택: 바우처(008) / 일반 ═══ -->
 <div class="screen" id="s-mode">
   <div class="wrap">
-    <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+    <a class="back" href="./index.html" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
     <div class="head-row"><h1>상담일지</h1><span class="who" id="whoTag2"></span></div>
     <p class="sub">어떤 상담일지를 쓸까요?</p>
     <div class="mode-list">
@@ -333,7 +337,7 @@
 <!-- ═══ 내담자 선택(하이브리드: 검색 + 목록) ═══ -->
 <div class="screen" id="s-clients">
   <div class="wrap">
-    <button class="back" id="cl-back" aria-label="이전">‹</button>
+    <button class="back" id="cl-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="head-row"><h1>바우처 상담일지</h1><span class="who" id="whoTag"></span></div>
     <div class="search">
       <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
@@ -348,10 +352,10 @@
 <!-- ═══ 월 / 회차 그리드 ═══ -->
 <div class="screen" id="s-month">
   <div class="wrap">
-    <button class="back" id="m-back" aria-label="목록">‹</button>
+    <button class="back" id="m-back" aria-label="목록"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="subject" id="m-subject"></div>
     <div class="month-nav">
-      <button id="m-prev" aria-label="이전 달">‹</button>
+      <button id="m-prev" aria-label="이전 달"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <div class="ym" id="m-ym"></div>
       <button id="m-next" aria-label="다음 달">›</button>
     </div>
@@ -364,7 +368,7 @@
 <!-- ═══ 008 출력 미리보기 ═══ -->
 <div class="screen" id="s-print">
   <div class="wrap">
-    <button class="back noprint" id="p-back" aria-label="뒤로">‹</button>
+    <button class="back noprint" id="p-back" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div id="report008"></div>
   </div>
   <div class="footbar noprint"><div class="inner"><button class="btn" id="p-do">출력 / PDF 저장</button></div></div>
@@ -374,7 +378,7 @@
 <div class="screen" id="s-gclients">
   <div class="wrap">
     <div class="head-row">
-      <button class="back" id="gcl-back" aria-label="이전" style="margin:0 0 0 -4px;">‹</button>
+      <button class="back" id="gcl-back" aria-label="이전" style="margin:0 0 0 -4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <button class="icobtn" id="gcl-edit" aria-label="순서 수정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
     </div>
     <h1 style="margin-top:2px;">일반 상담일지</h1>
@@ -392,7 +396,7 @@
 <!-- ═══ [일반] 내담자 직접입력 ═══ -->
 <div class="screen" id="s-gclient">
   <div class="wrap">
-    <button class="back" id="gc-back" aria-label="이전">‹</button>
+    <button class="back" id="gc-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <h1>일반 상담일지</h1>
     <p class="sub">이름과 생년월일로 회기를 모아 둘게요.</p>
     <div class="field"><label>이름</label><input id="gc-name" type="text" placeholder="홍길동" autocomplete="off"></div>
@@ -406,7 +410,7 @@
 <div class="screen" id="s-grounds">
   <div class="wrap">
     <div class="head-row" style="margin-bottom:2px;">
-      <button class="back" id="gr-back" aria-label="이전">‹</button>
+      <button class="back" id="gr-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <button class="icobtn" id="gr-edit" aria-label="내담자 정보·메모 수정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
     </div>
     <div class="subject" id="gr-subject"></div>
@@ -424,7 +428,7 @@
 <!-- ═══ [일반] 내담자 정보·메모 수정(연필) ═══ -->
 <div class="screen" id="s-gedit">
   <div class="wrap">
-    <button class="back" id="ge-back" aria-label="이전">‹</button>
+    <button class="back" id="ge-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <h1>내담자 정보</h1>
     <div class="field"><label>이름</label><input id="ge-name" type="text" placeholder="홍길동" autocomplete="off"></div>
     <div class="field"><label>생년월일</label><input id="ge-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
@@ -437,7 +441,7 @@
 <!-- ═══ [일반] 초기상담 기록(인테이크, 내담자당 1회) ═══ -->
 <div class="screen" id="s-gintake">
   <div class="wrap">
-    <button class="back" id="gi-back" aria-label="이전">‹</button>
+    <button class="back" id="gi-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="subject" id="gi-subject"></div>
 
     <div class="irow seg-row"><label>내담자</label><div class="seg" id="gi-type"></div></div>
@@ -475,7 +479,7 @@
 <!-- ═══ [일반] 회기 기록 폼(7칸) ═══ -->
 <div class="screen" id="s-gwrite">
   <div class="wrap">
-    <button class="back" id="gw-back" aria-label="회기">‹</button>
+    <button class="back" id="gw-back" aria-label="회기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="subject" id="gw-subject"></div>
 
     <div class="irow"><label>상담일자</label><input id="gw-date" class="flat" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
@@ -509,7 +513,7 @@
 <!-- ═══ 회차 상세내용 입력·수정 ═══ -->
 <div class="screen" id="s-write">
   <div class="wrap">
-    <button class="back" id="w-back" aria-label="회차">‹</button>
+    <button class="back" id="w-back" aria-label="회차"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="subject" id="w-subject"></div>
     <div class="field"><label>상담일</label><input id="w-date" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
     <div class="field"><label>상세내용</label><textarea id="w-content" placeholder="서비스 세부 내용 및 이용자 상태평가 등을 적어요."></textarea></div>
@@ -575,7 +579,7 @@ async function sha256(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-function show(id){ if(id!=="s-signup2") stopOtpTimer(); document.querySelectorAll(".footbar").forEach(f=>f.style.transform=""); document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }   // footbar transform 초기화 = 키보드 올린 채 화면 전환 시 잔류 방지
+function show(id){ if(id!=="s-signup2") stopOtpTimer(); document.querySelectorAll(".footbar").forEach(f=>{ f.style.transform=""; f.classList.remove("kb"); }); document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }   // footbar transform·kb 초기화 = 키보드 올린 채 화면 전환 시 잔류 방지
 
 // ── 자동서식 헬퍼 ──
 // 고정길이 자동닫힘 — 단, *고치러 다시 연 경우*(포커스 시점에 이미 가득)엔 안 닫음(수정 방해 방지). 원칙 §5.
@@ -605,7 +609,7 @@ $("su-name").oninput=v1; $("su-phone").addEventListener("fmt",v1);
 function setupTField(tf){
   const inp=tf.querySelector("input"), clr=tf.querySelector(".clr");
   const upd=()=>tf.classList.toggle("has-val", inp.value.length>0);
-  inp.addEventListener("focus",()=>tf.classList.add("focus"));
+  inp.addEventListener("focus",()=>{ tf.classList.add("focus"); setTimeout(()=>{ try{ inp.scrollIntoView({block:"center",behavior:"smooth"}); }catch(e){} },320); });   // 키보드 뜬 뒤 입력칸을 버튼 위로 스크롤(가림 방지)
   inp.addEventListener("blur",()=>tf.classList.remove("focus"));
   inp.addEventListener("input",upd);
   clr.addEventListener("click",()=>{ inp.value=""; inp.dispatchEvent(new Event("input")); inp.focus(); });   // 비우고 기존 검증·서식·has-val 재실행(input 리스너) + 포커스 유지
@@ -744,11 +748,11 @@ function openGate(){
 function fitGate(){ const g=$("s-gate"); if(g) g.style.height=(window.visualViewport?Math.round(window.visualViewport.height):window.innerHeight)+"px"; }   // 한 화면 보장(body 스크롤 방지)
 // ── 뷰포트 변화 한 곳에서 처리(§7 단일 핸들러): 게이트 활성 시 높이 박기 + 활성 화면 footbar만 키보드 위로 ──
 function liftActiveFooter(){
-  document.querySelectorAll(".footbar").forEach(f=>{ f.style.transform=""; });   // 전부 초기화 후
+  document.querySelectorAll(".footbar").forEach(f=>{ f.style.transform=""; f.classList.remove("kb"); });   // 전부 초기화 후
   if(!window.visualViewport) return;
   const kb=Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
   const fb=document.querySelector(".screen.active .footbar");
-  if(fb && kb>80) fb.style.transform="translateY("+(-kb)+"px)";                   // 활성 화면 것만 키보드 높이만큼 위로
+  if(fb && kb>80){ fb.style.transform="translateY("+(-kb)+"px)"; fb.classList.add("kb"); }   // 활성 화면 것만 키보드 위로 + 꽉 차게(ex2)
 }
 function onViewport(){ const g=$("s-gate"); if(g && g.classList.contains("active")) fitGate(); liftActiveFooter(); }
 window.addEventListener("resize",onViewport);
