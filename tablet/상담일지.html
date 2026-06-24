@@ -46,24 +46,32 @@
 
   /* 재진입 PIN 게이트 — 토스식 보안 키패드(랜덤 숫자, OS 키보드 없음) */
   #s-gate.active{display:flex;}   /* .screen.active{display:block} 덮어쓰기 */
-  #s-gate{flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;padding:max(40px,7vh) 24px calc(22px + env(safe-area-inset-bottom));}
-  .g-head{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
-  .g-head h1{font-size:23px;margin-bottom:6px;}
-  .g-head .sub{margin:0;}
-  .g-dots{display:flex;gap:16px;margin:32px 0 8px;}
-  .g-dot{width:14px;height:14px;border-radius:50%;background:var(--g200);transition:background .12s,transform .12s;}
+  #s-gate{flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;padding:max(36px,5vh) 24px calc(max(50px,10vh) + env(safe-area-inset-bottom));}
+  .g-head{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%;}
+  .g-titles{overflow:hidden;max-height:120px;opacity:1;transform:translateY(0);transition:max-height .44s cubic-bezier(.4,0,.2,1),opacity .3s ease,transform .44s cubic-bezier(.4,0,.2,1);}
+  .g-titles.hide{max-height:0;opacity:0;transform:translateY(-16px);}
+  .g-titles h1{font-size:23px;margin-bottom:6px;}
+  .g-titles .sub{margin:0;}
+  .g-dots{display:flex;gap:16px;margin:26px 0 8px;}
+  .g-dot{width:14px;height:14px;border-radius:50%;background:var(--g200);transition:background .15s,transform .15s;}
   .g-dot.on{background:var(--green);transform:scale(1.15);}
   .g-err{height:18px;font-size:13px;color:var(--red);font-weight:600;opacity:0;transition:opacity .15s;}
   .g-err.show{opacity:1;}
   .g-err.shake{animation:gshake .35s;}
   @keyframes gshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
-  .g-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px;width:100%;max-width:330px;}
-  .g-key{height:62px;border-radius:16px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:27px;font-weight:600;color:var(--g900);display:flex;align-items:center;justify-content:center;transition:background .1s,transform .08s;}
-  .g-key:active{background:var(--g100);transform:scale(.94);}
-  .g-key.fn{font-size:15px;font-weight:600;color:var(--g500);}
+  .g-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 18px;width:100%;max-width:336px;}
+  .g-key{position:relative;overflow:hidden;height:64px;border-radius:18px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:27px;font-weight:600;color:var(--g900);display:flex;align-items:center;justify-content:center;transition:transform .18s cubic-bezier(.2,.7,.3,1);}
+  .g-key:active{transform:scale(.9);}                              /* 부드러운 프레스(회색 X) */
+  .g-key .kd{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;}
+  .g-key.fn{color:var(--g700);opacity:0;pointer-events:none;transition:opacity .22s ease,transform .18s cubic-bezier(.2,.7,.3,1);}  /* 뒤로가기 = 입력 있을 때만 */
+  .g-key.fn.show{opacity:1;pointer-events:auto;}
   .g-key.empty{pointer-events:none;}
-  .g-forgot{margin-top:20px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--g500);text-decoration:underline;cursor:pointer;padding:8px 10px;}
-  .g-forgot:active{color:var(--g700);}
+  .ripple{position:absolute;left:50%;top:50%;width:140%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle, rgba(58,138,95,.5) 0%, rgba(58,138,95,.2) 48%, rgba(58,138,95,0) 72%);transform:translate(-50%,-50%) scale(.2);pointer-events:none;z-index:0;animation:grip .54s ease-out forwards;}
+  @keyframes grip{0%{transform:translate(-50%,-50%) scale(.2);opacity:.95;}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0;}}
+  .g-forgot-wrap{margin-top:26px;min-height:46px;display:flex;align-items:center;justify-content:center;}
+  .g-forgot{background:none;border:1.5px solid transparent;font-family:inherit;font-size:14px;font-weight:600;color:var(--g500);text-decoration:underline;cursor:pointer;padding:9px 16px;border-radius:13px;transition:background .35s ease,color .35s ease,border-color .35s ease,transform .35s cubic-bezier(.2,.7,.3,1);}
+  .g-forgot.as-btn{background:var(--green-l);color:var(--green-d);text-decoration:none;border-color:rgba(58,138,95,.22);transform:translateY(-2px);}  /* 3초 무입력 → 부드럽게 버튼화(딱 한번) */
+  .g-forgot:active{transform:scale(.97);}
 
   /* 내담자 검색 + 목록 */
   .search{position:relative;margin-bottom:16px;}
@@ -270,13 +278,15 @@
 <!-- ═══ 게이트: PIN 입력(재진입) — 토스식 보안 키패드 ═══ -->
 <div class="screen" id="s-gate">
   <div class="g-head">
-    <h1>다시 오셨네요</h1>
-    <p class="sub">비밀번호를 눌러주세요</p>
+    <div class="g-titles" id="gTitles">
+      <h1>다시 오셨네요</h1>
+      <p class="sub">비밀번호를 눌러주세요</p>
+    </div>
     <div class="g-dots"><div class="g-dot"></div><div class="g-dot"></div><div class="g-dot"></div><div class="g-dot"></div></div>
     <div class="g-err" id="gateErr"></div>
   </div>
   <div class="g-pad" id="g-pad"></div>
-  <button class="g-forgot" id="g-forgot">비밀번호를 몰라요</button>
+  <div class="g-forgot-wrap"><button class="g-forgot" id="g-forgot">비밀번호를 몰라요</button></div>
 </div>
 
 <!-- ═══ 모드 선택: 바우처(008) / 일반 ═══ -->
@@ -660,17 +670,33 @@ $("su3Btn").onclick=async()=>{
 };
 
 // ════ 게이트 — 토스식 보안 키패드(랜덤 숫자, OS 키보드 없음) ════
-let gateEntry="";
+let gateEntry="", gateStarted=false, forgotBtnUsed=false, forgotTimer=null;
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function gateDots(){ document.querySelectorAll("#s-gate .g-dot").forEach((d,i)=>d.classList.toggle("on", i<gateEntry.length)); }
+function gateTitle(){ $("gTitles").classList.toggle("hide", gateStarted); }   // 첫 입력 후 제목 접힘(이후 유지) → dots가 그 자리로 올라감
+function gateDel(){ const d=document.querySelector('#g-pad [data-k="del"]'); if(d) d.classList.toggle("show", gateEntry.length>0); }   // 뒤로가기 아이콘 = 입력 1개 이상일 때만
+function _gKey(d){ return `<button class="g-key" data-k="${d}"><span class="kd">${d}</span></button>`; }
+function _gDel(){ return `<button class="g-key fn" data-k="del" aria-label="지우기"><span class="kd"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></span></button>`; }
 function buildPad(){   // 매 진입·오답마다 0~9 재배치(토스 보안 키패드)
   const n=shuffle([0,1,2,3,4,5,6,7,8,9]); let h="";
-  for(let i=0;i<9;i++) h+=`<button class="g-key" data-k="${n[i]}">${n[i]}</button>`;
-  h+=`<span class="g-key empty"></span><button class="g-key" data-k="${n[9]}">${n[9]}</button><button class="g-key fn" data-k="del">지우기</button>`;
-  $("g-pad").innerHTML=h;
+  for(let i=0;i<9;i++) h+=_gKey(n[i]);
+  h+=`<span class="g-key empty"></span>`+_gKey(n[9])+_gDel();
+  $("g-pad").innerHTML=h; gateDel();
 }
-function openGate(){ gateEntry=""; $("gateErr").classList.remove("show"); gateDots(); buildPad(); show("s-gate"); }
-function gateBad(){ const e=$("gateErr"); e.textContent="비밀번호를 다시 눌러 주세요"; e.classList.add("show","shake"); setTimeout(()=>e.classList.remove("shake"),360); gateEntry=""; gateDots(); buildPad(); }   // 오답 = 키패드 재섞기(§2 긍정형)
+function gripple(btn){ if(!btn) return; const r=document.createElement("span"); r.className="ripple"; btn.appendChild(r); setTimeout(()=>r.remove(),560); }
+function grippleRandom(except){ const ks=[...document.querySelectorAll('#g-pad .g-key[data-k]')].filter(b=>b.getAttribute("data-k")!=="del" && b!==except); if(ks.length) gripple(ks[Math.floor(Math.random()*ks.length)]); }   // 누른 키 외 랜덤 1개 더 퍼짐(숄더서핑 차단)
+function armForgotBtn(){ clearTimeout(forgotTimer); forgotTimer=setTimeout(()=>{ if(!forgotBtnUsed && gateEntry.length===0) $("g-forgot").classList.add("as-btn"); }, 3000); }   // 3초 무입력 → 강조버튼 등장
+function dismissForgotBtn(){ clearTimeout(forgotTimer); forgotBtnUsed=true; $("g-forgot").classList.remove("as-btn"); }   // 입력 시작 = 영구 해제(딱 한번, 비워도 재등장 X)
+function openGate(){
+  gateEntry=""; gateStarted=false; forgotBtnUsed=false;
+  $("gateErr").classList.remove("show"); $("g-forgot").classList.remove("as-btn");
+  gateDots(); buildPad();
+  const gt=$("gTitles"); gt.classList.add("hide");                                    // 진입 애니메이션 시작점
+  show("s-gate");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>gt.classList.remove("hide")));  // 제목 부드럽게 등장
+  armForgotBtn();
+}
+function gateBad(){ const e=$("gateErr"); e.textContent="비밀번호를 다시 눌러 주세요"; e.classList.add("show","shake"); setTimeout(()=>e.classList.remove("shake"),360); gateEntry=""; gateDots(); gateDel(); setTimeout(buildPad,550); }   // 오답 = 흔들림·리플(540ms) 끝난 뒤 키패드 재섞기(마지막 키 리플 끊김 방지). gateDel은 옛 패드서 백스페이스 즉시 숨김. 제목은 접힌 채 유지
 async function gateCheck(){
   const s=loadSess(); if(!s){ show("s-signup1"); return; }
   const h=await sha256(s.device + ":" + gateEntry);
@@ -678,15 +704,22 @@ async function gateCheck(){
   else gateBad();
 }
 function gatePress(k){
-  if(k==="del"){ gateEntry=gateEntry.slice(0,-1); $("gateErr").classList.remove("show"); gateDots(); return; }
+  if(k==="del"){ if(!gateEntry.length) return; gateEntry=gateEntry.slice(0,-1); $("gateErr").classList.remove("show"); gateDots(); gateDel(); return; }
   if(gateEntry.length>=4) return;
   $("gateErr").classList.remove("show");
-  gateEntry+=k; gateDots();
-  if(gateEntry.length===4) gateCheck();   // 4자리 차면 자동 확인
+  if(!gateStarted){ gateStarted=true; gateTitle(); }   // 첫 숫자 = 제목 접고 dots 위로
+  dismissForgotBtn();                                   // 첫 숫자 = '몰라요' 강조버튼 영구 해제
+  gateEntry+=k; gateDots(); gateDel();
+  if(gateEntry.length===4) gateCheck();                 // 4자리 차면 자동 확인
 }
-$("g-pad").addEventListener("click",e=>{ const b=e.target.closest(".g-key[data-k]"); if(b) gatePress(b.getAttribute("data-k")); });
+$("g-pad").addEventListener("click",e=>{
+  const b=e.target.closest(".g-key[data-k]"); if(!b) return;
+  const k=b.getAttribute("data-k");
+  if(k!=="del"){ gripple(b); grippleRandom(b); }        // 초록 그라데이션 — 누른 키 + 랜덤 1개
+  gatePress(k);
+});
 // 비밀번호 분실 → 본인 확인(OTP)으로. 통과 후 PIN 재설정(forgotPin).
-$("g-forgot").onclick=()=>{ forgotPin=true; const s=loadSess()||{}; if(s.name) $("su-name").value=s.name; const n=$("su1Note"); if(n){ n.className="note"; n.textContent="비밀번호 대신 본인 확인으로 들어갈게요. 전화번호를 적어 주세요."; } show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100); };
+$("g-forgot").onclick=()=>{ clearTimeout(forgotTimer); forgotPin=true; const s=loadSess()||{}; if(s.name) $("su-name").value=s.name; const n=$("su1Note"); if(n){ n.className="note"; n.textContent="비밀번호 대신 본인 확인으로 들어갈게요. 전화번호를 적어 주세요."; } show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100); };   // clearTimeout = 숨겨진 화면서 강조버튼 켜지는 잔여 타이머 방지
 function markUnlocked(){ try{ sessionStorage.setItem(UNLOCK_KEY,"1"); }catch(e){} }
 function needGate(s){ const u=(()=>{ try{ return sessionStorage.getItem(UNLOCK_KEY)==="1"; }catch(e){ return false; } })(); return !u || (Date.now()-(s.lastAuth||0) > GATE_MS); }
 
