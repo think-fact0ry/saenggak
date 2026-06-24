@@ -120,12 +120,41 @@
   .install-bar .add{font-size:14px; font-weight:700; border-radius:11px; padding:10px 16px; background:#fff; color:var(--green-d);}
   .install-bar .add:active{background:#eef0f3;}
   .install-bar .x{background:transparent; color:#fff; font-size:20px; padding:4px 6px; opacity:.85;}
+
+  /* ═ 역할 분리(제공인력/이용자) — 앱 켤 때 첫 화면 ═ */
+  #roleGate{position:fixed; inset:0; z-index:10000; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 26px calc(40px + env(safe-area-inset-bottom));}
+  #roleGate.hide{display:none;}
+  .rg-logo{width:56px; height:56px; margin-bottom:18px;}
+  .rg-logo img{width:100%; height:100%; object-fit:contain; display:block;}
+  .rg-title{font-size:22px; font-weight:800; letter-spacing:-.6px;}
+  .rg-sub{font-size:15px; color:var(--g500); font-weight:500; margin-top:7px; margin-bottom:36px;}
+  .rg-btns{width:100%; max-width:360px; display:flex; flex-direction:column; gap:12px;}
+  .rg-btn{width:100%; font-family:inherit; font-size:16.5px; font-weight:700; letter-spacing:-.3px; padding:20px; border-radius:16px; border:1.5px solid var(--g200); background:var(--g100); color:var(--g900); cursor:pointer; transition:transform .08s, background .15s, border-color .15s; text-align:left;}
+  .rg-btn .rg-d{display:block; font-size:13px; font-weight:500; color:var(--g500); margin-top:3px;}
+  .rg-btn:active{transform:scale(.985);}
+  .rg-btn.primary{background:#eaf5ee; border-color:transparent;}
+  .rg-btn.primary:active{background:#e1f0e7;}
+
+  /* 이용자 = 제공인력 전용 타일 숨김 */
+  body.role-user .tile[data-prov]{display:none;}
+  .role-switch{display:inline-block; margin-top:8px; background:none; border:none; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--g400); text-decoration:underline; cursor:pointer;}
 </style>
 </head>
 <body>
 
-<!-- ═ PIN 잠금: 기기당 1회. 메뉴 존재를 가리는 속도방지턱(보안 아님) ═ -->
-<div id="gate">
+<!-- ═ 역할 분리: 앱 켤 때 첫 화면(제공인력/이용자) ═ -->
+<div id="roleGate" class="hide">
+  <div class="rg-logo"><img src="/saenggak/android-icon-192x192.png" alt="생각공작소"></div>
+  <div class="rg-title">생각공작소</div>
+  <div class="rg-sub">어떤 분이세요?</div>
+  <div class="rg-btns">
+    <button class="rg-btn primary" data-role="provider">제공인력<span class="rg-d">선생님 · 행정 — 상담일지·검사·서식 등</span></button>
+    <button class="rg-btn" data-role="user">이용자<span class="rg-d">보호자 · 일반 — 가격 안내·활동 보기</span></button>
+  </div>
+</div>
+
+<!-- ═ PIN 잠금: 제공인력 기기당 1회. 속도방지턱(보안 아님) ═ -->
+<div id="gate" class="hide">
   <div class="gate-logo"><img src="/saenggak/android-icon-192x192.png" alt="생각공작소"></div>
   <div class="gate-title">생각공작소</div>
   <div class="gate-sub">PIN을 눌러요</div>
@@ -175,33 +204,33 @@
       <div class="desc">센터 활동 이야기</div>
     </a>
 
-    <a class="tile" href="./검사_오감.html">
+    <a class="tile" data-prov href="./검사_오감.html">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
       <div class="name">심리검사</div>
       <div class="desc">즉시 채점</div>
     </a>
 
-    <a class="tile needs-net" href="./서식.html">
+    <a class="tile needs-net" data-prov href="./서식.html">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
       <div class="name">서식함</div>
       <div class="desc">양식 미리보기 · 출력</div>
     </a>
 
-    <a class="tile needs-net" href="./대응매뉴얼.html">
+    <a class="tile needs-net" data-prov href="./대응매뉴얼.html">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
       <div class="name">전화 응대 매뉴얼</div>
       <div class="desc">상황별 안내 · 보고</div>
       <span class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
     </a>
 
-    <a class="tile needs-net" href="../provider-map.html">
+    <a class="tile needs-net" data-prov href="../provider-map.html">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
       <div class="name">제공인력 지도</div>
       <div class="desc">선생님·대기 아동 위치</div>
       <span class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
     </a>
 
-    <a class="tile" href="./상담일지.html">
+    <a class="tile" data-prov href="./상담일지.html">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
       <div class="name">상담일지</div>
       <div class="desc">회기 기록</div>
@@ -209,7 +238,7 @@
 
   </div>
 
-  <div class="foot">생각공작소 · think-factory.kr <span id="ver" style="opacity:.8"></span></div>
+  <div class="foot">생각공작소 · think-factory.kr <span id="ver" style="opacity:.8"></span><br><button class="role-switch" id="roleSwitch">역할 바꾸기</button></div>
 
 </div>
 
@@ -248,11 +277,6 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   var gate = document.getElementById('gate');
   function unlock(){ gate.classList.add('hide'); }
 
-  // PIN 미설정 → 잠금 끔(설정 전 페이지가 막히지 않게)
-  if (!PIN_HASH) { unlock(); return; }
-  // 이 기기에서 이미 풀었고 PIN이 안 바뀌었으면 통과
-  try { if (localStorage.getItem(UNLOCK_KEY) === PIN_HASH) { unlock(); return; } } catch(e){}
-
   var dots = Array.prototype.slice.call(document.querySelectorAll('.gate-dot'));
   var err = document.getElementById('gateErr');
   var entry = '';
@@ -290,12 +314,45 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     if (/^[0-9]$/.test(e.key)) press(e.key);
     else if (e.key === 'Backspace') press('del');
   });
+  // 제공인력 역할일 때만 호출 — PIN 필요하면 #gate 보임, 아니면 통과
+  window.runPinGate = function(){
+    if (!PIN_HASH) { gate.classList.add('hide'); return; }
+    try { if (localStorage.getItem(UNLOCK_KEY) === PIN_HASH) { gate.classList.add('hide'); return; } } catch(e){}
+    entry = ''; render(); gate.classList.remove('hide');
+  };
   render();
+})();
+
+// ════ 역할 분리(제공인력/이용자) — 앱 켤 때 첫 화면 ════
+var ROLE_KEY = 'tf_role';
+function getRole(){ try{ return localStorage.getItem(ROLE_KEY); }catch(e){ return null; } }
+function applyRole(r){
+  document.body.classList.toggle('role-user', r === 'user');
+  document.getElementById('roleGate').classList.add('hide');
+  if (r === 'provider'){ if (window.runPinGate) window.runPinGate(); }   // 제공인력만 기기 PIN
+  // 이용자: PIN 없이 통과(전용 타일은 CSS로 숨김)
+}
+document.getElementById('roleGate').addEventListener('click', function(e){
+  var b = e.target.closest('[data-role]'); if (!b) return;
+  var r = b.getAttribute('data-role');
+  try{ localStorage.setItem(ROLE_KEY, r); }catch(e){}
+  applyRole(r);
+});
+document.getElementById('roleSwitch').addEventListener('click', function(){
+  try{ localStorage.removeItem(ROLE_KEY); }catch(e){}
+  document.body.classList.remove('role-user');
+  document.getElementById('gate').classList.add('hide');
+  document.getElementById('roleGate').classList.remove('hide');   // 역할 다시 고르기
+});
+(function(){
+  var r = getRole();
+  if (!r){ document.getElementById('roleGate').classList.remove('hide'); return; }   // 첫 방문 → 역할 선택
+  applyRole(r);
 })();
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.24k';
+var APP_VERSION = '26.06.24l';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
