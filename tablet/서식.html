@@ -253,7 +253,7 @@ function gasGet(action, params){
 
 // ── 목차 ──
 function loadList(){
-  if (!getToken()){ openGate(); return; }
+  // 암호 게이트 제거(유성 2026-06-24) — 허브 OTP+PIN 로그인으로 대체, GAS 토큰 게이트도 제거됨. #gate 키패드는 미사용(dormant)
   showLoad(true);
   document.getElementById('listMsg').style.display = 'none';
   gasGet('list').then(function(d){

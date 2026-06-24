@@ -302,7 +302,7 @@ function fetchManual(token){
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
 }
 function loadManual(){
-  if(!getToken()){ openGate(); return; }
+  // 암호 게이트 제거(유성 2026-06-24) — 허브 OTP+PIN + 매뉴얼 타일 data-tier=admin으로 접근 통제. #gate 키패드는 미사용(dormant)
   showLoad(true);
   fetchManual(getToken()).then(function(d){
     showLoad(false);
