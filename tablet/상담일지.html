@@ -35,7 +35,7 @@
 
   /* 토스식 입력 필드 (라벨·밑줄·X버튼·그린캐럿) — docs §5.5 */
   .tfield{margin-bottom:24px;}
-  .tfield label{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin:0 0 2px;transition:color .15s;}   /* 라벨↔인풋 간격 축소 */
+  .tfield label{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin:0 0 6px;transition:color .15s;}   /* 라벨↔인풋 간격 */
   .tfield.focus label{color:var(--green);}
   .tin-wrap{position:relative;border-bottom:2px solid var(--g200);transition:border-color .15s;}
   .tfield.focus .tin-wrap{border-color:var(--green);}
@@ -47,13 +47,28 @@
 
   /* 하단 고정 버튼 */
   .footbar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:12px 22px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--g100);transition:transform .25s cubic-bezier(.2,.7,.3,1);}   /* transform = 키패드 위로 올림 */
-  .footbar.kb{padding:0;border-top:none;}                  /* 키보드 위로 올라가면 좌우 여백 없이 꽉 차게(ex2) */
+  .footbar.kb{padding:0;border-top:none;transition:none;}  /* 키보드 위로 올라가면 좌우 여백 없이 꽉 차게(ex2) + transition 없음=스크롤 시 즉시 따라붙음 */
   .footbar.kb .inner{max-width:none;gap:0;}
   .footbar.kb .btn{border-radius:0;padding:19px;}
   .footbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px;}
   .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;}
   .btn:active{transform:scale(.985);background:var(--green-d);}
   .btn:disabled{background:var(--g200);color:var(--g500);cursor:default;transform:none;}
+
+  /* 본인 확인 동의 바텀시트 */
+  .sheet-dim{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .25s;}
+  .sheet-dim.on{opacity:1;pointer-events:auto;}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:1001;background:#fff;border-radius:24px 24px 0 0;padding:30px 24px calc(20px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto;transform:translateY(101%);transition:transform .3s cubic-bezier(.2,.8,.3,1);}
+  .sheet.on{transform:translateY(0);}
+  .sheet h2{font-size:21px;font-weight:700;letter-spacing:-.5px;line-height:1.4;margin-bottom:22px;}
+  .agree-list{display:flex;flex-direction:column;gap:15px;margin-bottom:26px;}
+  .agree-item{display:flex;align-items:flex-start;gap:9px;font-size:15px;color:var(--g700);font-weight:500;line-height:1.45;}
+  .agree-item .ck{flex-shrink:0;color:var(--green);display:flex;margin-top:1px;}
+  .agree-item .ck svg{width:19px;height:19px;display:block;}
+  .agree-item .req{color:var(--green);font-weight:700;margin-right:4px;}
+  .s-btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;}
+  .s-btn:active{transform:scale(.985);background:var(--green-d);}
+  .s-later{width:100%;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--g500);padding:14px;margin-top:4px;cursor:pointer;}
 
   .note{text-align:center;font-size:13.5px;margin:12px 2px 0;color:var(--g500);min-height:18px;}
   .note.err{color:var(--red);font-weight:600;}
@@ -262,20 +277,32 @@
     <div class="tfield" id="tf-name">
       <label for="su-name">이름</label>
       <div class="tin-wrap">
-        <input id="su-name" type="text" placeholder="홍길동" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+        <input id="su-name" type="text" placeholder="홍길동" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
         <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
     </div>
     <div class="tfield" id="tf-phone">
       <label for="su-phone">전화번호</label>
       <div class="tin-wrap">
-        <input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+        <input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
         <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
     </div>
     <div class="note" id="su1Note"></div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="su1Btn" disabled>인증번호 받기</button></div></div>
+</div>
+
+<!-- ═══ 본인 확인 동의 바텀시트 (OTP 발송 전) ═══ -->
+<div class="sheet-dim" id="consentDim"></div>
+<div class="sheet" id="consentSheet">
+  <h2>본인 확인을 위해<br>동의가 필요해요</h2>
+  <div class="agree-list">
+    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>개인정보(이름·전화번호) 수집·이용 동의</span></div>
+    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>본인 확인 문자(SMS) 발송·수신 동의</span></div>
+  </div>
+  <button class="s-btn" id="consentAgree">동의하고 인증받기</button>
+  <button class="s-later" id="consentLater">다음에 하기</button>
 </div>
 
 <!-- ═══ 가입 2: OTP ═══ -->
@@ -609,7 +636,7 @@ $("su-name").oninput=v1; $("su-phone").addEventListener("fmt",v1);
 function setupTField(tf){
   const inp=tf.querySelector("input"), clr=tf.querySelector(".clr");
   const upd=()=>tf.classList.toggle("has-val", inp.value.length>0);
-  inp.addEventListener("focus",()=>{ tf.classList.add("focus"); setTimeout(()=>{ try{ inp.scrollIntoView({block:"center",behavior:"smooth"}); }catch(e){} },320); });   // 키보드 뜬 뒤 입력칸을 버튼 위로 스크롤(가림 방지)
+  inp.addEventListener("focus",()=>{ inp.removeAttribute("readonly"); tf.classList.add("focus"); setTimeout(()=>{ try{ inp.scrollIntoView({block:"center",behavior:"smooth"}); }catch(e){} },320); });   // readonly 해제=자동완성 차단 후 입력 / 키보드 뜬 뒤 입력칸을 버튼 위로 스크롤
   inp.addEventListener("blur",()=>tf.classList.remove("focus"));
   inp.addEventListener("input",upd);
   clr.addEventListener("click",()=>{ inp.value=""; inp.dispatchEvent(new Event("input")); inp.focus(); });   // 비우고 기존 검증·서식·has-val 재실행(input 리스너) + 포커스 유지
@@ -619,17 +646,26 @@ function setupTField(tf){
 
 // 키보드 위로 액션 버튼(KeyboardAboveView) = onViewport/liftActiveFooter에서 단일 처리(docs §5.5)
 
-$("su1Btn").onclick=()=>{
+// 인증번호 받기 → 동의 먼저(개인정보 수집·문자 발송) → 동의 시 OTP 발송
+function openConsent(){ $("su-name").blur(); $("su-phone").blur(); $("consentDim").classList.add("on"); $("consentSheet").classList.add("on"); }   // 키보드 닫고 시트 = 시트 가림 방지
+function closeConsent(){ $("consentDim").classList.remove("on"); $("consentSheet").classList.remove("on"); }
+$("su1Btn").onclick=()=>{ if(!$("su1Btn").disabled) openConsent(); };   // 검증 통과(버튼 활성)면 동의 시트
+$("consentDim").onclick=closeConsent;
+$("consentLater").onclick=closeConsent;
+$("consentAgree").onclick=()=>{ closeConsent(); doSendOtp(); };
+let otpSendBusy=false;
+function doSendOtp(){
+  if(otpSendBusy) return; otpSendBusy=true;   // 더블탭 가드 = 문자 2번 발송 방지
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
   const note=$("su1Note"); note.className="note"; note.textContent="확인하고 있어요…"; $("su1Btn").disabled=true;
   post({action:"staff_start", name, phone}).then(d=>{
-    $("su1Btn").disabled=false;
+    otpSendBusy=false; $("su1Btn").disabled=false;
     if(d && d.ok){
       $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
       note.textContent=""; $("su2Note").className="note"; $("su2Note").textContent="";
       $("su-code").value=""; $("su-code").disabled=false; show("s-signup2"); startOtpTimer(); $("su-code").focus();
     } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
-  }).catch(()=>{ $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
+  }).catch(()=>{ otpSendBusy=false; $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
 };
 
 // ════ 가입 2: OTP → 등록 → PIN ════
@@ -748,11 +784,12 @@ function openGate(){
 function fitGate(){ const g=$("s-gate"); if(g) g.style.height=(window.visualViewport?Math.round(window.visualViewport.height):window.innerHeight)+"px"; }   // 한 화면 보장(body 스크롤 방지)
 // ── 뷰포트 변화 한 곳에서 처리(§7 단일 핸들러): 게이트 활성 시 높이 박기 + 활성 화면 footbar만 키보드 위로 ──
 function liftActiveFooter(){
-  document.querySelectorAll(".footbar").forEach(f=>{ f.style.transform=""; f.classList.remove("kb"); });   // 전부 초기화 후
-  if(!window.visualViewport) return;
-  const kb=Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
   const fb=document.querySelector(".screen.active .footbar");
-  if(fb && kb>80){ fb.style.transform="translateY("+(-kb)+"px)"; fb.classList.add("kb"); }   // 활성 화면 것만 키보드 위로 + 꽉 차게(ex2)
+  document.querySelectorAll(".footbar").forEach(f=>{ if(f!==fb){ f.style.transform=""; f.classList.remove("kb"); } });   // 비활성 것만 초기화(활성은 직접 갱신 = 리셋→재적용 깜빡임 없음)
+  if(!fb) return;
+  const kb = window.visualViewport ? Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop) : 0;
+  if(kb>80){ fb.style.transform="translateY("+(-kb)+"px)"; fb.classList.add("kb"); }   // 키보드 위로 + 꽉 차게(ex2)
+  else { fb.style.transform=""; fb.classList.remove("kb"); }
 }
 function onViewport(){ const g=$("s-gate"); if(g && g.classList.contains("active")) fitGate(); liftActiveFooter(); }
 window.addEventListener("resize",onViewport);
