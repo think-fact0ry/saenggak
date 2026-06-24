@@ -406,7 +406,9 @@ function renderReport(){
   const title = isPre ? "사정 평가 결과서" : "사후 평가 결과서";
   const footer = isPre
     ? "본 피검자는 위 검사 결과에 따른 개입을 적용하여 피검자가 정서적 안정 및 오감 능력이 향상 될 수 있도록 함"
-    : "본 피검자는 위 검사 결과, 사전 검사에 비해 정서적 안정 및 오감 능력이 향상된 것으로 나타남";
+    : "본 피검자의 사후 검사 결과는 위와 같으며, 검사 결과를 바탕으로 개입 효과를 점검하고 향후 지원 방향을 설정함";
+    // ⚠️ 사후 '향상됨' 고정문구는 점수무관 하드코딩이라 제거(정직한 측정·자산 오염 차단, 2026-06-24).
+    //    실제 사전/사후 변화(델타) 비교는 슬라이스2에서 사전 점수 조회 API 붙인 뒤 — 그때 진짜 '변화'를 표시.
 
   const sj={social:judgeSDQ("social",s.social),hyper:judgeSDQ("hyper",s.hyper),emotion:judgeSDQ("emotion",s.emotion),
             conduct:judgeSDQ("conduct",s.conduct),peer:judgeSDQ("peer",s.peer),total:judgeSDQ("total",s.total)};
