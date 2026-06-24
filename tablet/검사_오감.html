@@ -85,6 +85,13 @@
   .grp{background:#fafbfc;font-weight:700;}          /* 세로쓰기 제거 → 가로 두 글자 */
   .score{font-weight:700;font-size:14px;}
   .judge.danger{color:var(--red);font-weight:700;}
+  /* 사전→사후 델타 표시 */
+  .sc-prev{color:var(--g400);font-weight:600;}
+  .sc-arr{color:var(--g400);}
+  .dlt{display:inline-block;font-size:10px;font-weight:700;padding:1px 5px;border-radius:6px;margin-left:2px;white-space:nowrap;}
+  .dlt.up{background:var(--green-l);color:var(--green-d);}   /* 개선 */
+  .dlt.down{background:#fdecee;color:var(--red);}            /* 심화 */
+  .dlt.same{background:var(--g100);color:var(--g500);}       /* 유지 */
   .rfoot{font-size:12.5px;line-height:1.6;padding:13px 18px;text-align:center;}
   .rfoot .flabel{display:block;font-weight:700;margin-bottom:3px;color:var(--g700);}
 
@@ -346,9 +353,12 @@ document.getElementById("toKars").onclick=()=>{
 };
 document.getElementById("toResult").onclick=()=>{
   if(firstUnanswered("karsList",karsAns)>=0) return;
-  renderReport(); show("s-result");
   if(!examStamp) examStamp=nowStamp();   // 이 실시의 고정 시각(멱등키) — 첫 결과보기 때 1회
-  saveExam(true);                 // 결과 표시 후 백그라운드 적립 (화면을 막지 않음)
+  fetchPrev().then(prev=>{               // 사후+신원세션이면 사전 점수 조회(델타). 실패/없음=단회 폴백.
+    prevData = prev;
+    renderReport(); show("s-result");
+    saveExam(true);                      // 결과 표시 후 백그라운드 적립 (화면을 막지 않음)
+  });
 };
 document.getElementById("backEdit").onclick=()=>show("s-kars");
 document.getElementById("doPrint").onclick=()=>window.print();
@@ -403,12 +413,41 @@ function renderReport(){
   const name=document.getElementById("f-name").value.trim();
   const s=scoreSDQ(sdqAns), k=scoreKARS(karsAns);
   const isPre = state.type==="사정";
+  const hasPrev = !isPre && !!prevData;
+  const pS = (hasPrev && prevData["SDQ-kr"]) ? prevData["SDQ-kr"] : null;
+  const pK = (hasPrev && prevData["K-ARS"]) ? prevData["K-ARS"] : null;
   const title = isPre ? "사정 평가 결과서" : "사후 평가 결과서";
-  const footer = isPre
-    ? "본 피검자는 위 검사 결과에 따른 개입을 적용하여 피검자가 정서적 안정 및 오감 능력이 향상 될 수 있도록 함"
-    : "본 피검자의 사후 검사 결과는 위와 같으며, 검사 결과를 바탕으로 개입 효과를 점검하고 향후 지원 방향을 설정함";
-    // ⚠️ 사후 '향상됨' 고정문구는 점수무관 하드코딩이라 제거(정직한 측정·자산 오염 차단, 2026-06-24).
-    //    실제 사전/사후 변화(델타) 비교는 슬라이스2에서 사전 점수 조회 API 붙인 뒤 — 그때 진짜 '변화'를 표시.
+
+  // 점수 셀: 사전 있으면 "사전 → 사후", 없으면 사후만.
+  const sc=(prev,cur)=> (prev==null)
+      ? `<span class="score">${cur}</span>`
+      : `<span class="sc-prev">${prev}</span><span class="sc-arr"> → </span><span class="score">${cur}</span>`;
+  // 변화 뱃지: lowerBetter=점수 낮을수록 좋음(난점·주의력). 강점(사회지향)은 높을수록 좋음=false.
+  const bd=(prev,cur,lowerBetter)=>{
+    if(prev==null) return "";
+    const d=cur-prev;
+    if(d===0) return ` <span class="dlt same">유지</span>`;
+    const up = lowerBetter ? d<0 : d>0;
+    return ` <span class="dlt ${up?'up':'down'}">${up?'개선':'심화'} ${d>0?'+':''}${d}</span>`;
+  };
+  const gS=(key)=> (pS && pS.subscores && pS.subscores[key]!=null) ? pS.subscores[key] : null;
+  const gK=(key)=> (pK && pK.subscores && pK.subscores[key]!=null) ? pK.subscores[key] : null;
+  const pST = pS ? pS.total : null, pKT = pK ? pK.total : null;
+
+  let footer;
+  if(isPre){
+    footer = "본 피검자는 위 검사 결과에 따른 개입을 적용하여 피검자가 정서적 안정 및 오감 능력이 향상 될 수 있도록 함";
+  } else if(hasPrev){
+    let parts=[];
+    if(pST!=null) parts.push(`SDQ 총 난점 ${pST} → ${s.total}`);
+    if(pKT!=null) parts.push(`K-ARS 총점 ${pKT} → ${k.total}`);
+    footer = parts.length
+      ? `사전 검사 대비 변화는 위 표와 같음 (${parts.join(", ")}).`
+      : "본 피검자의 사후 검사 결과는 위와 같으며, 검사 결과를 바탕으로 개입 효과를 점검하고 향후 지원 방향을 설정함";
+  } else {
+    footer = "본 피검자의 사후 검사 결과는 위와 같으며, 검사 결과를 바탕으로 개입 효과를 점검하고 향후 지원 방향을 설정함";
+  }
+  const scoreHdr = hasPrev ? "점수 (사전→사후)" : "점수";
 
   const sj={social:judgeSDQ("social",s.social),hyper:judgeSDQ("hyper",s.hyper),emotion:judgeSDQ("emotion",s.emotion),
             conduct:judgeSDQ("conduct",s.conduct),peer:judgeSDQ("peer",s.peer),total:judgeSDQ("total",s.total)};
@@ -421,8 +460,8 @@ function renderReport(){
 
     <!-- SDQ -->
     <table class="rt">
-      <colgroup><col style="width:13%"><col style="width:40%"><col style="width:7%"><col style="width:18%"><col style="width:9%"><col style="width:13%"></colgroup>
-      <thead><tr><th>평가방법</th><th>범위 및 기준</th><th colspan="2">하위영역</th><th>점수</th><th>결과</th></tr></thead>
+      <colgroup><col style="width:13%"><col style="width:35%"><col style="width:7%"><col style="width:18%"><col style="width:12%"><col style="width:15%"></colgroup>
+      <thead><tr><th>평가방법</th><th>범위 및 기준</th><th colspan="2">하위영역</th><th>${scoreHdr}</th><th>결과</th></tr></thead>
       <tbody>
         <tr>
           <td class="method" rowspan="6"><span class="mtag">[ SDQ-kr ]</span><br>강점, 난점 설문지<br>(부모 보고형)</td>
@@ -438,20 +477,20 @@ function renderReport(){
             </table>
             <div class="desc">SDQ-kr는 아동의 사회정서적 발달 상태를 이해하고, 조기 개입이 필요한 영역을 파악하기 위한 검사입니다. 아동의 강점과 어려움을 함께 살펴봄으로써 건강한 성장을 위한 맞춤형 지원 방향을 모색할 수 있습니다.</div>
           </td>
-          <td class="grp">강점</td><td>사회지향행동</td><td class="score">${s.social}</td><td${J(sj.social)}>${sj.social}</td>
+          <td class="grp">강점</td><td>사회지향행동</td><td>${sc(gS('social'),s.social)}</td><td${J(sj.social)}>${sj.social}${bd(gS('social'),s.social,false)}</td>
         </tr>
-        <tr><td class="grp" rowspan="5">난점</td><td>과잉행동</td><td class="score">${s.hyper}</td><td${J(sj.hyper)}>${sj.hyper}</td></tr>
-        <tr><td>정서증상</td><td class="score">${s.emotion}</td><td${J(sj.emotion)}>${sj.emotion}</td></tr>
-        <tr><td>품행문제</td><td class="score">${s.conduct}</td><td${J(sj.conduct)}>${sj.conduct}</td></tr>
-        <tr><td>또래문제</td><td class="score">${s.peer}</td><td${J(sj.peer)}>${sj.peer}</td></tr>
-        <tr><td>총 난점</td><td class="score">${s.total}</td><td${J(sj.total)}>${sj.total}</td></tr>
+        <tr><td class="grp" rowspan="5">난점</td><td>과잉행동</td><td>${sc(gS('hyper'),s.hyper)}</td><td${J(sj.hyper)}>${sj.hyper}${bd(gS('hyper'),s.hyper,true)}</td></tr>
+        <tr><td>정서증상</td><td>${sc(gS('emotion'),s.emotion)}</td><td${J(sj.emotion)}>${sj.emotion}${bd(gS('emotion'),s.emotion,true)}</td></tr>
+        <tr><td>품행문제</td><td>${sc(gS('conduct'),s.conduct)}</td><td${J(sj.conduct)}>${sj.conduct}${bd(gS('conduct'),s.conduct,true)}</td></tr>
+        <tr><td>또래문제</td><td>${sc(gS('peer'),s.peer)}</td><td${J(sj.peer)}>${sj.peer}${bd(gS('peer'),s.peer,true)}</td></tr>
+        <tr><td>총 난점</td><td>${sc(pST,s.total)}</td><td${J(sj.total)}>${sj.total}${bd(pST,s.total,true)}</td></tr>
       </tbody>
     </table>
 
     <!-- K-ARS -->
     <table class="rt">
-      <colgroup><col style="width:13%"><col style="width:40%"><col style="width:7%"><col style="width:18%"><col style="width:9%"><col style="width:13%"></colgroup>
-      <thead><tr><th>평가방법</th><th>범위 및 기준</th><th colspan="2">하위영역</th><th>점수</th><th>결과</th></tr></thead>
+      <colgroup><col style="width:13%"><col style="width:35%"><col style="width:7%"><col style="width:18%"><col style="width:12%"><col style="width:15%"></colgroup>
+      <thead><tr><th>평가방법</th><th>범위 및 기준</th><th colspan="2">하위영역</th><th>${scoreHdr}</th><th>결과</th></tr></thead>
       <tbody>
         <tr>
           <td class="method" rowspan="3"><span class="mtag">[ K-ARS ]</span><br>한국판 ADHD 평가척도<br>(부모 보고형)</td>
@@ -464,10 +503,10 @@ function renderReport(){
             </table>
             <div class="desc">K-ARS는 주의력결핍 과잉행동장애(ADHD)의 증상을 평가하기 위해 개발된 검사입니다. 종합적으로 증상을 평가하여 ADHD의 조기 진단에 기여합니다. (정상 범위 이상의 결과일 경우 상담 개입을 고려)</div>
           </td>
-          <td class="grp">IA</td><td>부주의</td><td class="score">${k.ia}</td><td${J(kj.ia)}>${kj.ia}</td>
+          <td class="grp">IA</td><td>부주의</td><td>${sc(gK('ia'),k.ia)}</td><td${J(kj.ia)}>${kj.ia}${bd(gK('ia'),k.ia,true)}</td>
         </tr>
-        <tr><td class="grp" rowspan="2">HI</td><td>과잉행동-충동성</td><td class="score">${k.hi}</td><td${J(kj.hi)}>${kj.hi}</td></tr>
-        <tr><td>총 점수</td><td class="score">${k.total}</td><td${J(kj.total)}>${kj.total}</td></tr>
+        <tr><td class="grp" rowspan="2">HI</td><td>과잉행동-충동성</td><td>${sc(gK('hi'),k.hi)}</td><td${J(kj.hi)}>${kj.hi}${bd(gK('hi'),k.hi,true)}</td></tr>
+        <tr><td>총 점수</td><td>${sc(pKT,k.total)}</td><td${J(kj.total)}>${kj.total}${bd(pKT,k.total,true)}</td></tr>
       </tbody>
     </table>
 
@@ -479,6 +518,30 @@ function renderReport(){
 //  메일·발송 없음(유성 2026-06-21). 제출 시 raw응답+채점결과만 적립 = 종단 자산.
 //  GAS_EXEC = scripts/11 웹앱 배포 후 /exec URL을 채운다(미설정이면 저장 건너뜀 — 폼은 정상 동작).
 const GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";
+
+// ===== 사전 점수(사후 결과지의 델타 비교용) =====
+//  사후 검사 시, 제공인력 세션(상담일지 앱이 저장한 tf_staff_v1)으로 사전 점수 조회.
+//  세션 없는 기기(공개)·조회 실패·사전 기록 없음 = null → 단회 결과지로 폴백. 입력 흐름은 안 막음.
+const DEMO = /[?&]demo=1/.test(location.search);   // 검사 전용 미리보기. ga=1(일반상담 게이트)은 검사와 무관 → 제외(MOCK이 실결과지에 섞이던 버그, 리뷰 발견)
+let prevData = null;
+const MOCK_PREV = { "SDQ-kr":{subscores:{social:4,hyper:8,emotion:6,conduct:4,peer:3},total:21},
+                    "K-ARS":{subscores:{ia:13,hi:14},total:27} };
+function getStaffSess(){ try{ return JSON.parse(localStorage.getItem("tf_staff_v1")||"null"); }catch(e){ return null; } }
+function fetchPrev(){
+  return new Promise(resolve=>{
+    if(state.type!=="사후"){ resolve(null); return; }                    // 사정(사전)=비교 대상 없음
+    if(DEMO){ resolve(MOCK_PREV); return; }                              // 데모=목 사전데이터로 미리보기
+    const sess=getStaffSess();
+    if(!sess||!sess.staffId||!sess.session){ resolve(null); return; }     // 제공인력 신원 없는 기기=단회
+    const body={ action:"exam_prev", staffId:sess.staffId, session:sess.session,
+      child:{ name:document.getElementById("f-name").value.trim(), birth:document.getElementById("f-birth").value },
+      by:"보호자", tools:["SDQ-kr","K-ARS"] };
+    fetch(GAS_EXEC,{method:"POST",body:JSON.stringify(body)})
+      .then(r=>r.json())
+      .then(d=>resolve(d&&d.ok&&d.prev&&Object.keys(d.prev).length?d.prev:null))
+      .catch(()=>resolve(null));
+  });
+}
 
 // 실시일시 = 검사당 1회 고정(첫 전송·재시도 동일) → 서버 멱등 dedup 키. 기기 로컬시각(태블릿=서울).
 let examStamp = "";
