@@ -282,6 +282,7 @@
 <!-- ═══ 가입 1: 이름·전화 ═══ -->
 <div class="screen" id="s-signup1">
   <div class="wrap">
+    <button class="back" id="su1Back" aria-label="뒤로" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <h1>본인 확인을 할게요</h1>
     <p class="sub">이름과 전화번호를 적어 주세요.</p>
     <div class="tfield" id="tf-name">
@@ -345,6 +346,7 @@
 <!-- ═══ 가입 3: PIN 설정 ═══ -->
 <div class="screen" id="s-signup3">
   <div class="wrap">
+    <button class="back" id="su3Back" aria-label="취소"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <h1>비밀번호 설정</h1>
     <p class="sub">앱을 열 때 쓸 비밀번호예요. 이 기기에서만 써요.</p>
     <div class="field"><label>비밀번호 4자리</label><input id="su-pin1" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>
@@ -600,6 +602,7 @@ const DEMO = (function(){ try{ return new URLSearchParams(location.search).get('
 //  ⚠️ 보안 아님(공개 소스라 URL 알면 접근) — 상담사 우발 사용 차단용. 법무 OK 후 이 게이트 제거 = 정식 오픈.
 const GA_ON = DEMO || (function(){ try{ return new URLSearchParams(location.search).get('ga')==='1'; }catch(e){ return false; } })();
 const FROM_HUB = (function(){ try{ return new URLSearchParams(location.search).get('from')==='hub'; }catch(e){ return false; } })();   // 허브가 로그인하러 보냄 → 신원 끝나면 허브로 복귀(서약·일지 건너뜀)
+const PIN_CHANGE = (function(){ try{ return new URLSearchParams(location.search).get('pin')==='1'; }catch(e){ return false; } })();   // 마이페이지 '비밀번호 변경' → OTP 재인증 후 PIN 재설정
 const MOCK_CLIENTS = [
   {name:'김서준', birth:'20200911', service:'아청심', center:'미추'},
   {name:'김서준', birth:'20190304', service:'아청심', center:'서구'},   // 동명이인(생년월일로 구분) 데모
@@ -711,11 +714,11 @@ function doVerify(){
       const keepPin = same ? (prev.pinHash||"") : "";          // 다른 사람이면 이전 PIN 안 물려받음
       const keepOath = same ? !!prev.oath : false;             // 같은 상담사면 서약 유지(1회), 다른 사람은 다시 받음
       if(!same) clearClientCaches();                           // 상담사 바뀜 → 이전 캐시 비움(PII)
-      saveSess({ staffId:d.staffId, session:d.session, name:d.name, phone:$("su-phone").value, device, pinHash:keepPin, oath:keepOath, lastAuth: same?(prev.lastAuth||0):0 });
+      saveSess({ staffId:d.staffId, session:d.session, name:d.name, phone:$("su-phone").value, device, pinHash:keepPin, oath:keepOath, lastAuth: Date.now() });   // OTP 성공 = 새 인증 → lastAuth 갱신(허브 needGate 즉시 재게이트 방지)
       note.textContent="";
       // 분실 재인증은 'PIN 쓰는 기기(keepPin 있음=첫 기기)'에서만 재설정 — PIN 없는 다른 기기엔 강요 X(§11). forgotPin은 양쪽서 소비(누수 차단)
-      if((d.isNew && !keepPin) || (forgotPin && keepPin)){ forgotPin=false; show("s-signup3"); $("su-pin1").focus(); }   // 첫 등록 또는 비번분실 재인증 → PIN (재)설정
-      else { forgotPin=false; markUnlocked(); enterApp(); }                 // 다른 기기/일반 재인증 = PIN 설정 생략(유성)
+      if(!keepPin || forgotPin){ forgotPin=false; show("s-signup3"); $("su-pin1").focus(); }   // 이 기기에 PIN 없음(처음/레거시) 또는 분실·변경 재인증 → PIN (재)설정. 모든 기기가 PIN 가짐
+      else { forgotPin=false; markUnlocked(); enterApp(); }                 // 같은 기기·PIN 보유 상태의 서버 재인증(세션만료 등) = PIN 유지
     }
     else {
       // 만료(클라 타이머 종료됨 || 서버가 만료 응답) → 일반 에러 대신 재전송 UI로(막다른 화면·되살릴 수 없는 코드 방지)
@@ -774,6 +777,8 @@ $("su3Btn").onclick=async()=>{
   s.pinHash = await sha256(s.device + ":" + $("su-pin1").value);
   s.lastAuth = Date.now(); saveSess(s); markUnlocked(); enterApp();
 };
+// PIN 설정 취소 = 세션 비우고 로그인부터(허브 무한 게이트 방지 — 취소 후 허브로 가면 !pinHash로 다시 튕기므로)
+$("su3Back").onclick=()=>{ const s=loadSess()||{}; s.session=""; saveSess(s); $("su-pin1").value=""; $("su-pin2").value=""; $("su-phone").value=""; $("su1Back").style.display="none"; show("s-signup1"); setTimeout(()=>$("su-name").focus(),100); };
 
 // ════ 게이트 — 토스식 보안 키패드(랜덤 숫자, OS 키보드 없음) ════
 let gateEntry="", forgotBtnUsed=false, forgotTimer=null, gateFails=0, gateLocked=false, gatePadTimer=null;
@@ -857,8 +862,11 @@ $("g-pad").addEventListener("click",e=>{
   gatePress(k);
 });
 // 비밀번호 분실(또는 기회 소진) → 본인 확인(OTP)으로. 통과 후 PIN 재설정(forgotPin).
-function goForgot(){ clearTimeout(forgotTimer); forgotPin=true; const s=loadSess()||{}; if(s.name){ $("su-name").value=s.name; $("su-name").dispatchEvent(new Event("input")); } const n=$("su1Note"); if(n){ n.className="note"; n.textContent="비밀번호 대신 본인 확인으로 들어갈게요. 전화번호를 적어 주세요."; } show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100); }   // clearTimeout = 숨겨진 화면서 강조버튼 켜지는 잔여 타이머 방지
+// OTP 재인증 진입(분실·비번변경 공용) — 세션 있는 진입이라 뒤로(허브) 허용
+function enterReauth(noteText){ clearTimeout(forgotTimer); forgotPin=true; const s=loadSess()||{}; if(s.name){ $("su-name").value=s.name; $("su-name").dispatchEvent(new Event("input")); } const n=$("su1Note"); if(n){ n.className="note"; n.textContent=noteText; } $("su1Back").style.display="flex"; show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100); }   // clearTimeout = 숨겨진 화면서 강조버튼 켜지는 잔여 타이머 방지
+function goForgot(){ enterReauth("비밀번호 대신 본인 확인으로 들어갈게요. 전화번호를 적어 주세요."); }
 $("g-forgot").onclick=goForgot;
+$("su1Back").onclick=()=>{ location.href="./index.html"; };   // 세션 있는 재인증 진입에서만 보임 → 허브로(허브가 PIN 게이트 처리)
 function markUnlocked(){ try{ sessionStorage.setItem(UNLOCK_KEY,"1"); }catch(e){} }
 function needGate(s){ const u=(()=>{ try{ return sessionStorage.getItem(UNLOCK_KEY)==="1"; }catch(e){ return false; } })(); return !u || (Date.now()-(s.lastAuth||0) > GATE_MS); }
 
@@ -867,9 +875,16 @@ function boot(){
   forgotPin=false;                  // 새 로드 = 분실 재인증 의도 초기화
   if(DEMO){ enterApp(); return; }   // 디자인·시연: 신원 우회
   const s=loadSess();
-  if(!s || !s.session){ show("s-signup1"); $("su-name").focus(); return; }
-  if(s.pinHash && needGate(s)){ openGate(); return; }   // PIN 있는 기기(첫 기기)만 게이트(토스식 키패드)
-  enterApp();   // PIN 없는 기기(다른 기기 가입)는 바로 진입
+  if(!s || !s.session){ $("su1Back").style.display="none"; show("s-signup1"); $("su-name").focus(); return; }
+  if(PIN_CHANGE){ startPinChange(); return; }           // 마이페이지 '비밀번호 변경' → OTP 재인증 → PIN 재설정
+  if(!s.pinHash){ show("s-signup3"); $("su-pin1").focus(); return; }   // 세션은 있는데 이 기기에 PIN 없음 → 지금 설정(모든 기기 PIN)
+  if(needGate(s)){ openGate(); return; }                // PIN 있고 잠김(콜드런치/6시간 경과) → PIN 입력
+  enterApp();
+}
+// 비밀번호 변경 = 분실 재인증과 같은 길(OTP→PIN 재설정), 진입 문구만 다름
+function startPinChange(){
+  try{ history.replaceState({}, '', location.pathname+'?from=hub'); }catch(e){}   // pin=1 제거(재로드·복원 시 OTP 재발동 방지) — from=hub 유지
+  enterReauth("비밀번호를 바꾸기 전에 본인 확인을 할게요. 전화번호를 적어 주세요.");
 }
 // 서버가 세션 거부(code:auth) = 서버 토큰이 죽음(만료/재발급/불일치). PIN(로컬)으론 못 살림 → OTP 재인증.
 //  (boot의 6시간 PIN 게이트와 다름 — 그건 서버 세션 살아있는 로컬 잠금. 이건 서버 토큰 자체가 죽은 것.)
@@ -880,7 +895,7 @@ function sessExpired(){
   clearClientCaches();                            // 다른 상담사 재인증 시 이전 상담사 명단·기록 깜빡임(PII) 방지
   if(s.name){ $("su-name").value=s.name; $("su-name").dispatchEvent(new Event("input")); }   // 이름 미리 채움(편의·X버튼 활성), 전화는 다시 입력
   const note=$("su1Note"); if(note){ note.className="note"; note.textContent="다시 한 번 본인 확인이 필요해요. 전화번호를 적어 주세요."; }
-  show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100);
+  $("su1Back").style.display="none"; show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100);
 }
 // 상담사 식별이 바뀔 수 있는 시점(세션만료·다른 상담사 가입)에 메모리 캐시 비우기 — 공유 태블릿 PII 보호.
 function clearClientCaches(){ allClients=[]; gClients=[]; gRoundsCache={}; gIntake=null; gIntakeReady=false; gCurKey=""; gClient=null; }

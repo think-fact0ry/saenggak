@@ -20,12 +20,18 @@
 (function(){
   try{
     var s = JSON.parse(localStorage.getItem('tf_staff_v1') || 'null');
-    if (s && s.session){   // 상담일지 boot()과 동일 기준(예측자 일치 = 무한루프 불가)
-      var d = document.documentElement;   // 차수 플래그 → 타일 게이팅(head라 플래시 없음)
+    function storageBroken(){ try{ sessionStorage.setItem('_g','1'); sessionStorage.removeItem('_g'); return false; }catch(e){ return true; } }
+    function needGate(s){                 // ⚠️ 상담일지.html needGate(UNLOCK_KEY/GATE_MS)와 동일 기준 유지 — 한쪽만 바꾸면 허브↔상담일지 루프
+      if(!s.pinHash) return true;          // PIN 미설정 → 상담일지가 설정 받게
+      var u; try{ u = sessionStorage.getItem('tf_staff_unlocked')==='1'; }catch(e){ u=false; }
+      return !u || (Date.now()-(s.lastAuth||0) > 6*3600*1000);   // 잠김(콜드런치) 또는 6시간 경과
+    }
+    if (s && s.session && (storageBroken() || !needGate(s))){   // 세션 + (PIN 잠금 해제 || sessionStorage 불가=fail-open 루프방지) → 허브 로드
+      var d = document.documentElement;    // 차수 플래그 → 타일 게이팅(head라 플래시 없음)
       if (s.oath)  d.className += ' tier-oath';    // 상담사 = 상담일지 보임
       if (s.admin) d.className += ' tier-admin';   // 행정 = 매뉴얼·지도 보임
     } else {
-      location.replace('상담일지.html?from=hub');   // 세션 없음 → 로그인. 상담일지는 로그인서 멈추므로 자동 복귀 없음 = 루프 없음(가드 불필요)
+      location.replace('상담일지.html?from=hub');   // 세션 없음 OR PIN 잠김 → 로그인/PIN. 상담일지 boot이 처리 후 허브 복귀(unlock되면 통과 = 루프 없음)
     }
   } catch(e){}
 })();
@@ -319,6 +325,9 @@
       <button class="mp-row" id="rowAdmin"><span class="l">행정 등록</span><span class="st" id="adminSt">안 됨</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
     </div>
     <div class="mp-group">
+      <button class="mp-row" id="rowPin"><span class="l">비밀번호 변경</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
+    </div>
+    <div class="mp-group">
       <button class="mp-row danger" id="rowLogout"><span class="l">로그아웃</span></button>
     </div>
   </div>
@@ -348,6 +357,26 @@
   <div class="key-err" id="adminErr"></div>
   <button class="s-btn" id="adminSave" disabled>등록하기</button>
   <button class="s-later" id="adminLater">닫기</button>
+</div>
+
+<!-- ═ 상담사 등록 번호 시트 (번호 → 필수확인 순) ═ -->
+<div class="sheet-dim" id="cnumDim"></div>
+<div class="sheet" id="cnumSheet">
+  <h2>상담사 등록</h2>
+  <p class="ssub">상담사 등록 번호를 넣어 주세요.</p>
+  <input class="key-in" id="cnumKey" type="password" inputmode="numeric" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly>
+  <div class="key-err" id="cnumErr"></div>
+  <button class="s-btn" id="cnumNext" disabled>다음</button>
+  <button class="s-later" id="cnumLater">닫기</button>
+</div>
+
+<!-- ═ 상담사 등록 해제 시트 ═ -->
+<div class="sheet-dim" id="coffDim"></div>
+<div class="sheet" id="coffSheet">
+  <h2>상담사 등록을 해제할까요?</h2>
+  <p class="ssub">해제하면 상담일지를 쓸 수 없어요. 다시 등록 번호를 넣으면 돼요.</p>
+  <button class="s-btn danger" id="coffDo">해제</button>
+  <button class="s-later" id="coffLater">닫기</button>
 </div>
 
 <!-- ═ 로그아웃 확인 시트 ═ -->
@@ -459,12 +488,32 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   function setFlag(k){ var s=sess()||{}; s[k]=true; saveS(s); }
   $('mpOpen').onclick = function(){ refresh(); $('mypage').classList.add('on'); };
   $('mpClose').onclick = function(){ $('mypage').classList.remove('on'); };
-  // 상담사 등록(서약)
+  // 상담사 등록: (미등록) 번호(5007) → 필수확인(서약) / (등록됨) 해제
+  var COUNSELOR_HASH = "8d0a8cbf9d1e53373e02a4ad80e49b2853259c854de49349cd776a7569c47142";  // sha256("5007") — 모든 상담사 공용 코드(소스에 평문 대신 해시)
   function showOath(){ $('oathDim').classList.add('on'); $('oathSheet').classList.add('on'); }
   function closeOath(){ $('oathDim').classList.remove('on'); $('oathSheet').classList.remove('on'); }
-  $('rowOath').onclick = function(){ var s=sess(); if(s&&s.oath){ refresh(); return; } showOath(); };
+  function showCnum(){ $('cnumDim').classList.add('on'); $('cnumSheet').classList.add('on'); $('cnumKey').value=''; $('cnumKey').setAttribute('readonly',''); $('cnumErr').textContent=''; $('cnumNext').disabled=true; }
+  function closeCnum(){ $('cnumDim').classList.remove('on'); $('cnumSheet').classList.remove('on'); }
+  function showCoff(){ $('coffDim').classList.add('on'); $('coffSheet').classList.add('on'); }
+  function closeCoff(){ $('coffDim').classList.remove('on'); $('coffSheet').classList.remove('on'); }
+  $('rowOath').onclick = function(){ var s=sess(); if(s&&s.oath){ showCoff(); } else { showCnum(); } };   // 등록됨=해제 / 미등록=번호 입력
+  // 번호(5007) → 맞으면 필수확인(서약)
+  $('cnumKey').addEventListener('focus', function(){ this.removeAttribute('readonly'); });   // 탭 전 readonly=자동완성 차단(§5.5)
+  $('cnumKey').oninput = function(){ this.value=this.value.replace(/\D/g,'').slice(0,4); $('cnumNext').disabled=this.value.length!==4; $('cnumErr').textContent=''; if(this.value.length===4) this.blur(); };   // 4자리 차면 키패드 닫아 '다음' 안 가림(§5)
+  $('cnumNext').onclick = async function(){
+    var v=$('cnumKey').value; if(v.length!==4) return;
+    var ok=false; try{ ok = (await window.sha256(v))===COUNSELOR_HASH; }catch(e){}
+    if(ok){ closeCnum(); showOath(); }
+    else { $('cnumErr').textContent='번호가 맞지 않아요'; $('cnumKey').value=''; $('cnumNext').disabled=true; }
+  };
+  $('cnumLater').onclick = closeCnum; $('cnumDim').onclick = closeCnum;
   $('oathLater').onclick = closeOath; $('oathDim').onclick = closeOath;
   $('oathAgree').onclick = function(){ setFlag('oath'); location.reload(); };   // reload=head가 tier-oath 적용+상담일지 타일 노출
+  // 상담사 등록 해제
+  $('coffLater').onclick = closeCoff; $('coffDim').onclick = closeCoff;
+  $('coffDo').onclick = function(){ var s=sess()||{}; delete s.oath; saveS(s); location.reload(); };
+  // 비밀번호 변경 = OTP 재인증 후 PIN 재설정(상담일지가 처리)
+  $('rowPin').onclick = function(){ location.replace('상담일지.html?from=hub&pin=1'); };
   // 행정 등록(키)
   function showAdmin(){ $('adminDim').classList.add('on'); $('adminSheet').classList.add('on'); $('adminKey').value=''; $('adminKey').setAttribute('readonly',''); $('adminErr').textContent=''; $('adminSave').disabled=true; }   // 열 때마다 readonly 복원 = 재오픈에도 자동완성 차단 유지(§5.5)
   function closeAdmin(){ $('adminDim').classList.remove('on'); $('adminSheet').classList.remove('on'); }
@@ -492,7 +541,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.24n';
+var APP_VERSION = '26.06.24o';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
