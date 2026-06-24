@@ -32,8 +32,20 @@
   .field input:focus,.field textarea:focus{background:#fff;border-color:var(--green);}
   .field input.pin{letter-spacing:14px;text-align:center;font-size:22px;}
 
+  /* 토스식 입력 필드 (라벨·밑줄·X버튼·그린캐럿) — docs §5.5 */
+  .tfield{margin-bottom:30px;}
+  .tfield label{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin:0 0 6px;transition:color .15s;}
+  .tfield.focus label{color:var(--green);}
+  .tin-wrap{position:relative;border-bottom:2px solid var(--g200);transition:border-color .15s;}
+  .tfield.focus .tin-wrap{border-color:var(--green);}
+  .tin-wrap input{width:100%;border:none;background:none;outline:none;font-family:inherit;font-size:22px;font-weight:600;color:var(--g900);padding:4px 40px 11px 0;caret-color:var(--green);}
+  .tin-wrap input::placeholder{color:var(--g300);font-weight:500;}
+  .tin-wrap .clr{position:absolute;right:0;top:6px;width:24px;height:24px;border-radius:50%;background:var(--g300);border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+  .tfield.has-val .clr{display:flex;}
+  .tin-wrap .clr svg{width:13px;height:13px;color:#fff;display:block;}
+
   /* 하단 고정 버튼 */
-  .footbar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:12px 22px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--g100);}
+  .footbar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:12px 22px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--g100);transition:transform .25s cubic-bezier(.2,.7,.3,1);}   /* transform = 키패드 위로 올림 */
   .footbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px;}
   .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;}
   .btn:active{transform:scale(.985);background:var(--green-d);}
@@ -243,8 +255,20 @@
     <a class="back" href="./index.html" aria-label="홈으로">‹</a>
     <h1>반가워요</h1>
     <p class="sub">상담일지를 쓰려면 본인 확인을 할게요.</p>
-    <div class="field"><label>이름</label><input id="su-name" type="text" placeholder="홍길동" autocomplete="off"></div>
-    <div class="field"><label>전화번호</label><input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off"></div>
+    <div class="tfield" id="tf-name">
+      <label for="su-name">이름</label>
+      <div class="tin-wrap">
+        <input id="su-name" type="text" placeholder="홍길동" autocomplete="name">
+        <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <div class="tfield" id="tf-phone">
+      <label for="su-phone">전화번호</label>
+      <div class="tin-wrap">
+        <input id="su-phone" type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel">
+        <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
     <div class="note" id="su1Note"></div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="su1Btn" disabled>인증번호 받기</button></div></div>
@@ -551,7 +575,7 @@ async function sha256(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-function show(id){ if(id!=="s-signup2") stopOtpTimer(); document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }
+function show(id){ if(id!=="s-signup2") stopOtpTimer(); document.querySelectorAll(".footbar").forEach(f=>f.style.transform=""); document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }   // footbar transform 초기화 = 키보드 올린 채 화면 전환 시 잔류 방지
 
 // ── 자동서식 헬퍼 ──
 // 고정길이 자동닫힘 — 단, *고치러 다시 연 경우*(포커스 시점에 이미 가득)엔 안 닫음(수정 방해 방지). 원칙 §5.
@@ -576,6 +600,21 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("sho
 bindPhone($("su-phone"));
 function v1(){ $("su1Btn").disabled = !($("su-name").value.trim() && $("su-phone").value.replace(/\D/g,"").length>=10); }
 $("su-name").oninput=v1; $("su-phone").addEventListener("fmt",v1);
+
+// ── 토스식 입력 동작: 포커스 라벨/밑줄 + 우측 X + 값 채워짐(docs §5.5) ──
+function setupTField(tf){
+  const inp=tf.querySelector("input"), clr=tf.querySelector(".clr");
+  const upd=()=>tf.classList.toggle("has-val", inp.value.length>0);
+  inp.addEventListener("focus",()=>tf.classList.add("focus"));
+  inp.addEventListener("blur",()=>tf.classList.remove("focus"));
+  inp.addEventListener("input",upd);
+  clr.addEventListener("click",()=>{ inp.value=""; inp.dispatchEvent(new Event("input")); inp.focus(); });   // 비우고 기존 검증·서식·has-val 재실행(input 리스너) + 포커스 유지
+  upd();
+}
+["tf-name","tf-phone"].forEach(id=>setupTField($(id)));
+
+// 키보드 위로 액션 버튼(KeyboardAboveView) = onViewport/liftActiveFooter에서 단일 처리(docs §5.5)
+
 $("su1Btn").onclick=()=>{
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
   const note=$("su1Note"); note.className="note"; note.textContent="확인하고 있어요…"; $("su1Btn").disabled=true;
@@ -698,10 +737,23 @@ function openGate(){
   setGateTitle(false); $("g-forgot").classList.remove("as-btn");
   gateDots(); buildPad();
   const gt=$("gTitles"); gt.classList.add("hide");                                    // 진입 애니메이션 시작점
-  show("s-gate");
+  show("s-gate"); fitGate();   // 실제 보이는 높이를 박아 한 화면 고정(100dvh 미지원 브라우저 대비)
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(gateEntry.length===0) gt.classList.remove("hide"); }));  // 제목 부드럽게 등장(진입 중 숫자 누르면 접힌 채 유지 — 레이스 가드)
   armForgotBtn();
 }
+function fitGate(){ const g=$("s-gate"); if(g) g.style.height=(window.visualViewport?Math.round(window.visualViewport.height):window.innerHeight)+"px"; }   // 한 화면 보장(body 스크롤 방지)
+// ── 뷰포트 변화 한 곳에서 처리(§7 단일 핸들러): 게이트 활성 시 높이 박기 + 활성 화면 footbar만 키보드 위로 ──
+function liftActiveFooter(){
+  document.querySelectorAll(".footbar").forEach(f=>{ f.style.transform=""; });   // 전부 초기화 후
+  if(!window.visualViewport) return;
+  const kb=Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+  const fb=document.querySelector(".screen.active .footbar");
+  if(fb && kb>80) fb.style.transform="translateY("+(-kb)+"px)";                   // 활성 화면 것만 키보드 높이만큼 위로
+}
+function onViewport(){ const g=$("s-gate"); if(g && g.classList.contains("active")) fitGate(); liftActiveFooter(); }
+window.addEventListener("resize",onViewport);
+window.addEventListener("orientationchange",()=>setTimeout(onViewport,250));
+if(window.visualViewport){ window.visualViewport.addEventListener("resize",onViewport); window.visualViewport.addEventListener("scroll",onViewport); }
 function gateBad(){
   gateFails++;
   const locked = gateFails>=GATE_MAX_TRIES;
@@ -735,7 +787,7 @@ $("g-pad").addEventListener("click",e=>{
   gatePress(k);
 });
 // 비밀번호 분실(또는 기회 소진) → 본인 확인(OTP)으로. 통과 후 PIN 재설정(forgotPin).
-function goForgot(){ clearTimeout(forgotTimer); forgotPin=true; const s=loadSess()||{}; if(s.name) $("su-name").value=s.name; const n=$("su1Note"); if(n){ n.className="note"; n.textContent="비밀번호 대신 본인 확인으로 들어갈게요. 전화번호를 적어 주세요."; } show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100); }   // clearTimeout = 숨겨진 화면서 강조버튼 켜지는 잔여 타이머 방지
+function goForgot(){ clearTimeout(forgotTimer); forgotPin=true; const s=loadSess()||{}; if(s.name){ $("su-name").value=s.name; $("su-name").dispatchEvent(new Event("input")); } const n=$("su1Note"); if(n){ n.className="note"; n.textContent="비밀번호 대신 본인 확인으로 들어갈게요. 전화번호를 적어 주세요."; } show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100); }   // clearTimeout = 숨겨진 화면서 강조버튼 켜지는 잔여 타이머 방지
 $("g-forgot").onclick=goForgot;
 function markUnlocked(){ try{ sessionStorage.setItem(UNLOCK_KEY,"1"); }catch(e){} }
 function needGate(s){ const u=(()=>{ try{ return sessionStorage.getItem(UNLOCK_KEY)==="1"; }catch(e){ return false; } })(); return !u || (Date.now()-(s.lastAuth||0) > GATE_MS); }
@@ -756,7 +808,7 @@ function sessExpired(){
   const s=loadSess()||{};
   s.session=""; saveSess(s);                      // 죽은 토큰 비움 → 재진입도 가입으로
   clearClientCaches();                            // 다른 상담사 재인증 시 이전 상담사 명단·기록 깜빡임(PII) 방지
-  if(s.name) $("su-name").value=s.name;           // 이름 미리 채움(편의), 전화는 다시 입력
+  if(s.name){ $("su-name").value=s.name; $("su-name").dispatchEvent(new Event("input")); }   // 이름 미리 채움(편의·X버튼 활성), 전화는 다시 입력
   const note=$("su1Note"); if(note){ note.className="note"; note.textContent="다시 한 번 본인 확인이 필요해요. 전화번호를 적어 주세요."; }
   show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100);
 }
