@@ -520,7 +520,7 @@ async function sha256(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }
+function show(id){ if(id!=="s-signup2") stopOtpTimer(); document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }
 
 // ── 자동서식 헬퍼 ──
 // 고정길이 자동닫힘 — 단, *고치러 다시 연 경우*(포커스 시점에 이미 가득)엔 안 닫음(수정 방해 방지). 원칙 §5.
@@ -552,7 +552,8 @@ $("su1Btn").onclick=()=>{
     $("su1Btn").disabled=false;
     if(d && d.ok){
       $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
-      note.textContent=""; show("s-signup2"); $("su-code").focus();
+      note.textContent=""; $("su2Note").className="note"; $("su2Note").textContent="";
+      $("su-code").value=""; $("su-code").disabled=false; show("s-signup2"); startOtpTimer(); $("su-code").focus();
     } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
   }).catch(()=>{ $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
 };
@@ -576,12 +577,51 @@ function doVerify(){
       if(d.isNew && !keepPin){ show("s-signup3"); $("su-pin1").focus(); }   // 첫 등록 + 이 기기에 물려받은 PIN 없음 → 1회 설정
       else { markUnlocked(); enterApp(); }                                  // 다른 기기/재인증 = PIN 설정 생략(유성)
     }
-    else { note.className="note err"; note.textContent=(d&&d.error)||"인증번호가 달라요"; $("su-code").value=""; $("su-code").focus(); }  // 틀리면 비우고 재입력 → 6자리 차면 자동 재확인
+    else {
+      // 만료(클라 타이머 종료됨 || 서버가 만료 응답) → 일반 에러 대신 재전송 UI로(막다른 화면·되살릴 수 없는 코드 방지)
+      const expired = !otpTimer || (d && d.error && d.error.indexOf("만료")>=0);
+      if(expired){ otpExpired(); }
+      else { note.className="note err"; note.textContent=(d&&d.error)||"인증번호가 달라요"; $("su-code").value=""; $("su-code").focus(); }  // 틀리면 비우고 재입력 → 6자리 차면 자동 재확인
+    }
   }).catch(()=>{ su2Busy=false; note.className="note err"; note.textContent="연결이 안 됐어요"; });
 }
 // 6자리 채우면 자동 확인 (확인 버튼 없음).
 $("su-code").oninput=()=>{ $("su-code").value=$("su-code").value.replace(/\D/g,"").slice(0,6); if($("su-code").value.length===6){ $("su-code").blur(); doVerify(); } };   // 6자리 = 키패드 닫고 자동 확인
 $("su2Back").onclick=()=>show("s-signup1");
+
+// ── OTP 3분 카운트다운 (서버 만료 180초와 일치) ──
+const OTP_TTL = 180;
+let otpTimer = null, otpDeadline = 0;
+function stopOtpTimer(){ if(otpTimer){ clearInterval(otpTimer); otpTimer=null; } const st=$("su2Stub"); if(st) st.textContent=""; }
+function tickOtp(){
+  const left = Math.max(0, Math.round((otpDeadline - Date.now())/1000));
+  if(left<=0){ stopOtpTimer(); otpExpired(); return; }
+  const m=Math.floor(left/60), s=left%60;
+  $("su2Stub").textContent = m+":"+String(s).padStart(2,"0")+" 남았어요";
+}
+function startOtpTimer(){ stopOtpTimer(); otpDeadline=Date.now()+OTP_TTL*1000; tickOtp(); otpTimer=setInterval(tickOtp,1000); }
+function otpExpired(){
+  $("su-code").disabled=true; $("su-code").value="";
+  const note=$("su2Note"); note.className="note err";
+  note.innerHTML='시간이 지났어요. <button class="lk" id="otpResend">인증번호 다시 받기</button>';
+  const rb=$("otpResend"); if(rb) rb.onclick=resendOtp;
+}
+let resendBusy=false;
+function resendOtp(){
+  if(resendBusy) return; resendBusy=true;                     // 더블탭 가드: 보내는 동안 버튼이 사라져 재탭 불가 + 플래그로 belt-and-suspenders
+  const name=$("su-name").value.trim(), phone=$("su-phone").value;
+  const note=$("su2Note"); note.className="note"; note.textContent="다시 보내고 있어요…";
+  // 실패해도 '다시 받기' 버튼을 되살림(막다른 화면 방지, §3 나갈 선택지)
+  function failNote(msg){ note.className="note err"; note.innerHTML=msg+' <button class="lk" id="otpResend">다시 받기</button>'; const b=$("otpResend"); if(b) b.onclick=resendOtp; }
+  post({action:"staff_start", name, phone}).then(d=>{
+    resendBusy=false;
+    if(d && d.ok){
+      $("su2Sub").textContent=(d.phone||"")+" 로 보낸 6자리 숫자를 적어 주세요.";
+      note.className="note"; note.textContent="인증번호를 다시 보냈어요.";
+      $("su-code").value=""; $("su-code").disabled=false; startOtpTimer(); $("su-code").focus();
+    } else { failNote((d&&d.error)||"잠시 후 다시 받아 주세요"); }
+  }).catch(()=>{ resendBusy=false; failNote("연결이 안 됐어요. 와이파이를 확인해 주세요"); });
+}
 
 // ════ 가입 3: PIN 설정 ════
 function v3(){ $("su3Btn").disabled = !($("su-pin1").value.length===4 && $("su-pin2").value.length===4); }
