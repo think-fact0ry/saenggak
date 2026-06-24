@@ -61,6 +61,9 @@
   .sheet{position:fixed;left:0;right:0;bottom:0;z-index:1001;background:#fff;border-radius:24px 24px 0 0;padding:30px 24px calc(20px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto;transform:translateY(101%);transition:transform .3s cubic-bezier(.2,.8,.3,1);}
   .sheet.on{transform:translateY(0);}
   .sheet h2{font-size:21px;font-weight:700;letter-spacing:-.5px;line-height:1.4;margin-bottom:22px;}
+  .sheet-sub{font-size:14.5px;color:var(--g500);font-weight:500;line-height:1.5;margin:-12px 0 20px;}
+  .oath-note{font-size:13px;color:var(--g500);font-weight:500;line-height:1.5;background:var(--g100);border-radius:12px;padding:12px 14px;margin-bottom:20px;}
+  .oath-note b{color:var(--g700);font-weight:700;}
   .agree-list{display:flex;flex-direction:column;gap:15px;margin-bottom:26px;}
   .agree-item{display:flex;align-items:flex-start;gap:9px;font-size:15px;color:var(--g700);font-weight:500;line-height:1.45;}
   .agree-item .ck{flex-shrink:0;color:var(--green);display:flex;margin-top:1px;}
@@ -303,6 +306,21 @@
   </div>
   <button class="s-btn" id="consentAgree">동의하고 인증받기</button>
   <button class="s-later" id="consentLater">다음에 하기</button>
+</div>
+
+<!-- ═══ 상담사 서약 바텀시트 (상담일지 진입 1회) ═══ -->
+<div class="sheet-dim" id="oathDim"></div>
+<div class="sheet" id="oathSheet">
+  <h2>상담 기록을 다루기 전에</h2>
+  <p class="sheet-sub">상담일지는 내담자의 민감한 기록이에요. 아래에 동의해야 작성할 수 있어요.</p>
+  <div class="agree-list">
+    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>업무로 알게 된 내담자 정보·상담기록을 누설하지 않아요</span></div>
+    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>허가된 업무 목적 외엔 쓰지 않아요</span></div>
+    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>그만둔 뒤에도 지켜요</span></div>
+  </div>
+  <p class="oath-note">상담 기록은 상담이 끝난 뒤 <b>5년</b> 보관하고 안전하게 파기해요.</p>
+  <button class="s-btn" id="oathAgree">동의하고 시작하기</button>
+  <button class="s-later" id="oathLater">닫기</button>
 </div>
 
 <!-- ═══ 가입 2: OTP ═══ -->
@@ -681,8 +699,9 @@ function doVerify(){
       const prev=loadSess()||{};
       const same = prev.staffId && prev.staffId===d.staffId;   // 같은 사람의 재인증인가
       const keepPin = same ? (prev.pinHash||"") : "";          // 다른 사람이면 이전 PIN 안 물려받음
+      const keepOath = same ? !!prev.oath : false;             // 같은 상담사면 서약 유지(1회), 다른 사람은 다시 받음
       if(!same) clearClientCaches();                           // 상담사 바뀜 → 이전 캐시 비움(PII)
-      saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:keepPin, lastAuth: same?(prev.lastAuth||0):0 });
+      saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:keepPin, oath:keepOath, lastAuth: same?(prev.lastAuth||0):0 });
       note.textContent="";
       // 분실 재인증은 'PIN 쓰는 기기(keepPin 있음=첫 기기)'에서만 재설정 — PIN 없는 다른 기기엔 강요 X(§11). forgotPin은 양쪽서 소비(누수 차단)
       if((d.isNew && !keepPin) || (forgotPin && keepPin)){ forgotPin=false; show("s-signup3"); $("su-pin1").focus(); }   // 첫 등록 또는 비번분실 재인증 → PIN (재)설정
@@ -864,11 +883,22 @@ let curRound = 0;             // 1~4
 let roundData = {};           // {round: {date, content}}
 
 function enterApp(){
+  const s=loadSess();
+  if(!DEMO && s && !s.oath){ showOath(); return; }   // 상담사 서약 1회 — 동의해야 상담일지 사용
+  doEnterApp();
+}
+function doEnterApp(){
   const s=loadSess(); const who = "상담사 " + (DEMO ? "데모" : (s ? s.name : ""));
   $("whoTag").textContent = who; $("whoTag2").textContent = who;
   if(!GA_ON){ $("mode-general").style.display="none"; show("s-clients"); loadClients(); return; }  // 법무 전 상담사 = 008 단독(기존 흐름 그대로)
   show("s-mode");
 }
+// ── 상담사 서약(비밀유지) — 처음 1회만. 동의=상담사 전환(세션 oath), 미동의=허브로 ──
+function showOath(){ $("oathDim").classList.add("on"); $("oathSheet").classList.add("on"); }
+function closeOath(){ $("oathDim").classList.remove("on"); $("oathSheet").classList.remove("on"); }
+$("oathAgree").onclick=()=>{ const s=loadSess()||{}; s.oath=true; saveSess(s); closeOath(); doEnterApp(); };
+$("oathLater").onclick=()=>{ closeOath(); location.href="./index.html"; };   // 서약 안 하면 상담일지 못 씀 → 허브로
+$("oathDim").onclick=()=>{ closeOath(); location.href="./index.html"; };
 
 // ════ 모드 선택 → 008(바우처) / 일반 ════
 $("mode-voucher").onclick=()=>{ show("s-clients"); loadClients(); };
