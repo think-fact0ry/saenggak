@@ -44,6 +44,27 @@
   .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
   .stub{text-align:center;font-size:12.5px;color:var(--g400);margin-top:10px;}
 
+  /* 재진입 PIN 게이트 — 토스식 보안 키패드(랜덤 숫자, OS 키보드 없음) */
+  #s-gate.active{display:flex;}   /* .screen.active{display:block} 덮어쓰기 */
+  #s-gate{flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;padding:max(40px,7vh) 24px calc(22px + env(safe-area-inset-bottom));}
+  .g-head{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+  .g-head h1{font-size:23px;margin-bottom:6px;}
+  .g-head .sub{margin:0;}
+  .g-dots{display:flex;gap:16px;margin:32px 0 8px;}
+  .g-dot{width:14px;height:14px;border-radius:50%;background:var(--g200);transition:background .12s,transform .12s;}
+  .g-dot.on{background:var(--green);transform:scale(1.15);}
+  .g-err{height:18px;font-size:13px;color:var(--red);font-weight:600;opacity:0;transition:opacity .15s;}
+  .g-err.show{opacity:1;}
+  .g-err.shake{animation:gshake .35s;}
+  @keyframes gshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+  .g-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px;width:100%;max-width:330px;}
+  .g-key{height:62px;border-radius:16px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:27px;font-weight:600;color:var(--g900);display:flex;align-items:center;justify-content:center;transition:background .1s,transform .08s;}
+  .g-key:active{background:var(--g100);transform:scale(.94);}
+  .g-key.fn{font-size:15px;font-weight:600;color:var(--g500);}
+  .g-key.empty{pointer-events:none;}
+  .g-forgot{margin-top:20px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--g500);text-decoration:underline;cursor:pointer;padding:8px 10px;}
+  .g-forgot:active{color:var(--g700);}
+
   /* 내담자 검색 + 목록 */
   .search{position:relative;margin-bottom:16px;}
   .search input{width:100%;font-family:inherit;font-size:16px;padding:15px 16px 15px 46px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
@@ -246,14 +267,16 @@
   <div class="footbar"><div class="inner"><button class="btn" id="su3Btn" disabled>시작하기</button></div></div>
 </div>
 
-<!-- ═══ 게이트: PIN 입력(재진입) ═══ -->
+<!-- ═══ 게이트: PIN 입력(재진입) — 토스식 보안 키패드 ═══ -->
 <div class="screen" id="s-gate">
-  <div class="wrap">
+  <div class="g-head">
     <h1>다시 오셨네요</h1>
-    <p class="sub">비밀번호 4자리를 적어 주세요.</p>
-    <div class="field"><input id="g-pin" class="pin" type="password" inputmode="numeric" maxlength="4" placeholder="● ● ● ●" autocomplete="off"></div>
-    <div class="note" id="gateNote"></div>
+    <p class="sub">비밀번호를 눌러주세요</p>
+    <div class="g-dots"><div class="g-dot"></div><div class="g-dot"></div><div class="g-dot"></div><div class="g-dot"></div></div>
+    <div class="g-err" id="gateErr"></div>
   </div>
+  <div class="g-pad" id="g-pad"></div>
+  <button class="g-forgot" id="g-forgot">비밀번호를 몰라요</button>
 </div>
 
 <!-- ═══ 모드 선택: 바우처(008) / 일반 ═══ -->
@@ -559,7 +582,7 @@ $("su1Btn").onclick=()=>{
 };
 
 // ════ 가입 2: OTP → 등록 → PIN ════
-let su2Busy=false;
+let su2Busy=false, forgotPin=false;   // forgotPin = '비밀번호를 몰라요'로 들어온 재인증(통과 후 PIN 재설정)
 function doVerify(){
   if(su2Busy || $("su-code").value.length!==6) return;
   su2Busy=true;
@@ -574,8 +597,9 @@ function doVerify(){
       if(!same) clearClientCaches();                           // 상담사 바뀜 → 이전 캐시 비움(PII)
       saveSess({ staffId:d.staffId, session:d.session, name:d.name, device, pinHash:keepPin, lastAuth: same?(prev.lastAuth||0):0 });
       note.textContent="";
-      if(d.isNew && !keepPin){ show("s-signup3"); $("su-pin1").focus(); }   // 첫 등록 + 이 기기에 물려받은 PIN 없음 → 1회 설정
-      else { markUnlocked(); enterApp(); }                                  // 다른 기기/재인증 = PIN 설정 생략(유성)
+      // 분실 재인증은 'PIN 쓰는 기기(keepPin 있음=첫 기기)'에서만 재설정 — PIN 없는 다른 기기엔 강요 X(§11). forgotPin은 양쪽서 소비(누수 차단)
+      if((d.isNew && !keepPin) || (forgotPin && keepPin)){ forgotPin=false; show("s-signup3"); $("su-pin1").focus(); }   // 첫 등록 또는 비번분실 재인증 → PIN (재)설정
+      else { forgotPin=false; markUnlocked(); enterApp(); }                 // 다른 기기/일반 재인증 = PIN 설정 생략(유성)
     }
     else {
       // 만료(클라 타이머 종료됨 || 서버가 만료 응답) → 일반 에러 대신 재전송 UI로(막다른 화면·되살릴 수 없는 코드 방지)
@@ -635,31 +659,50 @@ $("su3Btn").onclick=async()=>{
   s.lastAuth = Date.now(); saveSess(s); markUnlocked(); enterApp();
 };
 
-// ════ 게이트 ════
-$("g-pin").oninput=async()=>{
-  $("g-pin").value=$("g-pin").value.replace(/\D/g,"").slice(0,4);
-  if($("g-pin").value.length!==4) return;
-  $("g-pin").blur();   // 4자리 = 키패드 닫고 자동 확인
+// ════ 게이트 — 토스식 보안 키패드(랜덤 숫자, OS 키보드 없음) ════
+let gateEntry="";
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function gateDots(){ document.querySelectorAll("#s-gate .g-dot").forEach((d,i)=>d.classList.toggle("on", i<gateEntry.length)); }
+function buildPad(){   // 매 진입·오답마다 0~9 재배치(토스 보안 키패드)
+  const n=shuffle([0,1,2,3,4,5,6,7,8,9]); let h="";
+  for(let i=0;i<9;i++) h+=`<button class="g-key" data-k="${n[i]}">${n[i]}</button>`;
+  h+=`<span class="g-key empty"></span><button class="g-key" data-k="${n[9]}">${n[9]}</button><button class="g-key fn" data-k="del">지우기</button>`;
+  $("g-pad").innerHTML=h;
+}
+function openGate(){ gateEntry=""; $("gateErr").classList.remove("show"); gateDots(); buildPad(); show("s-gate"); }
+function gateBad(){ const e=$("gateErr"); e.textContent="비밀번호를 다시 눌러 주세요"; e.classList.add("show","shake"); setTimeout(()=>e.classList.remove("shake"),360); gateEntry=""; gateDots(); buildPad(); }   // 오답 = 키패드 재섞기(§2 긍정형)
+async function gateCheck(){
   const s=loadSess(); if(!s){ show("s-signup1"); return; }
-  const h=await sha256(s.device + ":" + $("g-pin").value);
-  const note=$("gateNote");
-  if(h===s.pinHash){ s.lastAuth=Date.now(); saveSess(s); markUnlocked(); $("g-pin").value=""; note.textContent=""; enterApp(); }
-  else { note.className="note err"; note.textContent="비밀번호가 달라요"; $("g-pin").value=""; }
-};
+  const h=await sha256(s.device + ":" + gateEntry);
+  if(h===s.pinHash){ s.lastAuth=Date.now(); saveSess(s); markUnlocked(); gateEntry=""; gateDots(); enterApp(); }
+  else gateBad();
+}
+function gatePress(k){
+  if(k==="del"){ gateEntry=gateEntry.slice(0,-1); $("gateErr").classList.remove("show"); gateDots(); return; }
+  if(gateEntry.length>=4) return;
+  $("gateErr").classList.remove("show");
+  gateEntry+=k; gateDots();
+  if(gateEntry.length===4) gateCheck();   // 4자리 차면 자동 확인
+}
+$("g-pad").addEventListener("click",e=>{ const b=e.target.closest(".g-key[data-k]"); if(b) gatePress(b.getAttribute("data-k")); });
+// 비밀번호 분실 → 본인 확인(OTP)으로. 통과 후 PIN 재설정(forgotPin).
+$("g-forgot").onclick=()=>{ forgotPin=true; const s=loadSess()||{}; if(s.name) $("su-name").value=s.name; const n=$("su1Note"); if(n){ n.className="note"; n.textContent="비밀번호 대신 본인 확인으로 들어갈게요. 전화번호를 적어 주세요."; } show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100); };
 function markUnlocked(){ try{ sessionStorage.setItem(UNLOCK_KEY,"1"); }catch(e){} }
 function needGate(s){ const u=(()=>{ try{ return sessionStorage.getItem(UNLOCK_KEY)==="1"; }catch(e){ return false; } })(); return !u || (Date.now()-(s.lastAuth||0) > GATE_MS); }
 
 // ════ 부팅 라우팅 ════
 function boot(){
+  forgotPin=false;                  // 새 로드 = 분실 재인증 의도 초기화
   if(DEMO){ enterApp(); return; }   // 디자인·시연: 신원 우회
   const s=loadSess();
   if(!s || !s.session){ show("s-signup1"); $("su-name").focus(); return; }
-  if(s.pinHash && needGate(s)){ show("s-gate"); setTimeout(()=>$("g-pin").focus(),100); return; }   // PIN 있는 기기(첫 기기)만 게이트
+  if(s.pinHash && needGate(s)){ openGate(); return; }   // PIN 있는 기기(첫 기기)만 게이트(토스식 키패드)
   enterApp();   // PIN 없는 기기(다른 기기 가입)는 바로 진입
 }
 // 서버가 세션 거부(code:auth) = 서버 토큰이 죽음(만료/재발급/불일치). PIN(로컬)으론 못 살림 → OTP 재인증.
 //  (boot의 6시간 PIN 게이트와 다름 — 그건 서버 세션 살아있는 로컬 잠금. 이건 서버 토큰 자체가 죽은 것.)
 function sessExpired(){
+  forgotPin=false;                                // 서버발 일반 재인증 — 분실 재설정 의도와 섞이지 않게
   const s=loadSess()||{};
   s.session=""; saveSess(s);                      // 죽은 토큰 비움 → 재진입도 가입으로
   clearClientCaches();                            // 다른 상담사 재인증 시 이전 상담사 명단·기록 깜빡임(PII) 방지
