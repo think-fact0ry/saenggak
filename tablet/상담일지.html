@@ -41,9 +41,9 @@
   .tfield.focus .tin-wrap{border-color:var(--green);}
   .tin-wrap input{width:100%;border:none;background:none;outline:none;font-family:inherit;font-size:22px;font-weight:600;color:var(--g900);padding:2px 40px 5px 0;caret-color:var(--green);}   /* 인풋↔밑줄 간격 축소 */
   .tin-wrap input::placeholder{color:var(--g300);font-weight:500;}
-  .tin-wrap .clr{position:absolute;right:0;top:6px;width:24px;height:24px;border-radius:50%;background:var(--g300);border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+  .tin-wrap .clr{position:absolute;right:0;top:8px;width:19px;height:19px;border-radius:50%;background:var(--g300);border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;}
   .tfield.has-val .clr{display:flex;}
-  .tin-wrap .clr svg{width:13px;height:13px;color:#fff;display:block;}
+  .tin-wrap .clr svg{width:10px;height:10px;color:#fff;display:block;}   /* X 작게 */
 
   /* 하단 고정 버튼 */
   .footbar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:12px 22px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--g100);transition:transform .25s cubic-bezier(.2,.7,.3,1);}   /* transform = 키패드 위로 올림 */
@@ -298,8 +298,8 @@
 <div class="sheet" id="consentSheet">
   <h2>본인 확인을 위해<br>동의가 필요해요</h2>
   <div class="agree-list">
-    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>개인정보(이름·전화번호) 수집·이용 동의</span></div>
-    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>본인 확인 문자(SMS) 발송·수신 동의</span></div>
+    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>개인정보 수집·이용 동의</span></div>
+    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>본인 확인 문자 발송·수신 동의</span></div>
   </div>
   <button class="s-btn" id="consentAgree">동의하고 인증받기</button>
   <button class="s-later" id="consentLater">다음에 하기</button>
@@ -636,7 +636,7 @@ $("su-name").oninput=v1; $("su-phone").addEventListener("fmt",v1);
 function setupTField(tf){
   const inp=tf.querySelector("input"), clr=tf.querySelector(".clr");
   const upd=()=>tf.classList.toggle("has-val", inp.value.length>0);
-  inp.addEventListener("focus",()=>{ inp.removeAttribute("readonly"); tf.classList.add("focus"); setTimeout(()=>{ try{ inp.scrollIntoView({block:"center",behavior:"smooth"}); }catch(e){} },320); });   // readonly 해제=자동완성 차단 후 입력 / 키보드 뜬 뒤 입력칸을 버튼 위로 스크롤
+  inp.addEventListener("focus",()=>{ inp.removeAttribute("readonly"); tf.classList.add("focus"); });   // readonly 해제=자동완성 차단 후 입력. 스크롤 안 함=화면 고정(반가워요·화살표 유지)
   inp.addEventListener("blur",()=>tf.classList.remove("focus"));
   inp.addEventListener("input",upd);
   clr.addEventListener("click",()=>{ inp.value=""; inp.dispatchEvent(new Event("input")); inp.focus(); });   // 비우고 기존 검증·서식·has-val 재실행(input 리스너) + 포커스 유지
