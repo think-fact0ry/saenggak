@@ -167,8 +167,10 @@
   .mp-back{width:40px; height:40px; border:none; background:none; display:flex; align-items:center; justify-content:flex-start; color:var(--g700); cursor:pointer; margin-left:-6px;}
   .mp-back svg{width:24px; height:24px;}
   .mp-title{font-size:20px; font-weight:700; letter-spacing:-.5px;}
-  .mp-profile{background:var(--g100); border-radius:18px; padding:20px; margin-bottom:16px;}
-  .mp-name{font-size:19px; font-weight:700; letter-spacing:-.4px;}
+  .mp-profile{display:flex; align-items:center; gap:16px; padding:6px 4px 22px; margin-bottom:8px;}  /* ex7 = 박스 없음(아바타+이름+전화만) */
+  .mp-avatar{width:56px; height:56px; border-radius:50%; background:var(--g100); display:flex; align-items:center; justify-content:center; color:var(--g400); flex-shrink:0;}
+  .mp-avatar svg{width:30px; height:30px;}
+  .mp-name{font-size:20px; font-weight:700; letter-spacing:-.4px;}
   .mp-phone{font-size:14px; color:var(--g500); font-weight:500; margin-top:3px;}
   .mp-group{border:1.5px solid var(--g100); border-radius:18px; overflow:hidden; margin-bottom:14px;}
   .mp-row{display:flex; align-items:center; gap:10px; padding:17px 18px; background:#fff; border:none; border-bottom:1.5px solid var(--g100); width:100%; font-family:inherit; cursor:pointer; text-align:left;}
@@ -201,6 +203,8 @@
   .s-btn{width:100%; font-family:inherit; font-size:17px; font-weight:700; padding:17px; border-radius:15px; border:none; background:var(--green); color:#fff; cursor:pointer;}
   .s-btn:active{background:var(--green-d);}
   .s-btn:disabled{background:var(--g200); color:var(--g500);}
+  .s-btn.danger{background:var(--red);}
+  .s-btn.danger:active{background:#d63a48;}
   .s-later{width:100%; background:none; border:none; font-family:inherit; font-size:15px; font-weight:600; color:var(--g500); padding:14px; margin-top:4px; cursor:pointer;}
 </style>
 </head>
@@ -304,8 +308,11 @@
       <div class="mp-title">마이페이지</div>
     </div>
     <div class="mp-profile">
-      <div class="mp-name" id="mpName">상담사</div>
-      <div class="mp-phone" id="mpPhone"></div>
+      <div class="mp-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <div>
+        <div class="mp-name" id="mpName">상담사</div>
+        <div class="mp-phone" id="mpPhone"></div>
+      </div>
     </div>
     <div class="mp-group">
       <button class="mp-row" id="rowOath"><span class="l">상담사 등록</span><span class="st" id="oathSt">안 됨</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
@@ -336,11 +343,20 @@
 <div class="sheet-dim" id="adminDim"></div>
 <div class="sheet" id="adminSheet">
   <h2>행정 등록</h2>
-  <p class="ssub">전화 응대 매뉴얼과 제공인력 지도는 행정만 볼 수 있어요. 등록 번호 12자리를 넣어 주세요.</p>
-  <input class="key-in" id="adminKey" type="text" inputmode="text" maxlength="12" placeholder="등록 번호 12자리" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <p class="ssub">행정 담당자만 등록할 수 있어요.</p>
+  <input class="key-in" id="adminKey" type="password" inputmode="text" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly>
   <div class="key-err" id="adminErr"></div>
   <button class="s-btn" id="adminSave" disabled>등록하기</button>
   <button class="s-later" id="adminLater">닫기</button>
+</div>
+
+<!-- ═ 로그아웃 확인 시트 ═ -->
+<div class="sheet-dim" id="logoutDim"></div>
+<div class="sheet" id="logoutSheet">
+  <h2>로그아웃할까요?</h2>
+  <p class="ssub">다시 쓰려면 본인 확인을 한 번 더 해요.</p>
+  <button class="s-btn danger" id="logoutDo">로그아웃</button>
+  <button class="s-later" id="logoutCancel">닫기</button>
 </div>
 
 <div class="install-bar" id="installBar">
@@ -450,7 +466,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   $('oathLater').onclick = closeOath; $('oathDim').onclick = closeOath;
   $('oathAgree').onclick = function(){ setFlag('oath'); location.reload(); };   // reload=head가 tier-oath 적용+상담일지 타일 노출
   // 행정 등록(키)
-  function showAdmin(){ $('adminDim').classList.add('on'); $('adminSheet').classList.add('on'); $('adminKey').value=''; $('adminErr').textContent=''; $('adminSave').disabled=true; }
+  function showAdmin(){ $('adminDim').classList.add('on'); $('adminSheet').classList.add('on'); $('adminKey').value=''; $('adminKey').setAttribute('readonly',''); $('adminErr').textContent=''; $('adminSave').disabled=true; }   // 열 때마다 readonly 복원 = 재오픈에도 자동완성 차단 유지(§5.5)
   function closeAdmin(){ $('adminDim').classList.remove('on'); $('adminSheet').classList.remove('on'); }
   $('rowAdmin').onclick = function(){ var s=sess(); if(s&&s.admin){ refresh(); return; } showAdmin(); };
   $('adminLater').onclick = closeAdmin; $('adminDim').onclick = closeAdmin;
@@ -461,8 +477,14 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     try{ localStorage.setItem('saenggak_admin_token', k); }catch(e){}   // 지도가 읽는 키(ADMIN_TOKEN_KEY)에 저장 → 행정키가 지도 인증으로 바로 배선. 매뉴얼은 admin 플래그로 노출, 지도는 서버 토큰 검증
     setFlag('admin'); location.reload();
   };
-  // 로그아웃
-  $('rowLogout').onclick = function(){
+  // 행정키: 탭하기 전엔 readonly = 자동완성·저장된 비번 차단(§5.5)
+  $('adminKey').addEventListener('focus', function(){ this.removeAttribute('readonly'); });
+  // 로그아웃 = 확인 1회(바로 X)
+  function showLogout(){ $('logoutDim').classList.add('on'); $('logoutSheet').classList.add('on'); }
+  function closeLogout(){ $('logoutDim').classList.remove('on'); $('logoutSheet').classList.remove('on'); }
+  $('rowLogout').onclick = showLogout;
+  $('logoutCancel').onclick = closeLogout; $('logoutDim').onclick = closeLogout;
+  $('logoutDo').onclick = function(){
     try{ localStorage.removeItem('tf_staff_v1'); }catch(e){}
     location.replace('상담일지.html?from=hub');   // 세션 비움 → 로그인으로
   };
@@ -470,7 +492,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.24m';
+var APP_VERSION = '26.06.24n';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:

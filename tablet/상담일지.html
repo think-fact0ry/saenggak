@@ -78,6 +78,14 @@
   .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
   .stub{text-align:center;font-size:12.5px;color:var(--g400);margin-top:10px;}
 
+  /* 로딩 = 점 3개 위아래 출렁(인증번호 발송·확인) — 토스식, 진행 중임이 보이게 */
+  .ld{display:inline-flex;align-items:center;gap:9px;color:var(--g500);font-weight:500;}
+  .ld-dots{display:inline-flex;gap:5px;}
+  .ld-dots i{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:ldb 1.1s ease-in-out infinite;}
+  .ld-dots i:nth-child(2){animation-delay:.16s;}
+  .ld-dots i:nth-child(3){animation-delay:.32s;}
+  @keyframes ldb{0%,75%,100%{transform:translateY(0);opacity:.4;}38%{transform:translateY(-6px);opacity:1;}}
+
   /* 재진입 PIN 게이트 — 토스식 보안 키패드(랜덤 숫자, OS 키보드 없음) */
   #s-gate.active{display:flex;}   /* .screen.active{display:block} 덮어쓰기 */
   #s-gate{flex-direction:column;align-items:center;height:100vh;height:100dvh;overflow:hidden;padding:max(20px,3vh) 16px calc(max(14px,2vh) + env(safe-area-inset-bottom));}   /* 한 화면에 다(스크롤 X). 좌우 패딩 줄여 좁은 폰서 키패드 안 잘리게 */
@@ -274,9 +282,8 @@
 <!-- ═══ 가입 1: 이름·전화 ═══ -->
 <div class="screen" id="s-signup1">
   <div class="wrap">
-    <a class="back" href="./index.html" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
-    <h1>반가워요</h1>
-    <p class="sub">상담일지를 쓰려면 본인 확인을 할게요.</p>
+    <h1>본인 확인을 할게요</h1>
+    <p class="sub">이름과 전화번호를 적어 주세요.</p>
     <div class="tfield" id="tf-name">
       <label for="su-name">이름</label>
       <div class="tin-wrap">
@@ -593,7 +600,6 @@ const DEMO = (function(){ try{ return new URLSearchParams(location.search).get('
 //  ⚠️ 보안 아님(공개 소스라 URL 알면 접근) — 상담사 우발 사용 차단용. 법무 OK 후 이 게이트 제거 = 정식 오픈.
 const GA_ON = DEMO || (function(){ try{ return new URLSearchParams(location.search).get('ga')==='1'; }catch(e){ return false; } })();
 const FROM_HUB = (function(){ try{ return new URLSearchParams(location.search).get('from')==='hub'; }catch(e){ return false; } })();   // 허브가 로그인하러 보냄 → 신원 끝나면 허브로 복귀(서약·일지 건너뜀)
-if(FROM_HUB){ try{ var _sb=document.querySelector('#s-signup1 .sub'); if(_sb) _sb.textContent='생각공작소를 쓰려면 본인 확인을 할게요.'; }catch(e){} }   // 앱 로그인 진입 = 상담일지가 아니라 앱 결로 문구
 const MOCK_CLIENTS = [
   {name:'김서준', birth:'20200911', service:'아청심', center:'미추'},
   {name:'김서준', birth:'20190304', service:'아청심', center:'서구'},   // 동명이인(생년월일로 구분) 데모
@@ -646,6 +652,8 @@ function svcFull(s){ s=String(s||""); if(s.indexOf('아동')>=0||s.indexOf('아�
 // ════ 공통 POST ════
 function post(obj){ return fetch(GAS_EXEC, {method:"POST", body:JSON.stringify(obj)}).then(r=>{ if(!r.ok) throw new Error("서버 오류 "+r.status); return r.json(); }); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
+// 로딩 표시 = 글자 + 출렁이는 점 3개(진행 중임이 보이게). innerHTML이라 텍스트는 우리가 만든 고정 문자열만 넣음.
+function loadingNote(el, text){ el.className="note"; el.innerHTML='<span class="ld">'+text+'<span class="ld-dots"><i></i><i></i><i></i></span></span>'; }
 
 // ════ 가입 1: 이름·전화 → OTP ════
 bindPhone($("su-phone"));
@@ -677,7 +685,7 @@ let otpSendBusy=false;
 function doSendOtp(){
   if(otpSendBusy) return; otpSendBusy=true;   // 더블탭 가드 = 문자 2번 발송 방지
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
-  const note=$("su1Note"); note.className="note"; note.textContent="확인하고 있어요…"; $("su1Btn").disabled=true;
+  const note=$("su1Note"); loadingNote(note,"확인하고 있어요"); $("su1Btn").disabled=true;
   post({action:"staff_start", name, phone}).then(d=>{
     otpSendBusy=false; $("su1Btn").disabled=false;
     if(d && d.ok){
@@ -693,7 +701,7 @@ let su2Busy=false, forgotPin=false;   // forgotPin = '비밀번호를 몰라요'
 function doVerify(){
   if(su2Busy || $("su-code").value.length!==6) return;
   su2Busy=true;
-  const note=$("su2Note"); note.className="note"; note.textContent="확인 중…";
+  const note=$("su2Note"); loadingNote(note,"확인하고 있어요");
   const device=getDevice();
   post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device}).then(d=>{
     su2Busy=false;
@@ -742,7 +750,7 @@ let resendBusy=false;
 function resendOtp(){
   if(resendBusy) return; resendBusy=true;                     // 더블탭 가드: 보내는 동안 버튼이 사라져 재탭 불가 + 플래그로 belt-and-suspenders
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
-  const note=$("su2Note"); note.className="note"; note.textContent="다시 보내고 있어요…";
+  const note=$("su2Note"); loadingNote(note,"다시 보내고 있어요");
   // 실패해도 '다시 받기' 버튼을 되살림(막다른 화면 방지, §3 나갈 선택지)
   function failNote(msg){ note.className="note err"; note.innerHTML=msg+' <button class="lk" id="otpResend">다시 받기</button>'; const b=$("otpResend"); if(b) b.onclick=resendOtp; }
   post({action:"staff_start", name, phone}).then(d=>{
@@ -912,7 +920,7 @@ function loadClients(){
   if(DEMO){ allClients = MOCK_CLIENTS.slice(); $("cs-note").textContent=""; renderClients(""); return; }
   const note=$("cs-note");
   if(allClients.length){ renderClients($("cs-search").value); note.className="note"; note.textContent=""; }   // 이미 불러온 적 있으면 즉시(스피너 X) → 아래서 조용히 갱신
-  else { note.className="note"; note.textContent="담당 내담자를 불러오고 있어요…"; $("cs-list").innerHTML=""; $("cs-count").textContent=""; }
+  else { loadingNote(note,"담당 내담자를 불러오고 있어요"); $("cs-list").innerHTML=""; $("cs-count").textContent=""; }
   const s=loadSess()||{};
   post({action:"staff_clients", staffId:s.staffId, session:s.session}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
@@ -957,7 +965,7 @@ function openMonth(ym){
   $("m-ym").textContent = ymLabel(ym);
   $("m-next").disabled = (ym >= thisMonth());   // 미래 월로 못 넘어가게
   $("m-rounds").innerHTML='';
-  $("m-note").className="note"; $("m-note").textContent="불러오는 중…";
+  loadingNote($("m-note"),"불러오는 중");
   show("s-month");
   if(DEMO){ roundData = JSON.parse(JSON.stringify(MOCK_ROUNDS[curClient.name]||{})); $("m-note").textContent=""; renderRounds(); return; }
   const s=loadSess()||{};
@@ -1003,7 +1011,7 @@ function saveRound(retry){
   if(_saving) return;
   if(DEMO){ roundData[curRound]={date:ymd($("w-date").value), content:$("w-content").value.trim()}; toast(curRound+"회차 저장(데모)"); openMonth(curYm); return; }
   _saving=true;
-  const note=$("w-note"); note.className="note"; note.textContent="저장하고 있어요…"; $("w-save").disabled=true;
+  const note=$("w-note"); loadingNote(note,"저장하고 있어요"); $("w-save").disabled=true;
   const s=loadSess()||{};
   const body={ action:"journal", staffId:s.staffId, session:s.session,
     child:{ name:curClient.name, birth:curClient.birth }, service:curClient.service||"",
@@ -1014,7 +1022,7 @@ function saveRound(retry){
     throw new Error((d&&d.error)||"저장 실패");
   }).catch(err=>{
     _saving=false; note.className="note err";
-    if(retry){ note.textContent="다시 시도하고 있어요…"; setTimeout(()=>saveRound(false),1500); return; }
+    if(retry){ loadingNote(note,"다시 시도하고 있어요"); setTimeout(()=>saveRound(false),1500); return; }
     $("w-save").disabled=false;
     note.innerHTML='저장이 안 됐어요. <button class="lk" id="retrySave">다시 저장</button>';
     const b=$("retrySave"); if(b) b.onclick=()=>saveRound(true);
@@ -1082,7 +1090,7 @@ function loadGClients(){
   if(DEMO){ gClients=DEMO_GCLIENTS.slice(); $("gcl-note").textContent=""; renderGClients(""); return; }
   const note=$("gcl-note");
   if(gClients.length){ renderGClients(""); note.className="note"; note.textContent=""; }   // 이미 불러온 적 있으면 즉시 표시(스피너 X) → 아래서 조용히 갱신
-  else { note.className="note"; note.textContent="내담자를 불러오고 있어요…"; $("gcl-list").innerHTML=""; $("gcl-count").textContent=""; }
+  else { loadingNote(note,"내담자를 불러오고 있어요"); $("gcl-list").innerHTML=""; $("gcl-count").textContent=""; }
   const s=loadSess()||{};
   post({action:"gclient_list", staffId:s.staffId, session:s.session}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
@@ -1369,7 +1377,7 @@ function loadGRounds(){
   loadGIntakeStatus();           // 초기상담 카드 상태(백그라운드, 스피너 없음)
   if(DEMO){ gRounds = JSON.parse(JSON.stringify(DEMO_GROUNDS[gClient.name]||{})); $("gr-note").textContent=""; renderGRounds(); return; }
   if(gRoundsCache[key]){ gRounds=gRoundsCache[key]; $("gr-note").className="note"; $("gr-note").textContent=""; renderGRounds(); }   // 캐시(메모리) 즉시 — 재진입 스피너 없음
-  else { gRounds={}; $("gr-list").innerHTML=""; $("gr-count").textContent=""; $("gr-note").className="note"; $("gr-note").textContent="불러오는 중…"; }
+  else { gRounds={}; $("gr-list").innerHTML=""; $("gr-count").textContent=""; loadingNote($("gr-note"),"불러오는 중"); }
   const s=loadSess()||{};
   post({action:"gjournal_get", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
@@ -1502,7 +1510,7 @@ function doDeleteRound(){
     toast(r+"회기 삭제(데모)"); renderGRounds(); return;
   }
   const s=loadSess()||{};
-  $("gr-note").className="note"; $("gr-note").textContent="삭제하고 있어요…";
+  loadingNote($("gr-note"),"삭제하고 있어요");
   post({action:"gjournal_delete", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}, round:r}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
     if(d && d.ok){ applyRounds(d.rounds); $("gr-note").textContent=""; renderGRounds(); toast("삭제했어요"); }
