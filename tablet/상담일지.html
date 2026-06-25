@@ -18,10 +18,9 @@
   .screen.active{display:block;}
   .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}
   #s-signup1 .wrap,#s-signup2 .wrap{padding-top:64px;}   /* 키보드 down = 제목·입력 손 닿는 높이로 내림(상태바 밑 박힘 방지, ex12) */
-  .su-fixed{flex-shrink:0;}
-  /* 키보드 up(포커스) = 헤더(화살표+제목) 고정 + 입력만 스크롤. 2칸은 남는 공간에 들어가 스크롤 0, 3칸+면 그때만 입력영역 스크롤(헤더는 그대로) — 유성 설계 */
-  #s-signup1:focus-within .wrap,#s-signup2:focus-within .wrap{display:flex;flex-direction:column;height:100dvh;padding-top:12px;padding-bottom:0;}
-  #s-signup1:focus-within .su-scroll,#s-signup2:focus-within .su-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding-bottom:96px;}
+  #s-signup1 h1,#s-signup2 h1{margin-bottom:24px;}   /* 제목↔첫 입력 간격(부제 삭제 후 좁아진 것 복원) */
+  #s-signup1:focus-within .wrap,#s-signup2:focus-within .wrap{padding-top:16px;}   /* 키보드 뜰 때 위 여백 줄여 입력칸이 footbar 위로 올라옴(가림 방지) */
+  html:has(#s-signup1 input:focus),html:has(#s-signup2 input:focus){overflow:hidden;}   /* 키보드 뜰 때 스크롤 잠금=고정(스크롤바 없음). 입력 2칸이라 footbar 위에 다 들어감(유성) */
   .back{display:flex;align-items:center;justify-content:flex-start;width:40px;height:40px;margin:0 0 4px 0;border-radius:12px;border:none;background:#fff;text-decoration:none;color:var(--g700);cursor:pointer;position:sticky;top:0;z-index:5;}   /* 좌측 정렬 + sticky=스크롤해도 뒤로화살표 맨 위 유지(전 화면) */
   .back svg{width:24px;height:24px;display:block;}
   .back:active{background:var(--g100);}
@@ -291,11 +290,8 @@
 <!-- ═══ 가입 1: 이름·전화 ═══ -->
 <div class="screen" id="s-signup1">
   <div class="wrap">
-    <div class="su-fixed">
-      <button class="back" id="su1Back" aria-label="뒤로" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-      <h1>본인 확인을 할게요</h1>
-    </div>
-    <div class="su-scroll">
+    <button class="back" id="su1Back" aria-label="뒤로" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+    <h1>본인 확인을 할게요</h1>
     <div class="tfield" id="tf-name">
       <label for="su-name">이름</label>
       <div class="tin-wrap">
@@ -311,7 +307,6 @@
       </div>
     </div>
     <div class="note" id="su1Note"></div>
-    </div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="su1Btn" disabled>인증번호 받기</button></div></div>
 </div>
@@ -346,16 +341,12 @@
 <!-- ═══ 가입 2: OTP ═══ -->
 <div class="screen" id="s-signup2">
   <div class="wrap">
-    <div class="su-fixed">
-      <button class="back" id="su2Back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-      <h1>인증번호 확인</h1>
-      <p class="sub" id="su2Sub">문자로 받은 6자리 숫자를 적어 주세요.</p>
-    </div>
-    <div class="su-scroll">
+    <button class="back" id="su2Back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+    <h1>인증번호 확인</h1>
+    <p class="sub" id="su2Sub">문자로 받은 6자리 숫자를 적어 주세요.</p>
     <div class="field"><label>인증번호</label><input id="su-code" type="text" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off"></div>
     <div class="note" id="su2Note"></div>
     <div class="stub" id="su2Stub"></div>
-    </div>
   </div>
 </div>
 
