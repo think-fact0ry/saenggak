@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <title>상담일지 — 생각공작소</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
@@ -804,20 +804,13 @@ function openGate(){
 function fitGate(){ const g=$("s-gate"); if(g) g.style.height=(window.visualViewport?Math.round(window.visualViewport.height):window.innerHeight)+"px"; }   // 한 화면 보장(body 스크롤 방지)
 // ── 뷰포트 변화 한 곳에서 처리(§7 단일 핸들러): 게이트 활성 시 높이 박기 + 활성 화면 footbar만 키보드 위로 ──
 function liftActiveFooter(){
-  const sc=document.querySelector(".screen.active");
-  const fb=sc?sc.querySelector(".footbar"):null;
-  document.querySelectorAll(".footbar").forEach(f=>{ if(f!==fb){ f.style.transform=""; f.classList.remove("kb"); } });   // 비활성 것만 초기화(활성은 직접 갱신 = 리셋→재적용 깜빡임 없음)
-  const wrap=sc?sc.querySelector(".wrap"):null;   // s-gate는 .wrap 없음(자체 fitGate) → 영향 X
+  // 키보드 처리 = viewport meta `interactive-widget=resizes-content`가 레이아웃을 줄여 *패닝 자체를 없앰*(오버스크롤 차단). 여기선 footbar만 키보드 위로(meta가 먹히면 innerHeight도 줄어 kb≈0 → 자동으로 bottom:0 위치, meta 미지원 기기 폴백).
+  const fb=document.querySelector(".screen.active .footbar");
+  document.querySelectorAll(".footbar").forEach(f=>{ if(f!==fb){ f.style.transform=""; f.classList.remove("kb"); } });   // 비활성 것만 초기화
+  if(!fb) return;
   const kb = window.visualViewport ? Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop) : 0;
-  if(kb>80){
-    if(fb){ fb.style.transform="translateY("+(-kb)+"px)"; fb.classList.add("kb"); }   // 키보드 위로 + 꽉 차게(ex2)
-    // 키보드 떴을 때만: 활성 화면을 보이는 높이로 묶어 *내부* 스크롤 → 헤더가 상단 경계, 빈공간 오버스크롤 차단(ex14). body는 안 움직임.
-    if(wrap){ document.documentElement.style.overflow="hidden"; document.body.style.overflow="hidden"; wrap.style.height=window.visualViewport.height+"px"; wrap.style.overflowY="auto"; wrap.style.webkitOverflowScrolling="touch"; }
-  } else {
-    if(fb){ fb.style.transform=""; fb.classList.remove("kb"); }
-    document.documentElement.style.overflow=""; document.body.style.overflow="";   // 키보드 내려가면 고정 해제(평소 화면 고정은 짧은 본문이라 어차피 스크롤 없음)
-    document.querySelectorAll(".wrap").forEach(w=>{ w.style.height=""; w.style.overflowY=""; w.style.webkitOverflowScrolling=""; });
-  }
+  if(kb>80){ fb.style.transform="translateY("+(-kb)+"px)"; fb.classList.add("kb"); }   // (meta 미지원 폴백) 키보드 위로 + 꽉 차게
+  else { fb.style.transform=""; fb.classList.remove("kb"); }
 }
 function onViewport(){ const g=$("s-gate"); if(g && g.classList.contains("active")) fitGate(); liftActiveFooter(); }
 window.addEventListener("resize",onViewport);
