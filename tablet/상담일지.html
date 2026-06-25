@@ -19,8 +19,13 @@
   .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}
   #s-signup1 .wrap,#s-signup2 .wrap{padding-top:64px;}   /* 키보드 down = 제목·입력 손 닿는 높이로 내림(상태바 밑 박힘 방지, ex12) */
   #s-signup1 h1,#s-signup2 h1{margin-bottom:24px;}   /* 제목↔첫 입력 간격(부제 삭제 후 좁아진 것 복원) */
-  #s-signup1:focus-within .wrap,#s-signup2:focus-within .wrap{padding-top:16px;}   /* 키보드 뜰 때 위 여백 줄여 입력칸이 footbar 위로 올라옴(가림 방지) */
-  html:has(#s-signup1 input:focus),html:has(#s-signup2 input:focus){overflow:hidden;}   /* 키보드 뜰 때 스크롤 잠금=고정(스크롤바 없음). 입력 2칸이라 footbar 위에 다 들어감(유성) */
+  #s-signup1:focus-within .wrap,#s-signup2:focus-within .wrap,#s-gclient:focus-within .wrap{padding-top:16px;}   /* 키보드 뜰 때 위 여백 줄여 입력칸이 footbar 위로 올라옴(가림 방지) */
+  html:has(#s-signup1 input:focus),html:has(#s-signup2 input:focus),html:has(#s-gclient input:focus){overflow:hidden;}   /* 적은-칸 화면=키보드 뜰 때 스크롤 잠금=고정(스크롤바 없음). 입력이 footbar 위에 다 들어감(§5.5 ⓗ) */
+  /* 많은-칸 입력화면(textarea가 키보드에 가려짐)=헤더(뒤로·제목) 고정 + 입력영역만 스크롤 — §5.5 ⓗ. 키보드 down=일반 흐름(viewport 높이 가득), up=resizes-content가 dvh 줄여 입력영역만 줄어듦 */
+  .kbf.active{display:flex;flex-direction:column;height:100vh;height:100dvh;}
+  .kbf .wrap{flex:1;min-height:0;display:flex;flex-direction:column;padding-bottom:0;}
+  .kbf .kbf-head{flex-shrink:0;}
+  .kbf .kbf-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:96px;}
   .back{display:flex;align-items:center;justify-content:flex-start;width:40px;height:40px;margin:0 0 4px 0;border-radius:12px;border:none;background:#fff;text-decoration:none;color:var(--g700);cursor:pointer;position:sticky;top:0;z-index:5;}   /* 좌측 정렬 + sticky=스크롤해도 뒤로화살표 맨 위 유지(전 화면) */
   .back svg{width:24px;height:24px;display:block;}
   .back:active{background:var(--g100);}
@@ -477,23 +482,28 @@
 </div>
 
 <!-- ═══ [일반] 내담자 정보·메모 수정(연필) ═══ -->
-<div class="screen" id="s-gedit">
+<div class="screen kbf" id="s-gedit">
   <div class="wrap">
+    <div class="kbf-head">
     <button class="back" id="ge-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <h1>내담자 정보</h1>
+    </div><div class="kbf-body">
     <div class="field"><label>이름</label><input id="ge-name" type="text" placeholder="홍길동" autocomplete="off"></div>
     <div class="field"><label>생년월일</label><input id="ge-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
     <div class="field"><label>메모</label><textarea id="ge-memo" class="sm" placeholder="예: OO초 2학년 / OOO아파트 / OO구 OO동 / 우울로 인해 의뢰"></textarea></div>
     <div class="note" id="ge-note"></div>
+    </div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="ge-save">저장</button></div></div>
 </div>
 
 <!-- ═══ [일반] 초기상담 기록(인테이크, 내담자당 1회) ═══ -->
-<div class="screen" id="s-gintake">
+<div class="screen kbf" id="s-gintake">
   <div class="wrap">
+    <div class="kbf-head">
     <button class="back" id="gi-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="subject" id="gi-subject"></div>
+    </div><div class="kbf-body">
 
     <div class="irow seg-row"><label>내담자</label><div class="seg" id="gi-type"></div></div>
 
@@ -523,15 +533,18 @@
     </div>
 
     <div class="note" id="gi-note"></div>
+    </div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="gi-save">저장</button></div></div>
 </div>
 
 <!-- ═══ [일반] 회기 기록 폼(7칸) ═══ -->
-<div class="screen" id="s-gwrite">
+<div class="screen kbf" id="s-gwrite">
   <div class="wrap">
+    <div class="kbf-head">
     <button class="back" id="gw-back" aria-label="회기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="subject" id="gw-subject"></div>
+    </div><div class="kbf-body">
 
     <div class="irow"><label>상담일자</label><input id="gw-date" class="flat" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
     <div class="irow"><label>주호소</label><input id="gw-complaint" class="flat" type="text" placeholder="핵심 어려움" autocomplete="off"></div>
@@ -557,18 +570,22 @@
     <div class="block" id="gw-riskbox" style="display:none;border-bottom:none;"><textarea id="gw-risknote" class="sm" style="margin-top:0;" placeholder="어떤 위험 신호인지, 어떻게 대응했는지 적어요."></textarea></div>
 
     <div class="note" id="gw-note"></div>
+    </div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="gw-save" disabled>저장</button></div></div>
 </div>
 
 <!-- ═══ 회차 상세내용 입력·수정 ═══ -->
-<div class="screen" id="s-write">
+<div class="screen kbf" id="s-write">
   <div class="wrap">
+    <div class="kbf-head">
     <button class="back" id="w-back" aria-label="회차"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="subject" id="w-subject"></div>
+    </div><div class="kbf-body">
     <div class="field"><label>상담일</label><input id="w-date" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
     <div class="field"><label>상세내용</label><textarea id="w-content" placeholder="서비스 세부 내용 및 이용자 상태평가 등을 적어요."></textarea></div>
     <div class="note" id="w-note"></div>
+    </div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="w-save" disabled>저장</button></div></div>
 </div>
