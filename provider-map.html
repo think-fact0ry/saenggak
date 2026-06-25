@@ -288,11 +288,41 @@
   </div>
 </div>
 
+<!-- ════ 제공인력 로그인 모달 (11 OTP 재사용) ════ -->
+<div id="staffModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:22px;width:320px;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,.25)">
+    <div style="font-size:16px;font-weight:700;color:#222">제공인력 로그인</div>
+    <div id="smStep1">
+      <div style="font-size:12px;color:#888;margin:6px 0 14px">등록된 이름과 전화번호로 인증해요</div>
+      <input id="smName" placeholder="이름" autocomplete="off"
+             style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:14px;margin-bottom:8px">
+      <input id="smPhone" placeholder="전화번호" inputmode="numeric" autocomplete="off"
+             style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:14px">
+      <button id="smSendBtn" onclick="smSend()"
+              style="width:100%;margin-top:14px;padding:11px;border:none;background:#3a8a5f;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">인증번호 받기</button>
+    </div>
+    <div id="smStep2" style="display:none">
+      <div id="smPhoneEcho" style="font-size:12px;color:#888;margin:6px 0 12px"></div>
+      <input id="smCode" inputmode="numeric" maxlength="6" placeholder="인증번호 6자리" autocomplete="one-time-code"
+             style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:18px;letter-spacing:4px;text-align:center">
+      <button id="smVerifyBtn" onclick="smVerify()"
+              style="width:100%;margin-top:14px;padding:11px;border:none;background:#3a8a5f;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">확인</button>
+      <button onclick="smResend()"
+              style="width:100%;margin-top:8px;padding:8px;border:none;background:none;color:#888;font-size:12px;cursor:pointer">번호 다시 입력 / 재발송</button>
+    </div>
+    <div id="smErr" style="color:#dc2626;font-size:12px;min-height:16px;margin-top:10px"></div>
+    <button onclick="smClose()"
+            style="width:100%;margin-top:4px;padding:8px;border:1px solid #ddd;background:#fff;color:#666;border-radius:8px;font-size:13px;cursor:pointer">닫기</button>
+  </div>
+</div>
+
 <!-- ════ 컨트롤 ════ -->
 <div class="controls">
   <div class="logo">오감쑥쑥 <span>지도</span></div>
-  <a href="dashboard.html" style="font-size:10px;color:#999;text-decoration:none;border:1px solid #ddd;padding:3px 8px;border-radius:4px">📊</a>
-  <button onclick="promptAdminToken('관리자 인증 토큰 변경/입력:')" title="관리자 인증 토큰" style="font-size:10px;color:#999;background:#fff;border:1px solid #ddd;padding:3px 8px;border-radius:4px;cursor:pointer">🔑</button>
+  <a id="dashLink" href="dashboard.html" style="font-size:10px;color:#999;text-decoration:none;border:1px solid #ddd;padding:3px 8px;border-radius:4px">📊</a>
+  <button onclick="promptAdminToken('관리자 인증 토큰 변경/입력:').then(function(){ _svcCache={}; boot(); })" title="관리자 인증 토큰" style="font-size:10px;color:#999;background:#fff;border:1px solid #ddd;padding:3px 8px;border-radius:4px;cursor:pointer">🔑</button>
+  <button id="staffLoginBtn" onclick="staffLogin()" style="display:none;font-size:11px;color:#3a8a5f;background:#fff;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">👤 제공인력 로그인</button>
+  <span id="staffWhoami" onclick="staffLogout()" title="로그아웃" style="display:none;font-size:11px;color:#3a8a5f;background:#eef7f1;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px;cursor:pointer">👤 <b>제공인력</b> · 로그아웃</span>
   <div class="divider"></div>
   <select id="providerSelect"></select>
   <div class="filter-group">
@@ -310,7 +340,7 @@
     <button class="sbtn" data-svc="비바우처기관" onclick="pickService('비바우처기관')">일반·기관<i style="background:#9ca3af"></i></button>
   </div>
   <div class="divider"></div>
-  <div class="search-wrap">
+  <div class="search-wrap" id="searchWrap">
     <input type="text" class="search-input" id="searchInput" placeholder="🔍 이름 · 주소 · 전화번호" autocomplete="off">
     <div class="search-results" id="searchResults"></div>
   </div>
@@ -512,7 +542,7 @@ function initMap() {
   setupLongPress(mapEl);
 
   setupMapMoveListener();
-  loadProviders();
+  boot();   // 3모드 분기(기본/제공인력/행정) — 행정만 loadProviders 경로
 }
 
 // ══ API ══
@@ -546,6 +576,73 @@ function promptAdminToken(msg){
     input.onkeydown = function(e){ if(e.key==='Enter'){ commit(); } else if(e.key==='Escape'){ abort(); } };
   });
 }
+
+// ─────────────────────────────────────────────
+//  지도 3모드 (2026-06-25)
+//   basic = 키X·로그인X(공개) / provider = 11세션 로그인 / admin = 행정키
+//   결정: 행정키 有→admin / 11세션 有→provider / 둘 다 無→basic
+// ─────────────────────────────────────────────
+var MODE = 'basic';
+function isAdmin(){ return MODE === 'admin'; }
+
+// 11 플랫폼(신원) 배포 URL — OTP 로그인은 여기로 POST(06과 별개 배포). staffmap 데이터는 06(CONFIG.GAS_URL).
+var PLATFORM_URL = 'https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec';
+var STAFF_SESS_KEY = 'tf_staff_v1';   // 태블릿 앱과 공유 — 앱서 로그인했으면 PC 지도서도 자동 인식
+function getStaffSess(){ try{ return JSON.parse(localStorage.getItem(STAFF_SESS_KEY) || 'null'); }catch(e){ return null; } }
+function setStaffSess(s){ try{ localStorage.setItem(STAFF_SESS_KEY, JSON.stringify(s)); }catch(e){} }
+function clearStaffSess(){ try{ localStorage.removeItem(STAFF_SESS_KEY); }catch(e){} }
+function getDeviceId(){
+  var s = getStaffSess(); if (s && s.device) return s.device;
+  var d = localStorage.getItem('tf_device');
+  if (!d){ d = 'web-' + Math.random().toString(36).slice(2) + Date.now().toString(36); try{ localStorage.setItem('tf_device', d); }catch(e){} }
+  return d;
+}
+function postPlatform(payload){
+  return fetch(PLATFORM_URL, {
+    method: 'POST', redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // cross-origin 단순요청(preflight 회피) — 태블릿과 동일
+    body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); });
+}
+
+// ── 제공인력 로그인 모달 ──
+var _smBusy = false;
+function staffLogin(){ document.getElementById('staffModal').style.display='flex'; smShow(1); smErr(''); setTimeout(function(){ document.getElementById('smName').focus(); }, 50); }
+function smClose(){ document.getElementById('staffModal').style.display='none'; smErr(''); }
+function smShow(step){ document.getElementById('smStep1').style.display = step===1?'':'none'; document.getElementById('smStep2').style.display = step===2?'':'none'; }
+function smErr(m){ document.getElementById('smErr').textContent = m || ''; }
+function smResend(){ smShow(1); smErr(''); setTimeout(function(){ document.getElementById('smName').focus(); }, 50); }
+function smSend(){
+  if (_smBusy) return;
+  var name = document.getElementById('smName').value.trim();
+  var phone = document.getElementById('smPhone').value.trim();
+  if (!name || phone.replace(/\D/g,'').length < 10){ smErr('이름과 전화번호를 확인해 주세요'); return; }
+  _smBusy = true; smErr(''); var btn=document.getElementById('smSendBtn'); btn.textContent='보내는 중…'; btn.disabled=true;
+  postPlatform({ action:'staff_start', name:name, phone:phone }).then(function(r){
+    _smBusy=false; btn.textContent='인증번호 받기'; btn.disabled=false;
+    if (!r || !r.ok){ smErr((r&&r.error) || '발송에 실패했어요'); return; }
+    document.getElementById('smPhoneEcho').textContent = (r.phone||'') + ' 로 인증번호를 보냈어요';
+    smShow(2); setTimeout(function(){ document.getElementById('smCode').focus(); }, 50);
+  }).catch(function(){ _smBusy=false; btn.textContent='인증번호 받기'; btn.disabled=false; smErr('네트워크 오류 — 다시 시도해 주세요'); });
+}
+function smVerify(){
+  if (_smBusy) return;
+  var name = document.getElementById('smName').value.trim();
+  var phone = document.getElementById('smPhone').value.trim();
+  var code = document.getElementById('smCode').value.replace(/\D/g,'');
+  if (code.length < 6){ smErr('인증번호 6자리를 입력해 주세요'); return; }
+  _smBusy = true; smErr(''); var btn=document.getElementById('smVerifyBtn'); btn.textContent='확인 중…'; btn.disabled=true;
+  postPlatform({ action:'staff_verify', name:name, phone:phone, code:code, device:getDeviceId() }).then(function(r){
+    _smBusy=false; btn.textContent='확인'; btn.disabled=false;
+    if (!r || !r.ok){ smErr((r&&r.error) || '인증에 실패했어요'); return; }
+    var prev = getStaffSess() || {};
+    setStaffSess({ staffId:r.staffId, session:r.session, name:r.name||name, phone:phone, device:getDeviceId(),
+                   pinHash:prev.pinHash||'', oath:prev.oath||false, lastAuth:Date.now() });
+    smClose();
+    MODE='provider'; applyModeUI(); _svcCache={}; loadStaffMap();
+  }).catch(function(){ _smBusy=false; btn.textContent='확인'; btn.disabled=false; smErr('네트워크 오류 — 다시 시도해 주세요'); });
+}
+function staffLogout(){ clearStaffSess(); MODE='basic'; applyModeUI(); _svcCache={}; loadBasicMap(); showToast('로그아웃했어요'); }
 
 function _gasUrl(action, params) {
   var url = CONFIG.GAS_URL + '?action=' + action;
@@ -645,6 +742,74 @@ function loadMapData(name, keepView) {
   if(_svcCache[key]){ done(_svcCache[key]); return; }   // 캐시 즉시
   showLoading(true);
   fetchGAS('mapdata', {provider:name, service: currentService}).then(function(data){ showLoading(false); done(data); }).catch(function(e) { showLoading(false); showToast('데이터 로드 실패: '+e.message); });
+}
+
+// ══ 3모드 부팅 + UI 전환 ══
+function boot(){
+  if (getAdminToken()) MODE = 'admin';
+  else { var s = getStaffSess(); MODE = (s && s.session) ? 'provider' : 'basic'; }
+  applyModeUI();
+  if (MODE === 'admin') loadProviders();
+  else if (MODE === 'provider') loadStaffMap();
+  else loadBasicMap();
+}
+function applyModeUI(){
+  var admin = MODE === 'admin', provider = MODE === 'provider';
+  var show = function(id, on){ var el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+  show('providerSelect', admin);          // 행정만 제공인력 선택 드롭다운
+  show('dashLink', admin);
+  show('searchWrap', admin);              // 검색은 전 아동 PII 노출 → 행정만
+  show('nlFab', admin);                   // 신청폼 리스트 패널 → 행정만
+  show('filterHome', admin || provider);
+  show('filterAssigned', admin || provider);
+  show('staffLoginBtn', MODE === 'basic');
+  var who = document.getElementById('staffWhoami');
+  if (who){
+    who.style.display = provider ? '' : 'none';
+    if (provider){ var ss = getStaffSess(); var b = who.querySelector('b'); if (b) b.textContent = (ss && ss.name) || '제공인력'; }
+  }
+  if (!admin) hideDashboard();
+  // 모드별 마커 토글 기본값(서비스 전환 시엔 유지 — applyModeUI는 모드 바뀔 때만 호출)
+  if (MODE === 'basic'){ showHome=false; showAssigned=false; showWaiting=true; }
+  else if (provider){ showHome=true; showAssigned=true; showWaiting=true; }
+  ['filterHome','filterAssigned','filterWaiting'].forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    var on = id==='filterHome'?showHome : id==='filterAssigned'?showAssigned : showWaiting;
+    el.classList.toggle('active', on);
+  });
+  var logo = document.querySelector('.controls .logo span');
+  if (logo) logo.textContent = admin ? '지도 · 행정' : (provider ? '지도 · 제공인력' : '지도');
+}
+
+// 기본지도(공개): 대기아동(가림·동단위 뭉갬)만. 집·배정 없음.
+function loadBasicMap(keepView){
+  infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
+  showLoading(true);
+  fetchGAS('basicmap', { service: currentService }).then(function(data){
+    showLoading(false);
+    if (!data || data.error){ showToast((data && data.error) || '로드 실패'); return; }
+    currentData = { provider:{ name:'', lat:null, lng:null }, assigned:[], waiting:data.waiting||[], allProviders:null };
+    renderMarkers(); if (!keepView) fitBounds();
+  }).catch(function(e){ showLoading(false); showToast('로드 실패: '+e.message); });
+}
+
+// 제공인력지도(11세션): 내 배정아동(전체) + 대기아동(가림·정밀) + 내 집.
+function loadStaffMap(keepView){
+  var s = getStaffSess();
+  if (!s || !s.session){ MODE='basic'; applyModeUI(); loadBasicMap(keepView); return; }
+  infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
+  showLoading(true);
+  fetchGAS('staffmap', { service: currentService, staffId: s.staffId, session: s.session }).then(function(data){
+    showLoading(false);
+    if (data && data.error === 'auth'){   // 세션 만료·회수(퇴사) → 기본지도로 강등 + 재로그인 유도
+      clearStaffSess(); MODE='basic'; applyModeUI(); loadBasicMap();
+      showToast('로그인이 만료됐어요. 다시 로그인해 주세요'); return;
+    }
+    if (!data || data.error){ showToast((data && data.error) || '로드 실패'); return; }
+    if (!data.provider) data.provider = { name: s.name||'', lat:null, lng:null };
+    currentData = data; currentData.allProviders = null;
+    renderMarkers(); if (!keepView) fitBounds();
+  }).catch(function(e){ showLoading(false); showToast('로드 실패: '+e.message); });
 }
 
 // ══ 대시보드 ══
@@ -891,7 +1056,7 @@ function buildGroupedAssignedIW(items, hLat, hLng) {
     if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
     var ci = registerCopyData(c);
     h+='<div class="iw-actions">';
-    if (c.formRow) h+='<button class="iw-act unassign" onclick="doUnassign('+c.formRow+')">배정취소</button>';
+    if (isAdmin() && c.formRow) h+='<button class="iw-act unassign" onclick="doUnassign('+c.formRow+')">배정취소</button>';  // 배정취소는 행정만
     h+='<button class="iw-act copy" onclick="doCopy('+ci+')">📋 복사</button>'
       +'</div>';
     h+=routeBtns(c.name,c.lat,c.lng);
@@ -916,19 +1081,24 @@ function buildGroupedWaitingIW(items, hLat, hLng) {
     if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
     if (c.sigungu||c.bname) h+='<div class="iw-row" style="color:#aaa">'+esc(c.sigungu)+' '+esc(c.bname)+'</div>';
 
-    h += buildRecommendation(c);
-
-    var ci = registerCopyData(c);
-    var absentLabel = c.status === '부재1' ? '📵2' : '📵';
-    h+='<div class="iw-actions">'+assignBtn(c.row)
-      +'<button class="iw-act absent" onclick="doAbsent('+c.row+',\''+esc(c.status||'')+'\')">'+absentLabel+'</button>'
-      +'<button class="iw-act reject" onclick="doStatus('+c.row+',\'거절\')">✕</button>'
-      +'<button class="iw-act copy" onclick="doCopy('+ci+')">📋</button>'
-      +'</div>'
-      +'<div class="iw-actions">'
-      +'<button class="iw-act from" onclick="setRoute(\'from\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🟢 출발</button>'
-      +'<button class="iw-act to" onclick="setRoute(\'to\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🔴 도착</button>'
-      +'</div>';
+    // 배정추천·배정/거절/복사 = 행정만 (제공인력·기본은 숨김)
+    if (isAdmin()) {
+      h += buildRecommendation(c);
+      var ci = registerCopyData(c);
+      var absentLabel = c.status === '부재1' ? '📵2' : '📵';
+      h+='<div class="iw-actions">'+assignBtn(c.row)
+        +'<button class="iw-act absent" onclick="doAbsent('+c.row+',\''+esc(c.status||'')+'\')">'+absentLabel+'</button>'
+        +'<button class="iw-act reject" onclick="doStatus('+c.row+',\'거절\')">✕</button>'
+        +'<button class="iw-act copy" onclick="doCopy('+ci+')">📋</button>'
+        +'</div>';
+    }
+    // 출발/도착(길찾기) = 제공인력·행정 (기본지도는 좌표가 뭉개져 있어 숨김)
+    if (MODE !== 'basic') {
+      h+='<div class="iw-actions">'
+        +'<button class="iw-act from" onclick="setRoute(\'from\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🟢 출발</button>'
+        +'<button class="iw-act to" onclick="setRoute(\'to\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🔴 도착</button>'
+        +'</div>';
+    }
   });
   return h+'</div>';
 }
@@ -1112,6 +1282,8 @@ function doCopy(idx) {
 }
 
 function reloadCurrent(keepView) {
+  if (MODE === 'basic') { loadBasicMap(keepView); return; }
+  if (MODE === 'provider') { loadStaffMap(keepView); return; }
   var sel = document.getElementById('providerSelect').value;
   if (sel === '__ALL__') loadAllProviders(keepView);
   else if (sel) loadMapData(sel, keepView);
