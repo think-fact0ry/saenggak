@@ -99,6 +99,18 @@
   .print-row{display:flex;gap:10px;margin-top:16px;}
   .print-row .btn{margin-top:0;}
 
+  /* ===== 허브 목록 카드(이용자·이력) — 09 카드 톤(흰+옅은 보더+은은한 그림자) ===== */
+  .list-card{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;
+    background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:16px 18px;margin-bottom:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer;font-family:inherit;transition:.12s;}
+  .list-card:active{border-color:var(--green);background:var(--green-l);}
+  .list-card .lc-main{min-width:0;}
+  .list-card .lc-name{font-size:17px;font-weight:700;color:var(--g900);letter-spacing:-.3px;}
+  .list-card .lc-sub{font-size:13px;color:var(--g500);margin-top:3px;font-weight:500;}
+  .list-card .lc-meta{font-size:13px;color:var(--g500);font-weight:600;white-space:nowrap;flex-shrink:0;text-align:right;}
+  .list-card .lc-meta .lc-draw{display:block;color:var(--green-d);font-weight:700;}
+  .list-empty{text-align:center;color:var(--g500);font-size:14.5px;padding:40px 16px;line-height:1.6;}
+
   @media print{
     @page{size:A4 landscape;margin:8mm;}
     body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -111,10 +123,51 @@
 </head>
 <body>
 
-<!-- ===== 화면 1: 시작/아동정보 ===== -->
-<div class="screen active" id="s-intro">
+<!-- ===== 허브 0: 세션 없음 안내 ===== -->
+<div class="screen" id="s-gate">
   <div class="wrap">
     <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
+    <h1>로그인이 필요해요</h1>
+    <button class="btn" style="margin-top:18px;" onclick="location.href='./index.html'">홈으로 가서 로그인</button>
+  </div>
+</div>
+
+<!-- ===== 허브 ①: 이용자 목록 ===== -->
+<div class="screen active" id="s-clients">
+  <div class="wrap">
+    <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
+    <h1>심리검사</h1>
+    <button class="btn" id="newClient">새 아이 검사하기</button>
+    <div id="clientList" style="margin-top:20px;"></div>
+  </div>
+</div>
+
+<!-- ===== 허브 ②: 검사 이력 ===== -->
+<div class="screen" id="s-history">
+  <div class="wrap">
+    <button class="back noprint" id="histBack" aria-label="목록으로">‹</button>
+    <h1 id="histName">검사 이력</h1>
+    <p class="sub" id="histSub"></p>
+    <button class="btn" id="newExam">이 아이 새 검사하기</button>
+    <div id="historyList" style="margin-top:20px;"></div>
+  </div>
+</div>
+
+<!-- ===== 허브 ③: 결과 열람(저장 데이터 재렌더) ===== -->
+<div class="screen" id="s-view">
+  <div class="wrap">
+    <button class="back noprint" id="viewBack" aria-label="이력으로">‹</button>
+    <div id="viewDoc"></div>
+    <div class="print-row noprint">
+      <button class="btn" id="viewPrint">출력 / PDF 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 화면 1: 시작/아동정보 ===== -->
+<div class="screen" id="s-intro">
+  <div class="wrap">
+    <button class="back noprint" id="introBack" aria-label="뒤로">‹</button>
     <h1>사전사후검사</h1>
     <p class="sub">아이의 강점·난점(SDQ)과 주의력(K-ARS)을 살펴봐요. 보호자님이 평소 모습을 떠올리며 답해 주세요.</p>
 
@@ -126,14 +179,14 @@
       <label>생년월일</label>
       <input id="f-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off">
     </div>
-    <div class="field">
+    <div class="field" id="field-sex">
       <label>성별</label>
       <div class="toggle" id="f-sex">
         <button type="button" data-v="남">남</button>
         <button type="button" data-v="여">여</button>
       </div>
     </div>
-    <div class="field">
+    <div class="field" id="field-phone">
       <label>보호자 연락처</label>
       <input id="f-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off">
     </div>
@@ -182,7 +235,7 @@
 <!-- ===== 화면 4: 결과지 ===== -->
 <div class="screen" id="s-result">
   <div class="wrap">
-    <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
+    <button class="back noprint" id="resultBack" aria-label="뒤로">‹</button>
     <div id="resultDoc"></div>
     <div class="print-row noprint">
       <button class="btn ghost" id="backEdit">수정</button>
@@ -249,7 +302,7 @@ const sdqAns = new Array(25).fill(null);
 const karsAns = new Array(18).fill(null);
 
 // ===== 상태 입력 =====
-const state = {sex:"", type:"사정"};
+const state = {sex:"", type:"사정", prefilled:false};   // prefilled=돌아온 이용자(이름+생년월일로 식별 → 성별·연락처 생략)
 
 function bindToggle(id, key){
   document.querySelectorAll("#"+id+" button").forEach(b=>{
@@ -287,10 +340,11 @@ phone.oninput=()=>{
 document.getElementById("f-name").oninput=validateIntro;
 
 function validateIntro(){
-  const ok = document.getElementById("f-name").value.trim()
-    && birth.value.replace(/\D/g,"").length===8
-    && state.sex
-    && phone.value.replace(/\D/g,"").length>=10;
+  const baseOk = document.getElementById("f-name").value.trim()
+    && birth.value.replace(/\D/g,"").length===8;
+  // 새 이용자=전체(성별·연락처까지) 기록 / 돌아온 이용자(prefilled)=이름+생년월일로 식별되니 그 둘만
+  const ok = state.prefilled ? baseOk
+    : (baseOk && state.sex && phone.value.replace(/\D/g,"").length>=10);
   document.getElementById("toSdq").disabled=!ok;
 }
 validateIntro();
@@ -410,13 +464,19 @@ function judgeKARS(key,v){
 const J=(t)=>t==="개입필요"?` class="judge danger"`:"";
 
 // ===== 결과지 렌더 =====
-function renderReport(){
-  const name=document.getElementById("f-name").value.trim();
-  const s=scoreSDQ(sdqAns), k=scoreKARS(karsAns);
-  const isPre = state.type==="사정";
-  const hasPrev = !isPre && !!prevData;
-  const pS = (hasPrev && prevData["SDQ-kr"]) ? prevData["SDQ-kr"] : null;
-  const pK = (hasPrev && prevData["K-ARS"]) ? prevData["K-ARS"] : null;
+//  opts 없으면(작성 흐름) 폼 상태로 렌더. opts 주면(s-view 열람) 저장된 점수로 재렌더 — 같은 결과지·델타 재사용.
+//  opts = { name, s:{social..total}, k:{ia,hi,total}, isPre, prev:{"SDQ-kr":{subscores,total},"K-ARS":{..}}|null, target }
+function renderReport(opts){
+  opts = opts || {};
+  const name = (opts.name != null) ? opts.name : document.getElementById("f-name").value.trim();
+  const s = opts.s || scoreSDQ(sdqAns);
+  const k = opts.k || scoreKARS(karsAns);
+  const isPre = (opts.isPre != null) ? opts.isPre : (state.type==="사정");
+  const prev = (opts.prev !== undefined) ? opts.prev : prevData;
+  const target = opts.target || "resultDoc";
+  const hasPrev = !isPre && !!prev;
+  const pS = (hasPrev && prev["SDQ-kr"]) ? prev["SDQ-kr"] : null;
+  const pK = (hasPrev && prev["K-ARS"]) ? prev["K-ARS"] : null;
   const title = isPre ? "사정 평가 결과서" : "사후 평가 결과서";
 
   // 점수 셀: 사전 있으면 "사전 → 사후", 없으면 사후만.
@@ -454,7 +514,7 @@ function renderReport(){
             conduct:judgeSDQ("conduct",s.conduct),peer:judgeSDQ("peer",s.peer),total:judgeSDQ("total",s.total)};
   const kj={ia:judgeKARS("ia",k.ia),hi:judgeKARS("hi",k.hi),total:judgeKARS("total",k.total)};
 
-  document.getElementById("resultDoc").innerHTML=`
+  document.getElementById(target).innerHTML=`
   <div class="report">
     <div class="rtitle">${title}</div>
     <div class="rname">이 름 : <b>${name||"&nbsp;"}</b></div>
@@ -589,10 +649,17 @@ function buildPayload(){
 let _saved=false;   // 한 번만 적립(같은 실시 중복 방지). 수정 후 재보기는 첫 버전 유지 = 재제출 엣지(결정기록 4번 비핵심)
 function saveExam(retry){
   if(_saved) return;
+  if(DEMO){ _saved=true; return; }   // 데모=미리보기 → 실제 적립 안 함(GAS 미호출, 자산 오염 방지)
   if(!GAS_EXEC){ console.warn("GAS_EXEC 미설정 — 저장 건너뜀(배포 후 /exec URL 채우기)"); return; }
   const note=document.getElementById("saveNote");
+  const sess=getStaffSess();   // 검사 저장은 이제 세션 게이트(설계 §0.5) — 시행자=세션 staffId로 서버가 기록
+  if(!sess||!sess.staffId||!sess.session){
+    if(note) note.textContent="로그인이 풀려 결과를 저장하지 못했어요. 홈에서 다시 로그인해 주세요.";
+    return;
+  }
+  const payload=buildPayload(); payload.staffId=sess.staffId; payload.session=sess.session;
   // body가 문자열 → Content-Type text/plain 기본 → CORS 프리플라이트 없이 cross-origin POST 가능
-  fetch(GAS_EXEC, {method:"POST", body: JSON.stringify(buildPayload())})
+  fetch(GAS_EXEC, {method:"POST", body: JSON.stringify(payload)})
     .then(r=>r.json())
     .then(d=>{
       if(d && d.ok){ _saved=true; if(note) note.textContent=""; }
@@ -607,6 +674,196 @@ function saveExam(retry){
       }
     });
 }
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  검사 허브 — 이용자 목록 → 검사 이력 → 결과 열람 (설계 docs/설계_2026-06-24_검사허브.md)
+//   신원 = 허브(index.html) 진입 세션(tf_staff_v1) 공유. 검사앱 자체 신원 화면 없음.
+//   세션 없으면 s-gate로 유도. 목록·이력은 시행자=내 staffId 필터(서버) → 남의 검사 안 보임.
+// ════════════════════════════════════════════════════════════
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtBirthDisp(b8){ b8=String(b8||'').replace(/\D/g,''); return b8.length===8 ? b8.slice(0,4)+'.'+b8.slice(4,6)+'.'+b8.slice(6,8) : b8; }
+function fmtDateDisp(stamp){ const m=String(stamp||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m? m[1]+'.'+m[2]+'.'+m[3] : ''; }
+function drawLabel(d){ return d==='사전'?'사정 평가':(d==='사후'?'사후 평가':(d==='추적'?'추적 검사':(d||'검사'))); }
+
+// 데모(?demo=1) mock — 신원·GAS 우회, 모바일에서 목록·이력·열람 미리보기
+const MOCK_CLIENTS=[
+  {child_id:'C0001',name:'김민준',birth:'20190312',count:2,lastStamp:'2026-06-24T10:12:00',lastDraw:'사후'},
+  {child_id:'C0002',name:'이서윤',birth:'20200705',count:1,lastStamp:'2026-05-02T14:30:00',lastDraw:'사전'}
+];
+const MOCK_HISTORY={
+  '김민준':[
+    {tool:'SDQ-kr',draw:'사전',stamp:'2026-03-15T10:00:00',subscores:{social:4,hyper:8,emotion:6,conduct:4,peer:3},total:21,judge:{},by:'보호자'},
+    {tool:'K-ARS',draw:'사전',stamp:'2026-03-15T10:00:00',subscores:{ia:13,hi:14},total:27,judge:{},by:'보호자'},
+    {tool:'SDQ-kr',draw:'사후',stamp:'2026-06-24T10:12:00',subscores:{social:7,hyper:5,emotion:3,conduct:2,peer:2},total:12,judge:{},by:'보호자'},
+    {tool:'K-ARS',draw:'사후',stamp:'2026-06-24T10:12:00',subscores:{ia:8,hi:9},total:17,judge:{},by:'보호자'}
+  ],
+  '이서윤':[
+    {tool:'SDQ-kr',draw:'사전',stamp:'2026-05-02T14:30:00',subscores:{social:5,hyper:6,emotion:4,conduct:3,peer:2},total:15,judge:{},by:'보호자'},
+    {tool:'K-ARS',draw:'사전',stamp:'2026-05-02T14:30:00',subscores:{ia:9,hi:10},total:19,judge:{},by:'보호자'}
+  ]
+};
+
+let examFrom='clients';                 // s-intro 진입 출처(뒤로가기 라우팅)
+let currentClient=null;                 // 이력/열람 중인 이용자 {name,birth}
+let historyResults=[], sittings=[];     // 이력(도구별 행) / 실시 단위로 묶음
+
+// staffId+세션 첨부 POST
+function hubPost(body){
+  const sess=getStaffSess();
+  body.staffId = sess && sess.staffId;
+  body.session = sess && sess.session;
+  return fetch(GAS_EXEC,{method:"POST",body:JSON.stringify(body)}).then(r=>r.json());
+}
+
+// ① 이용자 목록
+function showClients(){
+  show('s-clients');
+  const box=document.getElementById('clientList');
+  if(DEMO){ renderClients(MOCK_CLIENTS); return; }
+  const sess=getStaffSess();
+  if(!sess||!sess.staffId||!sess.session){ show('s-gate'); return; }
+  box.innerHTML='<div class="list-empty">불러오는 중…</div>';
+  hubPost({action:'exam_clients'}).then(d=>{
+    if(d&&d.ok){ renderClients(d.clients||[]); }
+    else if(d&&d.code==='auth'){ show('s-gate'); }
+    else box.innerHTML='<div class="list-empty">목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
+  }).catch(()=>{ box.innerHTML='<div class="list-empty">목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>'; });
+}
+function renderClients(clients){
+  const box=document.getElementById('clientList');
+  if(!clients.length){ box.innerHTML='<div class="list-empty">아직 검사한 아이가 없어요.<br>위에서 새 검사를 시작해요.</div>'; return; }
+  box.innerHTML='';
+  clients.forEach(c=>{
+    const card=document.createElement('button');
+    card.className='list-card';
+    card.innerHTML=`<div class="lc-main"><div class="lc-name">${esc(c.name)}</div><div class="lc-sub">${fmtBirthDisp(c.birth)}</div></div>`
+      +`<div class="lc-meta"><span class="lc-draw">${drawLabel(c.lastDraw)}</span>검사 ${c.count}회 · ${fmtDateDisp(c.lastStamp)}</div>`;
+    card.onclick=()=>openHistory(c.name,c.birth);
+    box.appendChild(card);
+  });
+}
+
+// ② 검사 이력
+function openHistory(name,birth){
+  currentClient={name:name, birth:String(birth||'').replace(/\D/g,'').slice(0,8)};
+  document.getElementById('histName').textContent=name;
+  document.getElementById('histSub').textContent=fmtBirthDisp(currentClient.birth);
+  show('s-history');
+  const box=document.getElementById('historyList');
+  if(DEMO){ historyResults=MOCK_HISTORY[name]||[]; sittings=groupSittings(historyResults); renderHistory(); return; }
+  box.innerHTML='<div class="list-empty">불러오는 중…</div>';
+  hubPost({action:'exam_history', child:{name:name, birth:currentClient.birth}}).then(d=>{
+    if(d&&d.ok){ historyResults=d.results||[]; sittings=groupSittings(historyResults); renderHistory(); }
+    else if(d&&d.code==='auth'){ show('s-gate'); }
+    else box.innerHTML='<div class="list-empty">이력을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
+  }).catch(()=>{ box.innerHTML='<div class="list-empty">이력을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>'; });
+}
+// 도구별 행 → 실시(같은 실시일시=SDQ+K-ARS 한 번) 단위로 묶음, 시간순
+function groupSittings(results){
+  const by={};
+  (results||[]).forEach(r=>{
+    const key=r.stamp||'';
+    if(!by[key]) by[key]={stamp:r.stamp, draw:r.draw, tools:{}};
+    by[key].tools[r.tool]=r;
+  });
+  return Object.keys(by).map(k=>by[k]).sort((a,b)=> a.stamp<b.stamp?-1:(a.stamp>b.stamp?1:0));
+}
+function renderHistory(){
+  const box=document.getElementById('historyList');
+  if(!sittings.length){ box.innerHTML='<div class="list-empty">아직 검사 기록이 없어요.<br>위에서 새 검사를 시작해요.</div>'; return; }
+  box.innerHTML='';
+  sittings.forEach((st,idx)=>{
+    const tools=Object.keys(st.tools).join(' · ');
+    const card=document.createElement('button');
+    card.className='list-card';
+    card.innerHTML=`<div class="lc-main"><div class="lc-name">${drawLabel(st.draw)}</div><div class="lc-sub">${esc(tools)}</div></div>`
+      +`<div class="lc-meta">${fmtDateDisp(st.stamp)}</div>`;
+    card.onclick=()=>openView(idx);
+    box.appendChild(card);
+  });
+}
+
+// ③ 결과 열람 — 저장 점수로 결과지 재렌더(즉석 채점 아님). 사후면 같은 child의 '사전' 실시 대비 델타.
+function openView(idx){
+  const st=sittings[idx]; if(!st) return;
+  const sdq=st.tools['SDQ-kr'], kars=st.tools['K-ARS'];
+  if(!sdq && !kars) return;
+  const s = sdq ? Object.assign({}, sdq.subscores, {total: sdq.total}) : {};
+  const k = kars ? Object.assign({}, kars.subscores, {total: kars.total}) : {};
+  const isPre = st.draw==='사전';
+  let prev=null;
+  if(!isPre){
+    const pres=sittings.filter(x=>x.draw==='사전' && x.stamp<st.stamp);   // 이 실시 이전의 사전
+    const base = pres.length ? pres[pres.length-1] : sittings.filter(x=>x.draw==='사전')[0];
+    if(base){
+      prev={};
+      if(base.tools['SDQ-kr']) prev['SDQ-kr']={subscores:base.tools['SDQ-kr'].subscores, total:base.tools['SDQ-kr'].total};
+      if(base.tools['K-ARS'])  prev['K-ARS'] ={subscores:base.tools['K-ARS'].subscores,  total:base.tools['K-ARS'].total};
+    }
+  }
+  renderReport({ name: currentClient?currentClient.name:'', s:s, k:k, isPre:isPre, prev:prev, target:'viewDoc' });
+  show('s-view');
+}
+
+// 새 검사 시작 — 폼 초기화 후 진입
+function resetForm(){
+  document.getElementById('f-name').value='';
+  document.getElementById('f-birth').value='';
+  document.getElementById('f-phone').value='';
+  state.sex=''; state.type='사정'; state.prefilled=false;
+  document.getElementById('field-sex').style.display='';      // 새 이용자=성별·연락처 칸 보임(전체 기록)
+  document.getElementById('field-phone').style.display='';
+  document.querySelectorAll('#f-sex button').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#f-type button').forEach(b=>b.classList.toggle('on', b.dataset.v==='사정'));
+  for(let i=0;i<sdqAns.length;i++) sdqAns[i]=null;
+  for(let i=0;i<karsAns.length;i++) karsAns[i]=null;
+  renderQuestions("sdqList",SDQ_ITEMS,SDQ_OPTS,sdqAns,updateSdq);
+  renderQuestions("karsList",KARS_ITEMS,KARS_OPTS,karsAns,updateKars);
+  updateSdq(); updateKars();
+  examStamp=''; _saved=false; prevData=null;
+  validateIntro();
+}
+function startNewClient(){
+  resetForm(); examFrom='clients';
+  show('s-intro'); window.scrollTo(0,0);
+}
+function startNewExam(name,birth){
+  resetForm();
+  document.getElementById('f-name').value=name;
+  const b8=String(birth||'').replace(/\D/g,'').slice(0,8);
+  document.getElementById('f-birth').value = b8.length===8 ? b8.slice(0,4)+'. '+b8.slice(4,6)+'. '+b8.slice(6,8) : '';
+  state.prefilled=true; examFrom='history';
+  document.getElementById('field-sex').style.display='none';    // 돌아온 이용자=이름+생년월일로 식별 → 성별·연락처 칸 숨김(불필요 칸 안 보임)
+  document.getElementById('field-phone').style.display='none';
+  state.type='사후';   // 돌아온 이용자 → 사후평가 기본(델타 의도). 필요 시 토글로 변경.
+  document.querySelectorAll('#f-type button').forEach(b=>b.classList.toggle('on', b.dataset.v==='사후'));
+  show('s-intro'); validateIntro(); window.scrollTo(0,0);
+}
+
+// 버튼·뒤로가기 라우팅
+document.getElementById('newClient').onclick=()=>startNewClient();
+document.getElementById('newExam').onclick=()=>{ if(currentClient) startNewExam(currentClient.name,currentClient.birth); };
+document.getElementById('histBack').onclick=()=>showClients();
+document.getElementById('viewBack').onclick=()=>show('s-history');
+document.getElementById('introBack').onclick=()=>{ if(examFrom==='history') show('s-history'); else showClients(); };
+document.getElementById('viewPrint').onclick=()=>window.print();
+document.getElementById('resultBack').onclick=()=>{
+  const nm=document.getElementById('f-name').value.trim();
+  const bd=document.getElementById('f-birth').value.replace(/\D/g,'').slice(0,8);
+  if(nm && bd.length===8) openHistory(nm,bd);   // 방금 검사한 아이 이력으로(새 결과 포함)
+  else showClients();
+};
+
+// 진입 라우팅 — 세션 있으면 목록, 없으면 게이트(데모는 mock 목록)
+(function boot(){
+  if(DEMO){ showClients(); return; }
+  const sess=getStaffSess();
+  if(sess&&sess.staffId&&sess.session) showClients();
+  else show('s-gate');
+})();
 </script>
 
 <script>
