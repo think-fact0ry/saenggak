@@ -2,383 +2,223 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>바우처 이용내역 조회</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>바우처 이용내역 — 생각공작소</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="/saenggak/favicon.js"></script>
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    margin: 0; padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', Arial, sans-serif;
-    background: #f5f6fa; color: #202124;
+  :root{
+    --green:#3a8a5f; --green-d:#2f6f4d; --green-l:#eaf5ee;
+    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g400:#b0b8c1; --g300:#d1d6db;
+    --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
   }
-  .header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white; padding: 14px 16px; position: sticky; top: 0; z-index: 10;
-  }
-  .header-top { display: flex; justify-content: space-between; align-items: center; }
-  .header h1 { margin: 0; font-size: 13px; font-weight: 400; opacity: 0.85; }
-  .header .name { font-size: 17px; font-weight: 700; margin-top: 2px; }
-  .header-btns button {
-    background: rgba(255,255,255,0.2); color: white; border: none;
-    padding: 5px 9px; border-radius: 5px; font-size: 11px; cursor: pointer; margin-left: 4px;
-  }
-  .content { padding: 12px; padding-bottom: 60px; }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;-webkit-text-size-adjust:100%;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 0 60px;}
 
-  .tabs {
-    display: flex; background: white; border-radius: 10px; padding: 3px; margin-bottom: 10px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-  }
-  .tab {
-    flex: 1; padding: 9px; text-align: center; font-size: 13px; font-weight: 500;
-    border-radius: 7px; cursor: pointer; color: #5f6368;
-  }
-  .tab.active { background: #667eea; color: white; }
+  .head{position:sticky;top:0;z-index:10;background:#fff;padding:18px 20px 12px;border-bottom:1px solid var(--g100);}
+  .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  h1{font-size:20px;font-weight:700;letter-spacing:-.5px;}
+  .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:8px;padding:5px 11px;margin-top:8px;}
+  .icon-btn{width:40px;height:40px;border-radius:12px;border:none;background:var(--g100);color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .icon-btn:active{background:var(--g200);}
+  .icon-btn svg{width:20px;height:20px;}
+  .icon-btn.spin svg{animation:sp .7s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
 
-  .controls {
-    background: white; border-radius: 10px; padding: 10px; margin-bottom: 10px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-  }
-  .control-row { display: flex; gap: 6px; }
-  .control-row select, .control-row input {
-    flex: 1; padding: 9px 10px; font-size: 13px;
-    border: 1px solid #dadce0; border-radius: 7px; outline: none;
-    background: white; -webkit-appearance: none;
-  }
-  .control-row select {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%235f6368' d='M0 0l5 6 5-6z'/></svg>");
-    background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
-  }
-  .control-row button {
-    padding: 9px 18px; font-size: 13px; font-weight: 600;
-    background: #667eea; color: white; border: none; border-radius: 7px; cursor: pointer;
-  }
-  .refresh-btn {
-    padding: 7px 12px; font-size: 12px; background: white; color: #667eea;
-    border: 1px solid #667eea; border-radius: 6px; cursor: pointer; margin-top: 6px;
-  }
+  .body{padding:16px 20px;}
 
-  .title-bar {
-    background: white; border-radius: 10px 10px 0 0; padding: 14px 12px;
-    font-size: 15px; font-weight: 700; text-align: center;
-    border-bottom: 1.5px solid #202124;
-  }
-  .meta-bar {
-    background: white; padding: 6px 12px; font-size: 11px; color: #5f6368;
-    display: flex; justify-content: space-between; align-items: center;
-  }
+  .seg{display:flex;background:var(--g100);border-radius:13px;padding:4px;gap:4px;margin-bottom:16px;}
+  .seg button{flex:1;padding:11px;border:none;background:none;border-radius:10px;font-family:inherit;font-weight:600;color:var(--g500);font-size:14.5px;cursor:pointer;transition:.12s;}
+  .seg button.active{background:#fff;color:var(--green-d);box-shadow:0 1px 4px rgba(0,0,0,.08);}
 
-  .table-wrap {
-    background: white; border-radius: 0 0 10px 10px; overflow-x: auto;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-  }
-  table {
-    border-collapse: collapse; width: 100%; min-width: 720px; font-size: 12px;
-  }
-  th, td {
-    padding: 7px 6px; border: 1px solid #e8eaed; text-align: center; white-space: nowrap;
-  }
-  thead th {
-    background: #f5f6fa; font-weight: 600;
-    font-size: 11.5px; border-top: 1.5px solid #202124; border-bottom: 1.5px solid #202124;
-  }
-  td.amount { text-align: right; padding-right: 10px; }
-  td.name { font-weight: 500; }
-  .pay-red { color: #d93025; font-weight: 700; }
-  .row-empty td { border: none; height: 10px; padding: 0; background: white; }
+  .controls{margin-bottom:16px;}
+  .row{display:flex;gap:8px;}
+  select,.search-in{font-family:inherit;font-size:15px;padding:13px 14px;border:2px solid transparent;border-radius:13px;background:var(--g100);outline:none;width:100%;color:var(--g900);transition:.15s;-webkit-appearance:none;}
+  select:focus,.search-in:focus{background:#fff;border-color:var(--green);}
+  select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%238b95a1' d='M1 1l5 6 5-6'/></svg>");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
+  .search-btn{flex-shrink:0;padding:13px 22px;font-family:inherit;font-size:15px;font-weight:700;background:var(--green);color:#fff;border:none;border-radius:13px;cursor:pointer;}
+  .search-btn:active{background:var(--green-d);}
 
-  .empty, .loading {
-    background: white; text-align: center; padding: 40px 20px; color: #5f6368;
-    font-size: 14px; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-  }
-  .loading::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
-  @keyframes dots {
-    0%, 20% { content: ''; } 40% { content: '.'; }
-    60% { content: '..'; } 80%, 100% { content: '...'; }
-  }
+  .title-bar{font-size:15px;font-weight:700;color:var(--g900);padding:8px 2px 6px;}
+  .meta{font-size:12.5px;color:var(--g500);margin-bottom:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--g200);border-radius:14px;-webkit-overflow-scrolling:touch;}
+  table{border-collapse:collapse;width:100%;min-width:760px;font-size:13px;}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--g100);text-align:center;white-space:nowrap;}
+  thead th{background:var(--g100);font-weight:600;color:var(--g700);font-size:12.5px;}
+  td.name{font-weight:600;}
+  td.amount{text-align:right;padding-right:12px;font-variant-numeric:tabular-nums;}
+  .pay-red{color:var(--red);font-weight:700;}
+  .row-gap td{border:none;height:8px;background:#fff;padding:0;}
+
+  .state{text-align:center;padding:48px 20px;color:var(--g500);font-size:14.5px;}
+  .ld-dots{display:inline-block;margin-left:2px;}
+  .ld-dots i{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--g400);margin:0 1.5px;animation:bo 1s infinite;}
+  .ld-dots i:nth-child(2){animation-delay:.15s;} .ld-dots i:nth-child(3){animation-delay:.3s;}
+  @keyframes bo{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-4px);opacity:1;}}
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="header-top">
-    <div>
-      <h1>바우처 이용내역</h1>
-      <div class="name" id="providerName">-</div>
-    </div>
-    <div class="header-btns">
-      <button id="refreshBtn" title="데이터 새로고침">↻</button>
-      <button id="changePwBtn">비번변경</button>
-      <button id="logoutBtn">로그아웃</button>
-    </div>
-  </div>
-</div>
-
-<div class="content">
-  <div class="tabs">
-    <div class="tab active" data-tab="month">월별 전체</div>
-    <div class="tab" data-tab="child">아동별 검색</div>
-  </div>
-
-  <div class="controls">
-    <div class="control-row" id="monthControls">
-      <select id="yearSel"></select>
-      <select id="monthSel"></select>
-    </div>
-    <div class="control-row" id="childControls" style="display:none;">
-      <input type="text" id="childInput" placeholder="아동 이름 (전체 입력)">
-      <button id="searchBtn">검색</button>
+<div class="wrap">
+  <div class="head">
+    <div class="head-row">
+      <div>
+        <h1>바우처 이용내역</h1>
+        <div class="who" id="who">-</div>
+      </div>
+      <button class="icon-btn" id="refreshBtn" title="새로고침" aria-label="새로고침">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      </button>
     </div>
   </div>
 
-  <div id="resultWrap"><div class="loading">불러오는 중</div></div>
+  <div class="body">
+    <div class="seg">
+      <button class="active" data-tab="month">월별 전체</button>
+      <button data-tab="child">아동별 검색</button>
+    </div>
+
+    <div class="controls">
+      <div class="row" id="monthControls">
+        <select id="yearSel"></select>
+        <select id="monthSel"></select>
+      </div>
+      <div class="row" id="childControls" style="display:none;">
+        <input class="search-in" type="text" id="childInput" placeholder="아동 이름 (전체 입력)" inputmode="text">
+        <button class="search-btn" id="searchBtn">검색</button>
+      </div>
+    </div>
+
+    <div id="resultWrap"><div class="state">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></div></div>
+  </div>
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec';
-const STORAGE_KEY = 'saenggak_voucher_session';
-
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec';
+const SESS_KEY = 'tf_staff_v1';       // 태블릿 허브와 공유하는 11 OTP 세션
+const HUB_URL = '../tablet/index.html'; // 세션 없으면 허브로(허브 게이트가 신원·PIN 보장)
 const $ = id => document.getElementById(id);
 
-function getSession() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; } }
-function clearSession() { localStorage.removeItem(STORAGE_KEY); }
+function getSess(){ try{ return JSON.parse(localStorage.getItem(SESS_KEY)); }catch(e){ return null; } }
+function clearSess(){ try{ localStorage.removeItem(SESS_KEY); }catch(e){} }
+function goHub(){ location.replace(HUB_URL); }
+function bounceAuth(){ clearSess(); goHub(); } // 서버가 세션 거부 → 무효 세션 비우고 허브로(재OTP 유도, 무한 바운스 방지)
 
-async function apiCall(params) {
-  const url = API_URL + '?' + Object.keys(params).map(k =>
-    encodeURIComponent(k) + '=' + encodeURIComponent(params[k])
-  ).join('&');
-  const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+const sess = getSess();
+if(!sess || !sess.staffId || !sess.session){ goHub(); }
+$('who').textContent = ((sess && sess.name) ? sess.name : '') + ' 선생님';
+
+function isAuthError(err){ return !!err && (err.indexOf('세션')>=0 || err.indexOf('로그인')>=0 || err.indexOf('만료')>=0); }
+
+async function apiCall(params){
+  const url = GAS_URL + '?' + Object.keys(params).map(k => encodeURIComponent(k)+'='+encodeURIComponent(params[k])).join('&');
+  const res = await fetch(url, { method:'GET', redirect:'follow' });
   return res.json();
 }
 
-// 인증/세션 만료성 에러면 true (로그인 화면으로 돌려보내야 하는 에러)
-function isAuthError(err) {
-  return !!err && (err.indexOf('세션') >= 0 || err.indexOf('로그인') >= 0 ||
-    err.indexOf('인증') >= 0 || err.indexOf('선생님 정보') >= 0);
-}
+let allRecords=[], availableMonths=[], latestUpdate='', currentTab='month';
 
-const session = getSession();
-if (!session) location.href = 'login.html';
-$('providerName').textContent = session.name + ' 선생님';
-
-// ───── 클라이언트 전역 캐시 ─────
-let allRecords = [];       // 본인 전체 데이터
-let availableMonths = [];  // [{year, month}]
-let latestUpdate = '';
-let currentTab = 'month';
-
-// 탭 전환 — 서버 호출 없음, 즉시
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+document.querySelectorAll('.seg button').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
-    currentTab = t.dataset.tab;
-
-    if (currentTab === 'child') {
-      $('monthControls').style.display = 'none';
-      $('childControls').style.display = 'flex';
-      $('resultWrap').innerHTML = '<div class="empty">아동 이름을 입력하고 검색해주세요.</div>';
+    currentTab=t.dataset.tab;
+    if(currentTab==='child'){
+      $('monthControls').style.display='none';
+      $('childControls').style.display='flex';
+      $('resultWrap').innerHTML='<div class="state">아동 이름을 적고 검색해주세요.</div>';
       $('childInput').focus();
-    } else {
-      $('monthControls').style.display = 'flex';
-      $('childControls').style.display = 'none';
+    }else{
+      $('monthControls').style.display='flex';
+      $('childControls').style.display='none';
       renderMonthView();
     }
   });
 });
 
-$('yearSel').addEventListener('change', () => {
-  updateMonthSelect();
-  renderMonthView();
-});
+$('yearSel').addEventListener('change', ()=>{ updateMonthSelect(); renderMonthView(); });
 $('monthSel').addEventListener('change', renderMonthView);
-
 $('searchBtn').addEventListener('click', searchByChild);
-$('childInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') searchByChild();
-});
-
-$('refreshBtn').addEventListener('click', async () => {
-  $('refreshBtn').disabled = true;
-  $('refreshBtn').textContent = '...';
+$('childInput').addEventListener('keydown', e=>{ if(e.key==='Enter') searchByChild(); });
+$('refreshBtn').addEventListener('click', async ()=>{
+  $('refreshBtn').classList.add('spin');
   await loadAllData(true);
-  $('refreshBtn').disabled = false;
-  $('refreshBtn').textContent = '↻';
+  $('refreshBtn').classList.remove('spin');
 });
 
-// ───── 초기 전체 로드 (1회) ─────
-async function loadAllData(forceRefresh) {
-  if (!forceRefresh && allRecords.length > 0) return; // 이미 로드됨
-
-  $('resultWrap').innerHTML = '<div class="loading">전체 데이터 불러오는 중</div>';
-
-  const params = { action: 'queryMyAllData', token: session.token };
-  if (forceRefresh) params._t = Date.now(); // 캐시 우회용 dummy
-
-  try {
-    const res = await apiCall(params);
-    if (res.error) {
-      if (isAuthError(res.error)) { clearSession(); location.href = 'login.html'; return; }
-      $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
-      return;
+async function loadAllData(force){
+  if(!force && allRecords.length>0) return;
+  $('resultWrap').innerHTML='<div class="state">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></div>';
+  const params={ action:'queryMyAllData', staffId:sess.staffId, session:sess.session };
+  if(force) params._t=Date.now();
+  try{
+    const res=await apiCall(params);
+    if(res.error){
+      if(isAuthError(res.error)){ bounceAuth(); return; }
+      $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return;
     }
-
-    allRecords = res.records || [];
-    availableMonths = res.months || [];
-    latestUpdate = res.latestUpdate || '';
-
-    if (availableMonths.length === 0) {
-      $('resultWrap').innerHTML = '<div class="empty">이용내역이 없습니다.</div>';
-      return;
-    }
-
-    // 연도 드롭다운 채우기
-    const years = [...new Set(availableMonths.map(m => m.year))].sort((a,b) => b - a);
-    const yearSel = $('yearSel');
-    yearSel.innerHTML = '';
-    years.forEach(y => {
-      const opt = document.createElement('option');
-      opt.value = y; opt.textContent = y + '년';
-      yearSel.appendChild(opt);
-    });
-
-    updateMonthSelect();
-    renderMonthView();
-  } catch (e) {
-    $('resultWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
-  }
+    allRecords=res.records||[]; availableMonths=res.months||[]; latestUpdate=res.latestUpdate||'';
+    if(res.providerName) $('who').textContent=res.providerName+' 선생님';
+    if(availableMonths.length===0){ $('resultWrap').innerHTML='<div class="state">이용내역이 없어요.</div>'; return; }
+    const years=[...new Set(availableMonths.map(m=>m.year))].sort((a,b)=>b-a);
+    const ys=$('yearSel'); ys.innerHTML='';
+    years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y+'년'; ys.appendChild(o); });
+    updateMonthSelect(); renderMonthView();
+  }catch(e){ $('resultWrap').innerHTML='<div class="state">네트워크 오류: '+e.message+'</div>'; }
 }
 
-function updateMonthSelect() {
-  const year = Number($('yearSel').value);
-  const monthSel = $('monthSel');
-  const prev = Number(monthSel.value);
-  monthSel.innerHTML = '';
+function updateMonthSelect(){
+  const year=Number($('yearSel').value); const ms=$('monthSel'); const prev=Number(ms.value); ms.innerHTML='';
+  const months=availableMonths.filter(m=>m.year===year).map(m=>m.month).sort((a,b)=>b-a);
+  months.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m+'월'; ms.appendChild(o); });
+  if(months.indexOf(prev)>=0) ms.value=prev;
+}
 
-  const months = availableMonths
-    .filter(m => m.year === year)
-    .map(m => m.month)
-    .sort((a,b) => b - a);
+function payClass(t){ return (t==='소급'||t==='취소')?'pay-red':''; }
+function dispType(t){ return t==='보강'?'-보강':t; }
 
-  months.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m; opt.textContent = m + '월';
-    monthSel.appendChild(opt);
+function renderTable(records, titleText){
+  const wrap=$('resultWrap');
+  if(!records||records.length===0){ wrap.innerHTML='<div class="title-bar">'+titleText+'</div><div class="state">이용내역이 없어요.</div>'; return; }
+  let seq=0; records.forEach(r=>{ if(r.paymentType==='취소') r._seq=''; else { seq++; r._seq=seq; } });
+  const rows=[]; let pt=null,pc=null,pm=null;
+  records.forEach(r=>{
+    const ym=r.date.substring(0,7);
+    if(pt!==null && (r.serviceType!==pt||r.childName!==pc||ym!==pm)) rows.push('<tr class="row-gap"><td colspan="10"></td></tr>');
+    const cls=payClass(r.paymentType);
+    rows.push('<tr><td>'+r._seq+'</td><td class="name">'+r.childName+'</td><td>'+(r.dateDisplay||r.date)+'</td><td>'+r.time+'</td><td class="'+cls+'">'+dispType(r.paymentType)+'</td><td class="amount">'+r.amount+'</td><td>'+r.birth+'</td><td>'+r.serviceType+'</td><td>'+r.paymentProvider+'</td><td>'+(r.center||'')+'</td></tr>');
+    pt=r.serviceType; pc=r.childName; pm=ym;
   });
-
-  if (months.indexOf(prev) >= 0) monthSel.value = prev;
+  wrap.innerHTML='<div class="title-bar">'+titleText+'</div>'+
+    '<div class="meta"><span>'+(latestUpdate?'최신화 '+latestUpdate:'')+'</span><span>'+records.length+'건</span></div>'+
+    '<div class="table-wrap"><table><thead><tr><th>순번</th><th>대상자명</th><th>결제일시</th><th>결제시간</th><th>구분</th><th>승인금액</th><th>생년월일</th><th>유형</th><th>제공인력</th><th>센터</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div>';
 }
 
-function getPayClass(type) { return (type === '소급' || type === '취소') ? 'pay-red' : ''; }
-function displayType(type) { return type === '보강' ? '-보강' : type; }
+function renderMonthView(){
+  const year=Number($('yearSel').value), month=Number($('monthSel').value);
+  if(!year||!month){ $('resultWrap').innerHTML='<div class="state">이용내역이 없어요.</div>'; return; }
+  const mm=('0'+month).slice(-2), ymP=year+'-'+mm;
+  renderTable(allRecords.filter(r=>r.date.substring(0,7)===ymP), year+'년 '+month+'월 이용내역');
+}
 
-function renderTable(records, titleText) {
-  const wrap = $('resultWrap');
-
-  if (!records || records.length === 0) {
-    wrap.innerHTML = '<div class="title-bar">' + titleText + '</div>' +
-      '<div class="empty">이용내역이 없습니다.</div>';
-    return;
-  }
-
-  let seq = 0;
-  records.forEach(r => {
-    if (r.paymentType === '취소') r._seq = '';
-    else { seq++; r._seq = seq; }
-  });
-
-  const rowsHtml = [];
-  let prevType = null, prevChild = null, prevYm = null;
-  records.forEach(r => {
-    const ym = r.date.substring(0, 7);
-    if (prevType !== null && (r.serviceType !== prevType || r.childName !== prevChild || ym !== prevYm)) {
-      rowsHtml.push('<tr class="row-empty"><td colspan="10"></td></tr>');
+async function searchByChild(){
+  const name=$('childInput').value.trim();
+  if(!name){ alert('아동 이름을 적어주세요.'); $('childInput').focus(); return; }
+  if(name.length<2){ alert('아동 이름을 2글자 이상 적어주세요.'); $('childInput').focus(); return; }
+  $('resultWrap').innerHTML='<div class="state">검색하고 있어요<span class="ld-dots"><i></i><i></i><i></i></span></div>';
+  try{
+    const res=await apiCall({ action:'queryAllByChild', staffId:sess.staffId, session:sess.session, child:name });
+    if(res.error){
+      if(isAuthError(res.error)){ bounceAuth(); return; }
+      $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return;
     }
-    const cls = getPayClass(r.paymentType);
-    rowsHtml.push(
-      '<tr>' +
-        '<td>' + r._seq + '</td>' +
-        '<td class="name">' + r.childName + '</td>' +
-        '<td>' + (r.dateDisplay || r.date) + '</td>' +
-        '<td>' + r.time + '</td>' +
-        '<td class="' + cls + '">' + displayType(r.paymentType) + '</td>' +
-        '<td class="amount">' + r.amount + '</td>' +
-        '<td>' + r.birth + '</td>' +
-        '<td>' + r.serviceType + '</td>' +
-        '<td>' + r.paymentProvider + '</td>' +
-        '<td>' + (r.center || '') + '</td>' +
-      '</tr>'
-    );
-    prevType = r.serviceType;
-    prevChild = r.childName;
-    prevYm = ym;
-  });
-
-  wrap.innerHTML =
-    '<div class="title-bar">' + titleText + '</div>' +
-    '<div class="meta-bar">' +
-      '<span>' + (latestUpdate ? '최신화: ' + latestUpdate : '') + '</span>' +
-      '<span>제공인력: ' + session.name + '</span>' +
-    '</div>' +
-    '<div class="table-wrap">' +
-      '<table>' +
-        '<thead><tr>' +
-          '<th>순번</th><th>대상자명</th><th>결제일시</th><th>결제시간</th>' +
-          '<th>구분</th><th>승인금액</th><th>생년월일</th><th>유형</th>' +
-          '<th>제공인력</th><th>센터</th>' +
-        '</tr></thead>' +
-        '<tbody>' + rowsHtml.join('') + '</tbody>' +
-      '</table>' +
-    '</div>';
+    if(res.latestUpdate) latestUpdate=res.latestUpdate;
+    renderTable(res.records||[], '"'+name+'" 이용내역 (전체 기간)');
+  }catch(e){ $('resultWrap').innerHTML='<div class="state">네트워크 오류: '+e.message+'</div>'; }
 }
 
-// ───── 월별 전체 (클라이언트 필터) ─────
-function renderMonthView() {
-  const year = Number($('yearSel').value);
-  const month = Number($('monthSel').value);
-  if (!year || !month) {
-    $('resultWrap').innerHTML = '<div class="empty">이용내역이 없습니다.</div>';
-    return;
-  }
-
-  const mm = ('0' + month).slice(-2);
-  const ymPrefix = year + '-' + mm;
-  const filtered = allRecords.filter(r => r.date.substring(0, 7) === ymPrefix);
-
-  renderTable(filtered, year + '년 ' + month + '월 바우처 이용내역 조회');
-}
-
-// ───── 아동별 검색 (서버: 전체 대장 완전일치, 전 기간) ─────
-async function searchByChild() {
-  const name = $('childInput').value.trim();
-  if (!name) { alert('아동 이름을 적어주세요.'); $('childInput').focus(); return; }
-  if (name.length < 2) { alert('아동 이름을 2글자 이상 적어주세요.'); $('childInput').focus(); return; }
-
-  $('resultWrap').innerHTML = '<div class="loading">검색하고 있어요</div>';
-  try {
-    const res = await apiCall({ action: 'queryAllByChild', token: session.token, child: name });
-    if (res.error) {
-      if (isAuthError(res.error)) { clearSession(); location.href = 'login.html'; return; }
-      $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
-      return;
-    }
-    if (res.latestUpdate) latestUpdate = res.latestUpdate;
-    renderTable(res.records || [], '"' + name + '" 바우처 이용내역 조회 (전체 기간)');
-  } catch (e) {
-    $('resultWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
-  }
-}
-
-$('logoutBtn').addEventListener('click', async () => {
-  if (!confirm('로그아웃 하시겠습니까?')) return;
-  try { await apiCall({ action: 'authLogout', token: session.token }); } catch {}
-  clearSession();
-  location.href = 'login.html';
-});
-$('changePwBtn').addEventListener('click', () => {
-  if (confirm('비밀번호 변경을 위해 로그인 페이지로 이동합니다.')) location.href = 'login.html';
-});
-
-// 시작
-loadAllData();
+if(sess && sess.staffId && sess.session) loadAllData(); // 세션 없으면 위에서 goHub() — 여기서 null 참조 막음
 </script>
 </body>
 </html>
