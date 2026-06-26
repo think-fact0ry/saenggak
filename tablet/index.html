@@ -655,6 +655,8 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     history.pushState({root:1},''); showExitHint(); exitArmed=true;                                       // 첫 번째 → 머무르고 안내
     exitT=setTimeout(function(){ exitArmed=false; hideExitHint(); }, 2000);
   });
+  // 핀번호 변경(상담일지로 이동)에서 돌아오면 마이페이지를 다시 연다 = 단계적(핀화면 뒤로 → 마이페이지 → 홈)
+  try{ if(sessionStorage.getItem('tf_mp_return')){ sessionStorage.removeItem('tf_mp_return'); openMypage(); } }catch(e){}
   // 상담사 등록: (미등록) 번호(5007) → 필수확인(서약) / (등록됨) 해제
   var COUNSELOR_HASH = "8d0a8cbf9d1e53373e02a4ad80e49b2853259c854de49349cd776a7569c47142";  // sha256("5007") — 모든 상담사 공용 코드(소스에 평문 대신 해시)
   function showOath(){ $('oathDim').classList.add('on'); $('oathSheet').classList.add('on'); }
@@ -685,7 +687,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   $('aoffLater').onclick = navBack; $('aoffDim').onclick = navBack;
   $('aoffDo').onclick = function(){ var s=sess()||{}; delete s.admin; saveS(s); try{ localStorage.removeItem('saenggak_admin_token'); }catch(e){} location.reload(); };
   // 비밀번호 변경 = OTP 재인증 후 PIN 재설정(상담일지가 처리)
-  $('rowPin').onclick = function(){ location.replace('상담일지.html?from=hub&pin=1'); };
+  $('rowPin').onclick = function(){ try{ sessionStorage.setItem('tf_mp_return','1'); }catch(e){} location.replace('상담일지.html?from=hub&pin=1'); };   // 복귀 시 마이페이지 재오픈(단계적)
   // 행정 등록(키)
   function showAdmin(){ $('adminDim').classList.add('on'); $('adminSheet').classList.add('on'); $('adminKey').value=''; $('adminKey').setAttribute('readonly',''); $('adminErr').textContent=''; $('adminSave').disabled=true; }   // 열 때마다 readonly 복원 = 재오픈에도 자동완성 차단 유지(§5.5)
   function closeAdmin(){ $('adminDim').classList.remove('on'); $('adminSheet').classList.remove('on'); }
@@ -837,7 +839,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.26j';
+var APP_VERSION = '26.06.26k';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
