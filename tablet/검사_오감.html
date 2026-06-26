@@ -35,6 +35,9 @@
 
   h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 2px 6px;}
   .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 2px 24px;}
+  .head-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .head-row h1{margin-bottom:0;}
+  .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:8px;padding:5px 11px;white-space:nowrap;}   /* 우상단 상담사/행정명(상담일지와 동일) */
 
   /* 입력 */
   .field{margin-bottom:18px;}
@@ -180,7 +183,7 @@
 <div class="screen active" id="s-clients">
   <div class="wrap">
     <a class="back noprint" href="./index.html" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
-    <h1>심리검사</h1>
+    <div class="head-row"><h1>심리검사</h1><span class="who" id="examWho"></span></div>
     <button class="btn" id="newClient">새 아이 등록하기</button>
     <div id="clientList" style="margin-top:20px;"></div>
   </div>
@@ -798,8 +801,15 @@ function hubPost(body){
 }
 
 // ── ① 등록 아동 목록 ──────────────────────────────────────
+// 우상단 신원 표시: 행정→"행정 OOO" / 상담사(서약)→"상담사 OOO" / 그 외→"OOO 선생님" (상담일지 whoTag와 동일 규칙)
+function setExamWho(){
+  var el=document.getElementById('examWho'); if(!el) return;
+  if(DEMO){ el.textContent='상담사 데모'; return; }
+  var s=getStaffSess()||{}; var nm=String(s.name||'').trim();
+  el.textContent = !nm ? '' : (s.admin ? ('행정 '+nm) : (s.oath ? ('상담사 '+nm) : (nm+' 선생님')));
+}
 function showClients(){
-  show('s-clients');
+  show('s-clients'); setExamWho();
   const box=document.getElementById('clientList');
   if(DEMO){ renderClients(MOCK_CLIENTS); return; }
   const sess=getStaffSess();
