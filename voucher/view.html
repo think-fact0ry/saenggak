@@ -58,21 +58,19 @@
   @keyframes bo{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-4px);opacity:1;}}
 
   /* 다른 아동 경계 = 더 큰 간격(같은 아동 내 월/서비스 전환은 기본 8px) */
-  .row-gap.big td{height:20px;}
+  .row-gap.big td{height:18px;}
 
-  /* 모바일(≤640px): 가로 테이블 → 카드형(라벨:값). 좌우 한 화면, 위아래만 스크롤 */
+  /* 모바일: 표 그대로 + 폰트·패딩 축소로 좌우 한 화면에 (가로 스크롤 없음) */
   @media (max-width:640px){
-    .table-wrap{border:none;overflow-x:visible;}
-    table{min-width:0;}
-    thead{display:none;}
-    table,tbody,tr,td{display:block;width:100%;}
-    tr:not(.row-gap){border:1px solid var(--g200);border-radius:12px;margin-bottom:8px;padding:7px 13px;}
-    td{border:none;display:flex;justify-content:space-between;align-items:baseline;gap:14px;text-align:right;padding:4px 0;white-space:normal;}
-    td::before{content:attr(data-label);color:var(--g500);font-weight:600;text-align:left;flex-shrink:0;}
-    td.amount{padding-right:0;}
-    .row-gap{display:none;}
-    .row-gap.big{display:block;height:8px;}
-    .row-gap.big td{display:none;}
+    .table-wrap{overflow-x:hidden;}
+    table{min-width:0;width:100%;table-layout:fixed;font-size:10px;}
+    th,td{padding:6px 2px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;}
+    thead th{font-size:9.5px;}
+    td.amount{padding-right:3px;text-align:center;}
+  }
+  @media (max-width:400px){
+    table{font-size:9px;}
+    th,td{padding:5px 1px;}
   }
 </style>
 </head>
