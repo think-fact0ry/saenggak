@@ -24,7 +24,8 @@
   .bar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;gap:6px;
     background:#fff;border-bottom:1px solid var(--g200);
     height:calc(var(--bar) + env(safe-area-inset-top));padding:0 8px;padding-top:env(safe-area-inset-top);}
-  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:none;background:transparent;text-decoration:none;font-size:25px;color:var(--g700);cursor:pointer;flex-shrink:0;}
+  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:none;background:transparent;text-decoration:none;color:var(--g700);cursor:pointer;flex-shrink:0;}
+  .back svg{width:24px;height:24px;display:block;}   /* §5.8 라인 SVG ←(바는 유지, 아이콘만) */
   .back:active{background:var(--g100);}
   .bar-title{font-size:17px;font-weight:700;letter-spacing:-.4px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .icon-btn{display:flex;align-items:center;justify-content:center;width:42px;height:40px;border-radius:12px;border:none;background:transparent;font-size:21px;color:var(--g700);cursor:pointer;flex-shrink:0;}
@@ -205,7 +206,7 @@
 <body>
 
 <div class="bar">
-  <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+  <a class="back" href="./index.html" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
   <div class="bar-title">전화 응대 매뉴얼</div>
   <button class="icon-btn" onclick="openSearch()" aria-label="검색">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>

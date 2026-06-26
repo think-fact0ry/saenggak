@@ -19,7 +19,8 @@
 
   .top{display:flex;align-items:center;gap:6px;}
   .top-sp{flex:1;}
-  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin-left:-4px;border-radius:12px;border:none;background:transparent;text-decoration:none;font-size:22px;color:var(--g700);cursor:pointer;}
+  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin-left:-4px;border-radius:12px;border:none;background:transparent;text-decoration:none;color:var(--g700);cursor:pointer;}
+  .back svg{width:24px;height:24px;display:block;}   /* §5.8 라인 SVG ← */
   .back:active{background:var(--g100);}
   .gear{width:40px;height:40px;border-radius:12px;border:none;background:transparent;color:var(--g500);cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .gear:active{background:var(--g100);}
@@ -148,7 +149,7 @@
 
 <div class="wrap">
   <div class="top">
-    <a class="back" href="./index.html" aria-label="홈으로">‹</a>
+    <a class="back" href="./index.html" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
     <div class="top-sp"></div>
     <button class="gear" onclick="openGuide()" aria-label="프린터 설정 안내">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -162,7 +163,7 @@
 
   <div id="preview">
     <div class="pv-head">
-      <button class="back" onclick="backToList()" aria-label="목록으로" style="margin-left:-4px">‹</button>
+      <button class="back" onclick="backToList()" aria-label="목록으로" style="margin-left:-4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <div class="pv-name" id="pvName"></div>
     </div>
     <div id="editTools">
