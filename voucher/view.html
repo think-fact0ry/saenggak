@@ -56,6 +56,24 @@
   .ld-dots i{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--g400);margin:0 1.5px;animation:bo 1s infinite;}
   .ld-dots i:nth-child(2){animation-delay:.15s;} .ld-dots i:nth-child(3){animation-delay:.3s;}
   @keyframes bo{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-4px);opacity:1;}}
+
+  /* 다른 아동 경계 = 더 큰 간격(같은 아동 내 월/서비스 전환은 기본 8px) */
+  .row-gap.big td{height:20px;}
+
+  /* 모바일(≤640px): 가로 테이블 → 카드형(라벨:값). 좌우 한 화면, 위아래만 스크롤 */
+  @media (max-width:640px){
+    .table-wrap{border:none;overflow-x:visible;}
+    table{min-width:0;}
+    thead{display:none;}
+    table,tbody,tr,td{display:block;width:100%;}
+    tr:not(.row-gap){border:1px solid var(--g200);border-radius:12px;margin-bottom:8px;padding:7px 13px;}
+    td{border:none;display:flex;justify-content:space-between;align-items:baseline;gap:14px;text-align:right;padding:4px 0;white-space:normal;}
+    td::before{content:attr(data-label);color:var(--g500);font-weight:600;text-align:left;flex-shrink:0;}
+    td.amount{padding-right:0;}
+    .row-gap{display:none;}
+    .row-gap.big{display:block;height:8px;}
+    .row-gap.big td{display:none;}
+  }
 </style>
 </head>
 <body>
@@ -122,9 +140,23 @@ function renderTable(records, titleText){
   const rows=[]; let pt=null,pc=null,pm=null;
   records.forEach(r=>{
     const ym=r.date.substring(0,7);
-    if(pt!==null && (r.serviceType!==pt||r.childName!==pc||ym!==pm)) rows.push('<tr class="row-gap"><td colspan="10"></td></tr>');
+    if(pt!==null){
+      if(r.childName!==pc) rows.push('<tr class="row-gap big"><td colspan="10"></td></tr>');           // 다른 아동 = 큰 간격
+      else if(r.serviceType!==pt||ym!==pm) rows.push('<tr class="row-gap"><td colspan="10"></td></tr>'); // 같은 아동 내 = 기본
+    }
     const cls=payClass(r.paymentType);
-    rows.push('<tr><td>'+r._seq+'</td><td class="name">'+r.childName+'</td><td>'+(r.dateDisplay||r.date)+'</td><td>'+r.time+'</td><td class="'+cls+'">'+dispType(r.paymentType)+'</td><td class="amount">'+r.amount+'</td><td>'+r.birth+'</td><td>'+r.serviceType+'</td><td>'+r.paymentProvider+'</td><td>'+(r.center||'')+'</td></tr>');
+    rows.push('<tr>'+
+      '<td data-label="순번">'+r._seq+'</td>'+
+      '<td class="name" data-label="대상자명">'+r.childName+'</td>'+
+      '<td data-label="결제일시">'+(r.dateDisplay||r.date)+'</td>'+
+      '<td data-label="결제시간">'+r.time+'</td>'+
+      '<td class="'+cls+'" data-label="구분">'+dispType(r.paymentType)+'</td>'+
+      '<td class="amount" data-label="승인금액">'+r.amount+'</td>'+
+      '<td data-label="생년월일">'+r.birth+'</td>'+
+      '<td data-label="유형">'+r.serviceType+'</td>'+
+      '<td data-label="제공인력">'+r.paymentProvider+'</td>'+
+      '<td data-label="센터">'+(r.center||'')+'</td>'+
+    '</tr>');
     pt=r.serviceType; pc=r.childName; pm=ym;
   });
   wrap.innerHTML='<div class="title-bar">'+titleText+'</div>'+
