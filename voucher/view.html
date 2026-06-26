@@ -16,15 +16,13 @@
   body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;-webkit-text-size-adjust:100%;}
   .wrap{max-width:920px;margin:0 auto;padding:0 0 60px;}
 
-  .head{position:sticky;top:0;z-index:10;background:#fff;padding:18px 20px 12px;border-bottom:1px solid var(--g100);}
-  .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .head{position:sticky;top:0;z-index:10;background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--g100);}
+  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:none;background:#fff;color:var(--g700);text-decoration:none;margin:0 0 4px -8px;}
+  .back:active{background:var(--g100);}
+  .back svg{width:24px;height:24px;}
   h1{font-size:20px;font-weight:700;letter-spacing:-.5px;}
   .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:8px;padding:5px 11px;margin-top:8px;}
-  .icon-btn{width:40px;height:40px;border-radius:12px;border:none;background:var(--g100);color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .icon-btn:active{background:var(--g200);}
-  .icon-btn svg{width:20px;height:20px;}
-  .icon-btn.spin svg{animation:sp .7s linear infinite;}
-  @keyframes sp{to{transform:rotate(360deg);}}
+  .who.admin{color:#1967d2;background:#e8f0fe;}
 
   .body{padding:16px 20px;}
 
@@ -34,6 +32,7 @@
 
   .controls{margin-bottom:16px;}
   .row{display:flex;gap:8px;}
+  .row + .row{margin-top:8px;}
   select,.search-in{font-family:inherit;font-size:15px;padding:13px 14px;border:2px solid transparent;border-radius:13px;background:var(--g100);outline:none;width:100%;color:var(--g900);transition:.15s;-webkit-appearance:none;}
   select:focus,.search-in:focus{background:#fff;border-color:var(--green);}
   select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%238b95a1' d='M1 1l5 6 5-6'/></svg>");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
@@ -62,52 +61,34 @@
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="head-row">
-      <div>
-        <h1>바우처 이용내역</h1>
-        <div class="who" id="who">-</div>
-      </div>
-      <button class="icon-btn" id="refreshBtn" title="새로고침" aria-label="새로고침">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-      </button>
-    </div>
+    <a class="back" href="../tablet/index.html" aria-label="뒤로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <h1>바우처 이용내역</h1>
+    <div class="who" id="who">-</div>
   </div>
 
   <div class="body">
-    <div class="seg">
-      <button class="active" data-tab="month">월별 전체</button>
-      <button data-tab="child">아동별 검색</button>
-    </div>
-
-    <div class="controls">
-      <div class="row" id="monthControls">
-        <select id="yearSel"></select>
-        <select id="monthSel"></select>
-      </div>
-      <div class="row" id="childControls" style="display:none;">
-        <input class="search-in" type="text" id="childInput" placeholder="아동 이름 (전체 입력)" inputmode="text">
-        <button class="search-btn" id="searchBtn">검색</button>
-      </div>
-    </div>
-
-    <div id="resultWrap"><div class="state">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></div></div>
+    <div class="seg" id="seg"></div>
+    <div class="controls" id="controls"></div>
+    <div id="resultWrap"></div>
   </div>
 </div>
 
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec';
-const SESS_KEY = 'tf_staff_v1';       // 태블릿 허브와 공유하는 11 OTP 세션
-const HUB_URL = '../tablet/index.html'; // 세션 없으면 허브로(허브 게이트가 신원·PIN 보장)
+const SESS_KEY = 'tf_staff_v1';            // 11 OTP 세션(제공인력)
+const ADMIN_KEY = 'saenggak_admin_token';  // ACCESS_TOKEN(행정) — provider-map과 공유
+const HUB_URL = '../tablet/index.html';
 const $ = id => document.getElementById(id);
 
 function getSess(){ try{ return JSON.parse(localStorage.getItem(SESS_KEY)); }catch(e){ return null; } }
 function clearSess(){ try{ localStorage.removeItem(SESS_KEY); }catch(e){} }
+function getAdminToken(){ try{ return localStorage.getItem(ADMIN_KEY) || ''; }catch(e){ return ''; } }
+function clearAdmin(){ try{ localStorage.removeItem(ADMIN_KEY); }catch(e){} }
 function goHub(){ location.replace(HUB_URL); }
-function bounceAuth(){ clearSess(); goHub(); } // 서버가 세션 거부 → 무효 세션 비우고 허브로(재OTP 유도, 무한 바운스 방지)
-
-const sess = getSess();
-if(!sess || !sess.staffId || !sess.session){ goHub(); }
-$('who').textContent = ((sess && sess.name) ? sess.name : '') + ' 선생님';
+function bounceAuth(){ clearSess(); goHub(); }    // 11 세션 거부 → 비우고 허브(재OTP)
+function bounceAdmin(){ clearAdmin(); alert('행정 인증이 만료됐어요. 다시 등록해주세요.'); goHub(); }
 
 function isAuthError(err){ return !!err && (err.indexOf('세션')>=0 || err.indexOf('로그인')>=0 || err.indexOf('만료')>=0); }
 
@@ -117,66 +98,22 @@ async function apiCall(params){
   return res.json();
 }
 
-let allRecords=[], availableMonths=[], latestUpdate='', currentTab='month';
+// ── 역할(모드) 판정 ── 행정키 우선 → 11 세션 → 없으면 허브
+const adminToken = getAdminToken();
+const sess = getSess();
+let MODE = 'none';
+if(adminToken){ MODE = 'admin'; }
+else if(sess && sess.staffId && sess.session){ MODE = 'provider'; }
+else { goHub(); }
 
-document.querySelectorAll('.seg button').forEach(t=>{
-  t.addEventListener('click', ()=>{
-    document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    currentTab=t.dataset.tab;
-    if(currentTab==='child'){
-      $('monthControls').style.display='none';
-      $('childControls').style.display='flex';
-      $('resultWrap').innerHTML='<div class="state">아동 이름을 적고 검색해주세요.</div>';
-      $('childInput').focus();
-    }else{
-      $('monthControls').style.display='flex';
-      $('childControls').style.display='none';
-      renderMonthView();
-    }
-  });
-});
+// 역할 표시 (디자인원칙 §2.7)
+if(MODE === 'admin'){ $('who').textContent = '행정'; $('who').classList.add('admin'); }
+else { $('who').textContent = ((sess && sess.name) ? sess.name : '') + ' 선생님'; }
 
-$('yearSel').addEventListener('change', ()=>{ updateMonthSelect(); renderMonthView(); });
-$('monthSel').addEventListener('change', renderMonthView);
-$('searchBtn').addEventListener('click', searchByChild);
-$('childInput').addEventListener('keydown', e=>{ if(e.key==='Enter') searchByChild(); });
-$('refreshBtn').addEventListener('click', async ()=>{
-  $('refreshBtn').classList.add('spin');
-  await loadAllData(true);
-  $('refreshBtn').classList.remove('spin');
-});
-
-async function loadAllData(force){
-  if(!force && allRecords.length>0) return;
-  $('resultWrap').innerHTML='<div class="state">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></div>';
-  const params={ action:'queryMyAllData', staffId:sess.staffId, session:sess.session };
-  if(force) params._t=Date.now();
-  try{
-    const res=await apiCall(params);
-    if(res.error){
-      if(isAuthError(res.error)){ bounceAuth(); return; }
-      $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return;
-    }
-    allRecords=res.records||[]; availableMonths=res.months||[]; latestUpdate=res.latestUpdate||'';
-    if(res.providerName) $('who').textContent=res.providerName+' 선생님';
-    if(availableMonths.length===0){ $('resultWrap').innerHTML='<div class="state">이용내역이 없어요.</div>'; return; }
-    const years=[...new Set(availableMonths.map(m=>m.year))].sort((a,b)=>b-a);
-    const ys=$('yearSel'); ys.innerHTML='';
-    years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y+'년'; ys.appendChild(o); });
-    updateMonthSelect(); renderMonthView();
-  }catch(e){ $('resultWrap').innerHTML='<div class="state">네트워크 오류: '+e.message+'</div>'; }
-}
-
-function updateMonthSelect(){
-  const year=Number($('yearSel').value); const ms=$('monthSel'); const prev=Number(ms.value); ms.innerHTML='';
-  const months=availableMonths.filter(m=>m.year===year).map(m=>m.month).sort((a,b)=>b-a);
-  months.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m+'월'; ms.appendChild(o); });
-  if(months.indexOf(prev)>=0) ms.value=prev;
-}
-
+let latestUpdate = '';
 function payClass(t){ return (t==='소급'||t==='취소')?'pay-red':''; }
 function dispType(t){ return t==='보강'?'-보강':t; }
+function loadingHTML(text){ return '<div class="state">'+text+'<span class="ld-dots"><i></i><i></i><i></i></span></div>'; }
 
 function renderTable(records, titleText){
   const wrap=$('resultWrap');
@@ -195,30 +132,142 @@ function renderTable(records, titleText){
     '<div class="table-wrap"><table><thead><tr><th>순번</th><th>대상자명</th><th>결제일시</th><th>결제시간</th><th>구분</th><th>승인금액</th><th>생년월일</th><th>유형</th><th>제공인력</th><th>센터</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div>';
 }
 
+// 탭 전환 공통
+function bindSeg(onSwitch){
+  document.querySelectorAll('.seg button').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      onSwitch(t.dataset.tab);
+    });
+  });
+}
+
+// ════════════ 제공인력 모드 ════════════
+let allRecords=[], availableMonths=[];
+
+function initProvider(){
+  $('seg').innerHTML = '<button class="active" data-tab="month">월별 전체</button><button data-tab="child">아동별 검색</button>';
+  $('controls').innerHTML =
+    '<div class="row" id="monthControls"><select id="yearSel"></select><select id="monthSel"></select></div>'+
+    '<div class="row" id="childControls" style="display:none;"><input class="search-in" type="text" id="childInput" placeholder="아동 이름 (전체 입력)"><button class="search-btn" id="childBtn">검색</button></div>';
+  $('resultWrap').innerHTML = loadingHTML('불러오는 중');
+
+  bindSeg(tab=>{
+    if(tab==='child'){
+      $('monthControls').style.display='none'; $('childControls').style.display='flex';
+      $('resultWrap').innerHTML='<div class="state">아동 이름을 적고 검색해주세요.</div>'; $('childInput').focus();
+    }else{
+      $('monthControls').style.display='flex'; $('childControls').style.display='none'; renderMonthView();
+    }
+  });
+  $('yearSel').addEventListener('change', ()=>{ updateMonthSelect(); renderMonthView(); });
+  $('monthSel').addEventListener('change', renderMonthView);
+  $('childBtn').addEventListener('click', pSearchChild);
+  $('childInput').addEventListener('keydown', e=>{ if(e.key==='Enter') pSearchChild(); });
+
+  loadAllData();
+}
+
+async function loadAllData(){
+  const res = await apiCall({ action:'queryMyAllData', staffId:sess.staffId, session:sess.session });
+  if(res.error){
+    if(isAuthError(res.error)){ bounceAuth(); return; }
+    $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return;
+  }
+  allRecords=res.records||[]; availableMonths=res.months||[]; latestUpdate=res.latestUpdate||'';
+  if(res.providerName) $('who').textContent=res.providerName+' 선생님';
+  if(availableMonths.length===0){ $('resultWrap').innerHTML='<div class="state">이용내역이 없어요.</div>'; return; }
+  const years=[...new Set(availableMonths.map(m=>m.year))].sort((a,b)=>b-a);
+  const ys=$('yearSel'); ys.innerHTML='';
+  years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y+'년'; ys.appendChild(o); });
+  updateMonthSelect(); renderMonthView();
+}
+function updateMonthSelect(){
+  const year=Number($('yearSel').value); const ms=$('monthSel'); const prev=Number(ms.value); ms.innerHTML='';
+  const months=availableMonths.filter(m=>m.year===year).map(m=>m.month).sort((a,b)=>b-a);
+  months.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m+'월'; ms.appendChild(o); });
+  if(months.indexOf(prev)>=0) ms.value=prev;
+}
 function renderMonthView(){
   const year=Number($('yearSel').value), month=Number($('monthSel').value);
   if(!year||!month){ $('resultWrap').innerHTML='<div class="state">이용내역이 없어요.</div>'; return; }
   const mm=('0'+month).slice(-2), ymP=year+'-'+mm;
   renderTable(allRecords.filter(r=>r.date.substring(0,7)===ymP), year+'년 '+month+'월 이용내역');
 }
-
-async function searchByChild(){
+async function pSearchChild(){
   const name=$('childInput').value.trim();
   if(!name){ alert('아동 이름을 적어주세요.'); $('childInput').focus(); return; }
   if(name.length<2){ alert('아동 이름을 2글자 이상 적어주세요.'); $('childInput').focus(); return; }
-  $('resultWrap').innerHTML='<div class="state">검색하고 있어요<span class="ld-dots"><i></i><i></i><i></i></span></div>';
+  $('resultWrap').innerHTML=loadingHTML('검색하고 있어요');
   try{
     const res=await apiCall({ action:'queryAllByChild', staffId:sess.staffId, session:sess.session, child:name });
-    if(res.error){
-      if(isAuthError(res.error)){ bounceAuth(); return; }
-      $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return;
-    }
+    if(res.error){ if(isAuthError(res.error)){ bounceAuth(); return; } $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return; }
     if(res.latestUpdate) latestUpdate=res.latestUpdate;
     renderTable(res.records||[], '"'+name+'" 이용내역 (전체 기간)');
   }catch(e){ $('resultWrap').innerHTML='<div class="state">네트워크 오류: '+e.message+'</div>'; }
 }
 
-if(sess && sess.staffId && sess.session) loadAllData(); // 세션 없으면 위에서 goHub() — 여기서 null 참조 막음
+// ════════════ 행정 모드 ════════════
+function initAdmin(){
+  const ny = new Date().getFullYear();
+  const yearOpts = [ny, ny-1, ny-2].map(y=>'<option value="'+y+'">'+y+'년</option>').join('');
+  let monthOpts = '<option value="">전체 월</option>';
+  for(let m=1;m<=12;m++) monthOpts += '<option value="'+m+'">'+m+'월</option>';
+
+  $('seg').innerHTML = '<button class="active" data-tab="prov">제공인력별</button><button data-tab="child">아동별 검색</button>';
+  $('controls').innerHTML =
+    '<div id="provControls">'+
+      '<div class="row"><input class="search-in" type="text" id="provInput" placeholder="제공인력 이름"></div>'+
+      '<div class="row"><select id="aYear">'+yearOpts+'</select><select id="aMonth">'+monthOpts+'</select><button class="search-btn" id="provBtn">검색</button></div>'+
+    '</div>'+
+    '<div class="row" id="acControls" style="display:none;"><input class="search-in" type="text" id="acInput" placeholder="아동 이름 (전체 입력)"><button class="search-btn" id="acBtn">검색</button></div>';
+  $('resultWrap').innerHTML = '<div class="state">제공인력 이름과 월을 정해 검색해주세요.</div>';
+
+  bindSeg(tab=>{
+    if(tab==='child'){
+      $('provControls').style.display='none'; $('acControls').style.display='flex';
+      $('resultWrap').innerHTML='<div class="state">아동 이름을 적고 검색해주세요.</div>'; $('acInput').focus();
+    }else{
+      $('provControls').style.display='block'; $('acControls').style.display='none';
+      $('resultWrap').innerHTML='<div class="state">제공인력 이름과 월을 정해 검색해주세요.</div>'; $('provInput').focus();
+    }
+  });
+  $('provBtn').addEventListener('click', aSearchProvider);
+  $('provInput').addEventListener('keydown', e=>{ if(e.key==='Enter') aSearchProvider(); });
+  $('acBtn').addEventListener('click', aSearchChild);
+  $('acInput').addEventListener('keydown', e=>{ if(e.key==='Enter') aSearchChild(); });
+}
+
+async function aSearchProvider(){
+  const prov=$('provInput').value.trim();
+  if(!prov){ alert('제공인력 이름을 적어주세요.'); $('provInput').focus(); return; }
+  const year=$('aYear').value, month=$('aMonth').value;
+  $('resultWrap').innerHTML=loadingHTML('검색하고 있어요');
+  try{
+    const res=await apiCall({ action:'queryProviderAdmin', t:adminToken, provider:prov, year:year, month:month });
+    if(res.error){ if(res.error.indexOf('Unauthorized')>=0){ bounceAdmin(); return; } $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return; }
+    latestUpdate=res.latestUpdate||'';
+    const title = prov+' '+(year?year+'년 ':'')+(month?month+'월 ':'(전체 기간) ')+'이용내역';
+    renderTable(res.records||[], title);
+  }catch(e){ $('resultWrap').innerHTML='<div class="state">네트워크 오류: '+e.message+'</div>'; }
+}
+async function aSearchChild(){
+  const name=$('acInput').value.trim();
+  if(!name){ alert('아동 이름을 적어주세요.'); $('acInput').focus(); return; }
+  if(name.length<2){ alert('아동 이름을 2글자 이상 적어주세요.'); $('acInput').focus(); return; }
+  $('resultWrap').innerHTML=loadingHTML('검색하고 있어요');
+  try{
+    const res=await apiCall({ action:'queryChildAdmin', t:adminToken, child:name });
+    if(res.error){ if(res.error.indexOf('Unauthorized')>=0){ bounceAdmin(); return; } $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return; }
+    if(res.latestUpdate) latestUpdate=res.latestUpdate;
+    renderTable(res.records||[], '"'+name+'" 이용내역 (전체 기간)');
+  }catch(e){ $('resultWrap').innerHTML='<div class="state">네트워크 오류: '+e.message+'</div>'; }
+}
+
+// ── 부팅 ──
+if(MODE==='admin') initAdmin();
+else if(MODE==='provider') initProvider();
 </script>
 </body>
 </html>
