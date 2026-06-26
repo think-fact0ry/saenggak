@@ -617,10 +617,10 @@
 const GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";
 // ── 디자인·시연용 demo 모드(?demo=1): 신원·GAS 우회 + 가짜 데이터. 일반(?demo 없는) 진입엔 영향 없음. ──
 const DEMO = (function(){ try{ return new URLSearchParams(location.search).get('demo')==='1'; }catch(e){ return false; } })();
-// ── 일반(비바우처) 상담일지 노출 게이트(?ga=1 또는 demo) ──
-//  보존기간·동의 법무 확인 전까지 상담사에겐 안 보임(008만) → 실데이터 수집 0. 유성 테스트만 ?ga=1로 통과.
-//  ⚠️ 보안 아님(공개 소스라 URL 알면 접근) — 상담사 우발 사용 차단용. 법무 OK 후 이 게이트 제거 = 정식 오픈.
-const GA_ON = DEMO || (function(){ try{ return new URLSearchParams(location.search).get('ga')==='1'; }catch(e){ return false; } })();
+// ── 일반(비바우처) 상담일지 노출 ──
+//  ✅ 정식 오픈(유성 2026-06-26: 보존기간·동의 법무 확인 완료) → 상담사 모드선택에 일반 노출.
+//     옛 ?ga=1 게이트 해제(법무 미확인 동안 상담사 우발 사용을 막던 임시 플래그였음). 항상 켜짐.
+const GA_ON = true;
 const FROM_HUB = (function(){ try{ return new URLSearchParams(location.search).get('from')==='hub'; }catch(e){ return false; } })();   // 허브가 로그인하러 보냄 → 신원 끝나면 허브로 복귀(서약·일지 건너뜀)
 const PIN_CHANGE = (function(){ try{ return new URLSearchParams(location.search).get('pin')==='1'; }catch(e){ return false; } })();   // 마이페이지 '비밀번호 변경' → OTP 재인증 후 PIN 재설정
 const MOCK_CLIENTS = [
