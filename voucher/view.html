@@ -124,7 +124,7 @@
       <select id="monthSel"></select>
     </div>
     <div class="control-row" id="childControls" style="display:none;">
-      <input type="text" id="childInput" placeholder="아동 이름 (일부 입력 가능)">
+      <input type="text" id="childInput" placeholder="아동 이름 (전체 입력)">
       <button id="searchBtn">검색</button>
     </div>
   </div>
@@ -147,6 +147,12 @@ async function apiCall(params) {
   ).join('&');
   const res = await fetch(url, { method: 'GET', redirect: 'follow' });
   return res.json();
+}
+
+// 인증/세션 만료성 에러면 true (로그인 화면으로 돌려보내야 하는 에러)
+function isAuthError(err) {
+  return !!err && (err.indexOf('세션') >= 0 || err.indexOf('로그인') >= 0 ||
+    err.indexOf('인증') >= 0 || err.indexOf('선생님 정보') >= 0);
 }
 
 const session = getSession();
@@ -210,9 +216,7 @@ async function loadAllData(forceRefresh) {
   try {
     const res = await apiCall(params);
     if (res.error) {
-      if (res.error.indexOf('세션') >= 0 || res.error.indexOf('로그인') >= 0) {
-        clearSession(); location.href = 'login.html'; return;
-      }
+      if (isAuthError(res.error)) { clearSession(); location.href = 'login.html'; return; }
       $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
       return;
     }
@@ -342,13 +346,25 @@ function renderMonthView() {
   renderTable(filtered, year + '년 ' + month + '월 바우처 이용내역 조회');
 }
 
-// ───── 아동별 검색 (클라이언트 필터, 부분 일치) ─────
-function searchByChild() {
+// ───── 아동별 검색 (서버: 전체 대장 완전일치, 전 기간) ─────
+async function searchByChild() {
   const name = $('childInput').value.trim();
-  if (!name) { alert('아동 이름을 입력해주세요.'); $('childInput').focus(); return; }
+  if (!name) { alert('아동 이름을 적어주세요.'); $('childInput').focus(); return; }
+  if (name.length < 2) { alert('아동 이름을 2글자 이상 적어주세요.'); $('childInput').focus(); return; }
 
-  const filtered = allRecords.filter(r => r.childName.indexOf(name) >= 0);
-  renderTable(filtered, '"' + name + '" 바우처 이용내역 조회 (전체 기간)');
+  $('resultWrap').innerHTML = '<div class="loading">검색하고 있어요</div>';
+  try {
+    const res = await apiCall({ action: 'queryAllByChild', token: session.token, child: name });
+    if (res.error) {
+      if (isAuthError(res.error)) { clearSession(); location.href = 'login.html'; return; }
+      $('resultWrap').innerHTML = '<div class="empty">' + res.error + '</div>';
+      return;
+    }
+    if (res.latestUpdate) latestUpdate = res.latestUpdate;
+    renderTable(res.records || [], '"' + name + '" 바우처 이용내역 조회 (전체 기간)');
+  } catch (e) {
+    $('resultWrap').innerHTML = '<div class="empty">네트워크 오류: ' + e.message + '</div>';
+  }
 }
 
 $('logoutBtn').addEventListener('click', async () => {
