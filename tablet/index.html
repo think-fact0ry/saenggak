@@ -208,6 +208,7 @@
   .keep-note b{color:var(--g700); font-weight:700;}
   .key-in{width:100%; font-family:inherit; font-size:19px; font-weight:600; letter-spacing:1px; padding:15px 16px; border-radius:14px; border:2px solid var(--g200); background:var(--g100); outline:none; margin-bottom:8px; text-align:center;}
   .key-in:focus{background:#fff; border-color:var(--green);}
+  .key-in::placeholder{color:var(--g300); letter-spacing:6px;}   /* 빈칸일 때 ● ● ● ● 회색 안내(몇 글자 넣는지 보이게) */
   .key-err{min-height:18px; font-size:13px; color:var(--red); font-weight:600; text-align:center; margin-bottom:12px;}
   .s-btn{width:100%; font-family:inherit; font-size:17px; font-weight:700; padding:17px; border-radius:15px; border:none; background:var(--green); color:#fff; cursor:pointer;}
   .s-btn:active{background:var(--green-d);}
@@ -367,7 +368,7 @@
 <div class="sheet" id="cnumSheet">
   <h2>상담사 등록</h2>
   <p class="ssub">상담사 등록 번호를 넣어 주세요.</p>
-  <input class="key-in masked" id="cnumKey" type="text" inputmode="numeric" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly>
+  <input class="key-in masked" id="cnumKey" type="text" inputmode="numeric" maxlength="4" placeholder="● ● ● ●" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly>
   <div class="key-err" id="cnumErr"></div>
   <button class="s-btn" id="cnumNext" disabled>등록하기</button>
   <button class="s-later" id="cnumLater">닫기</button>
@@ -575,7 +576,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.25p';
+var APP_VERSION = '26.06.25q';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:

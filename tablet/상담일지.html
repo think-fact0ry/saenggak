@@ -17,8 +17,9 @@
   .screen{display:none;}
   .screen.active{display:block;}
   .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}
-  #s-signup1 .wrap,#s-signup2 .wrap{padding-top:64px;}   /* 키보드 down = 제목·입력 손 닿는 높이로 내림(상태바 밑 박힘 방지, ex12) */
+  #s-signup1 .wrap,#s-signup2 .wrap{padding-top:64px;position:relative;}   /* 키보드 down = 제목·입력 손 닿는 높이로 내림(상태바 밑 박힘 방지, ex12) */
   #s-signup1 h1,#s-signup2 h1{margin-bottom:24px;}   /* 제목↔첫 입력 간격(부제 삭제 후 좁아진 것 복원) */
+  #s-signup1 .back,#s-signup2 .back{position:absolute;top:18px;left:22px;margin:0;}   /* 화살표를 위 여백에 띄움 = 제목을 아래로 안 밀어 첫 진입(화살표 없음)과 같은 높이(유성 2026-06-25 PIN변경 화면) */
   /* ⚠️ 키보드 뜰 때 위여백 축소(64→16)는 폐기 — 입력 누르면 전체 텍스트가 위로 '뿅' 점프, 흰 바탕 누르면 다시 내려가 불편(유성 실기기 2026-06-25). 위여백 고정(점프 없음). §5.5 ⓕ 폐기. */
   html:has(#s-signup1 input:focus),html:has(#s-signup2 input:focus),html:has(#s-gclient input:focus){overflow:hidden;}   /* 적은-칸 화면=키보드 뜰 때 스크롤 잠금=고정(스크롤바 없음). 입력이 footbar 위에 다 들어감(§5.5 ⓗ) */
   /* 많은-칸 입력화면(textarea가 키보드에 가려짐)=헤더(뒤로·제목) 고정 + 입력영역만 스크롤 — §5.5 ⓗ. 키보드 down=일반 흐름(viewport 높이 가득), up=resizes-content가 dvh 줄여 입력영역만 줄어듦 */
