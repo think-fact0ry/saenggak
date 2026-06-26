@@ -644,8 +644,9 @@ function getDevice(){
 // 기기 표시명(종류·OS) — 마이페이지 '로그인된 기기'용. 정확한 모델명은 브라우저가 안 줌(개인정보) → 종류+OS까지.
 function deviceLabel(){
   var ua = navigator.userAgent || "";
-  var type = /iPad|Tablet|PlayBook|Silk|Galaxy Tab/i.test(ua) ? "태블릿" : (/Mobi|Android|iPhone|iPod/i.test(ua) ? "모바일" : "데스크탑");
-  var os = /iPad/i.test(ua) ? "아이패드" : /iPhone|iPod/i.test(ua) ? "아이폰" : /Android/i.test(ua) ? "안드로이드" : /Windows/i.test(ua) ? "윈도우" : /Mac/i.test(ua) ? "맥" : "";
+  var iPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;   // iPadOS 13+ = 데스크탑 Mac UA로 위장 → 터치점으로 식별
+  var type = (iPadOS || /iPad|Tablet|PlayBook|Silk|Galaxy Tab/i.test(ua)) ? "태블릿" : (/Mobi|Android|iPhone|iPod/i.test(ua) ? "모바일" : "데스크탑");
+  var os = (iPadOS || /iPad/i.test(ua)) ? "아이패드" : /iPhone|iPod/i.test(ua) ? "아이폰" : /Android/i.test(ua) ? "안드로이드" : /Windows/i.test(ua) ? "윈도우" : /Mac/i.test(ua) ? "맥" : "";
   return os ? (type + " · " + os) : type;
 }
 async function sha256(str){

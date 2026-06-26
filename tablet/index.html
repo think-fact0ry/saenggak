@@ -200,6 +200,7 @@
   .mp-dev{display:flex; align-items:center; gap:12px; width:100%; font-family:inherit; text-align:left; padding:15px 18px; background:#fff; border:none; border-bottom:1.5px solid var(--g100); cursor:pointer;}
   .mp-dev:last-child{border-bottom:none;}
   .mp-dev:active{background:var(--g100);}
+  .mp-dev.ro{cursor:default;} .mp-dev.ro:active{background:#fff;}   /* 기기id 없는 레거시 슬롯 = 별명 못 붙임 → 탭 불가 표시 */
   .mp-dev .di{color:var(--g500); display:flex; flex-shrink:0;} .mp-dev .di svg{width:22px; height:22px;}
   .mp-dev .dmain{flex:1; min-width:0;}
   .mp-dev .dn{font-size:15px; font-weight:600; color:var(--g900); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -678,11 +679,13 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
       var lab = d.l || (d.current ? deviceLabelLocal() : '기기');   // 현재 기기는 라벨 없으면 로컬 산출(배포 전 세션도 정확)
       var name = d.n ? d.n : lab;                                    // 별명 있으면 별명이 주, 라벨은 부제
       var sub = d.n ? lab : '';
-      return '<button class="mp-dev" data-i="'+i+'"><span class="di">'+iconFor(lab)+'</span>'
+      var nameable = !!d.d;   // 기기id 없는 레거시 슬롯은 별명 못 붙임(서버가 슬롯 못 찾음) → 행을 탭 불가로
+      var tag = nameable ? 'button' : 'div';
+      return '<'+tag+' class="mp-dev'+(nameable?'':' ro')+'"'+(nameable?' data-i="'+i+'"':'')+'><span class="di">'+iconFor(lab)+'</span>'
         +'<span class="dmain"><span class="dn">'+escHtml(name)+'</span>'+(sub?'<span class="dsub">'+escHtml(sub)+'</span>':'')+'</span>'
-        +(d.current?'<span class="dc">이 기기</span>':'')+'<span class="dedit">'+EDIT_SVG+'</span></button>';
+        +(d.current?'<span class="dc">이 기기</span>':'')+(nameable?'<span class="dedit">'+EDIT_SVG+'</span>':'')+'</'+tag+'>';
     }).join('');
-    Array.prototype.forEach.call(box.querySelectorAll('.mp-dev'), function(el){
+    Array.prototype.forEach.call(box.querySelectorAll('.mp-dev[data-i]'), function(el){
       el.onclick = function(){ openRename(parseInt(el.getAttribute('data-i'),10)); };
     });
   }
@@ -715,7 +718,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     var r; try{ r=await rpc('mypage_device_rename',{device:d.d, nick:nick}); }catch(e){ r={ok:false}; }
     drBusy=false; $('drBtn').disabled=false;
     if(r&&r.ok){ d.n=r.nick||''; renderDevices(); hideScreen('mpDevRename'); }
-    else { $('drNote').className='ed-note err'; $('drNote').textContent=(r&&r.error)||'잠시 후 다시 시도해 주세요'; }
+    else { $('drNote').className='ed-note err'; $('drNote').textContent=(r&&r.error)||'잠시 후 다시 시도해 주세요'; if(r&&r.code==='gone') loadDevices(); }   // 로그아웃·만료로 사라진 기기 = 목록 새로고침(뒤로가면 최신)
   };
   $('mpOpen').onclick = openMypage;
   $('mpClose').onclick = navBack;
