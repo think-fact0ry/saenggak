@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <title>사전사후검사 — 생각공작소</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
@@ -111,6 +111,48 @@
   .list-card .lc-meta .lc-draw{display:block;color:var(--green-d);font-weight:700;}
   .list-empty{text-align:center;color:var(--g500);font-size:14.5px;padding:40px 16px;line-height:1.6;}
 
+  /* ===== 등록폼: 토스식 입력(라벨·밑줄·X·그린캐럿) — docs §5.5 / 상담일지 signup 복제 ===== */
+  #s-register .wrap{padding-top:64px;padding-bottom:120px;position:relative;}   /* footbar 가림 방지 + §5.6-6 위 여백 */
+  #s-register .back{position:absolute;top:18px;left:22px;margin:0;}              /* 화살표가 제목 안 밀게(§5.6-6) */
+  html:has(#s-register input:focus){overflow:hidden;}                            /* 적은-칸=키보드 시 스크롤 잠금=고정(§5.5 ⓗ, 위여백 고정·점프 없음) */
+  .tfield{margin-bottom:24px;}
+  .tfield label{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin:0 0 6px;transition:color .15s;}
+  .tfield.focus label{color:var(--green);}
+  .tin-wrap{position:relative;border-bottom:2px solid var(--g200);transition:border-color .15s;}
+  .tfield.focus .tin-wrap{border-color:var(--green);}
+  .tin-wrap input{width:100%;border:none;background:none;outline:none;font-family:inherit;font-size:22px;font-weight:600;color:var(--g900);padding:2px 40px 5px 0;caret-color:var(--green);}
+  .tin-wrap input::placeholder{color:var(--g300);font-weight:500;}
+  .tin-wrap .clr{position:absolute;right:0;top:8px;width:19px;height:19px;border-radius:50%;background:var(--g300);border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+  .tfield.has-val .clr{display:flex;}
+  .tin-wrap .clr svg{width:10px;height:10px;color:#fff;display:block;}
+  .reg-sex{margin-bottom:24px;}
+  .reg-sex>label{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin:0 0 8px;}
+  .reg-note{font-size:13px;color:var(--red);font-weight:600;min-height:18px;margin:2px;}
+
+  /* 하단 고정 버튼(키보드 위) — §5.5 ⓐ */
+  .footbar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:12px 22px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--g100);transition:transform .25s cubic-bezier(.2,.7,.3,1);}
+  .footbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px;}
+  .footbar .btn{width:auto;flex:1;margin-top:0;}
+  .footbar.kb{padding:0;border-top:none;transition:none;}                        /* (meta 미지원 폴백) 키보드 위로 올라가면 꽉 차게 + 즉시 추종 */
+  .footbar.kb .inner{max-width:none;gap:0;}
+  .footbar.kb .btn{border-radius:0;padding:19px;}
+  /* resizes-content 환경=visualViewport로 키보드 감지 안 됨 → 입력 포커스면 :has로 footbar 꽉 차게(§5.5 ⓐ) */
+  .screen:has(input:focus,textarea:focus) .footbar{padding:0;border-top:none;transition:none;}
+  .screen:has(input:focus,textarea:focus) .footbar .inner{max-width:none;gap:0;}
+  .screen:has(input:focus,textarea:focus) .footbar .btn{border-radius:0;padding:19px;}
+
+  /* ===== 아동 상세: 검사 종류 카드 / 사정·사후 선택 ===== */
+  .sec-h{font-size:14px;font-weight:700;color:var(--g700);margin:26px 2px 12px;}
+  .type-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:18px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer;font-family:inherit;transition:.12s;}
+  .type-card:active{border-color:var(--green);background:var(--green-l);}
+  .type-card.soon{opacity:.55;cursor:default;box-shadow:none;}
+  .type-card .tc-name{font-size:16px;font-weight:700;color:var(--g900);}
+  .type-card .tc-sub{font-size:13px;color:var(--g500);margin-top:2px;font-weight:500;}
+  .pick-card{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer;font-family:inherit;transition:.12s;}
+  .pick-card:active{border-color:var(--green);background:var(--green-l);}
+  .pick-card .pc-name{font-size:18px;font-weight:700;color:var(--g900);}
+  .pick-card .pc-sub{font-size:13.5px;color:var(--g500);margin-top:4px;font-weight:500;}
+
   @media print{
     @page{size:A4 landscape;margin:8mm;}
     body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -132,24 +174,86 @@
   </div>
 </div>
 
-<!-- ===== 허브 ①: 이용자 목록 ===== -->
+<!-- ===== 허브 ①: 등록 아동 목록 ===== -->
 <div class="screen active" id="s-clients">
   <div class="wrap">
     <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
     <h1>심리검사</h1>
-    <button class="btn" id="newClient">새 아이 검사하기</button>
+    <button class="btn" id="newClient">새 아이 등록하기</button>
     <div id="clientList" style="margin-top:20px;"></div>
   </div>
 </div>
 
-<!-- ===== 허브 ②: 검사 이력 ===== -->
-<div class="screen" id="s-history">
+<!-- ===== 등록폼: 아이 등록(이름·생년월일·연락처·성별) — 검사는 다음 단계 ===== -->
+<div class="screen" id="s-register">
   <div class="wrap">
-    <button class="back noprint" id="histBack" aria-label="목록으로">‹</button>
-    <h1 id="histName">검사 이력</h1>
-    <p class="sub" id="histSub"></p>
-    <button class="btn" id="newExam">이 아이 새 검사하기</button>
-    <div id="historyList" style="margin-top:20px;"></div>
+    <button class="back noprint" id="regBack" aria-label="뒤로">‹</button>
+    <h1>새 아이 등록</h1>
+    <div class="tfield" id="rf-name">
+      <label for="reg-name">이름</label>
+      <div class="tin-wrap">
+        <input id="reg-name" type="text" placeholder="홍길동" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+        <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <div class="tfield" id="rf-birth">
+      <label for="reg-birth">생년월일</label>
+      <div class="tin-wrap">
+        <input id="reg-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+        <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <div class="tfield" id="rf-phone">
+      <label for="reg-phone">보호자 연락처</label>
+      <div class="tin-wrap">
+        <input id="reg-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+        <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <div class="reg-sex">
+      <label>성별</label>
+      <div class="toggle" id="reg-sex">
+        <button type="button" data-v="남">남</button>
+        <button type="button" data-v="여">여</button>
+      </div>
+    </div>
+    <div class="reg-note" id="regNote"></div>
+  </div>
+  <div class="footbar noprint"><div class="inner"><button class="btn" id="regBtn" disabled>등록하기</button></div></div>
+</div>
+
+<!-- ===== 아동 상세: 검사 종류(확장 슬롯) + 지난 검사 이력 ===== -->
+<div class="screen" id="s-child">
+  <div class="wrap">
+    <button class="back noprint" id="childBack" aria-label="목록으로">‹</button>
+    <h1 id="childName">아이</h1>
+    <p class="sub" id="childSub"></p>
+
+    <div class="sec-h">검사하기</div>
+    <button class="type-card" id="tc-ogam">
+      <div><div class="tc-name">오감 발달검사</div><div class="tc-sub">강점·난점(SDQ) · 주의력(K-ARS)</div></div>
+    </button>
+    <div class="type-card soon"><div><div class="tc-name">다른 검사</div><div class="tc-sub">준비 중이에요</div></div></div>
+
+    <div class="sec-h">지난 검사</div>
+    <div id="childHistory"></div>
+  </div>
+</div>
+
+<!-- ===== 사정/사후 선택 ===== -->
+<div class="screen" id="s-pick">
+  <div class="wrap">
+    <button class="back noprint" id="pickBack" aria-label="뒤로">‹</button>
+    <h1>오감 발달검사</h1>
+    <p class="sub" id="pickSub"></p>
+    <button class="pick-card" id="pick-pre">
+      <div class="pc-name">사정 평가</div>
+      <div class="pc-sub">처음 검사예요. 지금 상태를 기록해요.</div>
+    </button>
+    <button class="pick-card" id="pick-post">
+      <div class="pc-name">사후 평가</div>
+      <div class="pc-sub">개입한 뒤 다시 검사해 사정 평가와 견줘요.</div>
+    </button>
   </div>
 </div>
 
@@ -164,48 +268,10 @@
   </div>
 </div>
 
-<!-- ===== 화면 1: 시작/아동정보 ===== -->
-<div class="screen" id="s-intro">
-  <div class="wrap">
-    <button class="back noprint" id="introBack" aria-label="뒤로">‹</button>
-    <h1>사전사후검사</h1>
-    <p class="sub">아이의 강점·난점(SDQ)과 주의력(K-ARS)을 살펴봐요. 보호자님이 평소 모습을 떠올리며 답해 주세요.</p>
-
-    <div class="field">
-      <label>아이 이름</label>
-      <input id="f-name" type="text" placeholder="홍길동" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>생년월일</label>
-      <input id="f-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off">
-    </div>
-    <div class="field" id="field-sex">
-      <label>성별</label>
-      <div class="toggle" id="f-sex">
-        <button type="button" data-v="남">남</button>
-        <button type="button" data-v="여">여</button>
-      </div>
-    </div>
-    <div class="field" id="field-phone">
-      <label>보호자 연락처</label>
-      <input id="f-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>평가 종류</label>
-      <div class="toggle" id="f-type">
-        <button type="button" data-v="사정" class="on">사정평가</button>
-        <button type="button" data-v="사후">사후평가</button>
-      </div>
-    </div>
-
-    <button class="btn" id="toSdq">검사 시작</button>
-  </div>
-</div>
-
 <!-- ===== 화면 2: SDQ ===== -->
 <div class="screen" id="s-sdq">
   <div class="wrap">
-    <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
+    <button class="back noprint" id="sdqBack" aria-label="뒤로">‹</button>
     <div class="progress noprint">
       <div class="bar"><div class="fill" id="sdqFill"></div></div>
       <div class="lbl"><span>강점·난점 설문지 (SDQ-kr)</span><span id="sdqCount">0 / 25</span></div>
@@ -220,7 +286,7 @@
 <!-- ===== 화면 3: K-ARS ===== -->
 <div class="screen" id="s-kars">
   <div class="wrap">
-    <a class="back noprint" href="./index.html" aria-label="홈으로">‹</a>
+    <button class="back noprint" id="karsBack" aria-label="뒤로">‹</button>
     <div class="progress noprint">
       <div class="bar"><div class="fill" id="karsFill"></div></div>
       <div class="lbl"><span>ADHD 평가척도 (K-ARS)</span><span id="karsCount">0 / 18</span></div>
@@ -301,53 +367,65 @@ const KARS_OPTS = ["전혀 그렇지 않다","때때로 그렇다","자주 그�
 const sdqAns = new Array(25).fill(null);
 const karsAns = new Array(18).fill(null);
 
-// ===== 상태 입력 =====
-const state = {sex:"", type:"사정", prefilled:false};   // prefilled=돌아온 이용자(이름+생년월일로 식별 → 성별·연락처 생략)
+// ===== 상태 =====
+const state = {sex:""};        // 등록폼 성별
+let activeChild = null;        // 검사/이력 중인 아이 {name, birth8, sex, phone}
+let activeDraw  = "사전";       // 이 검사의 차수(사정/사후) — s-pick에서 정함
 
 function bindToggle(id, key){
   document.querySelectorAll("#"+id+" button").forEach(b=>{
     b.onclick=()=>{
       document.querySelectorAll("#"+id+" button").forEach(x=>x.classList.remove("on"));
-      b.classList.add("on"); state[key]=b.dataset.v; validateIntro();
+      b.classList.add("on"); state[key]=b.dataset.v; validateRegister();
     };
   });
 }
-bindToggle("f-sex","sex");
-bindToggle("f-type","type");
+bindToggle("reg-sex","sex");
 
-// 생년월일 자동서식 — 다 채우면 키패드 닫힘(고치러 다시 연 경우엔 안 닫음). 상담일지 bindDate와 동일 규칙(원칙 §5)
-const birth=document.getElementById("f-birth");
+// 토스식 입력 동작: 포커스 라벨/밑줄 + 우측 X + 값 채워짐(docs §5.5) — 상담일지 setupTField 복제
+function setupTField(tf){
+  const inp=tf.querySelector("input"), clr=tf.querySelector(".clr");
+  const upd=()=>tf.classList.toggle("has-val", inp.value.length>0);
+  inp.addEventListener("focus",()=>{ inp.removeAttribute("readonly"); tf.classList.add("focus"); });   // readonly 해제=자동완성 차단 후 입력
+  inp.addEventListener("blur",()=>tf.classList.remove("focus"));
+  inp.addEventListener("input",upd);
+  clr.addEventListener("click",()=>{ inp.value=""; inp.dispatchEvent(new Event("input")); inp.focus(); });   // 비우고 검증·서식·has-val 재실행 + 포커스 유지
+  upd();
+}
+["rf-name","rf-birth","rf-phone"].forEach(id=>setupTField(document.getElementById(id)));
+
+// 생년월일 자동서식 — 다 채우면 키패드 닫힘(고치러 다시 연 경우엔 안 닫음, 원칙 §5.5)
+const birth=document.getElementById("reg-birth");
 birth.addEventListener("focus",()=>{ birth._wasFull = birth.value.replace(/\D/g,"").length>=8; });
-birth.oninput=()=>{
+birth.addEventListener("input",()=>{
   let d=birth.value.replace(/\D/g,"").slice(0,8);
   let out=d.slice(0,4);
   if(d.length>4) out+=". "+d.slice(4,6);
   if(d.length>6) out+=". "+d.slice(6,8);
-  birth.value=out; validateIntro();
+  birth.value=out; validateRegister();
   if(d.length===8 && !birth._wasFull) birth.blur();
-};
+});
 // 전화 자동 하이픈 — 동일 규칙
-const phone=document.getElementById("f-phone");
+const phone=document.getElementById("reg-phone");
 phone.addEventListener("focus",()=>{ phone._wasFull = phone.value.replace(/\D/g,"").length>=11; });
-phone.oninput=()=>{
+phone.addEventListener("input",()=>{
   let d=phone.value.replace(/\D/g,"").slice(0,11);
   if(d.length<4) phone.value=d;
   else if(d.length<8) phone.value=d.slice(0,3)+"-"+d.slice(3);
   else phone.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7);
-  validateIntro();
+  validateRegister();
   if(d.length===11 && !phone._wasFull) phone.blur();
-};
-document.getElementById("f-name").oninput=validateIntro;
+});
+document.getElementById("reg-name").addEventListener("input",validateRegister);
 
-function validateIntro(){
-  const baseOk = document.getElementById("f-name").value.trim()
-    && birth.value.replace(/\D/g,"").length===8;
-  // 새 이용자=전체(성별·연락처까지) 기록 / 돌아온 이용자(prefilled)=이름+생년월일로 식별되니 그 둘만
-  const ok = state.prefilled ? baseOk
-    : (baseOk && state.sex && phone.value.replace(/\D/g,"").length>=10);
-  document.getElementById("toSdq").disabled=!ok;
+function validateRegister(){
+  const ok = document.getElementById("reg-name").value.trim()
+    && birth.value.replace(/\D/g,"").length===8
+    && state.sex
+    && phone.value.replace(/\D/g,"").length>=10;
+  document.getElementById("regBtn").disabled=!ok;
 }
-validateIntro();
+validateRegister();
 
 // ===== 문항 렌더 =====
 function renderQuestions(listId, items, opts, ansArr, onChange){
@@ -397,11 +475,11 @@ function firstUnanswered(listId, arr){
 
 // ===== 화면 전환 =====
 function show(id){
+  document.querySelectorAll(".footbar").forEach(f=>{ f.style.transform=""; f.classList.remove("kb"); });   // 키보드 올린 채 전환 시 잔류 방지
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   window.scrollTo(0,0);
 }
-document.getElementById("toSdq").onclick=()=>{ show("s-sdq"); };
 document.getElementById("toKars").onclick=()=>{
   if(firstUnanswered("sdqList",sdqAns)>=0) return;
   show("s-kars");
@@ -468,10 +546,10 @@ const J=(t)=>t==="개입필요"?` class="judge danger"`:"";
 //  opts = { name, s:{social..total}, k:{ia,hi,total}, isPre, prev:{"SDQ-kr":{subscores,total},"K-ARS":{..}}|null, target }
 function renderReport(opts){
   opts = opts || {};
-  const name = (opts.name != null) ? opts.name : document.getElementById("f-name").value.trim();
+  const name = (opts.name != null) ? opts.name : (activeChild ? activeChild.name : "");
   const s = opts.s || scoreSDQ(sdqAns);
   const k = opts.k || scoreKARS(karsAns);
-  const isPre = (opts.isPre != null) ? opts.isPre : (state.type==="사정");
+  const isPre = (opts.isPre != null) ? opts.isPre : (activeDraw==="사전");
   const prev = (opts.prev !== undefined) ? opts.prev : prevData;
   const target = opts.target || "resultDoc";
   const hasPrev = !isPre && !!prev;
@@ -590,12 +668,12 @@ const MOCK_PREV = { "SDQ-kr":{subscores:{social:4,hyper:8,emotion:6,conduct:4,pe
 function getStaffSess(){ try{ return JSON.parse(localStorage.getItem("tf_staff_v1")||"null"); }catch(e){ return null; } }
 function fetchPrev(){
   return new Promise(resolve=>{
-    if(state.type!=="사후"){ resolve(null); return; }                    // 사정(사전)=비교 대상 없음
+    if(activeDraw!=="사후"){ resolve(null); return; }                    // 사정(사전)=비교 대상 없음
     if(DEMO){ resolve(MOCK_PREV); return; }                              // 데모=목 사전데이터로 미리보기
     const sess=getStaffSess();
-    if(!sess||!sess.staffId||!sess.session){ resolve(null); return; }     // 제공인력 신원 없는 기기=단회
+    if(!sess||!sess.staffId||!sess.session||!activeChild){ resolve(null); return; }   // 제공인력 신원 없는 기기=단회
     const body={ action:"exam_prev", staffId:sess.staffId, session:sess.session,
-      child:{ name:document.getElementById("f-name").value.trim(), birth:document.getElementById("f-birth").value },
+      child:{ name:activeChild.name, birth:activeChild.birth8 },
       by:"보호자", tools:["SDQ-kr","K-ARS"] };
     fetch(GAS_EXEC,{method:"POST",body:JSON.stringify(body)})
       .then(r=>r.json())
@@ -621,15 +699,15 @@ function instrumentVer(items, opts){
 
 function buildPayload(){
   const s=scoreSDQ(sdqAns), k=scoreKARS(karsAns);
-  const draw = state.type==="사후" ? "사후" : "사전";   // 사정평가 = 사전
+  const c = activeChild || {};
   return {
     child:{
-      name: document.getElementById("f-name").value.trim(),
-      birth: document.getElementById("f-birth").value,   // 서버가 숫자만 추출(8자리)
-      sex: state.sex,
-      phone: document.getElementById("f-phone").value
+      name: c.name || "",
+      birth: c.birth8 || "",   // 서버가 숫자만 추출(8자리)
+      sex: c.sex || "",
+      phone: c.phone || ""
     },
-    service:"오감", draw, by:"보호자", via:"태블릿", "실시일시": examStamp,
+    service:"오감", draw: activeDraw, by:"보호자", via:"태블릿", "실시일시": examStamp,
     tools:[
       { tool:"SDQ-kr", toolVer: instrumentVer(SDQ_ITEMS, SDQ_OPTS), scoreVer:"sdq-kr-v1",
         items: SDQ_ITEMS, opts: SDQ_OPTS,        // 문항 고치면 toolVer 자동 변경(내용 해시) → 옛 문구 보존
@@ -691,7 +769,8 @@ function drawLabel(d){ return d==='사전'?'사정 평가':(d==='사후'?'사후
 // 데모(?demo=1) mock — 신원·GAS 우회, 모바일에서 목록·이력·열람 미리보기
 const MOCK_CLIENTS=[
   {child_id:'C0001',name:'김민준',birth:'20190312',count:2,lastStamp:'2026-06-24T10:12:00',lastDraw:'사후'},
-  {child_id:'C0002',name:'이서윤',birth:'20200705',count:1,lastStamp:'2026-05-02T14:30:00',lastDraw:'사전'}
+  {child_id:'C0002',name:'이서윤',birth:'20200705',count:1,lastStamp:'2026-05-02T14:30:00',lastDraw:'사전'},
+  {child_id:'C0003',name:'박도현',birth:'20210118',count:0,lastStamp:'',lastDraw:''}   // 등록만 함(검사 전) — 등록=실존 미리보기
 ];
 const MOCK_HISTORY={
   '김민준':[
@@ -706,9 +785,7 @@ const MOCK_HISTORY={
   ]
 };
 
-let examFrom='clients';                 // s-intro 진입 출처(뒤로가기 라우팅)
-let currentClient=null;                 // 이력/열람 중인 이용자 {name,birth}
-let historyResults=[], sittings=[];     // 이력(도구별 행) / 실시 단위로 묶음
+let childResults=[], sittings=[];     // 이력(도구별 행) / 실시(SDQ+K-ARS 한 번) 단위로 묶음
 
 // staffId+세션 첨부 POST
 function hubPost(body){
@@ -718,7 +795,7 @@ function hubPost(body){
   return fetch(GAS_EXEC,{method:"POST",body:JSON.stringify(body)}).then(r=>r.json());
 }
 
-// ① 이용자 목록
+// ── ① 등록 아동 목록 ──────────────────────────────────────
 function showClients(){
   show('s-clients');
   const box=document.getElementById('clientList');
@@ -734,29 +811,71 @@ function showClients(){
 }
 function renderClients(clients){
   const box=document.getElementById('clientList');
-  if(!clients.length){ box.innerHTML='<div class="list-empty">아직 검사한 아이가 없어요.<br>위에서 새 검사를 시작해요.</div>'; return; }
+  if(!clients.length){ box.innerHTML='<div class="list-empty">아직 등록한 아이가 없어요.<br>위에서 새 아이를 등록해요.</div>'; return; }
   box.innerHTML='';
   clients.forEach(c=>{
     const card=document.createElement('button');
     card.className='list-card';
-    card.innerHTML=`<div class="lc-main"><div class="lc-name">${esc(c.name)}</div><div class="lc-sub">${fmtBirthDisp(c.birth)}</div></div>`
-      +`<div class="lc-meta"><span class="lc-draw">${drawLabel(c.lastDraw)}</span>검사 ${c.count}회 · ${fmtDateDisp(c.lastStamp)}</div>`;
-    card.onclick=()=>openHistory(c.name,c.birth);
+    const meta = c.count>0
+      ? `<div class="lc-meta"><span class="lc-draw">${drawLabel(c.lastDraw)}</span>검사 ${c.count}회 · ${fmtDateDisp(c.lastStamp)}</div>`
+      : `<div class="lc-meta">검사 전</div>`;
+    card.innerHTML=`<div class="lc-main"><div class="lc-name">${esc(c.name)}</div><div class="lc-sub">${fmtBirthDisp(c.birth)}</div></div>`+meta;
+    card.onclick=()=>openChild(c.name,c.birth);
     box.appendChild(card);
   });
 }
 
-// ② 검사 이력
-function openHistory(name,birth){
-  currentClient={name:name, birth:String(birth||'').replace(/\D/g,'').slice(0,8)};
-  document.getElementById('histName').textContent=name;
-  document.getElementById('histSub').textContent=fmtBirthDisp(currentClient.birth);
-  show('s-history');
-  const box=document.getElementById('historyList');
-  if(DEMO){ historyResults=MOCK_HISTORY[name]||[]; sittings=groupSittings(historyResults); renderHistory(); return; }
+// ── 새 아이 등록(폼 초기화 후 진입 → 등록 저장 → 아동 화면) ──
+function startRegister(){
+  document.getElementById('reg-name').value='';
+  document.getElementById('reg-birth').value='';
+  document.getElementById('reg-phone').value='';
+  state.sex='';
+  document.querySelectorAll('#reg-sex button').forEach(b=>b.classList.remove('on'));
+  ['rf-name','rf-birth','rf-phone'].forEach(id=>document.getElementById(id).classList.remove('has-val','focus'));
+  document.getElementById('regNote').textContent='';
+  validateRegister();
+  show('s-register'); window.scrollTo(0,0);
+}
+let regBusy=false;
+function submitRegister(){
+  if(regBusy) return;
+  const name=document.getElementById('reg-name').value.trim();
+  const birth8=document.getElementById('reg-birth').value.replace(/\D/g,'').slice(0,8);
+  const sex=state.sex;
+  const phone=document.getElementById('reg-phone').value.replace(/\D/g,'');
+  if(!name||birth8.length!==8||!sex||phone.length<10) return;
+  const child={name:name, birth8:birth8, sex:sex, phone:phone};
+  if(DEMO){ activeChild=child; openChild(name,birth8); return; }   // 데모=GAS 미호출, 바로 아동 화면
+  const sess=getStaffSess();
+  if(!sess||!sess.staffId||!sess.session){ show('s-gate'); return; }
+  const note=document.getElementById('regNote'); note.textContent='';
+  regBusy=true; const btn=document.getElementById('regBtn'); btn.disabled=true; btn.textContent='등록 중…';   // 더블탭 가드(§5.6-3)
+  hubPost({action:'register', child:{name:name, birth:birth8, sex:sex, phone:phone}}).then(d=>{
+    regBusy=false; btn.textContent='등록하기';
+    if(d&&d.ok){ activeChild=child; openChild(name,birth8); }
+    else if(d&&d.code==='auth'){ show('s-gate'); }
+    else { btn.disabled=false; note.textContent=(d&&d.error)||'등록에 실패했어요. 잠시 후 다시 시도해 주세요.'; }
+  }).catch(()=>{ regBusy=false; btn.textContent='등록하기'; btn.disabled=false; note.textContent='등록에 실패했어요. 잠시 후 다시 시도해 주세요.'; });
+}
+
+// ── ② 아동 상세(검사 종류 + 지난 검사 이력) ─────────────────
+function openChild(name,birth){
+  const b8=String(birth||'').replace(/\D/g,'').slice(0,8);
+  if(!activeChild || activeChild.name!==name || activeChild.birth8!==b8){   // 같은 아이면 성별·전화 보존
+    activeChild={name:name, birth8:b8, sex:'', phone:''};
+  }
+  document.getElementById('childName').textContent=name;
+  document.getElementById('childSub').textContent=fmtBirthDisp(b8);
+  show('s-child');
+  loadChildHistory(name,b8);
+}
+function loadChildHistory(name,b8){
+  const box=document.getElementById('childHistory');
+  if(DEMO){ childResults=MOCK_HISTORY[name]||[]; sittings=groupSittings(childResults); renderChildHistory(); return; }
   box.innerHTML='<div class="list-empty">불러오는 중…</div>';
-  hubPost({action:'exam_history', child:{name:name, birth:currentClient.birth}}).then(d=>{
-    if(d&&d.ok){ historyResults=d.results||[]; sittings=groupSittings(historyResults); renderHistory(); }
+  hubPost({action:'exam_history', child:{name:name, birth:b8}}).then(d=>{
+    if(d&&d.ok){ childResults=d.results||[]; sittings=groupSittings(childResults); renderChildHistory(); }
     else if(d&&d.code==='auth'){ show('s-gate'); }
     else box.innerHTML='<div class="list-empty">이력을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
   }).catch(()=>{ box.innerHTML='<div class="list-empty">이력을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>'; });
@@ -771,9 +890,9 @@ function groupSittings(results){
   });
   return Object.keys(by).map(k=>by[k]).sort((a,b)=> a.stamp<b.stamp?-1:(a.stamp>b.stamp?1:0));
 }
-function renderHistory(){
-  const box=document.getElementById('historyList');
-  if(!sittings.length){ box.innerHTML='<div class="list-empty">아직 검사 기록이 없어요.<br>위에서 새 검사를 시작해요.</div>'; return; }
+function renderChildHistory(){
+  const box=document.getElementById('childHistory');
+  if(!sittings.length){ box.innerHTML='<div class="list-empty">아직 검사 기록이 없어요.</div>'; return; }
   box.innerHTML='';
   sittings.forEach((st,idx)=>{
     const tools=Object.keys(st.tools).join(' · ');
@@ -786,7 +905,24 @@ function renderHistory(){
   });
 }
 
-// ③ 결과 열람 — 저장 점수로 결과지 재렌더(즉석 채점 아님). 사후면 같은 child의 '사전' 실시 대비 델타.
+// ── 검사 종류 → 사정/사후 선택 → 검사 실행 ───────────────────
+function openPick(){
+  if(!activeChild) return;
+  document.getElementById('pickSub').textContent=activeChild.name+' · '+fmtBirthDisp(activeChild.birth8);
+  show('s-pick');
+}
+function startTest(draw){
+  activeDraw=draw;
+  for(let i=0;i<sdqAns.length;i++) sdqAns[i]=null;
+  for(let i=0;i<karsAns.length;i++) karsAns[i]=null;
+  renderQuestions("sdqList",SDQ_ITEMS,SDQ_OPTS,sdqAns,updateSdq);
+  renderQuestions("karsList",KARS_ITEMS,KARS_OPTS,karsAns,updateKars);
+  updateSdq(); updateKars();
+  examStamp=''; _saved=false; prevData=null;
+  show('s-sdq'); window.scrollTo(0,0);
+}
+
+// ── ③ 결과 열람 — 저장 점수로 재렌더(즉석 채점 아님). 사후면 같은 child의 '사전' 실시 대비 델타. ──
 function openView(idx){
   const st=sittings[idx]; if(!st) return;
   const sdq=st.tools['SDQ-kr'], kars=st.tools['K-ARS'];
@@ -804,56 +940,41 @@ function openView(idx){
       if(base.tools['K-ARS'])  prev['K-ARS'] ={subscores:base.tools['K-ARS'].subscores,  total:base.tools['K-ARS'].total};
     }
   }
-  renderReport({ name: currentClient?currentClient.name:'', s:s, k:k, isPre:isPre, prev:prev, target:'viewDoc' });
+  renderReport({ name: activeChild?activeChild.name:'', s:s, k:k, isPre:isPre, prev:prev, target:'viewDoc' });
   show('s-view');
 }
 
-// 새 검사 시작 — 폼 초기화 후 진입
-function resetForm(){
-  document.getElementById('f-name').value='';
-  document.getElementById('f-birth').value='';
-  document.getElementById('f-phone').value='';
-  state.sex=''; state.type='사정'; state.prefilled=false;
-  document.getElementById('field-sex').style.display='';      // 새 이용자=성별·연락처 칸 보임(전체 기록)
-  document.getElementById('field-phone').style.display='';
-  document.querySelectorAll('#f-sex button').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('#f-type button').forEach(b=>b.classList.toggle('on', b.dataset.v==='사정'));
-  for(let i=0;i<sdqAns.length;i++) sdqAns[i]=null;
-  for(let i=0;i<karsAns.length;i++) karsAns[i]=null;
-  renderQuestions("sdqList",SDQ_ITEMS,SDQ_OPTS,sdqAns,updateSdq);
-  renderQuestions("karsList",KARS_ITEMS,KARS_OPTS,karsAns,updateKars);
-  updateSdq(); updateKars();
-  examStamp=''; _saved=false; prevData=null;
-  validateIntro();
+// ── 키보드 위 액션 버튼(KeyboardAboveView 폴백, 비-resizes-content 기기) — docs §5.5 ──
+function liftActiveFooter(){
+  const fb=document.querySelector('.screen.active .footbar');
+  document.querySelectorAll('.footbar').forEach(f=>{ if(f!==fb){ f.style.transform=''; f.classList.remove('kb'); } });
+  if(!fb) return;
+  const kb = window.visualViewport ? Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop) : 0;
+  if(kb>80){ fb.style.transform='translateY('+(-kb)+'px)'; fb.classList.add('kb'); }
+  else { fb.style.transform=''; fb.classList.remove('kb'); }
 }
-function startNewClient(){
-  resetForm(); examFrom='clients';
-  show('s-intro'); window.scrollTo(0,0);
-}
-function startNewExam(name,birth){
-  resetForm();
-  document.getElementById('f-name').value=name;
-  const b8=String(birth||'').replace(/\D/g,'').slice(0,8);
-  document.getElementById('f-birth').value = b8.length===8 ? b8.slice(0,4)+'. '+b8.slice(4,6)+'. '+b8.slice(6,8) : '';
-  state.prefilled=true; examFrom='history';
-  document.getElementById('field-sex').style.display='none';    // 돌아온 이용자=이름+생년월일로 식별 → 성별·연락처 칸 숨김(불필요 칸 안 보임)
-  document.getElementById('field-phone').style.display='none';
-  state.type='사후';   // 돌아온 이용자 → 사후평가 기본(델타 의도). 필요 시 토글로 변경.
-  document.querySelectorAll('#f-type button').forEach(b=>b.classList.toggle('on', b.dataset.v==='사후'));
-  show('s-intro'); validateIntro(); window.scrollTo(0,0);
-}
+window.addEventListener('resize',liftActiveFooter);
+if(window.visualViewport){ window.visualViewport.addEventListener('resize',liftActiveFooter); window.visualViewport.addEventListener('scroll',liftActiveFooter); }
 
-// 버튼·뒤로가기 라우팅
-document.getElementById('newClient').onclick=()=>startNewClient();
-document.getElementById('newExam').onclick=()=>{ if(currentClient) startNewExam(currentClient.name,currentClient.birth); };
-document.getElementById('histBack').onclick=()=>showClients();
-document.getElementById('viewBack').onclick=()=>show('s-history');
-document.getElementById('introBack').onclick=()=>{ if(examFrom==='history') show('s-history'); else showClients(); };
+// ── 버튼·뒤로가기 라우팅 ───────────────────────────────────
+document.getElementById('newClient').onclick=()=>startRegister();
+document.getElementById('regBtn').onclick=()=>submitRegister();
+document.getElementById('regBack').onclick=()=>showClients();
+document.getElementById('childBack').onclick=()=>showClients();
+document.getElementById('tc-ogam').onclick=()=>openPick();
+document.getElementById('pickBack').onclick=()=>show('s-child');
+document.getElementById('pick-pre').onclick=()=>startTest('사전');
+document.getElementById('pick-post').onclick=()=>startTest('사후');
+document.getElementById('sdqBack').onclick=()=>{   // 답 있으면 이탈 경고(실수로 답 날아가는 것 방지)
+  const answered=document.querySelectorAll('#s-sdq .opts button.on, #s-kars .opts button.on').length>0;
+  if(answered && !confirm('지금 나가면 입력한 답이 사라져요. 나갈까요?')) return;
+  show('s-pick');
+};
+document.getElementById('karsBack').onclick=()=>show('s-sdq');
+document.getElementById('viewBack').onclick=()=>show('s-child');
 document.getElementById('viewPrint').onclick=()=>window.print();
 document.getElementById('resultBack').onclick=()=>{
-  const nm=document.getElementById('f-name').value.trim();
-  const bd=document.getElementById('f-birth').value.replace(/\D/g,'').slice(0,8);
-  if(nm && bd.length===8) openHistory(nm,bd);   // 방금 검사한 아이 이력으로(새 결과 포함)
+  if(activeChild) openChild(activeChild.name, activeChild.birth8);   // 방금 검사한 아이 상세로(새 결과 포함)
   else showClients();
 };
 
@@ -864,21 +985,6 @@ document.getElementById('resultBack').onclick=()=>{
   if(sess&&sess.staffId&&sess.session) showClients();
   else show('s-gate');
 })();
-</script>
-
-<script>
-// 검사 진행 중(질문 화면에서 답을 하나라도 골랐으면) 홈으로 나갈 때 확인 — 실수로 답 날아가는 것 방지
-document.querySelectorAll('a.back').forEach(function(a){
-  a.addEventListener('click', function(e){
-    var active = document.querySelector('.screen.active');
-    if (!active) return;
-    var onTest = (active.id === 's-sdq' || active.id === 's-kars');
-    var answered = document.querySelectorAll('#s-sdq .opts button.on, #s-kars .opts button.on').length > 0;
-    if (onTest && answered && !confirm('지금 나가면 입력한 답이 사라져요. 나갈까요?')) {
-      e.preventDefault();
-    }
-  });
-});
 </script>
 </body>
 </html>
