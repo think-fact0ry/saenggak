@@ -251,10 +251,10 @@ async function pSearchChild(){
 
 // ════════════ 행정 모드 ════════════
 function initAdmin(){
-  const ny = new Date().getFullYear();
+  const ny = new Date().getFullYear(), nm = new Date().getMonth()+1;
   const yearOpts = [ny, ny-1, ny-2].map(y=>'<option value="'+y+'">'+y+'년</option>').join('');
   let monthOpts = '<option value="">전체 월</option>';
-  for(let m=1;m<=12;m++) monthOpts += '<option value="'+m+'">'+m+'월</option>';
+  for(let m=1;m<=12;m++) monthOpts += '<option value="'+m+'"'+(m===nm?' selected':'')+'>'+m+'월</option>'; // 기본=당월
 
   $('seg').innerHTML = '<button class="active" data-tab="prov">제공인력별</button><button data-tab="child">아동별 검색</button>';
   $('controls').innerHTML =
