@@ -49,6 +49,7 @@
   td.name{font-weight:600;}
   td.amount{text-align:right;padding-right:12px;font-variant-numeric:tabular-nums;}
   .pay-red{color:var(--red);font-weight:700;}
+  .pay-bold{font-weight:700;}
   .row-gap td{border:none;height:8px;background:#fff;padding:0;}
 
   .state{text-align:center;padding:48px 20px;color:var(--g500);font-size:14.5px;}
@@ -127,7 +128,7 @@ if(MODE === 'admin'){ $('who').textContent = '행정'; $('who').classList.add('a
 else { $('who').textContent = ((sess && sess.name) ? sess.name : '') + ' 선생님'; }
 
 let latestUpdate = '';
-function payClass(t){ return (t==='소급'||t==='취소')?'pay-red':''; }
+function payClass(t){ if(t==='소급'||t==='취소') return 'pay-red'; if(t==='보강') return 'pay-bold'; return ''; }
 function dispType(t){ return t==='보강'?'-보강':t; }
 function loadingHTML(text){ return '<div class="state">'+text+'<span class="ld-dots"><i></i><i></i><i></i></span></div>'; }
 
@@ -180,7 +181,7 @@ function initProvider(){
   $('seg').innerHTML = '<button class="active" data-tab="month">월별 전체</button><button data-tab="child">아동별 검색</button>';
   $('controls').innerHTML =
     '<div class="row" id="monthControls"><select id="yearSel"></select><select id="monthSel"></select></div>'+
-    '<div class="row" id="childControls" style="display:none;"><input class="search-in" type="text" id="childInput" placeholder="아동 이름 (전체 입력)"><button class="search-btn" id="childBtn">검색</button></div>';
+    '<div class="row" id="childControls" style="display:none;"><input class="search-in" type="text" id="childInput" placeholder="아동 이름"><button class="search-btn" id="childBtn">검색</button></div>';
   $('resultWrap').innerHTML = loadingHTML('불러오는 중');
 
   bindSeg(tab=>{
@@ -211,7 +212,17 @@ async function loadAllData(){
   const years=[...new Set(availableMonths.map(m=>m.year))].sort((a,b)=>b-a);
   const ys=$('yearSel'); ys.innerHTML='';
   years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y+'년'; ys.appendChild(o); });
-  updateMonthSelect(); renderMonthView();
+  updateMonthSelect(); setDefaultMonth(); renderMonthView();
+}
+// 기본 선택 = 이번 달(가용하면), 없으면 updateMonthSelect의 최신 유지
+function setDefaultMonth(){
+  const ny=new Date().getFullYear(), nm=new Date().getMonth()+1;
+  const years=[...new Set(availableMonths.map(m=>m.year))];
+  if(years.indexOf(ny)>=0){
+    $('yearSel').value=ny; updateMonthSelect();
+    const months=availableMonths.filter(m=>m.year===ny).map(m=>m.month);
+    $('monthSel').value = (months.indexOf(nm)>=0)? nm : Math.max.apply(null, months);
+  }
 }
 function updateMonthSelect(){
   const year=Number($('yearSel').value); const ms=$('monthSel'); const prev=Number(ms.value); ms.innerHTML='';
@@ -251,7 +262,7 @@ function initAdmin(){
       '<div class="row"><input class="search-in" type="text" id="provInput" placeholder="제공인력 이름"></div>'+
       '<div class="row"><select id="aYear">'+yearOpts+'</select><select id="aMonth">'+monthOpts+'</select><button class="search-btn" id="provBtn">검색</button></div>'+
     '</div>'+
-    '<div class="row" id="acControls" style="display:none;"><input class="search-in" type="text" id="acInput" placeholder="아동 이름 (전체 입력)"><button class="search-btn" id="acBtn">검색</button></div>';
+    '<div class="row" id="acControls" style="display:none;"><input class="search-in" type="text" id="acInput" placeholder="아동 이름"><button class="search-btn" id="acBtn">검색</button></div>';
   $('resultWrap').innerHTML = '<div class="state">제공인력 이름과 월을 정해 검색해주세요.</div>';
 
   bindSeg(tab=>{
