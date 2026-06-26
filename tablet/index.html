@@ -12,8 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="생각공작소">
-<link rel="apple-touch-icon" href="/saenggak/apple-icon-180x180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/saenggak/android-icon-192x192.png">
+<script src="/saenggak/favicon.js"></script>
 
 <script>
 // 앱 진입 게이트 = 직원 계정 세션 필요. 없으면 상담일지 신원으로 보냄(끝나면 허브 복귀). 오류=잠그지 말고 통과(fail-open=전원 잠금 방지).
@@ -757,7 +756,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.26b';
+var APP_VERSION = '26.06.26c';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
