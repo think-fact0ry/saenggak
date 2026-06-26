@@ -516,7 +516,7 @@ function updateRoutePanel() {
 // ══ 지도 초기화 ══
 function initMap() {
   map = new kakao.maps.Map(document.getElementById('map'), { center: new kakao.maps.LatLng(37.46, 126.70), level: 7 });
-  infoWindow = new kakao.maps.InfoWindow({ zIndex: 10 });
+  infoWindow = new kakao.maps.InfoWindow({ zIndex: 50 });   // 모든 마커(센터12·검색20 등) 위 — 아이 정보창이 센터 빨간마커에 안 가리게
   kakao.maps.event.addListener(map, 'click', function() { infoWindow.close(); });
   placesService = new kakao.maps.services.Places();
   geocoder = new kakao.maps.services.Geocoder();
