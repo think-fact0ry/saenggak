@@ -300,6 +300,8 @@
              style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:14px">
       <button id="smSendBtn" onclick="smSend()"
               style="width:100%;margin-top:14px;padding:11px;border:none;background:#3a8a5f;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">인증번호 받기</button>
+      <button id="smResetBtn" onclick="smResetLogin()"
+              style="display:none;width:100%;margin-top:8px;padding:11px;border:1px solid #cfe6d8;background:#eef7f1;color:#2f6f4d;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">다른 기기 전부 로그아웃하고 이 기기 쓰기</button>
     </div>
     <div id="smStep2" style="display:none">
       <div id="smPhoneEcho" style="font-size:12px;color:#888;margin:6px 0 12px"></div>
@@ -607,22 +609,29 @@ function postPlatform(payload){
 // ── 제공인력 로그인 모달 ──
 var _smBusy = false;
 var _smPushed = false;   // 로그인 팝업이 history 1칸 점유 중인지
+var _smReset = false;    // "다른 기기 전부 로그아웃하고 이 기기 쓰기" 모드(분실폰 대비)
+function _smResetShow(on){ var b=document.getElementById('smResetBtn'); if(b) b.style.display = on?'block':'none'; }
 function _smHide(){ document.getElementById('staffModal').style.display='none'; smErr(''); }
-function staffLogin(){ document.getElementById('staffModal').style.display='flex'; smShow(1); smErr(''); _smPushed=true; try{ history.pushState({sm:1},''); }catch(e){} setTimeout(function(){ document.getElementById('smName').focus(); }, 50); }   // 열 때 history 1칸 → 스와이프 뒤로=팝업만 닫힘(페이지 유지, §5.9)
+function staffLogin(){ document.getElementById('staffModal').style.display='flex'; smShow(1); smErr(''); _smReset=false; _smResetShow(false); _smPushed=true; try{ history.pushState({sm:1},''); }catch(e){} setTimeout(function(){ document.getElementById('smName').focus(); }, 50); }   // 열 때 history 1칸 → 스와이프 뒤로=팝업만 닫힘(페이지 유지, §5.9)
 function smClose(){ if(_smPushed){ history.back(); } else { _smHide(); } }   // X·성공·스와이프 모두 popstate 경유로 통일
 window.addEventListener('popstate', function(){ if(_smPushed){ _smPushed=false; _smHide(); } });   // 뒤로가기/스와이프 = 로그인 팝업 닫기
 function smShow(step){ document.getElementById('smStep1').style.display = step===1?'':'none'; document.getElementById('smStep2').style.display = step===2?'':'none'; }
 function smErr(m){ document.getElementById('smErr').textContent = m || ''; }
-function smResend(){ smShow(1); smErr(''); setTimeout(function(){ document.getElementById('smName').focus(); }, 50); }
+function smResend(){ _smReset=false; _smResetShow(false); smShow(1); smErr(''); setTimeout(function(){ document.getElementById('smName').focus(); }, 50); }
+function smResetLogin(){ _smReset=true; _smResetShow(false); smErr(''); smSend(); }   // 전부 로그아웃 모드로 OTP 발송(백엔드가 캡 우회)
 function smSend(){
   if (_smBusy) return;
   var name = document.getElementById('smName').value.trim();
   var phone = document.getElementById('smPhone').value.trim();
   if (!name || phone.replace(/\D/g,'').length < 10){ smErr('이름과 전화번호를 확인해 주세요'); return; }
   _smBusy = true; smErr(''); var btn=document.getElementById('smSendBtn'); btn.textContent='보내는 중…'; btn.disabled=true;
-  postPlatform({ action:'staff_start', name:name, phone:phone }).then(function(r){
+  postPlatform({ action:'staff_start', name:name, phone:phone, reset:_smReset }).then(function(r){
     _smBusy=false; btn.textContent='인증번호 받기'; btn.disabled=false;
-    if (!r || !r.ok){ smErr((r&&r.error) || '발송에 실패했어요'); return; }
+    if (!r || !r.ok){
+      if (r && r.code==='devlimit'){ smErr(r.error || '기기 한도예요'); _smResetShow(true); return; }   // 2대 한도 → "다른 기기 전부 로그아웃" 옵션 노출
+      smErr((r&&r.error) || '발송에 실패했어요'); return;
+    }
+    _smResetShow(false);
     document.getElementById('smPhoneEcho').textContent = (r.phone||'') + ' 로 인증번호를 보냈어요';
     smShow(2); setTimeout(function(){ document.getElementById('smCode').focus(); }, 50);
   }).catch(function(){ _smBusy=false; btn.textContent='인증번호 받기'; btn.disabled=false; smErr('네트워크 오류 — 다시 시도해 주세요'); });
@@ -634,7 +643,7 @@ function smVerify(){
   var code = document.getElementById('smCode').value.replace(/\D/g,'');
   if (code.length < 6){ smErr('인증번호 6자리를 입력해 주세요'); return; }
   _smBusy = true; smErr(''); var btn=document.getElementById('smVerifyBtn'); btn.textContent='확인하고 있어요'; btn.disabled=true;   // §2 해요체 진행형(명사+중·정적 '…' 지양)
-  postPlatform({ action:'staff_verify', name:name, phone:phone, code:code, device:getDeviceId() }).then(function(r){
+  postPlatform({ action:'staff_verify', name:name, phone:phone, code:code, device:getDeviceId(), reset:_smReset }).then(function(r){
     _smBusy=false; btn.textContent='확인'; btn.disabled=false;
     if (!r || !r.ok){ smErr((r&&r.error) || '인증에 실패했어요'); return; }
     var prev = getStaffSess() || {};
