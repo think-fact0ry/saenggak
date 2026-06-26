@@ -606,8 +606,11 @@ function postPlatform(payload){
 
 // ── 제공인력 로그인 모달 ──
 var _smBusy = false;
-function staffLogin(){ document.getElementById('staffModal').style.display='flex'; smShow(1); smErr(''); setTimeout(function(){ document.getElementById('smName').focus(); }, 50); }
-function smClose(){ document.getElementById('staffModal').style.display='none'; smErr(''); }
+var _smPushed = false;   // 로그인 팝업이 history 1칸 점유 중인지
+function _smHide(){ document.getElementById('staffModal').style.display='none'; smErr(''); }
+function staffLogin(){ document.getElementById('staffModal').style.display='flex'; smShow(1); smErr(''); _smPushed=true; try{ history.pushState({sm:1},''); }catch(e){} setTimeout(function(){ document.getElementById('smName').focus(); }, 50); }   // 열 때 history 1칸 → 스와이프 뒤로=팝업만 닫힘(페이지 유지, §5.9)
+function smClose(){ if(_smPushed){ history.back(); } else { _smHide(); } }   // X·성공·스와이프 모두 popstate 경유로 통일
+window.addEventListener('popstate', function(){ if(_smPushed){ _smPushed=false; _smHide(); } });   // 뒤로가기/스와이프 = 로그인 팝업 닫기
 function smShow(step){ document.getElementById('smStep1').style.display = step===1?'':'none'; document.getElementById('smStep2').style.display = step===2?'':'none'; }
 function smErr(m){ document.getElementById('smErr').textContent = m || ''; }
 function smResend(){ smShow(1); smErr(''); setTimeout(function(){ document.getElementById('smName').focus(); }, 50); }
