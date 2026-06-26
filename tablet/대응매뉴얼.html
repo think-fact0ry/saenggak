@@ -89,8 +89,11 @@
   .doc h2{font-size:22px;font-weight:800;letter-spacing:-.5px;margin:56px 0 14px;
     padding-bottom:5px;border-bottom:2px solid var(--g900);scroll-margin-top:calc(var(--bar) + 12px);}
   .group-head + h2{margin-top:10px;}     /* 대분류 헤더 바로 뒤 첫 섹션은 가깝게 */
-  .doc h3{font-size:16.5px;font-weight:700;letter-spacing:-.3px;margin:30px 0 10px;color:var(--green-d);
+  /* 중분류 = "어떤 케이스인가" (분기·상황·서비스명) = 연초록 밴드 */
+  .doc h3,.doc p.caseh{font-size:16.5px;font-weight:800;letter-spacing:-.3px;color:var(--green-d);
+    background:var(--green-l);border-radius:10px;padding:9px 13px;margin:36px 0 12px;
     scroll-margin-top:calc(var(--bar) + 12px);}
+  .doc p.caseh strong{font-weight:800;color:var(--green-d);}
   .doc h4{font-size:15px;font-weight:700;margin:18px 0 7px;}
   .doc p{margin:7px 0;}
   .doc ul,.doc ol{margin:7px 0 10px;padding-left:19px;}
@@ -99,9 +102,13 @@
   .doc hr{display:none;}
   .doc a{color:var(--green-d);text-decoration:underline;}
 
-  /* 라벨(증상 예시·대응 절차·메모·자주 묻는 질문 …) = 스캔 앵커. 초록 강조 + 좌측 바 */
-  .doc p.lbl{font-size:13.5px;font-weight:800;letter-spacing:-.2px;color:var(--green-d);
-    margin:32px 0 8px;padding-left:11px;border-left:3px solid var(--green);line-height:1.3;}
+  /* 소분류(블록 앵커: 증상/상황 예시·대응 절차·문자 양식·메모·자주 묻는 질문·예시) = 초록 강조 + 좌측 바 */
+  .doc p.lbl{font-size:15px;font-weight:800;letter-spacing:-.2px;color:var(--green-d);
+    margin:30px 0 8px;padding-left:11px;border-left:3px solid var(--green);line-height:1.3;}
+  /* 세부(Step·번호 항목) = 좌측 바 없음, 한 단계 작게 */
+  .doc p.step{font-size:14px;font-weight:800;letter-spacing:-.2px;color:var(--green-d);
+    margin:18px 0 6px;line-height:1.3;}
+  .doc p.step strong{font-weight:800;color:var(--green-d);}
   .doc p.lbl strong{font-weight:800;color:var(--green-d);}
   .doc p.lbl em{font-weight:500;color:var(--g500);font-style:normal;}
   /* 대사 화자(담당자/보호자) 색 구분 — 한 블록에 섞여도 단어별로 */
@@ -368,7 +375,9 @@ function styleLabels(doc){
     if(/^❌/.test(t)){ p.classList.add('call','no'); return; }
     if(/^✅/.test(t)){ p.classList.add('call','yes'); return; }
     if(/^Q\s*\d/i.test(t)){ p.classList.add('qa'); return; }
-    p.classList.add('lbl');
+    if(/^(상황|분기)\s*\d/.test(t)){ p.classList.add('caseh'); return; }   // 중분류 = 케이스(상황 N / 분기 N)
+    if(/^Step\s*\d/i.test(t) || /^\d+[.)]\s/.test(t)){ p.classList.add('step'); return; }   // 세부 = Step·번호 항목(바 없음)
+    p.classList.add('lbl');   // 소분류 = 블록 앵커
   });
 }
 
