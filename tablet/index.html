@@ -600,8 +600,16 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     setSt($('oathSt'), !!s.oath); setSt($('adminSt'), !!s.admin);
   }
   function setFlag(k){ var s=sess()||{}; s[k]=true; saveS(s); }
-  $('mpOpen').onclick = function(){ refresh(); $('mypage').classList.add('on'); };
-  $('mpClose').onclick = function(){ $('mypage').classList.remove('on'); };
+  // ── 안드로이드 뒤로가기/스와이프 = 마이페이지(+열린 시트) 닫고 허브로. 이전 페이지(상담일지)로 튕김 방지 ──
+  var mpGuard = false;
+  function closeSheets(){ var ns=document.querySelectorAll('.sheet.on, .sheet-dim.on'); for(var i=0;i<ns.length;i++) ns[i].classList.remove('on'); }
+  function openMypage(){ refresh(); $('mypage').classList.add('on'); if(!mpGuard){ history.pushState({tfMp:1},''); mpGuard=true; } }   // 열 때 히스토리 1칸 → 뒤로가기가 이 칸을 소비
+  function closeMypage(){ closeSheets(); $('mypage').classList.remove('on'); }
+  $('mpOpen').onclick = openMypage;
+  $('mpClose').onclick = function(){ if(mpGuard){ history.back(); } else { closeMypage(); } };   // X도 back()으로 닫음 → 히스토리 정합(빈 뒤로가기 방지)
+  window.addEventListener('popstate', function(){
+    if($('mypage').classList.contains('on') || document.querySelector('.sheet.on')){ closeMypage(); mpGuard=false; }   // 열린 게 있으면 닫기만(이동 X)
+  });
   // 상담사 등록: (미등록) 번호(5007) → 필수확인(서약) / (등록됨) 해제
   var COUNSELOR_HASH = "8d0a8cbf9d1e53373e02a4ad80e49b2853259c854de49349cd776a7569c47142";  // sha256("5007") — 모든 상담사 공용 코드(소스에 평문 대신 해시)
   function showOath(){ $('oathDim').classList.add('on'); $('oathSheet').classList.add('on'); }
@@ -784,7 +792,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.26f';
+var APP_VERSION = '26.06.26g';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
