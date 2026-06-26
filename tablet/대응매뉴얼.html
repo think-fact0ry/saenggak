@@ -151,6 +151,19 @@
   .doc code{font-family:inherit;}
   .doc :not(pre)>code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:14px;}
 
+  /* 양식 박스 복사 버튼(전역 복사차단이라 버튼으로만 복사) */
+  .doc pre{position:relative;padding-top:38px;}
+  .copy-btn{position:absolute;top:9px;right:11px;display:inline-flex;align-items:center;gap:4px;
+    font-size:12.5px;color:#9aa4b0;background:transparent;border:none;cursor:pointer;font-family:inherit;
+    text-decoration:underline;text-underline-offset:2px;padding:3px 3px;line-height:1;}
+  .copy-btn:active{color:#d2d8df;}
+  .copy-btn svg{width:13px;height:13px;}
+  .copy-toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));
+    transform:translateX(-50%) translateY(8px);background:var(--g900);color:#fff;font-size:13.5px;
+    padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;z-index:200;
+    box-shadow:0 6px 20px rgba(0,0,0,.18);transition:opacity .18s,transform .18s;}
+  .copy-toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+
   /* 표 — 화면 폭에 맞춰 줄바꿈(가로 스크롤 X) */
   .tbl{border:1px solid var(--g200);border-radius:12px;overflow:hidden;margin:11px 0;}
   .tbl table{width:100%;border-collapse:collapse;table-layout:auto;font-size:13.5px;}
@@ -343,9 +356,46 @@ function render(md){
   wrapTables(doc);
   styleBlockquotes(doc);
   styleLabels(doc);
+  addCopyButtons(doc);
   buildToc(doc);
   buildChips();
   setupScrollSpy();
+}
+
+// 양식 박스(메모·보고·문자 양식)에 복사 버튼 — 전역 user-select:none이라 클립보드 API로만 복사
+function addCopyButtons(doc){
+  doc.querySelectorAll('pre').forEach(function(pre){
+    if(pre.querySelector('.copy-btn')) return;
+    var btn=document.createElement('button');
+    btn.type='button'; btn.className='copy-btn';
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>복사';
+    btn.addEventListener('click', function(){
+      var code=pre.querySelector('code');
+      var text=(code?code.innerText:pre.innerText).replace(/ /g,' ').replace(/\s+$/,'');
+      copyText(text);
+    });
+    pre.appendChild(btn);
+  });
+}
+function copyText(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(showCopyToast).catch(function(){ if(fallbackCopy(text)) showCopyToast(); });
+  } else if(fallbackCopy(text)){ showCopyToast(); }
+}
+function fallbackCopy(text){
+  try{
+    var ta=document.createElement('textarea'); ta.value=text;
+    ta.style.position='fixed'; ta.style.top='0'; ta.style.left='0'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    var ok=document.execCommand('copy'); document.body.removeChild(ta); return ok;
+  }catch(e){ return false; }
+}
+var _copyToastT=null;
+function showCopyToast(){
+  var t=document.getElementById('copyToast');
+  if(!t){ t=document.createElement('div'); t.id='copyToast'; t.className='copy-toast'; t.textContent='복사되었어요'; document.body.appendChild(t); }
+  t.classList.add('on'); clearTimeout(_copyToastT);
+  _copyToastT=setTimeout(function(){ t.classList.remove('on'); }, 1400);
 }
 
 function wrapTables(doc){
