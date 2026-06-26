@@ -56,7 +56,7 @@
   /* ── 검색 오버레이 (돋보기) ── */
   #searchPanel{position:fixed;top:0;left:0;right:0;z-index:70;background:#fff;
     box-shadow:0 8px 24px rgba(0,0,0,.1);border-bottom:1px solid var(--g200);
-    transform:translateY(-110%);transition:transform .2s;padding-top:env(safe-area-inset-top);max-height:88vh;overflow-y:auto;}
+    transform:translateY(-110%);transition:transform .22s cubic-bezier(.2,.8,.3,1);padding-top:env(safe-area-inset-top);max-height:88vh;display:flex;flex-direction:column;}
   #searchPanel.on{transform:translateY(0);}
   .sp-top{display:flex;align-items:center;gap:8px;padding:8px 12px;}
   .search{flex:1;min-width:0;font-family:inherit;font-size:16px;font-weight:500;padding:12px 15px;border-radius:13px;
@@ -67,7 +67,9 @@
     width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;}
   .sp-close:active{background:var(--g100);}
   .sp-close svg{width:22px;height:22px;}
-  .sp-body{padding:4px 14px 18px;}
+  .sp-body{padding:4px 14px 18px;flex:1;min-height:0;overflow-y:auto;}
+  .sp-handle{flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:8px 0 calc(10px + env(safe-area-inset-bottom));touch-action:none;cursor:grab;}
+  .sp-handle::before{content:'';width:40px;height:4px;background:var(--g200);border-radius:99px;}   /* 드래그해서 위로 올려 닫기 */
   .chip-title{font-size:12.5px;font-weight:800;color:var(--g500);margin:6px 2px 10px;letter-spacing:.2px;}
   .chips{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{font-family:inherit;font-size:14px;font-weight:600;color:var(--g700);background:var(--g100);
@@ -235,6 +237,7 @@
     </div>
     <div class="results" id="results"></div>
   </div>
+  <div class="sp-handle" id="spHandle"></div>
 </div>
 
 <div class="layout">
@@ -438,6 +441,15 @@ function openSearch(){
   setTimeout(function(){ s.focus(); }, 120);
 }
 function closeSearch(){ document.getElementById('searchPanel').classList.remove('on'); }
+// 논모달: 하단 회색바를 잡고 위로 끌어 닫기(§5.7 결, 위 패널이라 위로). 손가락 추종 중 transition 없음.
+(function(){
+  var panel=document.getElementById('searchPanel'), handle=document.getElementById('spHandle');
+  if(!panel||!handle) return;
+  var startY=0, dy=0, dragging=false;
+  function move(e){ if(!dragging) return; dy=Math.min(0, e.clientY-startY); panel.style.transform='translateY('+dy+'px)'; }   // 위로만(음수 클램프)
+  function end(){ if(!dragging) return; dragging=false; window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',end); window.removeEventListener('pointercancel',end); panel.style.transition=''; panel.style.transform=''; if(dy < -60) closeSearch(); }   // 60px 넘게 올리면 닫힘
+  handle.addEventListener('pointerdown', function(e){ dragging=true; startY=e.clientY; dy=0; panel.style.transition='none'; window.addEventListener('pointermove',move); window.addEventListener('pointerup',end); window.addEventListener('pointercancel',end); });
+})();
 function buildChips(topTerms){
   var box=document.getElementById('chips'); box.innerHTML='';
   var title=document.querySelector('.chip-title');
