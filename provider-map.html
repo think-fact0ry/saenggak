@@ -630,7 +630,7 @@ function smVerify(){
   var phone = document.getElementById('smPhone').value.trim();
   var code = document.getElementById('smCode').value.replace(/\D/g,'');
   if (code.length < 6){ smErr('인증번호 6자리를 입력해 주세요'); return; }
-  _smBusy = true; smErr(''); var btn=document.getElementById('smVerifyBtn'); btn.textContent='확인 중…'; btn.disabled=true;
+  _smBusy = true; smErr(''); var btn=document.getElementById('smVerifyBtn'); btn.textContent='확인하고 있어요'; btn.disabled=true;   // §2 해요체 진행형(명사+중·정적 '…' 지양)
   postPlatform({ action:'staff_verify', name:name, phone:phone, code:code, device:getDeviceId() }).then(function(r){
     _smBusy=false; btn.textContent='확인'; btn.disabled=false;
     if (!r || !r.ok){ smErr((r&&r.error) || '인증에 실패했어요'); return; }

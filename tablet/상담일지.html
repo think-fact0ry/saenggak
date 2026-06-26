@@ -1373,7 +1373,7 @@ function loadGIntakeStatus(){
   gIntake=null; gIntakeReady=false;
   const key=gClient.name+"|"+gClient.birth;
   if(DEMO){ gIntake=DEMO_GINTAKE[gClient.name]||null; gIntakeReady=true; updateIntakeCard(); return; }
-  $("gr-intake-st").textContent="확인 중…"; $("gr-intake").classList.remove("done");
+  $("gr-intake-st").innerHTML='<span class="ld">확인 중<span class="ld-dots"><i></i><i></i><i></i></span></span>'; $("gr-intake").classList.remove("done");   // §7.1 로딩 점
   const s=loadSess()||{};
   post({action:"gintake_get", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}}).then(d=>{
     if(key!==gCurKey) return;   // 그새 다른 내담자로 이동 → 엉뚱한 카드 갱신 방지

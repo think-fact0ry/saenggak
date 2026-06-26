@@ -114,6 +114,12 @@
   .list-card .lc-meta{font-size:13px;color:var(--g500);font-weight:600;white-space:nowrap;flex-shrink:0;text-align:right;}
   .list-card .lc-meta .lc-draw{display:block;color:var(--green-d);font-weight:700;}
   .list-empty{text-align:center;color:var(--g500);font-size:14.5px;padding:40px 16px;line-height:1.6;}
+  /* 로딩 = 글자 + 점 3개 출렁(정적 '…' 금지, 1_원칙_디자인UX §7.1) — 상담일지 loadingNote와 동일 */
+  .ld{display:inline-flex;align-items:center;gap:9px;color:var(--g500);font-weight:500;}
+  .ld-dots{display:inline-flex;gap:5px;}
+  .ld-dots i{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:ldb 1.1s ease-in-out infinite;}
+  .ld-dots i:nth-child(2){animation-delay:.16s;} .ld-dots i:nth-child(3){animation-delay:.32s;}
+  @keyframes ldb{0%,75%,100%{transform:translateY(0);opacity:.4;}38%{transform:translateY(-6px);opacity:1;}}
 
   /* ===== 등록폼: 토스식 입력(라벨·밑줄·X·그린캐럿) — docs §5.5 / 상담일지 signup 복제 ===== */
   #s-register .wrap{padding-top:64px;padding-bottom:120px;position:relative;}   /* footbar 가림 방지 + §5.6-6 위 여백 */
@@ -814,7 +820,7 @@ function showClients(){
   if(DEMO){ renderClients(MOCK_CLIENTS); return; }
   const sess=getStaffSess();
   if(!sess||!sess.staffId||!sess.session){ show('s-gate'); return; }
-  box.innerHTML='<div class="list-empty">불러오는 중…</div>';
+  box.innerHTML='<div class="list-empty"><span class="ld">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></span></div>';
   hubPost({action:'exam_clients'}).then(d=>{
     if(d&&d.ok){ renderClients(d.clients||[]); }
     else if(d&&d.code==='auth'){ show('s-gate'); }
@@ -885,7 +891,7 @@ function openChild(name,birth){
 function loadChildHistory(name,b8){
   const box=document.getElementById('childHistory');
   if(DEMO){ childResults=MOCK_HISTORY[name]||[]; sittings=groupSittings(childResults); renderChildHistory(); return; }
-  box.innerHTML='<div class="list-empty">불러오는 중…</div>';
+  box.innerHTML='<div class="list-empty"><span class="ld">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></span></div>';
   hubPost({action:'exam_history', child:{name:name, birth:b8}}).then(d=>{
     if(d&&d.ok){ childResults=d.results||[]; sittings=groupSittings(childResults); renderChildHistory(); }
     else if(d&&d.code==='auth'){ show('s-gate'); }
