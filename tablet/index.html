@@ -194,12 +194,17 @@
   .mp-row .chev{color:var(--g300); display:flex;}
   .mp-row .chev svg{width:18px; height:18px;}
   .mp-row.danger .l{color:var(--red);}
-  /* 로그인된 기기 목록 */
-  .mp-dev-title{font-size:13px; font-weight:700; color:var(--g500); padding:15px 18px 8px;}
-  .mp-dev{display:flex; align-items:center; gap:11px; padding:13px 18px; border-top:1px solid var(--g100);}
-  .mp-dev .di{color:var(--g500); display:flex; flex-shrink:0;} .mp-dev .di svg{width:21px; height:21px;}
-  .mp-dev .dn{flex:1; font-size:14.5px; font-weight:600; color:var(--g900);}
-  .mp-dev .dc{font-size:11.5px; font-weight:700; color:var(--green-d); background:var(--green-l); border-radius:7px; padding:3px 8px;}
+  /* 로그인된 기기 목록(별도 화면, 행=탭하면 별명) */
+  .mp-dev{display:flex; align-items:center; gap:12px; width:100%; font-family:inherit; text-align:left; padding:15px 18px; background:#fff; border:none; border-bottom:1.5px solid var(--g100); cursor:pointer;}
+  .mp-dev:last-child{border-bottom:none;}
+  .mp-dev:active{background:var(--g100);}
+  .mp-dev .di{color:var(--g500); display:flex; flex-shrink:0;} .mp-dev .di svg{width:22px; height:22px;}
+  .mp-dev .dmain{flex:1; min-width:0;}
+  .mp-dev .dn{font-size:15px; font-weight:600; color:var(--g900); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .mp-dev .dsub{font-size:12.5px; color:var(--g500); font-weight:500; margin-top:2px;}
+  .mp-dev .dc{flex-shrink:0; font-size:11.5px; font-weight:700; color:var(--green-d); background:var(--green-l); border-radius:7px; padding:3px 8px;}
+  .mp-dev .dedit{flex-shrink:0; color:var(--g300); display:flex;} .mp-dev .dedit svg{width:18px; height:18px;}
+  .mp-dev-msg{padding:38px 18px; text-align:center; color:var(--g400); font-size:14px; font-weight:500;}
 
   /* ═ 바텀시트(서약·행정키) ═ */
   .sheet-dim{position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.4); opacity:0; pointer-events:none; transition:opacity .25s;}
@@ -393,9 +398,8 @@
       <button class="mp-row" id="rowOath"><span class="l">상담사 등록</span><span class="st" id="oathSt">안 됨</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
       <button class="mp-row" id="rowAdmin"><span class="l">행정 등록</span><span class="st" id="adminSt">안 됨</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
     </div>
-    <div class="mp-group" id="mpDevGroup" style="display:none;">
-      <div class="mp-dev-title">로그인된 기기</div>
-      <div id="mpDevList"></div>
+    <div class="mp-group">
+      <button class="mp-row" id="rowDevices"><span class="l">로그인된 기기</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
     </div>
     <div class="mp-group">
       <button class="mp-row danger" id="rowLogout"><span class="l">로그아웃</span></button>
@@ -453,6 +457,30 @@
     <div class="ed-note" id="adNote">주소를 검색하면 지도에 정확히 표시돼요.</div>
   </div>
   <div class="ed-foot"><button class="s-btn" id="adBtn" disabled>저장</button></div>
+</div>
+
+<!-- ═ 로그인된 기기 목록 (마이페이지 열 때 인라인 로딩 X → 여기서 lazy load) ═ -->
+<div class="mp-screen" id="mpDevices">
+  <div class="mp-wrap2">
+    <div class="mp-top">
+      <button class="mp-back" id="devBack" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="mp-title">로그인된 기기</div>
+    </div>
+    <div class="mp-group" id="mpDevList" style="border:none; margin-bottom:0;"></div>
+  </div>
+</div>
+
+<!-- ═ 기기 별명 붙이기 ═ -->
+<div class="mp-screen" id="mpDevRename">
+  <div class="mp-wrap2">
+    <div class="mp-top">
+      <button class="mp-back" id="drBack" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="mp-title">기기 별명</div>
+    </div>
+    <div class="tfield" id="drF"><label>이 기기를 뭐라고 부를까요?</label><div class="tin"><input id="drIn" type="text" maxlength="20" placeholder="예: 안방 태블릿" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly><button class="clr" id="drClr" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
+    <div class="ed-note" id="drNote"></div>
+  </div>
+  <div class="ed-foot"><button class="s-btn" id="drBtn">저장</button></div>
 </div>
 
 <!-- ═ 상담사 서약 시트 ═ -->
@@ -621,27 +649,70 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   function navOpen(showFn, closeFn){ showFn(); navStack.push(closeFn); history.pushState({n:navStack.length},''); }
   function navSwap(closeFn){ if(navStack.length) navStack[navStack.length-1]=closeFn; }   // 같은 레벨 교체(번호→서약: 깊이 유지)
   function navBack(){ if(navStack.length) history.back(); }   // X·딤·취소·드래그 → popstate가 실제로 닫음(히스토리 정합)
-  function openMypage(){ navOpen(function(){ refresh(); loadDevices(); $('mypage').classList.add('on'); }, function(){ $('mypage').classList.remove('on'); }); }
-  // 로그인된 기기 목록(읽기 전용) — mypage_get의 devices. 종류별 라인 SVG + '이 기기' 표시
+  function openMypage(){ navOpen(function(){ refresh(); $('mypage').classList.add('on'); }, function(){ $('mypage').classList.remove('on'); }); }   // 인라인 기기로딩 제거(GAS 콜드스타트로 느려서 별도 화면 lazy load, 2026-06-27)
+  // ── 로그인된 기기 목록 — '로그인된 기기' 행 → 별도 화면에서 mypage_get lazy load ──
   var DEV_SVG = {
     mobile:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>',
     tablet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="11" y1="18.5" x2="13" y2="18.5"/></svg>',
     desktop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
   };
+  var EDIT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
   function escHtml(s){ return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  // 기기 종류 라벨(종류·OS) 로컬 산출 — 현재 기기가 라벨 없을 때(배포 전 세션) 폴백. 상담일지 deviceLabel과 동일 규칙 + 아이패드(Mac UA 위장) 보정.
+  function deviceLabelLocal(){
+    var ua=navigator.userAgent||'';
+    var iPadOS=/Macintosh/.test(ua) && navigator.maxTouchPoints>1;   // iPadOS 13+ = 데스크탑 Mac UA로 위장 → 터치점으로 식별
+    var type=(iPadOS||/iPad|Tablet|PlayBook|Silk|Galaxy Tab/i.test(ua))?'태블릿':(/Mobi|Android|iPhone|iPod/i.test(ua)?'모바일':'데스크탑');
+    var os=(iPadOS||/iPad/i.test(ua))?'아이패드':/iPhone|iPod/i.test(ua)?'아이폰':/Android/i.test(ua)?'안드로이드':/Windows/i.test(ua)?'윈도우':/Mac/i.test(ua)?'맥':'';
+    return os?(type+' · '+os):type;
+  }
+  function iconFor(lab){ return /태블릿/.test(lab)?DEV_SVG.tablet:(/모바일/.test(lab)?DEV_SVG.mobile:DEV_SVG.desktop); }
+  var devCache=[];   // 마지막 로드 결과 — 별명 저장 후 로컬 갱신·재렌더용
+  function renderDevices(){
+    var box=$('mpDevList'); if(!box) return;
+    if(!devCache.length){ box.innerHTML='<div class="mp-dev-msg">로그인된 기기가 없어요</div>'; return; }
+    box.innerHTML = devCache.map(function(d,i){
+      var lab = d.l || (d.current ? deviceLabelLocal() : '기기');   // 현재 기기는 라벨 없으면 로컬 산출(배포 전 세션도 정확)
+      var name = d.n ? d.n : lab;                                    // 별명 있으면 별명이 주, 라벨은 부제
+      var sub = d.n ? lab : '';
+      return '<button class="mp-dev" data-i="'+i+'"><span class="di">'+iconFor(lab)+'</span>'
+        +'<span class="dmain"><span class="dn">'+escHtml(name)+'</span>'+(sub?'<span class="dsub">'+escHtml(sub)+'</span>':'')+'</span>'
+        +(d.current?'<span class="dc">이 기기</span>':'')+'<span class="dedit">'+EDIT_SVG+'</span></button>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('.mp-dev'), function(el){
+      el.onclick = function(){ openRename(parseInt(el.getAttribute('data-i'),10)); };
+    });
+  }
   async function loadDevices(){
-    var g=$('mpDevGroup'), box=$('mpDevList'); if(!g||!box) return; g.style.display='none';
+    var box=$('mpDevList'); if(!box) return;
+    box.innerHTML='<div class="mp-dev-msg">불러오는 중…</div>';
     try{
       var r=await rpc('mypage_get');
-      if(r&&r.ok&&r.devices&&r.devices.length){
-        box.innerHTML = r.devices.map(function(d){
-          var lab=d.l||'기기', ic=/태블릿/.test(lab)?DEV_SVG.tablet:(/모바일/.test(lab)?DEV_SVG.mobile:DEV_SVG.desktop);
-          return '<div class="mp-dev"><span class="di">'+ic+'</span><span class="dn">'+escHtml(lab)+'</span>'+(d.current?'<span class="dc">이 기기</span>':'')+'</div>';
-        }).join('');
-        g.style.display='';
-      }
-    }catch(e){}
+      if(r&&r.ok&&r.devices){ devCache=r.devices; renderDevices(); }
+      else { box.innerHTML='<div class="mp-dev-msg">잠시 후 다시 시도해 주세요</div>'; }
+    }catch(e){ box.innerHTML='<div class="mp-dev-msg">잠시 후 다시 시도해 주세요</div>'; }
   }
+  $('rowDevices').onclick = function(){ showScreen('mpDevices'); loadDevices(); };
+  $('devBack').onclick = function(){ hideScreen('mpDevices'); };
+  // ── 기기 별명 붙이기 ──
+  var drIdx=-1, drBusy=false;
+  function openRename(i){
+    drIdx=i; var d=devCache[i]||{};
+    $('drIn').value=d.n||''; $('drF').classList.toggle('has', !!d.n);
+    $('drNote').textContent=''; $('drNote').className='ed-note';
+    $('drIn').setAttribute('readonly',''); showScreen('mpDevRename');
+  }
+  $('drBack').onclick = function(){ hideScreen('mpDevRename'); };
+  wireField('drF','drIn','drClr');
+  $('drBtn').onclick = async function(){
+    if(drBusy) return; var d=devCache[drIdx]; if(!d){ hideScreen('mpDevRename'); return; }
+    var nick=$('drIn').value.trim().slice(0,20);
+    drBusy=true; $('drBtn').disabled=true; $('drNote').className='ed-note'; $('drNote').textContent='저장하고 있어요…';
+    var r; try{ r=await rpc('mypage_device_rename',{device:d.d, nick:nick}); }catch(e){ r={ok:false}; }
+    drBusy=false; $('drBtn').disabled=false;
+    if(r&&r.ok){ d.n=r.nick||''; renderDevices(); hideScreen('mpDevRename'); }
+    else { $('drNote').className='ed-note err'; $('drNote').textContent=(r&&r.error)||'잠시 후 다시 시도해 주세요'; }
+  };
   $('mpOpen').onclick = openMypage;
   $('mpClose').onclick = navBack;
   // 메인 종료 확인: 루트 가드 1칸 → 첫 뒤로가기=머무르고 안내, 2초 내 한 번 더=종료
@@ -655,8 +726,6 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     history.pushState({root:1},''); showExitHint(); exitArmed=true;                                       // 첫 번째 → 머무르고 안내
     exitT=setTimeout(function(){ exitArmed=false; hideExitHint(); }, 2000);
   });
-  // 핀번호 변경(상담일지로 이동)에서 돌아오면 마이페이지를 다시 연다 = 단계적(핀화면 뒤로 → 마이페이지 → 홈)
-  try{ if(sessionStorage.getItem('tf_mp_return')){ sessionStorage.removeItem('tf_mp_return'); openMypage(); } }catch(e){}
   // 상담사 등록: (미등록) 번호(5007) → 필수확인(서약) / (등록됨) 해제
   var COUNSELOR_HASH = "8d0a8cbf9d1e53373e02a4ad80e49b2853259c854de49349cd776a7569c47142";  // sha256("5007") — 모든 상담사 공용 코드(소스에 평문 대신 해시)
   function showOath(){ $('oathDim').classList.add('on'); $('oathSheet').classList.add('on'); }
@@ -687,7 +756,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   $('aoffLater').onclick = navBack; $('aoffDim').onclick = navBack;
   $('aoffDo').onclick = function(){ var s=sess()||{}; delete s.admin; saveS(s); try{ localStorage.removeItem('saenggak_admin_token'); }catch(e){} location.reload(); };
   // 비밀번호 변경 = OTP 재인증 후 PIN 재설정(상담일지가 처리)
-  $('rowPin').onclick = function(){ try{ sessionStorage.setItem('tf_mp_return','1'); }catch(e){} location.replace('상담일지.html?from=hub&pin=1'); };   // 복귀 시 마이페이지 재오픈(단계적)
+  $('rowPin').onclick = function(){ location.replace('상담일지.html?from=hub&pin=1'); };   // 핀변경=상담일지로(OTP→PIN). 뒤로가기는 홈으로(마이페이지 재오픈 안 함 = 빠른 더블스와이프 종료 방지)
   // 행정 등록(키)
   function showAdmin(){ $('adminDim').classList.add('on'); $('adminSheet').classList.add('on'); $('adminKey').value=''; $('adminKey').setAttribute('readonly',''); $('adminErr').textContent=''; $('adminSave').disabled=true; }   // 열 때마다 readonly 복원 = 재오픈에도 자동완성 차단 유지(§5.5)
   function closeAdmin(){ $('adminDim').classList.remove('on'); $('adminSheet').classList.remove('on'); }
@@ -839,7 +908,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.26k';
+var APP_VERSION = '26.06.26m';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
