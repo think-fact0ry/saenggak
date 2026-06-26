@@ -94,6 +94,8 @@
   .doc h3,.doc p.caseh{font-size:17px;font-weight:800;letter-spacing:-.4px;color:var(--g900);
     margin:34px 0 10px;scroll-margin-top:calc(var(--bar) + 12px);}
   .doc p.caseh strong{font-weight:800;color:var(--g900);}
+  /* 상위 갈림(분기 N·서비스명) = 초록 좌측바 + 넓은 위 여백. 상황(하위)보다 한 단계 위 */
+  .doc h3.branch{padding-left:13px;border-left:4px solid var(--green);margin-top:40px;}
   .doc h4{font-size:15px;font-weight:700;margin:18px 0 7px;}
   .doc p{margin:7px 0;}
   .doc ul,.doc ol{margin:7px 0 10px;padding-left:19px;}
@@ -104,10 +106,10 @@
 
   /* 소분류(블록 앵커: 증상/상황 예시·대응 절차·문자 양식·메모·자주 묻는 질문·예시) = 초록 강조 + 좌측 바 */
   .doc p.lbl{font-size:15px;font-weight:800;letter-spacing:-.2px;color:var(--green-d);
-    margin:30px 0 8px;padding-left:11px;border-left:3px solid var(--green);line-height:1.3;}
+    margin:36px 0 8px;padding-left:11px;border-left:3px solid var(--green);line-height:1.3;}
   /* 세부(Step·번호 항목) = 좌측 바 없음, 한 단계 작게 */
   .doc p.step{font-size:14px;font-weight:800;letter-spacing:-.2px;color:var(--green-d);
-    margin:18px 0 6px;line-height:1.3;}
+    margin:20px 0 6px;line-height:1.3;}
   .doc p.step strong{font-weight:800;color:var(--green-d);}
   .doc p.lbl strong{font-weight:800;color:var(--green-d);}
   .doc p.lbl em{font-weight:500;color:var(--g500);font-style:normal;}
@@ -132,7 +134,7 @@
   .doc p.call{font-size:14.5px;font-weight:700;border-radius:10px;padding:9px 13px;margin:24px 0 6px;letter-spacing:-.2px;}
   .doc p.call.warn{background:var(--amber-l);color:#8a5a00;}
   .doc p.call.no{background:#fdecee;color:#c0303c;}
-  .doc p.call.yes{background:var(--green-l);color:var(--green-d);}
+  .doc p.call.yes{background:var(--green-l);color:var(--g900);}
   .doc p.call.sos{background:#fdecee;color:#c0303c;}
 
   /* 메모·보고 양식 */
@@ -363,6 +365,10 @@ function styleBlockquotes(doc){
   });
 }
 function styleLabels(doc){
+  // 중분류 H3 분기(상위 갈림: 분기 N·서비스명)엔 초록 좌측바. 상황 N은 하위 케이스라 바 없이 검정 볼드만.
+  doc.querySelectorAll('h3').forEach(function(h){
+    if(!/^상황\s*\d/.test(h.textContent.trim())) h.classList.add('branch');
+  });
   doc.querySelectorAll('p').forEach(function(p){
     // 라벨 = 굵은 글씨로 시작하는 문단(앞에 일반 텍스트가 없을 때)
     var lead = p.firstChild;
