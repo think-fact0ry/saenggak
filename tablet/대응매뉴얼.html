@@ -89,11 +89,11 @@
   .doc h2{font-size:22px;font-weight:800;letter-spacing:-.5px;margin:56px 0 14px;
     padding-bottom:5px;border-bottom:2px solid var(--g900);scroll-margin-top:calc(var(--bar) + 12px);}
   .group-head + h2{margin-top:10px;}     /* 대분류 헤더 바로 뒤 첫 섹션은 가깝게 */
-  /* 중분류 = "어떤 케이스인가" (분기·상황·서비스명) = 연초록 밴드 */
-  .doc h3,.doc p.caseh{font-size:16.5px;font-weight:800;letter-spacing:-.3px;color:var(--green-d);
-    background:var(--green-l);border-radius:10px;padding:9px 13px;margin:36px 0 12px;
-    scroll-margin-top:calc(var(--bar) + 12px);}
-  .doc p.caseh strong{font-weight:800;color:var(--green-d);}
+  /* 중분류 = "어떤 케이스인가" (분기·상황·서비스명) = 검정 볼드.
+     (초록 박스 금지 — 바로 아래 초록 대사박스(say-staff)와 겹쳐 안 읽힘. 구조 헤더는 검정이 대비가 산다) */
+  .doc h3,.doc p.caseh{font-size:17px;font-weight:800;letter-spacing:-.4px;color:var(--g900);
+    margin:34px 0 10px;scroll-margin-top:calc(var(--bar) + 12px);}
+  .doc p.caseh strong{font-weight:800;color:var(--g900);}
   .doc h4{font-size:15px;font-weight:700;margin:18px 0 7px;}
   .doc p{margin:7px 0;}
   .doc ul,.doc ol{margin:7px 0 10px;padding-left:19px;}
