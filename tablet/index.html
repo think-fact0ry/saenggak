@@ -216,6 +216,47 @@
   .s-btn.danger{background:var(--red);}
   .s-btn.danger:active{background:#d63a48;}
   .s-later{width:100%; background:none; border:none; font-family:inherit; font-size:15px; font-weight:600; color:var(--g500); padding:14px; margin-top:4px; cursor:pointer;}
+
+  /* ═ 내 정보·주소 관리 (2026-06-26) ═ */
+  .mp-profile{width:100%; font-family:inherit; text-align:left; background:none; border:none; cursor:pointer; padding:12px; margin:0 -12px 14px; border-radius:16px; transition:background .12s, transform .08s;}
+  .mp-profile:active{background:var(--g100); transform:scale(.985);}   /* ex15.1 = 회색 박스 + 살짝 축소 */
+  .mp-profile .mp-pinfo{flex:1; min-width:0;}
+  .mp-profile .mp-sub2{font-size:14px; color:var(--g500); font-weight:500; margin-top:3px;}
+  .mp-profile .chev{color:var(--g300); display:flex; align-self:center;}
+  .mp-profile .chev svg{width:20px; height:20px;}
+  .mp-screen{position:fixed; inset:0; z-index:520; background:#fff; overflow-y:auto; transform:translateX(100%); transition:transform .28s cubic-bezier(.2,.8,.3,1);}
+  .mp-screen.on{transform:translateX(0);}
+  .mp-wrap2{max-width:560px; margin:0 auto; padding:16px 22px calc(110px + env(safe-area-inset-bottom));}
+  .info-row{display:flex; align-items:center; gap:10px; padding:18px 2px; border:none; border-bottom:1px solid var(--g100); width:100%; font-family:inherit; text-align:left; background:none;}
+  .info-row.tap{cursor:pointer;} .info-row.tap:active{background:var(--g100);}
+  .info-row .il{font-size:15.5px; font-weight:600; color:var(--g700);}
+  .info-row .iv{flex:1; text-align:right; font-size:15.5px; font-weight:600; color:var(--g900);}
+  .info-row.ro .iv{color:var(--g500);}
+  .info-row .chev{color:var(--g300); display:flex;} .info-row .chev svg{width:18px; height:18px;}
+  .info-sec{font-size:14px; font-weight:700; color:var(--g700); margin:26px 2px 8px;}
+  .addr-card{display:flex; align-items:flex-start; gap:12px; width:100%; font-family:inherit; text-align:left; background:#fff; border:1.5px solid var(--g200); border-radius:16px; padding:16px 18px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .addr-card:active{border-color:var(--green); background:#F6FAF6;}
+  .addr-card .home{color:var(--green); flex-shrink:0; margin-top:1px;} .addr-card .home svg{width:22px; height:22px;}
+  .addr-card .ac-main{flex:1; min-width:0;}
+  .addr-card .ac-tl{font-size:15px; font-weight:700;}
+  .addr-card .ac-v{font-size:14px; color:var(--g600); font-weight:500; margin-top:4px; line-height:1.5; word-break:keep-all;}
+  .addr-card .ac-v.empty{color:var(--g400);}
+  .addr-card .chev{color:var(--g300); align-self:center;} .addr-card .chev svg{width:18px; height:18px;}
+  /* 토스식 입력(라벨·밑줄·X) — 전화·주소 편집 */
+  .tfield{margin-bottom:24px;}
+  .tfield label{display:block; font-size:13.5px; font-weight:600; color:var(--g500); margin:0 0 6px; transition:color .15s;}
+  .tfield.focus label{color:var(--green);}
+  .tin{position:relative; border-bottom:2px solid var(--g200); transition:border-color .15s;}
+  .tfield.focus .tin{border-color:var(--green);}
+  .tin input{width:100%; border:none; background:none; outline:none; font-family:inherit; font-size:20px; font-weight:600; color:var(--g900); padding:2px 36px 6px 0; caret-color:var(--green);}
+  .tin input::placeholder{color:var(--g300); font-weight:500;}
+  .tin .clr{position:absolute; right:0; top:6px; width:19px; height:19px; border-radius:50%; background:var(--g300); border:none; display:none; align-items:center; justify-content:center; cursor:pointer; padding:0;}
+  .tfield.has .clr{display:flex;} .tin .clr svg{width:10px; height:10px; color:#fff;}
+  .ed-note{font-size:13.5px; color:var(--g500); font-weight:500; margin:2px; min-height:18px;} .ed-note.err{color:var(--red);}
+  .ed-foot{position:fixed; left:0; right:0; bottom:0; background:#fff; padding:12px 22px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid var(--g100);}
+  .ed-foot .s-btn{max-width:560px; margin:0 auto; display:block;}
+  .mp-screen:has(input:focus) .ed-foot{padding:0; border-top:none;}   /* 키보드 뜨면 버튼 꽉 차게(§5.5 ⓐ, resizes-content라 :has로) */
+  .mp-screen:has(input:focus) .ed-foot .s-btn{border-radius:0; padding:19px; max-width:none;}
 </style>
 </head>
 <body>
@@ -317,13 +358,14 @@
       <button class="mp-back" id="mpClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <div class="mp-title">마이페이지</div>
     </div>
-    <div class="mp-profile">
+    <button class="mp-profile" id="rowInfo">
       <div class="mp-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-      <div>
+      <div class="mp-pinfo">
         <div class="mp-name" id="mpName">상담사</div>
-        <div class="mp-phone" id="mpPhone"></div>
+        <div class="mp-sub2">내 정보 · 주소 관리</div>
       </div>
-    </div>
+      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </button>
     <div class="mp-group">
       <button class="mp-row" id="rowPin"><span class="l">PIN번호 변경</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
     </div>
@@ -335,6 +377,53 @@
       <button class="mp-row danger" id="rowLogout"><span class="l">로그아웃</span></button>
     </div>
   </div>
+</div>
+
+<!-- ═ 내 정보 (이름·전화·주소) ═ -->
+<div class="mp-screen" id="mpInfo">
+  <div class="mp-wrap2">
+    <div class="mp-top">
+      <button class="mp-back" id="infoBack" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="mp-title">내 정보</div>
+    </div>
+    <div class="mp-group" style="border:none; margin-bottom:0;">
+      <div class="info-row ro"><span class="il">이름</span><span class="iv" id="ivName">—</span></div>
+      <button class="info-row tap" id="rowPhone"><span class="il">휴대폰 번호</span><span class="iv" id="ivPhone">—</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
+    </div>
+    <div class="info-sec">내 주소</div>
+    <button class="addr-card" id="rowAddr">
+      <span class="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
+      <div class="ac-main"><div class="ac-tl">집</div><div class="ac-v empty" id="acAddr">아직 등록하지 않았어요</div></div>
+      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </button>
+  </div>
+</div>
+
+<!-- ═ 휴대폰 번호 변경 (새 번호 → 인증번호) ═ -->
+<div class="mp-screen" id="mpPhoneEdit">
+  <div class="mp-wrap2">
+    <div class="mp-top">
+      <button class="mp-back" id="phBack" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="mp-title">휴대폰 번호 변경</div>
+    </div>
+    <div class="tfield" id="phF"><label>새 휴대폰 번호</label><div class="tin"><input id="phIn" type="text" inputmode="numeric" placeholder="010-0000-0000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly><button class="clr" id="phClr" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
+    <div class="tfield" id="phOtpF" style="display:none;"><label>인증번호</label><div class="tin"><input id="phOtp" type="text" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly><button class="clr" id="phOtpClr" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
+    <div class="ed-note" id="phNote"></div>
+  </div>
+  <div class="ed-foot"><button class="s-btn" id="phBtn" disabled>인증번호 받기</button></div>
+</div>
+
+<!-- ═ 집 주소 변경 ═ -->
+<div class="mp-screen" id="mpAddrEdit">
+  <div class="mp-wrap2">
+    <div class="mp-top">
+      <button class="mp-back" id="adBack" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="mp-title">집 주소</div>
+    </div>
+    <div class="tfield" id="adF"><label>집 주소</label><div class="tin"><input id="adIn" type="text" placeholder="인천광역시 ○○구 ○○로 00" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly><button class="clr" id="adClr" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
+    <div class="ed-note" id="adNote">도로명 주소로 적으면 지도에 정확히 표시돼요.</div>
+  </div>
+  <div class="ed-foot"><button class="s-btn" id="adBtn" disabled>저장</button></div>
 </div>
 
 <!-- ═ 상담사 서약 시트 ═ -->
@@ -495,7 +584,6 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   function refresh(){
     var s=sess()||{};
     $('mpName').textContent = s.name || '상담사';
-    $('mpPhone').textContent = fmtPhone(s.phone);
     setSt($('oathSt'), !!s.oath); setSt($('adminSt'), !!s.admin);
   }
   function setFlag(k){ var s=sess()||{}; s[k]=true; saveS(s); }
@@ -556,6 +644,99 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     location.replace('상담일지.html?from=hub');   // 세션 비움 → 로그인으로
   };
 
+  // ════ 내 정보 · 주소 관리 (2026-06-26) — 11 GAS가 인사시트 4탭 + 06 지도에 자동 전파 ════
+  var GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";   // 11 플랫폼(상담일지와 같은 배포)
+  async function rpc(action, extra){
+    var s = sess()||{};
+    var body = Object.assign({ action:action, staffId:s.staffId, session:s.session }, extra||{});
+    var res = await fetch(GAS_EXEC, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) });
+    return res.json();
+  }
+  function fmtLive(v){ var d=String(v||'').replace(/\D/g,'').slice(0,11); if(d.length<4) return d; if(d.length<8) return d.slice(0,3)+'-'+d.slice(3); return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7); }
+  function showScreen(id){ $(id).classList.add('on'); } function hideScreen(id){ $(id).classList.remove('on'); }
+  // 토스식 입력 1개 배선: focus(라벨 그린·readonly해제=자동완성 차단 §5.5)·input(X버튼·콜백)·clr(비우기)
+  function wireField(fieldId, inId, clrId, onInput){
+    var f=$(fieldId), inp=$(inId), clr=$(clrId);
+    inp.addEventListener('focus', function(){ this.removeAttribute('readonly'); f.classList.add('focus'); });
+    inp.addEventListener('blur', function(){ f.classList.remove('focus'); });
+    inp.addEventListener('input', function(){ if(onInput) onInput(this); f.classList.toggle('has', !!this.value); });
+    clr.onclick = function(){ inp.value=''; inp.dispatchEvent(new Event('input')); inp.focus(); };
+  }
+  // ── 내 정보 화면 ──
+  $('rowInfo').onclick = async function(){
+    var s=sess()||{}; $('ivName').textContent=s.name||'—'; $('ivPhone').textContent=fmtPhone(s.phone)||'—';
+    $('acAddr').textContent='불러오는 중…'; $('acAddr').classList.remove('empty');
+    showScreen('mpInfo');
+    try{
+      var r=await rpc('mypage_get');
+      if(r&&r.ok){
+        $('ivName').textContent=r.name||'—'; $('ivPhone').textContent=fmtPhone(r.phone)||'—';
+        if(r.addr){ $('acAddr').textContent=r.addr; $('acAddr').classList.remove('empty'); }
+        else { $('acAddr').textContent='아직 등록하지 않았어요'; $('acAddr').classList.add('empty'); }
+      } else { $('acAddr').textContent='아직 등록하지 않았어요'; $('acAddr').classList.add('empty'); }
+    }catch(e){ $('acAddr').textContent='잠시 후 다시 시도해 주세요'; $('acAddr').classList.add('empty'); }
+  };
+  $('infoBack').onclick = function(){ hideScreen('mpInfo'); };
+  // ── 휴대폰 번호 변경(새 번호 → 인증번호) ──
+  var phStage='input', phBusy=false;
+  function openPhone(){
+    phStage='input'; $('phIn').value=''; $('phOtp').value=''; $('phF').classList.remove('has'); $('phOtpF').classList.remove('has');
+    $('phOtpF').style.display='none'; $('phNote').textContent=''; $('phNote').className='ed-note';
+    $('phBtn').textContent='인증번호 받기'; $('phBtn').disabled=true;
+    $('phIn').setAttribute('readonly',''); $('phOtp').setAttribute('readonly',''); showScreen('mpPhoneEdit');
+  }
+  $('rowPhone').onclick = openPhone;
+  $('phBack').onclick = function(){ hideScreen('mpPhoneEdit'); };
+  wireField('phF','phIn','phClr', function(inp){ inp.value=fmtLive(inp.value); if(phStage==='input') $('phBtn').disabled = inp.value.replace(/\D/g,'').length!==11; });
+  wireField('phOtpF','phOtp','phOtpClr', function(inp){ inp.value=inp.value.replace(/\D/g,'').slice(0,6); $('phBtn').disabled = inp.value.length!==6; if(inp.value.length===6) inp.blur(); });
+  $('phBtn').onclick = async function(){
+    if(phBusy) return; var r;
+    if(phStage==='input'){
+      var np=$('phIn').value.replace(/\D/g,''); if(np.length!==11) return;
+      phBusy=true; $('phBtn').disabled=true; $('phNote').className='ed-note'; $('phNote').textContent='인증번호를 보내고 있어요…';
+      try{ r=await rpc('mypage_phone_start',{newPhone:np}); }catch(e){ r={ok:false,error:'잠시 후 다시 시도해 주세요'}; }
+      phBusy=false;
+      if(r&&r.ok){ phStage='otp'; $('phOtpF').style.display=''; $('phBtn').textContent='확인'; $('phBtn').disabled=true; $('phNote').textContent=(r.phone||'')+' 로 인증번호를 보냈어요'; }
+      else { $('phBtn').disabled=false; $('phNote').className='ed-note err'; $('phNote').textContent=(r&&r.error)||'발송에 실패했어요'; }
+    } else {
+      var np2=$('phIn').value.replace(/\D/g,''), code=$('phOtp').value.replace(/\D/g,''); if(code.length!==6) return;
+      phBusy=true; $('phBtn').disabled=true; $('phNote').className='ed-note'; $('phNote').textContent='확인하고 있어요…';
+      try{ r=await rpc('mypage_phone_verify',{newPhone:np2, code:code}); }catch(e){ r={ok:false,error:'잠시 후 다시 시도해 주세요'}; }
+      phBusy=false;
+      if(r&&r.ok){ var s=sess()||{}; s.phone=np2; saveS(s); $('ivPhone').textContent=fmtPhone(np2); hideScreen('mpPhoneEdit'); }
+      else { $('phBtn').disabled=false; $('phNote').className='ed-note err'; $('phNote').textContent=(r&&r.error)||'인증번호가 달라요'; }
+    }
+  };
+  // ── 집 주소 변경 ──
+  var adBusy=false;
+  function openAddr(){
+    var cur=$('acAddr').classList.contains('empty')?'':$('acAddr').textContent;
+    $('adIn').value=cur||''; $('adF').classList.toggle('has', !!cur);
+    $('adNote').className='ed-note'; $('adNote').textContent='도로명 주소로 적으면 지도에 정확히 표시돼요.';
+    $('adBtn').disabled=(!cur||cur.length<5); $('adIn').setAttribute('readonly',''); showScreen('mpAddrEdit');
+  }
+  $('rowAddr').onclick = openAddr;
+  $('adBack').onclick = function(){ hideScreen('mpAddrEdit'); };
+  wireField('adF','adIn','adClr', function(inp){ $('adBtn').disabled = inp.value.trim().length<5; });
+  $('adBtn').onclick = async function(){
+    if(adBusy) return; var addr=$('adIn').value.trim(); if(addr.length<5) return; var r;
+    adBusy=true; $('adBtn').disabled=true; $('adNote').className='ed-note'; $('adNote').textContent='저장하고 있어요…';
+    try{ r=await rpc('mypage_addr_save',{addr:addr}); }catch(e){ r={ok:false,error:'잠시 후 다시 시도해 주세요'}; }
+    adBusy=false;
+    var saved = r&&r.ok&&((r.hr>0)||r.mapStatus==='반영');   // 인사시트 갱신 또는 지도 반영 = 어딘가 저장됨
+    if(saved){
+      $('acAddr').textContent=addr; $('acAddr').classList.remove('empty');
+      var msg;
+      if(r.hr===0) msg='지도에는 반영했어요. 인사 기록은 관리자 확인이 필요해요.';   // 인사시트 매칭 0(번호 어긋남)
+      else if(r.mapStatus==='반영') msg='주소를 저장했어요. 지도에도 반영했어요.';
+      else if(r.mapStatus==='좌표실패') msg='주소는 저장했어요. 지도 반영은 주소를 다시 확인해 주세요.';
+      else if(r.mapStatus==='동명이인') msg='주소를 저장했어요. 지도는 관리자 확인이 필요해요.';
+      else msg='주소를 저장했어요.';   // 미등록 = 지도 대상 아님(상담사·대표 등)
+      hideScreen('mpAddrEdit');
+      var t=$('netToast'); if(t){ t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); t.textContent='와이파이가 연결되면 볼 수 있어요'; }, 2800); }
+    } else { $('adBtn').disabled=false; $('adNote').className='ed-note err'; $('adNote').textContent=(r&&r.error)||'저장하지 못했어요. 관리자에게 문의해 주세요'; }
+  };
+
   // ── 바텀시트 = 위 영역 끌어 아래로 닫기 + 누름 scale 피드백(§5.7) ──
   function initSheetDrag(sheet, closeFn){
     if(!sheet) return;
@@ -576,7 +757,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.26a';
+var APP_VERSION = '26.06.26b';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
