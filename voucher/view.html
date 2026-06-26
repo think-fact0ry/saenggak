@@ -58,8 +58,8 @@
   .ld-dots i:nth-child(2){animation-delay:.15s;} .ld-dots i:nth-child(3){animation-delay:.3s;}
   @keyframes bo{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-4px);opacity:1;}}
 
-  /* 다른 아동 경계 = 더 큰 간격(같은 아동 내 월/서비스 전환은 기본 8px) */
-  .row-gap.big td{height:18px;}
+  /* 다른 아동 경계 = 검정 구분선(같은 아동 내 월/서비스 전환은 기본 회색 간격) */
+  .row-gap.big td{height:0;padding:0;border:none;border-top:2px solid var(--g900);}
 
   /* 모바일: 표 그대로 + 폰트·패딩 축소로 좌우 한 화면에 (가로 스크롤 없음) */
   @media (max-width:640px){
