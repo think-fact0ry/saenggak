@@ -139,16 +139,14 @@
   .search .ico svg{width:20px;height:20px;}
   .count{font-size:13.5px;color:var(--g500);font-weight:600;margin:0 2px 10px;}
   .client-list{display:flex;flex-direction:column;gap:10px;}
-  .client-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:16px 16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:transform .2s cubic-bezier(.2,.7,.3,1),border-color .12s,background .12s;-webkit-touch-callout:none;}
+  .client-card{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:16px 18px 16px 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:transform .2s cubic-bezier(.2,.7,.3,1),border-color .12s,background .12s;-webkit-touch-callout:none;}
   #gw-opinion{margin-top:10px;}
   .client-card:active{border-color:var(--green);background:#F6FAF6;}
   .client-card .nm{font-size:16.5px;font-weight:700;letter-spacing:-.3px;}
   .client-card .meta{font-size:13px;color:var(--g500);font-weight:500;}
   .client-card .chev{color:var(--g300);display:flex;}
-  /* 드래그 손잡이(☰) — 이것만 touch-action:none이라 잡으면 목록 스크롤에 안 뺏기고 확실히 끌림. 카드 본체 탭=열기 */
-  .client-card .drag{flex:0 0 auto;display:flex;align-items:center;color:var(--g400);cursor:grab;touch-action:none;-webkit-touch-callout:none;padding:4px 4px 4px 0;margin:-4px 0;}
-  .client-card .drag:active{color:var(--green);}
-  .client-card .drag svg{width:24px;height:24px;display:block;}
+  /* "끌 수 있다" 표시 = 왼쪽 옅은 회색 세로 바(│). 드래그는 *박스 전체* 길게누름(이 바만이 아님) */
+  .client-card .drag{flex:0 0 auto;width:3px;height:20px;border-radius:2px;background:var(--g300);}
   .empty{text-align:center;color:var(--g400);font-size:14px;font-weight:500;padding:40px 0;}
   /* 일반 내담자 명단 관리(2026-06-23): 메모(우측)·드래그 정렬(들어올림)·연필. 아이콘=라인 SVG(이모지 금지, 원칙 §4) */
   .btn.ghost{flex:0 0 auto;padding:17px 22px;background:var(--g100);color:var(--g700);}
@@ -1169,7 +1167,7 @@ function renderGClients(q){
   list.forEach(c=>{
     const el=document.createElement("div"); el.className="client-card"; el.dataset.cid=c.child_id||"";
     const sub=[fmtBirth(c.birth), (c.rounds?c.rounds+"회기":"")].filter(Boolean).join(" · ");
-    el.innerHTML='<span class="drag" aria-label="순서 이동"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>'
+    el.innerHTML='<span class="drag" aria-hidden="true"></span>'
       +'<div class="cc-main"><div class="nm">'+escapeHtml(c.name)+'</div><div class="meta">'+escapeHtml(sub)+'</div></div>'
       +(c.memo?'<div class="cmemo">'+escapeHtml(c.memo)+'</div>':'')
       +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
@@ -1195,37 +1193,46 @@ function saveGOrder(){
     if(!(d && d.ok)) toast("순서 저장을 못 했어요. 다시 시도해 주세요");
   }).catch(()=>toast("연결이 안 됐어요. 순서가 저장되지 않았어요"));
 }
-// 순서 변경 = 카드 왼쪽 *손잡이(☰)*를 잡고 위아래로 끌면 이동(손 떼면 즉시 저장). 카드 본체 탭 = 열기.
-//  손잡이만 touch-action:none이라 터치서도 목록 스크롤에 안 뺏기고 확실히 끌림(카드 본체는 정상 스크롤).
+// 순서 변경 = 카드 *박스 전체를 길게 누르면*(~320ms) 드래그(유성 2026-06-26). 왼쪽 옅은 회색 바(│)는 "끌 수 있다"는 표시.
+//  대기 중 10px 넘게 움직이면=스크롤 의도라 취소(목록 정상 스크롤). 짧은 탭=열기. 손 떼면 즉시 저장.
+//  ★터치 핵심: 드래그 시작하면 비-passive touchmove에서 preventDefault → 브라우저가 스크롤로 가로채(pointercancel) 카드를 떨구는 것 차단(이게 빠지면 "들리는데 안 끌림").
+const GDRAG_HOLD = 320;
 function enableDrag(card){
-  const handle = card.querySelector(".drag");
-  if(!handle) return;
-  handle.addEventListener("pointerdown",(e)=>{
+  card.addEventListener("pointerdown",(e)=>{
     if(e.button!=null && e.button!==0) return;
     if(gDragActive) return;                       // 다른 카드 드래그 중 = 두 번째 손가락 무시
     if($("gcl-search").value.trim()) return;      // 검색 중엔 부분목록이라 순서변경 막음(전체에서만)
-    e.preventDefault();
-    beginCardDrag(card, e, e.pointerId);
+    const sx=e.clientX, sy=e.clientY, pid=e.pointerId;
+    let holdTimer=setTimeout(()=>{ holdTimer=null; cleanupPre(); beginCardDrag(card, sy, pid); }, GDRAG_HOLD);
+    const preMove=(ev)=>{ if(Math.abs(ev.clientX-sx)>10 || Math.abs(ev.clientY-sy)>10) cleanupPre(); };   // 움직임=스크롤 의도 → 길게누름 취소
+    const preEnd=()=>cleanupPre();                // 짧은 탭/취소 → click이 열기
+    function cleanupPre(){
+      if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; }
+      document.removeEventListener("pointermove",preMove);
+      document.removeEventListener("pointerup",preEnd);
+      document.removeEventListener("pointercancel",preEnd);
+    }
+    document.addEventListener("pointermove",preMove);
+    document.addEventListener("pointerup",preEnd);
+    document.addEventListener("pointercancel",preEnd);
   });
 }
-function beginCardDrag(card, e, pid){
-  if(gDragActive) return;                                 // 이미 다른 카드 드래그 중(두 손가락 동시 진입 차단)
+function beginCardDrag(card, startY, pid){
+  if(gDragActive) return;                                 // 두 손가락 동시 진입 차단
   gDragActive=true;
   const list=card.parentNode;
   const rect=card.getBoundingClientRect();
-  const offsetY=e.clientY-rect.top;                       // e=정지 상태 pointerdown(위치 유효)
-  let moved=false, lastAnchor=undefined;
+  const offsetY=startY-rect.top;                          // 길게누름 시작 시점 손가락 위치(정지 상태라 유효)
+  let moved=false, lastAnchor=undefined, ended=false;
   const ph=document.createElement("div"); ph.className="gcl-ph"; ph.style.height=rect.height+"px";
   list.insertBefore(ph, card);                            // 원래 자리에 자리표시
   card.classList.add("dragging");                         // fixed로 띄움
-  card.style.touchAction="none";                          // 드래그 중엔 스크롤 차단(카드만 움직임)
+  card.style.touchAction="none";
   card.style.width=rect.width+"px"; card.style.left=rect.left+"px"; card.style.top=rect.top+"px";
   try{ card.setPointerCapture(pid); }catch(_){}
   if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(_){} }   // 집었다는 햅틱(지원 기기만)
-  const move=(ev)=>{
-    ev.preventDefault();                                  // 스크롤 억제(드래그 우선)
-    card.style.top=(ev.clientY-offsetY)+"px";             // 손가락 따라 항상 갱신
-    const y=ev.clientY;
+  const moveAt=(y)=>{
+    card.style.top=(y-offsetY)+"px";                      // 손가락 따라 갱신
     const sibs=Array.prototype.slice.call(list.querySelectorAll(".client-card:not(.dragging)"));
     let anchor=null;
     for(const sib of sibs){ const r=sib.getBoundingClientRect(); if(y < r.top + r.height/2){ anchor=sib; break; } }
@@ -1235,21 +1242,30 @@ function beginCardDrag(card, e, pid){
     if(anchor) list.insertBefore(ph, anchor); else list.appendChild(ph);
     sibs.forEach((s,i)=>{ const dy=firsts[i]-s.getBoundingClientRect().top; if(dy){ s.style.transition="none"; s.style.transform="translateY("+dy+"px)"; requestAnimationFrame(()=>{ s.style.transition=""; s.style.transform=""; }); } });   // 새 위치로 스르륵
   };
+  const pmove=(ev)=>{ if(ev.pointerType==="touch") return; moveAt(ev.clientY); };   // 마우스용(터치는 tmove가 위치 담당)
+  const tmove=(ev)=>{ ev.preventDefault(); if(ev.touches&&ev.touches[0]) moveAt(ev.touches[0].clientY); };   // ★터치: 스크롤 가로채임 차단 + 위치 갱신
   const up=()=>{
-    document.removeEventListener("pointermove",move);
+    if(ended) return; ended=true;                         // pointerup+touchend 중복 호출 방지
+    document.removeEventListener("pointermove",pmove);
+    document.removeEventListener("touchmove",tmove);
     document.removeEventListener("pointerup",up);
     document.removeEventListener("pointercancel",up);
+    document.removeEventListener("touchend",up);
+    document.removeEventListener("touchcancel",up);
     list.insertBefore(card, ph); list.removeChild(ph);    // 자리표시 위치에 안착
     card.classList.remove("dragging");
     card.style.width=card.style.left=card.style.top=card.style.touchAction="";
     Array.prototype.forEach.call(list.querySelectorAll(".client-card"), s=>{ s.style.transform=""; s.style.transition=""; });  // FLIP 잔여 정리
     gDragActive=false;
     if(moved) saveGOrder();                                // 실제로 움직였을 때만 저장
-    gJustDragged=true; setTimeout(function(){ gJustDragged=false; }, 80);   // 손잡이 조작 직후 카드 열림(click) 한 번만 막고 곧 해제(다음 탭은 정상)
+    gJustDragged=true; setTimeout(function(){ gJustDragged=false; }, 80);   // 길게눌러 떴다 떼는 직후 카드 열림(click) 한 번만 막고 곧 해제
   };
-  document.addEventListener("pointermove",move,{passive:false});
+  document.addEventListener("pointermove",pmove);
+  document.addEventListener("touchmove",tmove,{passive:false});   // ★ 핵심(비-passive)
   document.addEventListener("pointerup",up);
   document.addEventListener("pointercancel",up);
+  document.addEventListener("touchend",up);
+  document.addEventListener("touchcancel",up);
 }
 
 // ── 내담자 정보·메모 수정(연필) ──
