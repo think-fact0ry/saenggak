@@ -59,6 +59,12 @@
   .pv-page{display:block;width:100%;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.12);margin-bottom:10px;}
   .pv-page:last-child{margin-bottom:0;}
   .pv-loading{padding:50px 16px;text-align:center;color:var(--g500);font-size:14px;}
+  /* 로딩 = 글자 + 점 3개 출렁(정적 '…' 금지, 디자인_UX_원칙 §7.1) — 상담일지 loadingNote와 동일 */
+  .ld{display:inline-flex;align-items:center;gap:9px;color:var(--g500);font-weight:500;}
+  .ld-dots{display:inline-flex;gap:5px;}
+  .ld-dots i{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:ldb 1.1s ease-in-out infinite;}
+  .ld-dots i:nth-child(2){animation-delay:.16s;} .ld-dots i:nth-child(3){animation-delay:.32s;}
+  @keyframes ldb{0%,75%,100%{transform:translateY(0);opacity:.4;}38%{transform:translateY(-6px);opacity:1;}}
 
   /* 편집(전체화면) */
   #preview.editing{position:fixed;inset:0;z-index:80;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -303,7 +309,7 @@ function openForm(f){
   document.getElementById('listMsg').style.display = 'none';
   document.getElementById('pvName').textContent = curName;
   document.getElementById('preview').classList.add('on');
-  document.getElementById('pdfBox').innerHTML = '<div class="pv-loading">불러오는 중…</div>';
+  document.getElementById('pdfBox').innerHTML = '<div class="pv-loading"><span class="ld">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></span></div>';
   window.scrollTo(0, 0);
   showLoad(true);
   // 빠른 경로: OneDrive에서 직접 받기 → 막히면(CORS) 자동으로 GAS 경유 폴백
@@ -327,7 +333,7 @@ function openViaBase64(f){
 }
 function renderPdf(src){
   var box = document.getElementById('pdfBox');
-  box.innerHTML = '<div class="pv-loading">미리보기 그리는 중…</div>';
+  box.innerHTML = '<div class="pv-loading"><span class="ld">미리보기 그리는 중<span class="ld-dots"><i></i><i></i><i></i></span></span></div>';
   pageData = [];
   if (!window.pdfjsLib) return Promise.reject('no pdfjs');
   return pdfjsLib.getDocument(src).promise.then(function(pdf){   // src = {url:..} 직접받기 또는 {data:..} 폴백
