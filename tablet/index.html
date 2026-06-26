@@ -191,6 +191,12 @@
   .mp-row .chev{color:var(--g300); display:flex;}
   .mp-row .chev svg{width:18px; height:18px;}
   .mp-row.danger .l{color:var(--red);}
+  /* 로그인된 기기 목록 */
+  .mp-dev-title{font-size:13px; font-weight:700; color:var(--g500); padding:15px 18px 8px;}
+  .mp-dev{display:flex; align-items:center; gap:11px; padding:13px 18px; border-top:1px solid var(--g100);}
+  .mp-dev .di{color:var(--g500); display:flex; flex-shrink:0;} .mp-dev .di svg{width:21px; height:21px;}
+  .mp-dev .dn{flex:1; font-size:14.5px; font-weight:600; color:var(--g900);}
+  .mp-dev .dc{font-size:11.5px; font-weight:700; color:var(--green-d); background:var(--green-l); border-radius:7px; padding:3px 8px;}
 
   /* ═ 바텀시트(서약·행정키) ═ */
   .sheet-dim{position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.4); opacity:0; pointer-events:none; transition:opacity .25s;}
@@ -380,6 +386,10 @@
     <div class="mp-group">
       <button class="mp-row" id="rowOath"><span class="l">상담사 등록</span><span class="st" id="oathSt">안 됨</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
       <button class="mp-row" id="rowAdmin"><span class="l">행정 등록</span><span class="st" id="adminSt">안 됨</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></button>
+    </div>
+    <div class="mp-group" id="mpDevGroup" style="display:none;">
+      <div class="mp-dev-title">로그인된 기기</div>
+      <div id="mpDevList"></div>
     </div>
     <div class="mp-group">
       <button class="mp-row danger" id="rowLogout"><span class="l">로그아웃</span></button>
@@ -603,7 +613,27 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   // ── 안드로이드 뒤로가기/스와이프 = 마이페이지(+열린 시트) 닫고 허브로. 이전 페이지(상담일지)로 튕김 방지 ──
   var mpGuard = false;
   function closeSheets(){ var ns=document.querySelectorAll('.sheet.on, .sheet-dim.on'); for(var i=0;i<ns.length;i++) ns[i].classList.remove('on'); }
-  function openMypage(){ refresh(); $('mypage').classList.add('on'); if(!mpGuard){ history.pushState({tfMp:1},''); mpGuard=true; } }   // 열 때 히스토리 1칸 → 뒤로가기가 이 칸을 소비
+  function openMypage(){ refresh(); loadDevices(); $('mypage').classList.add('on'); if(!mpGuard){ history.pushState({tfMp:1},''); mpGuard=true; } }   // 열 때 히스토리 1칸 → 뒤로가기가 이 칸을 소비
+  // 로그인된 기기 목록(읽기 전용) — mypage_get의 devices. 종류별 라인 SVG + '이 기기' 표시
+  var DEV_SVG = {
+    mobile:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>',
+    tablet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="11" y1="18.5" x2="13" y2="18.5"/></svg>',
+    desktop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+  };
+  function escHtml(s){ return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  async function loadDevices(){
+    var g=$('mpDevGroup'), box=$('mpDevList'); if(!g||!box) return; g.style.display='none';
+    try{
+      var r=await rpc('mypage_get');
+      if(r&&r.ok&&r.devices&&r.devices.length){
+        box.innerHTML = r.devices.map(function(d){
+          var lab=d.l||'기기', ic=/태블릿/.test(lab)?DEV_SVG.tablet:(/모바일/.test(lab)?DEV_SVG.mobile:DEV_SVG.desktop);
+          return '<div class="mp-dev"><span class="di">'+ic+'</span><span class="dn">'+escHtml(lab)+'</span>'+(d.current?'<span class="dc">이 기기</span>':'')+'</div>';
+        }).join('');
+        g.style.display='';
+      }
+    }catch(e){}
+  }
   function closeMypage(){ closeSheets(); $('mypage').classList.remove('on'); }
   $('mpOpen').onclick = openMypage;
   $('mpClose').onclick = function(){ if(mpGuard){ history.back(); } else { closeMypage(); } };   // X도 back()으로 닫음 → 히스토리 정합(빈 뒤로가기 방지)
@@ -792,7 +822,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.26h';
+var APP_VERSION = '26.06.26i';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:

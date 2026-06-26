@@ -639,6 +639,13 @@ function getDevice(){
   try { d = (crypto.randomUUID ? crypto.randomUUID() : ("d"+Date.now()+Math.random())).replace(/-/g,""); } catch(e){ d = "d"+Date.now(); }
   return d;
 }
+// 기기 표시명(종류·OS) — 마이페이지 '로그인된 기기'용. 정확한 모델명은 브라우저가 안 줌(개인정보) → 종류+OS까지.
+function deviceLabel(){
+  var ua = navigator.userAgent || "";
+  var type = /iPad|Tablet|PlayBook|Silk|Galaxy Tab/i.test(ua) ? "태블릿" : (/Mobi|Android|iPhone|iPod/i.test(ua) ? "모바일" : "데스크탑");
+  var os = /iPad/i.test(ua) ? "아이패드" : /iPhone|iPod/i.test(ua) ? "아이폰" : /Android/i.test(ua) ? "안드로이드" : /Windows/i.test(ua) ? "윈도우" : /Mac/i.test(ua) ? "맥" : "";
+  return os ? (type + " · " + os) : type;
+}
 async function sha256(str){
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
@@ -715,7 +722,7 @@ function doVerify(){
   su2Busy=true;
   const note=$("su2Note"); loadingNote(note,"확인하고 있어요");
   const device=getDevice();
-  post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device}).then(d=>{
+  post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device, dlabel:deviceLabel()}).then(d=>{
     su2Busy=false;
     if(d && d.ok){
       const prev=loadSess()||{};
@@ -932,7 +939,7 @@ function sessExpired(){
   s.session=""; saveSess(s);                      // 죽은 토큰 비움 → 재진입도 가입으로
   clearClientCaches();                            // 다른 상담사 재인증 시 이전 상담사 명단·기록 깜빡임(PII) 방지
   if(s.name){ $("su-name").value=s.name; $("su-name").dispatchEvent(new Event("input")); }   // 이름 미리 채움(편의·X버튼 활성), 전화는 다시 입력
-  const note=$("su1Note"); if(note){ note.className="note"; note.textContent="로그인 기간이 지나 다시 본인 확인이 필요해요. 전화번호를 적어 주세요."; }   // 30일 세션 만료(멀티기기 캡 차단과 별개 — 캡은 가입 시작 단계서 안내)
+  const note=$("su1Note"); if(note){ note.className="note"; note.textContent="로그인한 지 오래돼서 다시 한 번 확인할게요. 전화번호를 적어 주세요."; }   // 30일 세션 만료(능동형 §2-2; 멀티기기 캡 차단과 별개 — 캡은 가입 시작 단계서 안내)
   $("su1Back").style.display="none"; show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100);
 }
 // 상담사 식별이 바뀔 수 있는 시점(세션만료·다른 상담사 가입)에 메모리 캐시 비우기 — 공유 태블릿 PII 보호.
