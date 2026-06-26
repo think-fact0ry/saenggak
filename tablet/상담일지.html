@@ -19,7 +19,7 @@
   .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}
   #s-signup1 .wrap,#s-signup2 .wrap{padding-top:64px;}   /* 키보드 down = 제목·입력 손 닿는 높이로 내림(상태바 밑 박힘 방지, ex12) */
   #s-signup1 h1,#s-signup2 h1{margin-bottom:24px;}   /* 제목↔첫 입력 간격(부제 삭제 후 좁아진 것 복원) */
-  #s-signup1:focus-within .wrap,#s-signup2:focus-within .wrap,#s-gclient:focus-within .wrap{padding-top:16px;}   /* 키보드 뜰 때 위 여백 줄여 입력칸이 footbar 위로 올라옴(가림 방지) */
+  /* ⚠️ 키보드 뜰 때 위여백 축소(64→16)는 폐기 — 입력 누르면 전체 텍스트가 위로 '뿅' 점프, 흰 바탕 누르면 다시 내려가 불편(유성 실기기 2026-06-25). 위여백 고정(점프 없음). §5.5 ⓕ 폐기. */
   html:has(#s-signup1 input:focus),html:has(#s-signup2 input:focus),html:has(#s-gclient input:focus){overflow:hidden;}   /* 적은-칸 화면=키보드 뜰 때 스크롤 잠금=고정(스크롤바 없음). 입력이 footbar 위에 다 들어감(§5.5 ⓗ) */
   /* 많은-칸 입력화면(textarea가 키보드에 가려짐)=헤더(뒤로·제목) 고정 + 입력영역만 스크롤 — §5.5 ⓗ. 키보드 down=일반 흐름(viewport 높이 가득), up=resizes-content가 dvh 줄여 입력영역만 줄어듦 */
   .kbf.active{display:flex;flex-direction:column;height:100vh;height:100dvh;}
@@ -60,6 +60,10 @@
   .footbar.kb{padding:0;border-top:none;transition:none;}  /* 키보드 위로 올라가면 좌우 여백 없이 꽉 차게(ex2) + transition 없음=스크롤 시 즉시 따라붙음 */
   .footbar.kb .inner{max-width:none;gap:0;}
   .footbar.kb .btn{border-radius:0;padding:19px;}
+  /* resizes-content 환경에선 visualViewport로 키보드 감지가 안 됨(kb≈0, .kb 미부착) → 입력 포커스(=키보드 up)면 하단 버튼을 좌우·아래 여백·라운드 없이 꽉 차게(§5.5 ⓐ). 화면 전체 공통 */
+  .screen:has(input:focus,textarea:focus) .footbar{padding:0;border-top:none;transition:none;}
+  .screen:has(input:focus,textarea:focus) .footbar .inner{max-width:none;gap:0;}
+  .screen:has(input:focus,textarea:focus) .footbar .btn{border-radius:0;padding:19px;}
   .footbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px;}
   .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;}
   .btn:active{transform:scale(.985);background:var(--green-d);}
