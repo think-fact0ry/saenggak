@@ -1,7 +1,7 @@
 // 생각공작소 태블릿 서비스워커 — 설치 가능(앱) 조건 충족 + 오프라인 폴백.
 // 전략: network-first. 온라인이면 항상 최신을 받고(Pages 캐시 지연·스테일 회피),
 //       실패(오프라인)일 때만 캐시로 폴백. 캐시 이름에 버전 → 갱신 시 v 올리면 무효화.
-var CACHE = 'tf-tablet-v88';   // ⚠️ 배포할 때마다 올릴 것(+index.html APP_VERSION 동기) → 켜둔 앱도 포그라운드 복귀 시 자동 갱신
+var CACHE = 'tf-tablet-v89';   // ⚠️ 배포할 때마다 올릴 것(+index.html APP_VERSION 동기) → 켜둔 앱도 포그라운드 복귀 시 자동 갱신
 var SHELL = [
   './', './index.html', './가격표.html', './검사_오감.html', './상담일지.html', './대응매뉴얼.html', './서식.html', './tfnav.js', './manifest.json',
   '/saenggak/favicon.js',

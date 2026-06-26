@@ -159,7 +159,7 @@
 
 <div class="wrap">
   <div class="top">
-    <a class="back" href="./index.html" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+    <button class="back" onclick="sikBack()" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="top-sp"></div>
     <button class="gear" onclick="openGuide()" aria-label="프린터 설정 안내">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -173,7 +173,6 @@
 
   <div id="preview">
     <div class="pv-head">
-      <button class="back" onclick="backToList()" aria-label="목록으로" style="margin-left:-4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <div class="pv-name" id="pvName"></div>
     </div>
     <div id="editTools">
@@ -309,6 +308,7 @@ function openForm(f){
   document.getElementById('listMsg').style.display = 'none';
   document.getElementById('pvName').textContent = curName;
   document.getElementById('preview').classList.add('on');
+  try{ history.pushState({sik:'preview'},''); }catch(e){}   // 단계적 뒤로가기(§5.9): 프리뷰 = 1칸
   document.getElementById('pdfBox').innerHTML = '<div class="pv-loading"><span class="ld">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></span></div>';
   window.scrollTo(0, 0);
   showLoad(true);
@@ -375,7 +375,7 @@ function setEdit(on){
   zoomReset();
   if (on) window.scrollTo(0, 0);
 }
-function editForm(){ setEdit(!drawMode); }
+function editForm(){ if(drawMode){ history.back(); } else { setEdit(true); try{ history.pushState({sik:'edit'},''); }catch(e){} } }   // 편집 진입=push / 완료=뒤로(popstate가 setEdit(false))
 
 function penStyle(ctx, c){ ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(2, c.width/520); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; }
 function drawStroke(s){
@@ -482,6 +482,14 @@ function backToList(){
   pageData = []; strokes = []; redoStack = []; curFormId = null;
   document.getElementById('list').style.display = 'flex';
 }
+// ── 단계적 뒤로가기(§5.9): 스와이프/좌상단 = 편집→프리뷰→리스트→허브 ──
+function sikBack(){ if(document.getElementById('preview').classList.contains('on')) history.back(); else location.href='./index.html'; }
+window.addEventListener('popstate', function(){
+  var pv=document.getElementById('preview');
+  if(pv.classList.contains('editing')){ setEdit(false); return; }   // 편집 → 프리뷰
+  if(pv.classList.contains('on')){ backToList(); return; }           // 프리뷰 → 리스트
+  // 리스트 → 브라우저 기본(허브)
+});
 
 // ── 프린터 안내 ──
 function openGuide(){ document.getElementById('guide').classList.add('on'); }
