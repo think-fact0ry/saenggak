@@ -654,7 +654,31 @@ async function sha256(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-function show(id){ if(id!=="s-signup2") stopOtpTimer(); document.querySelectorAll(".footbar").forEach(f=>{ f.style.transform=""; f.classList.remove("kb"); }); document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }   // footbar transform·kb 초기화 = 키보드 올린 채 화면 전환 시 잔류 방지
+function show(id){ if(id!=="s-signup2") stopOtpTimer(); document.querySelectorAll(".footbar").forEach(f=>{ f.style.transform=""; f.classList.remove("kb"); }); document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); _navTrack(id); }   // footbar transform·kb 초기화 = 키보드 올린 채 화면 전환 시 잔류 방지 / _navTrack=화면 단위 뒤로가기
+
+// ── 화면 단위 단계적 뒤로가기 (디자인원칙 §5.9) — 전진=push / 스와이프 뒤로=부모 한 단계(기존 백버튼 재사용) / 베이스 뒤로=허브 ──
+var NAV_SCREENS=['s-mode','s-clients','s-gclients','s-month','s-write','s-print','s-gclient','s-grounds','s-gwrite','s-gintake','s-gedit'];
+var NAV_PARENT={'s-clients':'s-mode','s-gclients':'s-mode','s-month':'s-clients','s-write':'s-month','s-print':'s-month','s-gclient':'s-gclients','s-grounds':'s-gclients','s-gwrite':'s-grounds','s-gintake':'s-grounds','s-gedit':'s-grounds'};
+var NAV_BACKBTN={'s-clients':'cl-back','s-gclients':'gcl-back','s-month':'m-back','s-write':'w-back','s-print':'p-back','s-gclient':'gc-back','s-grounds':'gr-back','s-gwrite':'gw-back','s-gintake':'gi-back','s-gedit':'ge-back'};
+var navStarted=false, navInternal=false, navBase='', navSuppress=0, navCur='';
+function navStart(base){ navBase=base; navStarted=true; navCur=base; }   // doEnterApp이 앱 베이스 진입 시 호출
+function _navTrack(id){
+  if(!navStarted || navInternal){ navCur=id; return; }                  // popstate/백버튼發 = 히스토리 건드리지 않음
+  if(NAV_SCREENS.indexOf(id)<0){ navCur=id; return; }                   // 아이덴티티 등 비앱화면
+  // id가 navCur의 조상이면 = 뒤로(백버튼 직접 탭) → 조상까지 히스토리 되감기
+  var p=navCur, back=0, anc=false;
+  while(NAV_PARENT[p]){ p=NAV_PARENT[p]; back++; if(p===id){ anc=true; break; } }
+  if(anc){ navCur=id; navSuppress+=back; if(back>0) history.go(-back); }
+  else if(id!==navCur){ navCur=id; if(id!==navBase) history.pushState({scr:id},''); }   // 전진/형제 = 1칸 push(베이스 제외)
+}
+window.addEventListener('popstate', function(){
+  if(!navStarted) return;
+  if(navSuppress>0){ navSuppress--; return; }                           // 백버튼 탭이 부른 history.go 반향 무시
+  if(NAV_SCREENS.indexOf(navCur)<0 || navCur===navBase) return;         // 베이스/아이덴티티 = 브라우저 기본(허브로 나감)
+  var before=navCur, btn=NAV_BACKBTN[navCur], el=btn?document.getElementById(btn):null;
+  if(el){ navInternal=true; el.click(); navInternal=false; }            // 현재 화면 백버튼(부모 이동+미저장 confirm) 1회 실행
+  if(navCur===before){ try{ history.pushState({scr:before},''); }catch(e){} }   // confirm 취소 등으로 안 바뀌면 머무름
+});
 
 // ── 자동서식 헬퍼 ──
 // 고정길이 자동닫힘 — 단, *고치러 다시 연 경우*(포커스 시점에 이미 가득)엔 안 닫음(수정 방해 방지). 원칙 §5.
@@ -964,8 +988,8 @@ function enterApp(){
 function doEnterApp(){
   const s=loadSess(); const who = "상담사 " + (DEMO ? "데모" : (s ? s.name : ""));
   $("whoTag").textContent = who; $("whoTag2").textContent = who;
-  if(!GA_ON){ $("mode-general").style.display="none"; show("s-clients"); loadClients(); return; }  // 법무 전 상담사 = 008 단독(기존 흐름 그대로)
-  show("s-mode");
+  if(!GA_ON){ $("mode-general").style.display="none"; navStart("s-clients"); show("s-clients"); loadClients(); return; }  // 법무 전 상담사 = 008 단독(기존 흐름 그대로)
+  navStart("s-mode"); show("s-mode");
 }
 // ── 상담사 서약(비밀유지) — 처음 1회만. 동의=상담사 전환(세션 oath), 미동의=허브로 ──
 function showOath(){ $("oathDim").classList.add("on"); $("oathSheet").classList.add("on"); }
