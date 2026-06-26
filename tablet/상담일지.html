@@ -13,7 +13,7 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 롱프레스→구글검색 차단(ex9) */
   input,textarea{-webkit-user-select:text;user-select:text;}   /* 입력칸은 선택 허용 */
-  body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;overscroll-behavior:none;}   /* 당겨서 새로고침·오버스크롤 바운스 차단(카드 드래그 방해 방지) */
   .screen{display:none;}
   .screen.active{display:block;}
   .wrap{max-width:720px;margin:0 auto;padding:20px 22px 120px;}
@@ -155,11 +155,6 @@
   .icobtn svg{width:19px;height:19px;}
   .client-card .cc-main{flex:1;min-width:0;}
   .client-card .cmemo{flex:0 1 auto;max-width:44%;text-align:right;font-size:12.5px;color:var(--green-d);font-weight:600;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;}
-  .client-card .drag{display:none;color:var(--g300);cursor:grab;touch-action:none;padding:0 10px 0 2px;align-items:center;}
-  .client-card .drag svg{width:22px;height:22px;}
-  .client-list.editing .client-card{cursor:grab;touch-action:none;}            /* 박스 전체를 잡아 끌 수 있게 */
-  .client-list.editing .client-card .drag{display:flex;}
-  .client-list.editing .client-card .chev,.client-list.editing .client-card .cmemo{display:none;}  /* 편집 중엔 메모·화살표 숨겨 드래그에 집중 */
   .client-card.dragging{position:fixed;z-index:400;margin:0;transition:none;box-shadow:0 14px 34px rgba(0,0,0,.22);border-color:var(--green);background:#fff;}  /* 손가락 따라 떠다님(자기는 transition 없음, 주변만 FLIP 애니메이션) */
   .gcl-ph{border:2px dashed var(--green);border-radius:16px;background:#F6FAF6;}  /* 들어갈 자리 표시 */
   /* 초기상담(인테이크) 진입 카드 + 섹션 구분(2026-06-23 슬라이스 B) */
@@ -1163,8 +1158,7 @@ function renderGClients(q){
   list.forEach(c=>{
     const el=document.createElement("div"); el.className="client-card"; el.dataset.cid=c.child_id||"";
     const sub=[fmtBirth(c.birth), (c.rounds?c.rounds+"회기":"")].filter(Boolean).join(" · ");
-    el.innerHTML='<span class="drag" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg></span>'
-      +'<div class="cc-main"><div class="nm">'+escapeHtml(c.name)+'</div><div class="meta">'+escapeHtml(sub)+'</div></div>'
+    el.innerHTML='<div class="cc-main"><div class="nm">'+escapeHtml(c.name)+'</div><div class="meta">'+escapeHtml(sub)+'</div></div>'
       +(c.memo?'<div class="cmemo">'+escapeHtml(c.memo)+'</div>':'')
       +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
     el.onclick=()=>{ if(gJustDragged){ gJustDragged=false; return; } openGClient(c); };   // 드래그 직후 click은 무시(열기 방지)
@@ -1199,7 +1193,7 @@ function enableDrag(card){
     if(gDragActive) return;                       // 다른 카드 드래그 중 = 두 번째 손가락 무시
     gJustDragged=false;
     const sx=e.clientX, sy=e.clientY, pid=e.pointerId;
-    let holdTimer=setTimeout(()=>{ holdTimer=null; cleanupPre(); beginCardDrag(card, e, pid); }, GDRAG_HOLD);
+    let holdTimer=setTimeout(()=>{ holdTimer=null; cleanupPre(); if($("gcl-search").value.trim()) return; beginCardDrag(card, e, pid); }, GDRAG_HOLD);   // 검색 필터 중엔 부분목록이라 순서변경 막음(전체 목록에서만)
     const preMove=(ev)=>{ if(Math.abs(ev.clientX-sx)>10 || Math.abs(ev.clientY-sy)>10) cleanupPre(); };   // 움직임=스크롤 의도 → 길게누름 취소
     const preEnd=()=>cleanupPre();                // 짧은 탭/취소 → click이 열기
     function cleanupPre(){
@@ -1214,7 +1208,9 @@ function enableDrag(card){
   });
 }
 function beginCardDrag(card, e, pid){
+  if(gDragActive) return;                                 // 이미 다른 카드 드래그 중(두 손가락 동시 진입 차단)
   gDragActive=true;
+  gJustDragged=true;                                      // 떠올린 순간부터 직후 click(열기) 억제 — 안 움직이고 떼도 안 열리게
   const list=card.parentNode;
   const rect=card.getBoundingClientRect();
   const offsetY=e.clientY-rect.top;                       // e=정지 상태 pointerdown(위치 유효)
