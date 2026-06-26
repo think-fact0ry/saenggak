@@ -288,33 +288,43 @@
   </div>
 </div>
 
-<!-- ════ 제공인력 로그인 모달 (11 OTP 재사용) ════ -->
-<div id="staffModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:12px;padding:22px;width:320px;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,.25)">
-    <div style="font-size:16px;font-weight:700;color:#222">제공인력 로그인</div>
+<!-- ════ 제공인력 로그인 모달 (11 OTP 재사용 · 토스식 §5.5/토스토큰) ════ -->
+<style>
+  #staffModal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px}
+  .sm-card{background:#fff;border-radius:20px;padding:28px 24px 20px;width:340px;max-width:92vw;box-shadow:0 12px 44px rgba(0,0,0,.22);font-family:inherit;word-break:keep-all}
+  .sm-title{font-size:20px;font-weight:700;color:#191f28;letter-spacing:-.3px;margin-bottom:18px}
+  .sm-input{width:100%;box-sizing:border-box;font-family:inherit;font-size:16px;color:#191f28;padding:15px 16px;border-radius:14px;border:2px solid transparent;background:#f2f4f6;outline:none;transition:border-color .15s,background .15s;caret-color:#3a8a5f}
+  .sm-input::placeholder{color:#b0b8c1}
+  .sm-input:focus{background:#fff;border-color:#3a8a5f}
+  .sm-input + .sm-input{margin-top:10px}
+  .sm-code{letter-spacing:8px;text-align:center;font-size:21px;font-weight:600}
+  .sm-btn{width:100%;font-family:inherit;font-size:16px;font-weight:700;padding:16px;border-radius:14px;border:none;background:#3a8a5f;color:#fff;cursor:pointer;margin-top:16px;transition:background .12s,transform .08s}
+  .sm-btn:active{background:#2f6f4d;transform:scale(.99)}
+  .sm-btn:disabled{background:#e5e8eb;color:#8b95a1;cursor:default;transform:none}
+  .sm-ghost{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;font-weight:600;padding:15px;border-radius:14px;border:1.5px solid #cfe6d8;background:#fff;color:#2f6f4d;cursor:pointer;margin-top:10px}
+  .sm-ghost:active{background:#f0f7f3}
+  .sm-link{width:100%;font-family:inherit;font-size:13.5px;font-weight:500;padding:12px;border:none;background:none;color:#8b95a1;cursor:pointer;margin-top:4px}
+  .sm-close{width:100%;font-family:inherit;font-size:14px;font-weight:600;padding:13px;border:none;background:none;color:#8b95a1;cursor:pointer;margin-top:6px}
+  .sm-echo{font-size:13.5px;color:#8b95a1;font-weight:500;margin:2px 0 14px}
+  .sm-err{color:#f04452;font-size:13px;font-weight:500;min-height:18px;margin-top:12px;word-break:keep-all}
+</style>
+<div id="staffModal">
+  <div class="sm-card">
+    <div class="sm-title">제공인력 로그인</div>
     <div id="smStep1">
-      <div style="font-size:12px;color:#888;margin:6px 0 14px">등록된 이름과 전화번호로 인증해요</div>
-      <input id="smName" placeholder="이름" autocomplete="off"
-             style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:14px;margin-bottom:8px">
-      <input id="smPhone" placeholder="전화번호" inputmode="numeric" autocomplete="off"
-             style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:14px">
-      <button id="smSendBtn" onclick="smSend()"
-              style="width:100%;margin-top:14px;padding:11px;border:none;background:#3a8a5f;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">인증번호 받기</button>
-      <button id="smResetBtn" onclick="smResetLogin()"
-              style="display:none;width:100%;margin-top:8px;padding:11px;border:1px solid #cfe6d8;background:#eef7f1;color:#2f6f4d;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">다른 기기 전부 로그아웃하고 이 기기 쓰기</button>
+      <input id="smName" class="sm-input" placeholder="이름" autocomplete="off">
+      <input id="smPhone" class="sm-input" placeholder="전화번호" inputmode="numeric" autocomplete="off">
+      <button id="smSendBtn" class="sm-btn" onclick="smSend()">인증번호 받기</button>
+      <button id="smResetBtn" class="sm-ghost" onclick="smResetLogin()" style="display:none">다른 기기 전부 로그아웃하고 이 기기 쓰기</button>
     </div>
     <div id="smStep2" style="display:none">
-      <div id="smPhoneEcho" style="font-size:12px;color:#888;margin:6px 0 12px"></div>
-      <input id="smCode" inputmode="numeric" maxlength="6" placeholder="인증번호 6자리" autocomplete="one-time-code"
-             style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:18px;letter-spacing:4px;text-align:center">
-      <button id="smVerifyBtn" onclick="smVerify()"
-              style="width:100%;margin-top:14px;padding:11px;border:none;background:#3a8a5f;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">확인</button>
-      <button onclick="smResend()"
-              style="width:100%;margin-top:8px;padding:8px;border:none;background:none;color:#888;font-size:12px;cursor:pointer">번호 다시 입력 / 재발송</button>
+      <div id="smPhoneEcho" class="sm-echo"></div>
+      <input id="smCode" class="sm-input sm-code" inputmode="numeric" maxlength="6" placeholder="인증번호 6자리" autocomplete="one-time-code">
+      <button id="smVerifyBtn" class="sm-btn" onclick="smVerify()">확인</button>
+      <button class="sm-link" onclick="smResend()">번호 다시 입력 · 재발송</button>
     </div>
-    <div id="smErr" style="color:#dc2626;font-size:12px;min-height:16px;margin-top:10px"></div>
-    <button onclick="smClose()"
-            style="width:100%;margin-top:4px;padding:8px;border:1px solid #ddd;background:#fff;color:#666;border-radius:8px;font-size:13px;cursor:pointer">닫기</button>
+    <div id="smErr" class="sm-err"></div>
+    <button class="sm-close" onclick="smClose()">닫기</button>
   </div>
 </div>
 
