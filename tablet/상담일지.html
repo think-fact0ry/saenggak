@@ -139,7 +139,7 @@
   .search .ico svg{width:20px;height:20px;}
   .count{font-size:13.5px;color:var(--g500);font-weight:600;margin:0 2px 10px;}
   .client-list{display:flex;flex-direction:column;gap:10px;}
-  .client-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:16px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:transform .2s cubic-bezier(.2,.7,.3,1),border-color .12s,background .12s;}
+  .client-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:16px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:transform .2s cubic-bezier(.2,.7,.3,1),border-color .12s,background .12s;-webkit-touch-callout:none;}   /* 길게 누름=드래그 → iOS 롱프레스 메뉴 차단 */
   #gw-opinion{margin-top:10px;}
   .client-card:active{border-color:var(--green);background:#F6FAF6;}
   .client-card .nm{font-size:16.5px;font-weight:700;letter-spacing:-.3px;}
@@ -440,7 +440,7 @@
 <div class="screen" id="s-gclients">
   <div class="wrap">
     <button class="back" id="gcl-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-    <div class="head-row"><h1>일반 상담일지</h1><button class="icobtn" id="gcl-edit" aria-label="순서 수정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button></div>
+    <div class="head-row"><h1>일반 상담일지</h1></div>
     <div class="search">
       <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input id="gcl-search" type="text" placeholder="이름으로 찾기" autocomplete="off">
@@ -449,7 +449,7 @@
     <div class="client-list" id="gcl-list"></div>
     <div class="note" id="gcl-note"></div>
   </div>
-  <div class="footbar"><div class="inner"><button class="btn" id="gcl-new">새 내담자</button><button class="btn" id="gcl-done" style="display:none;">완료</button></div></div>
+  <div class="footbar"><div class="inner"><button class="btn" id="gcl-new">새 내담자</button></div></div>
 </div>
 
 <!-- ═══ [일반] 내담자 직접입력 ═══ -->
@@ -703,7 +703,7 @@ function doSendOtp(){
   if(otpSendBusy) return; otpSendBusy=true;   // 더블탭 가드 = 문자 2번 발송 방지
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
   const note=$("su1Note"); loadingNote(note,"확인하고 있어요"); $("su1Btn").disabled=true;
-  post({action:"staff_start", name, phone}).then(d=>{
+  post({action:"staff_start", name, phone, device:getDevice()}).then(d=>{
     otpSendBusy=false; $("su1Btn").disabled=false;
     if(d && d.ok){
       $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
@@ -770,7 +770,7 @@ function resendOtp(){
   const note=$("su2Note"); loadingNote(note,"다시 보내고 있어요");
   // 실패해도 '다시 받기' 버튼을 되살림(막다른 화면 방지, §3 나갈 선택지)
   function failNote(msg){ note.className="note err"; note.innerHTML=msg+' <button class="lk" id="otpResend">다시 받기</button>'; const b=$("otpResend"); if(b) b.onclick=resendOtp; }
-  post({action:"staff_start", name, phone}).then(d=>{
+  post({action:"staff_start", name, phone, device:getDevice()}).then(d=>{
     resendBusy=false;
     if(d && d.ok){
       $("su2Sub").textContent=(d.phone||"")+" 로 보낸 6자리 숫자를 적어 주세요.";
@@ -937,7 +937,7 @@ function sessExpired(){
   s.session=""; saveSess(s);                      // 죽은 토큰 비움 → 재진입도 가입으로
   clearClientCaches();                            // 다른 상담사 재인증 시 이전 상담사 명단·기록 깜빡임(PII) 방지
   if(s.name){ $("su-name").value=s.name; $("su-name").dispatchEvent(new Event("input")); }   // 이름 미리 채움(편의·X버튼 활성), 전화는 다시 입력
-  const note=$("su1Note"); if(note){ note.className="note"; note.textContent="다시 한 번 본인 확인이 필요해요. 전화번호를 적어 주세요."; }
+  const note=$("su1Note"); if(note){ note.className="note"; note.textContent="로그인 기간이 지나 다시 본인 확인이 필요해요. 전화번호를 적어 주세요."; }   // 30일 세션 만료(멀티기기 캡 차단과 별개 — 캡은 가입 시작 단계서 안내)
   $("su1Back").style.display="none"; show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100);
 }
 // 상담사 식별이 바뀔 수 있는 시점(세션만료·다른 상담사 가입)에 메모리 캐시 비우기 — 공유 태블릿 PII 보호.
@@ -1121,8 +1121,7 @@ const DEMO_GCLIENTS = [    // 명단·정렬·메모·연필 UX 미리보기용(
 
 let gClient = null;        // {name, birth8(YYYYMMDD), child_id?, memo?}
 let gClients = [];         // 일반 내담자 명단 [{child_id,name,birth,memo,order,rounds,lastDate}]
-let gEditMode = false;     // 명단 순서수정 모드
-let gReorderDirty = false; // 드래그로 순서 바뀜 → 완료 시 저장
+let gJustDragged = false;  // 드래그 직후 click(열기) 억제
 let geOrig = {name:"",birth:"",memo:""};   // s-gedit 진입 시점 값(변경 감지·자동저장 판단)
 let gDragActive = false;   // 드래그 진행 중(멀티터치 동시 드래그 차단 — 단일 드래그 모델)
 let gIntake = null;        // 현재 내담자 초기상담(있으면 객체, 없으면 null)
@@ -1143,7 +1142,6 @@ let _gsaving = false;
 
 // ── 일반 내담자 명단(회기 모아둔 곳) ──
 function loadGClients(){
-  gEditMode=false; gReorderDirty=false; updateGEditUI();
   if($("gcl-search")) $("gcl-search").value="";
   if(DEMO){ gClients=DEMO_GCLIENTS.slice(); $("gcl-note").textContent=""; renderGClients(""); return; }
   const note=$("gcl-note");
@@ -1152,7 +1150,7 @@ function loadGClients(){
   const s=loadSess()||{};
   post({action:"gclient_list", staffId:s.staffId, session:s.session}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
-    if(d && d.ok){ gClients=d.clients||[]; note.textContent=""; if(!gEditMode) renderGClients($("gcl-search").value); }   // 편집 중이면 재렌더 보류(드래그 보호)
+    if(d && d.ok){ gClients=d.clients||[]; note.textContent=""; if(!gDragActive) renderGClients($("gcl-search").value); }   // 드래그 중이면 재렌더 보류(드래그 카드 보호)
     else if(!gClients.length){ note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; }
   }).catch(()=>{ if(!gClients.length){ note.className="note err"; note.textContent="연결이 안 됐어요"; } });
 }
@@ -1169,90 +1167,92 @@ function renderGClients(q){
       +'<div class="cc-main"><div class="nm">'+escapeHtml(c.name)+'</div><div class="meta">'+escapeHtml(sub)+'</div></div>'
       +(c.memo?'<div class="cmemo">'+escapeHtml(c.memo)+'</div>':'')
       +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
-    el.onclick=()=>{ if(!gEditMode) openGClient(c); };
+    el.onclick=()=>{ if(gJustDragged){ gJustDragged=false; return; } openGClient(c); };   // 드래그 직후 click은 무시(열기 방지)
     enableDrag(el);
     box.appendChild(el);
   });
 }
 function openGClient(c){ gClient={ name:c.name, birth:c.birth, child_id:c.child_id||"", memo:c.memo||"" }; loadGRounds(); }
-$("gcl-search").oninput=()=>{ if(!gEditMode) renderGClients($("gcl-search").value); };
-$("gcl-back").onclick=()=>{ if(gEditMode){ finishGEdit(); return; } show("s-mode"); };   // 편집 중 뒤로 = 먼저 저장(드래그 유실 방지)
+$("gcl-search").oninput=()=>{ renderGClients($("gcl-search").value); };
+$("gcl-back").onclick=()=>{ show("s-mode"); };
 $("gcl-new").onclick=()=>{ resetGClient(); show("s-gclient"); $("gc-name").focus(); };
 
-// 순서수정 모드 — 우상단 햄버거(☰)로 진입, [완료]로 종료(드래그 변경은 종료 시 저장)
-function updateGEditUI(){
-  const editing=gEditMode;
-  $("gcl-list").classList.toggle("editing", editing);
-  $("gcl-edit").classList.toggle("on", editing);          // 햄버거 활성 표시
-  $("gcl-new").style.display = editing ? "none" : "";
-  $("gcl-done").style.display = editing ? "" : "none";
-  const sr=$("gcl-search").parentNode; if(sr) sr.style.display = editing ? "none" : "";
-}
-function finishGEdit(){ gEditMode=false; updateGEditUI(); if(gReorderDirty) saveGOrder(); }   // 저장은 saveGOrder가 성공 시에만 dirty 해제
-$("gcl-edit").onclick=()=>{
-  if(gEditMode){ finishGEdit(); return; }
-  if($("gcl-search").value){ $("gcl-search").value=""; renderGClients(""); }   // 부분목록 정렬 방지
-  if(gClients.length<2){ toast("내담자가 2명 이상일 때 순서를 바꿀 수 있어요"); return; }
-  gEditMode=true; updateGEditUI();
-};
-$("gcl-done").onclick=()=>finishGEdit();
+// 순서 저장 — 드래그로 자리 바뀌면 손 떼는 즉시 저장(별도 [완료] 없음). 성공=조용히(순서가 이미 보임), 실패만 토스트.
 function saveGOrder(){
   const ids=Array.prototype.map.call($("gcl-list").querySelectorAll(".client-card"), el=>el.dataset.cid).filter(Boolean);
   const pos={}; ids.forEach((id,i)=>pos[id]=i);
   gClients.sort((a,b)=>{ const pa=(pos[a.child_id]==null?999:pos[a.child_id]), pb=(pos[b.child_id]==null?999:pos[b.child_id]); return pa-pb; });
-  if(DEMO){ gReorderDirty=false; toast("순서 저장(데모)"); return; }
+  if(DEMO){ return; }
   const s=loadSess()||{};
   post({action:"gclient_reorder", staffId:s.staffId, session:s.session, order:ids}).then(d=>{
-    if(d && d.code==="auth"){ sessExpired(); return; }   // dirty 유지 → 재인증 후 재시도 가능
-    if(d && d.ok){ gReorderDirty=false; toast("순서를 저장했어요"); }
-    else toast("순서 저장을 못 했어요. 순서 수정에서 다시 시도해 주세요");   // dirty 유지
-  }).catch(()=>toast("연결이 안 됐어요. 순서 수정에서 다시 시도해 주세요"));   // dirty 유지
+    if(d && d.code==="auth"){ sessExpired(); return; }
+    if(!(d && d.ok)) toast("순서 저장을 못 했어요. 다시 시도해 주세요");
+  }).catch(()=>toast("연결이 안 됐어요. 순서가 저장되지 않았어요"));
 }
-// 드래그 정렬(터치/태블릿) — 편집 모드에서 *박스 전체*를 잡으면 카드가 손가락을 따라 떠오르고(fixed),
-//  들어갈 자리에 점선 자리표시(placeholder)가 보임. 손 떼면 그 자리에 안착. move/up은 document 바인딩(어디서 떼도 정리).
+// 순서 변경 = 카드를 *길게 누르면* 바로 드래그(별도 모드·버튼 없음, 유성 2026-06-26).
+//  누르고 ~320ms 정지하면 카드가 떠오르고(fixed) 손가락 따라감 + 들어갈 자리 점선. 대기 중 10px 넘게 움직이면=스크롤 의도라 취소(목록 정상 스크롤).
+//  짧은 탭은 그대로 열기(openGClient). 손 떼면 그 자리에 안착 + 즉시 저장.
+const GDRAG_HOLD = 320;
 function enableDrag(card){
   card.addEventListener("pointerdown",(e)=>{
-    if(!gEditMode) return;
-    if(gDragActive) return;                       // 이미 다른 카드 드래그 중 = 두 번째 손가락 무시(멀티터치 손상 방지)
     if(e.button!=null && e.button!==0) return;
-    e.preventDefault();
-    gDragActive=true;
-    const list=card.parentNode;
-    const rect=card.getBoundingClientRect();
-    const offsetY=e.clientY-rect.top;
-    let moved=false, lastAnchor=undefined;
-    const ph=document.createElement("div"); ph.className="gcl-ph"; ph.style.height=rect.height+"px";
-    list.insertBefore(ph, card);                          // 원래 자리에 자리표시
-    card.classList.add("dragging");                       // fixed로 띄움
-    card.style.width=rect.width+"px"; card.style.left=rect.left+"px"; card.style.top=(e.clientY-offsetY)+"px";
-    try{ card.setPointerCapture(e.pointerId); }catch(_){}
-    const move=(ev)=>{
-      card.style.top=(ev.clientY-offsetY)+"px";           // 손가락 따라 항상 갱신(부드러운 추적)
-      const y=ev.clientY;
-      const sibs=Array.prototype.slice.call(list.querySelectorAll(".client-card:not(.dragging)"));
-      let anchor=null;
-      for(const sib of sibs){ const r=sib.getBoundingClientRect(); if(y < r.top + r.height/2){ anchor=sib; break; } }
-      if(anchor===lastAnchor) return;                     // 들어갈 자리 그대로 → reflow·애니메이션 생략(프레임 튐 방지)
-      lastAnchor=anchor; moved=true;
-      const firsts=sibs.map(s=>s.getBoundingClientRect().top);   // FLIP: 이동 전 위치
-      if(anchor) list.insertBefore(ph, anchor); else list.appendChild(ph);
-      sibs.forEach((s,i)=>{ const dy=firsts[i]-s.getBoundingClientRect().top; if(dy){ s.style.transition="none"; s.style.transform="translateY("+dy+"px)"; requestAnimationFrame(()=>{ s.style.transition=""; s.style.transform=""; }); } });   // 새 위치로 스르륵(CSS transition)
-    };
-    const up=()=>{
-      document.removeEventListener("pointermove",move);
-      document.removeEventListener("pointerup",up);
-      document.removeEventListener("pointercancel",up);
-      list.insertBefore(card, ph); list.removeChild(ph);  // 자리표시 위치에 안착
-      card.classList.remove("dragging");
-      card.style.width=card.style.left=card.style.top="";
-      Array.prototype.forEach.call(list.querySelectorAll(".client-card"), s=>{ s.style.transform=""; s.style.transition=""; });  // FLIP 잔여 정리
-      gDragActive=false;
-      if(moved) gReorderDirty=true;                       // 실제로 움직였을 때만(단순 탭 헛저장 방지)
-    };
-    document.addEventListener("pointermove",move);
-    document.addEventListener("pointerup",up);
-    document.addEventListener("pointercancel",up);
+    if(gDragActive) return;                       // 다른 카드 드래그 중 = 두 번째 손가락 무시
+    gJustDragged=false;
+    const sx=e.clientX, sy=e.clientY, pid=e.pointerId;
+    let holdTimer=setTimeout(()=>{ holdTimer=null; cleanupPre(); beginCardDrag(card, e, pid); }, GDRAG_HOLD);
+    const preMove=(ev)=>{ if(Math.abs(ev.clientX-sx)>10 || Math.abs(ev.clientY-sy)>10) cleanupPre(); };   // 움직임=스크롤 의도 → 길게누름 취소
+    const preEnd=()=>cleanupPre();                // 짧은 탭/취소 → click이 열기
+    function cleanupPre(){
+      if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; }
+      document.removeEventListener("pointermove",preMove);
+      document.removeEventListener("pointerup",preEnd);
+      document.removeEventListener("pointercancel",preEnd);
+    }
+    document.addEventListener("pointermove",preMove);
+    document.addEventListener("pointerup",preEnd);
+    document.addEventListener("pointercancel",preEnd);
   });
+}
+function beginCardDrag(card, e, pid){
+  gDragActive=true;
+  const list=card.parentNode;
+  const rect=card.getBoundingClientRect();
+  const offsetY=e.clientY-rect.top;                       // e=정지 상태 pointerdown(위치 유효)
+  let moved=false, lastAnchor=undefined;
+  const ph=document.createElement("div"); ph.className="gcl-ph"; ph.style.height=rect.height+"px";
+  list.insertBefore(ph, card);                            // 원래 자리에 자리표시
+  card.classList.add("dragging");                         // fixed로 띄움
+  card.style.touchAction="none";                          // 드래그 중엔 스크롤 차단(카드만 움직임)
+  card.style.width=rect.width+"px"; card.style.left=rect.left+"px"; card.style.top=rect.top+"px";
+  try{ card.setPointerCapture(pid); }catch(_){}
+  if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(_){} }   // 집었다는 햅틱(지원 기기만)
+  const move=(ev)=>{
+    ev.preventDefault();                                  // 스크롤 억제(드래그 우선)
+    card.style.top=(ev.clientY-offsetY)+"px";             // 손가락 따라 항상 갱신
+    const y=ev.clientY;
+    const sibs=Array.prototype.slice.call(list.querySelectorAll(".client-card:not(.dragging)"));
+    let anchor=null;
+    for(const sib of sibs){ const r=sib.getBoundingClientRect(); if(y < r.top + r.height/2){ anchor=sib; break; } }
+    if(anchor===lastAnchor) return;                       // 들어갈 자리 그대로 → 애니메이션 생략(프레임 튐 방지)
+    lastAnchor=anchor; moved=true;
+    const firsts=sibs.map(s=>s.getBoundingClientRect().top);   // FLIP: 이동 전 위치
+    if(anchor) list.insertBefore(ph, anchor); else list.appendChild(ph);
+    sibs.forEach((s,i)=>{ const dy=firsts[i]-s.getBoundingClientRect().top; if(dy){ s.style.transition="none"; s.style.transform="translateY("+dy+"px)"; requestAnimationFrame(()=>{ s.style.transition=""; s.style.transform=""; }); } });   // 새 위치로 스르륵
+  };
+  const up=()=>{
+    document.removeEventListener("pointermove",move);
+    document.removeEventListener("pointerup",up);
+    document.removeEventListener("pointercancel",up);
+    list.insertBefore(card, ph); list.removeChild(ph);    // 자리표시 위치에 안착
+    card.classList.remove("dragging");
+    card.style.width=card.style.left=card.style.top=card.style.touchAction="";
+    Array.prototype.forEach.call(list.querySelectorAll(".client-card"), s=>{ s.style.transform=""; s.style.transition=""; });  // FLIP 잔여 정리
+    gDragActive=false;
+    if(moved){ gJustDragged=true; saveGOrder(); }          // 실제로 움직였을 때만 저장(+ 직후 click 억제)
+  };
+  document.addEventListener("pointermove",move,{passive:false});
+  document.addEventListener("pointerup",up);
+  document.addEventListener("pointercancel",up);
 }
 
 // ── 내담자 정보·메모 수정(연필) ──
