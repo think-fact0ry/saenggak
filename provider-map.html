@@ -321,7 +321,7 @@
   <div class="logo">오감쑥쑥 <span>지도</span></div>
   <a id="dashLink" href="dashboard.html" style="font-size:10px;color:#999;text-decoration:none;border:1px solid #ddd;padding:3px 8px;border-radius:4px">📊</a>
   <button id="staffLoginBtn" onclick="staffLogin()" style="display:none;font-size:11px;color:#3a8a5f;background:#fff;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">👤 제공인력 로그인</button>
-  <span id="staffWhoami" onclick="staffLogout()" title="로그아웃" style="display:none;font-size:11px;color:#3a8a5f;background:#eef7f1;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px;cursor:pointer">👤 <b>제공인력</b> · 로그아웃</span>
+  <span id="staffWhoami" style="display:none;font-size:11px;color:#3a8a5f;background:#eef7f1;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px">👤 <b>제공인력</b></span>
   <div class="divider"></div>
   <select id="providerSelect"></select>
   <div class="filter-group">
@@ -641,7 +641,6 @@ function smVerify(){
     MODE='provider'; applyModeUI(); _svcCache={}; loadStaffMap();
   }).catch(function(){ _smBusy=false; btn.textContent='확인'; btn.disabled=false; smErr('네트워크 오류 — 다시 시도해 주세요'); });
 }
-function staffLogout(){ clearStaffSess(); MODE='basic'; applyModeUI(); _svcCache={}; loadBasicMap(); showToast('로그아웃했어요'); }
 
 function _gasUrl(action, params) {
   var url = CONFIG.GAS_URL + '?action=' + action;
