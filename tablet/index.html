@@ -171,6 +171,9 @@
   .mp-icon svg{width:22px; height:22px;}
   #mypage{position:fixed; inset:0; z-index:500; background:#fff; overflow-y:auto; transform:translateX(100%); transition:transform .28s cubic-bezier(.2,.8,.3,1);}
   #mypage.on{transform:translateX(0);}
+  /* ═ 종료 안내(하단, 터치 안 막음) ═ */
+  #exitHint{position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(8px); z-index:2000; background:rgba(25,31,40,.92); color:#fff; font-size:14px; font-weight:500; padding:12px 20px; border-radius:99px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; white-space:nowrap; box-shadow:0 6px 20px rgba(0,0,0,.25);}
+  #exitHint.on{opacity:1; transform:translateX(-50%) translateY(0);}
   .mp-wrap{max-width:560px; margin:0 auto; padding:16px 22px calc(30px + env(safe-area-inset-bottom));}
   .mp-top{display:flex; align-items:center; margin-bottom:16px;}
   .mp-back{width:40px; height:40px; border:none; background:none; display:flex; align-items:center; justify-content:flex-start; color:var(--g700); cursor:pointer; margin-left:-6px;}
@@ -364,6 +367,9 @@
   <div class="foot">생각공작소 · think-factory.kr <span id="ver" style="opacity:.8"></span></div>
 
 </div>
+
+<!-- ═ 종료 안내(하단 박스) ═ -->
+<div id="exitHint">한 번 더 누르면 앱을 닫아요</div>
 
 <!-- ═ 마이페이지 ═ -->
 <div id="mypage">
@@ -610,10 +616,12 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     setSt($('oathSt'), !!s.oath); setSt($('adminSt'), !!s.admin);
   }
   function setFlag(k){ var s=sess()||{}; s[k]=true; saveS(s); }
-  // ── 안드로이드 뒤로가기/스와이프 = 마이페이지(+열린 시트) 닫고 허브로. 이전 페이지(상담일지)로 튕김 방지 ──
-  var mpGuard = false;
-  function closeSheets(){ var ns=document.querySelectorAll('.sheet.on, .sheet-dim.on'); for(var i=0;i<ns.length;i++) ns[i].classList.remove('on'); }
-  function openMypage(){ refresh(); loadDevices(); $('mypage').classList.add('on'); if(!mpGuard){ history.pushState({tfMp:1},''); mpGuard=true; } }   // 열 때 히스토리 1칸 → 뒤로가기가 이 칸을 소비
+  // ── 뒤로가기/스와이프 통합: 오버레이는 단계적으로(맨 위부터 한 겹씩) 닫고, 메인에선 종료 확인 ──
+  var navStack = [];   // 열린 오버레이 닫기함수(맨 뒤=가장 위). 열 때마다 히스토리 1칸 push
+  function navOpen(showFn, closeFn){ showFn(); navStack.push(closeFn); history.pushState({n:navStack.length},''); }
+  function navSwap(closeFn){ if(navStack.length) navStack[navStack.length-1]=closeFn; }   // 같은 레벨 교체(번호→서약: 깊이 유지)
+  function navBack(){ if(navStack.length) history.back(); }   // X·딤·취소·드래그 → popstate가 실제로 닫음(히스토리 정합)
+  function openMypage(){ navOpen(function(){ refresh(); loadDevices(); $('mypage').classList.add('on'); }, function(){ $('mypage').classList.remove('on'); }); }
   // 로그인된 기기 목록(읽기 전용) — mypage_get의 devices. 종류별 라인 SVG + '이 기기' 표시
   var DEV_SVG = {
     mobile:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>',
@@ -634,11 +642,18 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
       }
     }catch(e){}
   }
-  function closeMypage(){ closeSheets(); $('mypage').classList.remove('on'); }
   $('mpOpen').onclick = openMypage;
-  $('mpClose').onclick = function(){ if(mpGuard){ history.back(); } else { closeMypage(); } };   // X도 back()으로 닫음 → 히스토리 정합(빈 뒤로가기 방지)
+  $('mpClose').onclick = navBack;
+  // 메인 종료 확인: 루트 가드 1칸 → 첫 뒤로가기=머무르고 안내, 2초 내 한 번 더=종료
+  history.pushState({root:1},'');
+  var exitArmed=false, exitT=null;
+  function showExitHint(){ var e=$('exitHint'); if(e) e.classList.add('on'); }
+  function hideExitHint(){ var e=$('exitHint'); if(e) e.classList.remove('on'); }
   window.addEventListener('popstate', function(){
-    if($('mypage').classList.contains('on') || document.querySelector('.sheet.on')){ closeMypage(); mpGuard=false; }   // 열린 게 있으면 닫기만(이동 X)
+    if(navStack.length){ var fn=navStack.pop(); try{ fn(); }catch(e){} return; }                       // 오버레이 한 겹 닫기(이동 X)
+    if(exitArmed){ exitArmed=false; clearTimeout(exitT); hideExitHint(); history.go(-1); return; }       // 두 번째 → 진짜 종료
+    history.pushState({root:1},''); showExitHint(); exitArmed=true;                                       // 첫 번째 → 머무르고 안내
+    exitT=setTimeout(function(){ exitArmed=false; hideExitHint(); }, 2000);
   });
   // 상담사 등록: (미등록) 번호(5007) → 필수확인(서약) / (등록됨) 해제
   var COUNSELOR_HASH = "8d0a8cbf9d1e53373e02a4ad80e49b2853259c854de49349cd776a7569c47142";  // sha256("5007") — 모든 상담사 공용 코드(소스에 평문 대신 해시)
@@ -648,34 +663,34 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   function closeCnum(){ $('cnumDim').classList.remove('on'); $('cnumSheet').classList.remove('on'); }
   function showCoff(){ $('coffDim').classList.add('on'); $('coffSheet').classList.add('on'); }
   function closeCoff(){ $('coffDim').classList.remove('on'); $('coffSheet').classList.remove('on'); }
-  $('rowOath').onclick = function(){ var s=sess(); if(s&&s.oath){ showCoff(); } else { showCnum(); } };   // 등록됨=해제 / 미등록=번호 입력
+  $('rowOath').onclick = function(){ var s=sess(); if(s&&s.oath){ navOpen(showCoff, closeCoff); } else { navOpen(showCnum, closeCnum); } };   // 등록됨=해제 / 미등록=번호 입력
   // 번호(5007) → 맞으면 필수확인(서약)
   $('cnumKey').addEventListener('focus', function(){ this.removeAttribute('readonly'); });   // 탭 전 readonly=자동완성 차단(§5.5)
   $('cnumKey').oninput = function(){ this.value=this.value.replace(/\D/g,'').slice(0,4); $('cnumNext').disabled=this.value.length!==4; $('cnumErr').textContent=''; if(this.value.length===4) this.blur(); };   // 4자리 차면 키패드 닫아 '다음' 안 가림(§5)
   $('cnumNext').onclick = async function(){
     var v=$('cnumKey').value; if(v.length!==4) return;
     var ok=false; try{ ok = (await window.sha256(v))===COUNSELOR_HASH; }catch(e){}
-    if(ok){ closeCnum(); showOath(); }
+    if(ok){ closeCnum(); showOath(); navSwap(closeOath); }   // 번호→서약: 같은 레벨 교체(뒤로 한 번에 서약 닫힘)
     else { $('cnumErr').textContent='번호가 맞지 않아요'; $('cnumKey').value=''; $('cnumNext').disabled=true; }
   };
-  $('cnumLater').onclick = closeCnum; $('cnumDim').onclick = closeCnum;
-  $('oathLater').onclick = closeOath; $('oathDim').onclick = closeOath;
+  $('cnumLater').onclick = navBack; $('cnumDim').onclick = navBack;
+  $('oathLater').onclick = navBack; $('oathDim').onclick = navBack;
   $('oathAgree').onclick = function(){ setFlag('oath'); location.reload(); };   // reload=head가 tier-oath 적용+상담일지 타일 노출
   // 상담사 등록 해제
-  $('coffLater').onclick = closeCoff; $('coffDim').onclick = closeCoff;
+  $('coffLater').onclick = navBack; $('coffDim').onclick = navBack;
   $('coffDo').onclick = function(){ var s=sess()||{}; delete s.oath; saveS(s); location.reload(); };
   // 행정 등록 해제
   function showAoff(){ $('aoffDim').classList.add('on'); $('aoffSheet').classList.add('on'); }
   function closeAoff(){ $('aoffDim').classList.remove('on'); $('aoffSheet').classList.remove('on'); }
-  $('aoffLater').onclick = closeAoff; $('aoffDim').onclick = closeAoff;
+  $('aoffLater').onclick = navBack; $('aoffDim').onclick = navBack;
   $('aoffDo').onclick = function(){ var s=sess()||{}; delete s.admin; saveS(s); try{ localStorage.removeItem('saenggak_admin_token'); }catch(e){} location.reload(); };
   // 비밀번호 변경 = OTP 재인증 후 PIN 재설정(상담일지가 처리)
   $('rowPin').onclick = function(){ location.replace('상담일지.html?from=hub&pin=1'); };
   // 행정 등록(키)
   function showAdmin(){ $('adminDim').classList.add('on'); $('adminSheet').classList.add('on'); $('adminKey').value=''; $('adminKey').setAttribute('readonly',''); $('adminErr').textContent=''; $('adminSave').disabled=true; }   // 열 때마다 readonly 복원 = 재오픈에도 자동완성 차단 유지(§5.5)
   function closeAdmin(){ $('adminDim').classList.remove('on'); $('adminSheet').classList.remove('on'); }
-  $('rowAdmin').onclick = function(){ var s=sess(); if(s&&s.admin){ showAoff(); } else { showAdmin(); } };   // 등록됨=해제 / 미등록=번호 입력
-  $('adminLater').onclick = closeAdmin; $('adminDim').onclick = closeAdmin;
+  $('rowAdmin').onclick = function(){ var s=sess(); if(s&&s.admin){ navOpen(showAoff, closeAoff); } else { navOpen(showAdmin, closeAdmin); } };   // 등록됨=해제 / 미등록=번호 입력
+  $('adminLater').onclick = navBack; $('adminDim').onclick = navBack;
   $('adminKey').oninput = function(){ $('adminSave').disabled = this.value.trim().length!==12; $('adminErr').textContent=''; };
   $('adminSave').onclick = function(){
     var k = $('adminKey').value.trim();
@@ -688,8 +703,8 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   // 로그아웃 = 확인 1회(바로 X)
   function showLogout(){ $('logoutDim').classList.add('on'); $('logoutSheet').classList.add('on'); }
   function closeLogout(){ $('logoutDim').classList.remove('on'); $('logoutSheet').classList.remove('on'); }
-  $('rowLogout').onclick = showLogout;
-  $('logoutCancel').onclick = closeLogout; $('logoutDim').onclick = closeLogout;
+  $('rowLogout').onclick = function(){ navOpen(showLogout, closeLogout); };
+  $('logoutCancel').onclick = navBack; $('logoutDim').onclick = navBack;
   $('logoutDo').onclick = function(){
     try{ localStorage.removeItem('tf_staff_v1'); }catch(e){}
     location.replace('상담일지.html?from=hub');   // 세션 비움 → 로그인으로
@@ -816,13 +831,13 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
       window.addEventListener('pointermove',move); window.addEventListener('pointerup',end); window.addEventListener('pointercancel',end);   // window = 손가락이 시트 밖으로 나가도 끝남(고착 방지)
     });
   }
-  [['oathSheet',closeOath],['adminSheet',closeAdmin],['cnumSheet',closeCnum],['coffSheet',closeCoff],['aoffSheet',closeAoff],['logoutSheet',closeLogout]]
-    .forEach(function(p){ var el=$(p[0]); if(el) initSheetDrag(el, p[1]); });
+  ['oathSheet','adminSheet','cnumSheet','coffSheet','aoffSheet','logoutSheet']
+    .forEach(function(id){ var el=$(id); if(el) initSheetDrag(el, navBack); });   // 드래그 닫기도 navBack=맨 위 한 겹(히스토리 정합)
 })();
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.26i';
+var APP_VERSION = '26.06.26j';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
