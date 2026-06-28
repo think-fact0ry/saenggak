@@ -90,6 +90,8 @@
   .s-later{width:100%;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--g500);padding:14px;margin-top:4px;cursor:pointer;}
 
   .note{text-align:center;font-size:13.5px;margin:12px 2px 0;color:var(--g500);min-height:18px;}
+  .su-reset{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;font-weight:600;padding:15px;border-radius:14px;border:1.5px solid #cfe6d8;background:#fff;color:#2f6f4d;cursor:pointer;margin-top:16px;word-break:keep-all;}   /* 기기 한도 시 복구 = 다른 기기 전부 로그아웃(분실폰 대비). provider-map .sm-ghost와 같은 토큰 */
+  .su-reset:active{background:#f0f7f3;}
   .note.err{color:var(--red);font-weight:600;}
   .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
   .stub{text-align:center;font-size:12.5px;color:var(--g400);margin-top:10px;}
@@ -315,6 +317,7 @@
       </div>
     </div>
     <div class="note" id="su1Note"></div>
+    <button class="su-reset" id="su1Reset" type="button" style="display:none">다른 기기 전부 로그아웃하고 이 기기 쓰기</button>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="su1Btn" disabled>인증번호 받기</button></div></div>
 </div>
@@ -723,7 +726,11 @@ function setupTField(tf){
 // 인증번호 받기 → 동의 먼저(개인정보 수집·문자 발송) → 동의 시 OTP 발송
 function openConsent(){ $("su-name").blur(); $("su-phone").blur(); $("consentDim").classList.add("on"); $("consentSheet").classList.add("on"); }   // 키보드 닫고 시트 = 시트 가림 방지
 function closeConsent(){ $("consentDim").classList.remove("on"); $("consentSheet").classList.remove("on"); }
-$("su1Btn").onclick=()=>{ if(!$("su1Btn").disabled) openConsent(); };   // 검증 통과(버튼 활성)면 동의 시트
+$("su1Btn").onclick=()=>{ if(!$("su1Btn").disabled){ _suReset=false; suResetShow(false); openConsent(); } };   // 검증 통과(버튼 활성)면 동의 시트. 일반 발송=reset 모드 해제
+// 기기 한도(2대) 복구 = '다른 기기 전부 로그아웃하고 이 기기 쓰기'(폰을 안 가져왔을 때). 백엔드 reset=캡 우회+기존 세션 전부 비움. 동의는 이미 한 세션이라 바로 재발송
+let _suReset=false;
+function suResetShow(on){ const b=$("su1Reset"); if(b) b.style.display = on?"block":"none"; }
+$("su1Reset").onclick=()=>{ _suReset=true; suResetShow(false); doSendOtp(); };
 $("consentDim").onclick=closeConsent;
 $("consentLater").onclick=closeConsent;
 $("consentAgree").onclick=()=>{ closeConsent(); doSendOtp(); };
@@ -732,13 +739,13 @@ function doSendOtp(){
   if(otpSendBusy) return; otpSendBusy=true;   // 더블탭 가드 = 문자 2번 발송 방지
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
   const note=$("su1Note"); loadingNote(note,"확인하고 있어요"); $("su1Btn").disabled=true;
-  post({action:"staff_start", name, phone, device:getDevice()}).then(d=>{
+  post({action:"staff_start", name, phone, device:getDevice(), reset:_suReset}).then(d=>{
     otpSendBusy=false; $("su1Btn").disabled=false;
     if(d && d.ok){
       $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
       note.textContent=""; $("su2Note").className="note"; $("su2Note").textContent="";
       $("su-code").value=""; $("su-code").disabled=false; show("s-signup2"); startOtpTimer(); $("su-code").focus();
-    } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
+    } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; suResetShow(d && d.code==="devlimit"); }   // 기기 한도 → '전부 로그아웃' 버튼 노출
   }).catch(()=>{ otpSendBusy=false; $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
 };
 
@@ -749,7 +756,7 @@ function doVerify(){
   su2Busy=true;
   const note=$("su2Note"); loadingNote(note,"확인하고 있어요");
   const device=getDevice();
-  post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device, dlabel:deviceLabel()}).then(d=>{
+  post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device, dlabel:deviceLabel(), reset:_suReset}).then(d=>{
     su2Busy=false;
     if(d && d.ok){
       const prev=loadSess()||{};
@@ -799,7 +806,7 @@ function resendOtp(){
   const note=$("su2Note"); loadingNote(note,"다시 보내고 있어요");
   // 실패해도 '다시 받기' 버튼을 되살림(막다른 화면 방지, §3 나갈 선택지)
   function failNote(msg){ note.className="note err"; note.innerHTML=msg+' <button class="lk" id="otpResend">다시 받기</button>'; const b=$("otpResend"); if(b) b.onclick=resendOtp; }
-  post({action:"staff_start", name, phone, device:getDevice()}).then(d=>{
+  post({action:"staff_start", name, phone, device:getDevice(), reset:_suReset}).then(d=>{   // reset 모드면 재전송도 유지
     resendBusy=false;
     if(d && d.ok){
       $("su2Sub").textContent=(d.phone||"")+" 로 보낸 6자리 숫자를 적어 주세요.";
