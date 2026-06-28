@@ -92,6 +92,18 @@
   .note{text-align:center;font-size:13.5px;margin:12px 2px 0;color:var(--g500);min-height:18px;}
   .su-reset{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;font-weight:600;padding:15px;border-radius:14px;border:1.5px solid #cfe6d8;background:#fff;color:#2f6f4d;cursor:pointer;margin-top:16px;word-break:keep-all;}   /* 기기 한도 시 복구 = 다른 기기 전부 로그아웃(분실폰 대비). provider-map .sm-ghost와 같은 토큰 */
   .su-reset:active{background:#f0f7f3;}
+  /* 센터 모달(가운데 알림 다이얼로그) — 타이머 종료 등. 시트(§5.7)와 별개=짧은 확인용, 버튼 가로 2개 */
+  .cmodal-dim{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s;}
+  .cmodal-dim.on{opacity:1;pointer-events:auto;}
+  .cmodal{position:fixed;left:50%;top:50%;z-index:1201;width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:20px;padding:26px 22px 18px;text-align:center;opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.96);transition:opacity .2s,transform .2s;}
+  .cmodal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+  .cmodal h3{font-size:18px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px;color:var(--g900);word-break:keep-all;}
+  .cmodal p{font-size:14.5px;color:var(--g500);font-weight:500;margin-bottom:20px;word-break:keep-all;}
+  .cmodal-row{display:flex;gap:8px;}
+  .cm-btn{flex:1;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:13px;border:none;background:var(--g100);color:var(--g700);cursor:pointer;}
+  .cm-btn:active{background:var(--g200);}
+  .cm-btn.primary{background:var(--green);color:#fff;}
+  .cm-btn.primary:active{background:var(--green-d);}
   .note.err{color:var(--red);font-weight:600;}
   .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
   .stub{text-align:center;font-size:12.5px;color:var(--g400);margin-top:10px;}
@@ -358,6 +370,17 @@
     <div class="field"><label>인증번호</label><input id="su-code" type="text" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off"></div>
     <div class="note" id="su2Note"></div>
     <div class="stub" id="su2Stub"></div>
+  </div>
+</div>
+
+<!-- ═══ 인증 시간 만료 센터 모달 ═══ -->
+<div class="cmodal-dim" id="otpExDim"></div>
+<div class="cmodal" id="otpExModal">
+  <h3>입력할 수 있는 시간이 지났어요</h3>
+  <p>문자를 다시 받을까요?</p>
+  <div class="cmodal-row">
+    <button class="cm-btn" id="otpExClose">닫기</button>
+    <button class="cm-btn primary" id="otpExResend">다시 받기</button>
   </div>
 </div>
 
@@ -795,10 +818,14 @@ function tickOtp(){
 function startOtpTimer(){ stopOtpTimer(); otpDeadline=Date.now()+OTP_TTL*1000; tickOtp(); otpTimer=setInterval(tickOtp,1000); }
 function otpExpired(){
   $("su-code").disabled=true; $("su-code").value="";
-  const note=$("su2Note"); note.className="note err";
-  note.innerHTML='시간이 지났어요. <button class="lk" id="otpResend">인증번호 다시 받기</button>';
-  const rb=$("otpResend"); if(rb) rb.onclick=resendOtp;
+  $("su2Note").textContent=""; $("su2Note").className="note";   // 인라인 링크 대신 센터 모달(유성 2026-06-28)
+  showOtpEx();
 }
+function showOtpEx(){ $("otpExDim").classList.add("on"); $("otpExModal").classList.add("on"); }
+function closeOtpEx(){ $("otpExDim").classList.remove("on"); $("otpExModal").classList.remove("on"); }
+$("otpExClose").onclick=closeOtpEx;
+$("otpExDim").onclick=closeOtpEx;
+$("otpExResend").onclick=()=>{ closeOtpEx(); resendOtp(); };   // resendOtp 성공 시 startOtpTimer로 타이머 재시작
 let resendBusy=false;
 function resendOtp(){
   if(resendBusy) return; resendBusy=true;                     // 더블탭 가드: 보내는 동안 버튼이 사라져 재탭 불가 + 플래그로 belt-and-suspenders
