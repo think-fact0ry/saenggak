@@ -41,6 +41,7 @@
   .field input,.field textarea{width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
   .field textarea{font-size:16px;line-height:1.65;resize:vertical;min-height:300px;}
   .field input::placeholder,.field textarea::placeholder{color:var(--g400);font-weight:500;}
+  #su-code::placeholder{font-size:11px;letter-spacing:6px;font-weight:400;color:var(--g300);}   /* 인증번호 예시 동그라미 = 작게(유성: 너무 커/굵어). 입력 글자는 17px 유지 */
   .field input:focus,.field textarea:focus{background:#fff;border-color:var(--green);}
   .field input.pin{letter-spacing:14px;text-align:center;font-size:22px;}
 
@@ -66,8 +67,8 @@
   .screen:has(input:focus,textarea:focus) .footbar .inner{max-width:none;gap:0;}
   .screen:has(input:focus,textarea:focus) .footbar .btn{border-radius:0;padding:19px;}
   .footbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px;}
-  .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;}
-  .btn:active{transform:scale(.985);background:var(--green-d);}
+  .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
+  .btn:active{transform:scale(.97);background:var(--green-d);}
   .btn:disabled{background:var(--g200);color:var(--g500);cursor:default;transform:none;}
 
   /* 본인 확인 동의 바텀시트 */
@@ -75,6 +76,13 @@
   .sheet-dim.on{opacity:1;pointer-events:auto;}
   .sheet{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:1001;background:#fff;border-radius:24px;padding:14px 24px 24px;max-width:560px;margin:0 auto;transform:translateY(calc(100% + 16px + env(safe-area-inset-bottom)));transition:transform .3s cubic-bezier(.2,.8,.3,1);touch-action:none;}   /* 좌·우·아래 여백 + 4면 라운드 + 드래그(§5.7). 닫힘 transform은 safe-area까지 덮음 */
   .sheet.on{transform:translateY(0);}
+  /* 시트 열리면 내용(텍스트·버튼 전체)이 위에서부터 아래로 부드럽게 순차 등장(유성) */
+  .sheet.on>*{animation:sheetItem .4s both;}
+  .sheet.on>*:nth-child(1){animation-delay:.05s;} .sheet.on>*:nth-child(2){animation-delay:.11s;}
+  .sheet.on>*:nth-child(3){animation-delay:.17s;} .sheet.on>*:nth-child(4){animation-delay:.23s;}
+  .sheet.on>*:nth-child(5){animation-delay:.29s;} .sheet.on>*:nth-child(6){animation-delay:.35s;}
+  .sheet.on>*:nth-child(7){animation-delay:.41s;} .sheet.on>*:nth-child(n+8){animation-delay:.47s;}
+  @keyframes sheetItem{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
   .sheet::before{content:'';display:block;width:40px;height:4px;background:var(--g200);border-radius:99px;margin:0 auto 18px;}   /* 드래그 핸들 */
   .sheet h2{font-size:21px;font-weight:700;letter-spacing:-.5px;line-height:1.4;margin-bottom:22px;}
   .sheet-sub{font-size:14.5px;color:var(--g500);font-weight:500;line-height:1.5;margin:-12px 0 20px;}
@@ -85,9 +93,14 @@
   .agree-item .ck{flex-shrink:0;color:var(--green);display:flex;margin-top:1px;}
   .agree-item .ck svg{width:19px;height:19px;display:block;}
   .agree-item .req{color:var(--green);font-weight:700;margin-right:4px;}
-  .s-btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;}
-  .s-btn:active{transform:scale(.985);background:var(--green-d);}
-  .s-later{width:100%;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--g500);padding:14px;margin-top:4px;cursor:pointer;}
+  .s-btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
+  .s-btn:active{transform:scale(.97);background:var(--green-d);}
+  .s-later{width:100%;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--g500);padding:14px;margin-top:4px;cursor:pointer;transition:transform .12s;}
+  .s-later:active{transform:scale(.93);}   /* 회색 텍스트 버튼(동의 안함·닫기) = 누르면 텍스트 살짝 축소(색버튼과 다른 인터랙션, 유성) */
+  /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 */
+  .rip{position:absolute;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.16);transform:translate(-50%,-50%) scale(0);pointer-events:none;}
+  .rip.go{transform:translate(-50%,-50%) scale(16);transition:transform .5s cubic-bezier(.25,.6,.3,1);}
+  .rip.fade{opacity:0;transition:opacity .3s;}
 
   .note{text-align:center;font-size:13.5px;margin:12px 2px 0;color:var(--g500);min-height:18px;}
   /* 진보형 본인확인 입력 — 휴대폰→생년월일·성별→이름 순서대로 한 칸씩 등장, 활성칸이 맨 위(flex order). 완료칸은 아래로 */
@@ -95,20 +108,29 @@
   .tfield.fhide{display:none;}
   .tfield.fin{animation:ffin .28s ease;}
   @keyframes ffin{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  /* 주민등록번호 = 앞6(밑줄) ‒ 뒤1(밑줄) + 작은 동그라미 6개(뒷자리 가림, 입력 X). 전체 밑줄 X, 중앙에 - */
+  .rrn-row{display:flex;align-items:baseline;padding-top:4px;}
+  .rrn-in{border:none;border-bottom:2px solid var(--g200);background:none;outline:none;font-family:inherit;font-size:22px;font-weight:600;color:var(--g900);caret-color:var(--green);font-variant-numeric:tabular-nums;padding:2px 0 5px;transition:border-color .15s;}
+  .rrn-front{width:6.4ch;} .rrn-back{width:1.5ch;text-align:center;}
+  .rrn-in:focus{border-color:var(--green);}
+  .rrn-dash{margin:0 9px;color:var(--g400);font-size:20px;font-weight:600;}
+  .rrn-mask{margin-left:10px;color:var(--g300);font-size:8px;letter-spacing:4px;align-self:center;}   /* 작은 동그라미(유성: 훨씬 작게) */
+  .tfield:focus-within label{color:var(--green);}
   /* 센터 모달(가운데 알림 다이얼로그) — 타이머 종료 등. 시트(§5.7)와 별개=짧은 확인용, 버튼 가로 2개 */
   .cmodal-dim{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s;}
   .cmodal-dim.on{opacity:1;pointer-events:auto;}
-  .cmodal{position:fixed;left:50%;top:50%;z-index:1201;width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:20px;padding:26px 22px 18px;text-align:center;opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.96);transition:opacity .2s,transform .2s;}
+  .cmodal{position:fixed;left:50%;top:50%;z-index:1201;width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:20px;padding:24px 22px 18px;text-align:left;opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.96);transition:opacity .2s,transform .2s;}   /* 텍스트 왼쪽정렬(유성) */
   .cmodal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
   .cmodal h3{font-size:18px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px;color:var(--g900);word-break:keep-all;}
   .cmodal p{font-size:14.5px;color:var(--g500);font-weight:500;margin-bottom:20px;word-break:keep-all;}
   .cmodal-row{display:flex;gap:8px;}
-  .cm-btn{flex:1;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:13px;border:none;background:var(--g100);color:var(--g700);cursor:pointer;}
-  .cm-btn:active{background:var(--g200);}
-  .cm-btn.primary{background:var(--green);color:#fff;}
-  .cm-btn.primary:active{background:var(--green-d);}
+  .cm-btn{flex:1;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:13px;border:none;background:var(--g100);color:var(--g700);cursor:pointer;transition:transform .12s;}
+  .cm-btn:active{background:var(--g200);}   /* 닫기 = 박스버튼이라 배경만(텍스트형 아님) */
+  .cm-btn.primary{background:var(--green);color:#fff;position:relative;overflow:hidden;}
+  .cm-btn.primary:active{background:var(--green-d);transform:scale(.97);}
   .note.err{color:var(--red);font-weight:600;}
-  .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
+  .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;transition:transform .12s;display:inline-block;}
+  .note .lk:active{transform:scale(.93);}   /* 박스 없는 텍스트형 클릭 = 누르면 축소(유성) */
   .stub{text-align:center;font-size:12.5px;color:var(--g400);margin-top:10px;}
 
   /* 로딩 = 점 3개 위아래 출렁(인증번호 발송·확인) — 토스식, 진행 중임이 보이게 */
@@ -146,7 +168,7 @@
   .g-forgot-wrap{margin-top:14px;width:100%;max-width:min(336px,90vw);}   /* 키패드 좌우 라인에 맞춤 + 키패드 쪽으로 조금 올림 */
   .g-forgot{width:100%;background:none;border:none;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--g500);opacity:.4;text-decoration:none;cursor:pointer;padding:15px;border-radius:15px;transition:background .45s ease,opacity .45s ease,transform .3s cubic-bezier(.2,.7,.3,1);}  /* 회색일 땐 밑줄 없음·투명도·무테두리·풀폭·스무스 */
   .g-forgot.as-btn{background:rgba(58,138,95,.06);opacity:1;color:var(--green-d);text-decoration:none;}  /* 3초 무입력 → 아주 옅은 배경 + 선명해짐(딱 한번) */
-  .g-forgot:active{transform:scale(.99);}
+  .g-forgot:active{transform:scale(.93);}   /* 텍스트형 클릭 = 누르면 축소 */
 
   /* 내담자 검색 + 목록 */
   .search{position:relative;margin-bottom:16px;}
@@ -326,10 +348,12 @@
         </div>
       </div>
       <div class="tfield fhide" id="tf-birth" style="order:1">
-        <label for="su-birth">생년월일·성별</label>
-        <div class="tin-wrap">
-          <input id="su-birth" type="text" inputmode="numeric" placeholder="991231 - 1" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
-          <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <label>주민등록번호</label>
+        <div class="rrn-row">
+          <input id="su-birth-front" class="rrn-in rrn-front" type="text" inputmode="numeric" maxlength="6" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+          <span class="rrn-dash">-</span>
+          <input id="su-birth-back" class="rrn-in rrn-back" type="text" inputmode="numeric" maxlength="1" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+          <span class="rrn-mask" aria-hidden="true">●●●●●●</span>
         </div>
       </div>
       <div class="tfield" id="tf-phone" style="order:2">
@@ -350,7 +374,7 @@
 <div class="sheet" id="consentSheet">
   <h2>본인 확인을 위해<br>동의가 필요해요</h2>
   <div class="agree-list">
-    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>개인정보(이름·휴대폰 번호·생년월일·성별) 수집·이용 동의</span></div>
+    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>이름·휴대폰 번호·생년월일·성별 수집·이용 동의</span></div>
     <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>본인 확인 문자 발송·수신 동의</span></div>
   </div>
   <button class="s-btn" id="consentAgree">동의하고 인증받기</button>
@@ -723,10 +747,13 @@ function bindPhone(el){
   el.addEventListener("focus",()=>{ el._wasFull = el.value.replace(/\D/g,"").length>=11; });
   el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,11); if(d.length<4) el.value=d; else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3); else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7); el.dispatchEvent(new Event("fmt")); if(d.length===11 && !el._wasFull) revealBirth(); };   // 11자리 차면 blur 대신 생년월일 칸으로 자동 이동(키패드 유지)
 }
-// 생년월일·성별 = 주민번호 앞 7자리(생년월일6 + 뒤 1자리). 7자리 차고 유효하면 이름 칸으로 자동 이동
-function bindBirth(el){
-  el.addEventListener("focus",()=>{ el._wasFull = el.value.replace(/\D/g,"").length>=7; });
-  el.oninput=()=>{ $("su1Note").textContent=""; let d=el.value.replace(/\D/g,"").slice(0,7); let out=d.slice(0,6); if(d.length>6) out+=" - "+d.slice(6,7); el.value=out; el.dispatchEvent(new Event("fmt")); if(d.length===7 && !el._wasFull){ if(birthValid(d)) revealName(); else { $("su1Note").className="note err"; $("su1Note").textContent="생년월일을 확인해 주세요"; } } };
+// 주민등록번호 = 앞 7자리만(생년월일6 = su-birth-front, 뒷 1자리 = su-birth-back). 휴대폰처럼 연속 입력, 6자리 차면 뒷칸 자동
+function bindRRN(){
+  const f=$("su-birth-front"), b=$("su-birth-back");
+  [f,b].forEach(el=>el.addEventListener("focus",()=>el.removeAttribute("readonly")));   // readonly 해제=자동완성 차단 후 입력
+  f.oninput=()=>{ $("su1Note").textContent=""; f.value=f.value.replace(/\D/g,"").slice(0,6); f.dispatchEvent(new Event("fmt")); if(f.value.length===6){ b.removeAttribute("readonly"); b.focus(); } };   // 6자리 → 뒷자리 칸(키패드 유지)
+  b.oninput=()=>{ $("su1Note").textContent=""; b.value=b.value.replace(/\D/g,"").slice(0,1); b.dispatchEvent(new Event("fmt")); if(b.value.length===1){ if(birthValid()) revealName(); else { $("su1Note").className="note err"; $("su1Note").textContent="생년월일을 확인해 주세요"; } } };
+  b.addEventListener("keydown",e=>{ if(e.key==="Backspace" && !b.value){ f.focus(); } });   // 뒷칸 비었을 때 지우기 = 앞칸으로
 }
 function bindDate(el){
   el.addEventListener("focus",()=>{ el._wasFull = el.value.replace(/\D/g,"").length>=8; });
@@ -745,28 +772,28 @@ function loadingNote(el, text){ el.className="note"; el.innerHTML='<span class="
 
 // ════ 가입 1: 진보형 입력 — 휴대폰→생년월일·성별→이름 한 칸씩(활성칸 맨 위) → OTP ════
 //  키패드 유지 + 자동 커서 이동(안드로이드 최적, iOS는 키패드 내려갈 수 있어 §5.5 footbar 폴백). 첫 칸은 사용자가 1번 탭(웹은 자동 키보드 못 띄움)
-bindPhone($("su-phone"));   // 11자리 → 생년월일 칸
-bindBirth($("su-birth"));   // 7자리 유효 → 이름 칸
+bindPhone($("su-phone"));   // 11자리 → 주민번호 앞칸
+bindRRN();                  // 주민번호 7자리(6+1) 유효 → 이름 칸
 function revealField(tfId, inId){ const tf=$(tfId); if(tf.classList.contains("fhide")){ tf.classList.remove("fhide"); tf.classList.add("fin"); } $("su1Note").textContent=""; const inp=$(inId); inp.removeAttribute("readonly"); inp.focus(); vSignup(); }   // 칸 등장 + 커서 이동(동기 포커스=키패드 유지)
-function revealBirth(){ revealField("tf-birth","su-birth"); }
+function revealBirth(){ revealField("tf-birth","su-birth-front"); }
 function revealName(){ revealField("tf-name","su-name"); }
-// 주민번호 앞 7자리 → 생년월일(YYYYMMDD)+성별 디코드(원문 7자리 미저장 = 주민번호 아님, 일반 개인정보). 7번째=세기·성별
+// 주민번호 앞 7자리(front6+back1) → 생년월일(YYYYMMDD)+성별 디코드(원문 미저장 = 주민번호 아님, 일반 개인정보). 7번째=세기·성별
 function decodeBirth(){
-  const d=$("su-birth").value.replace(/\D/g,"").slice(0,7); if(d.length<7) return null;
+  const d=($("su-birth-front").value+$("su-birth-back").value).replace(/\D/g,"").slice(0,7); if(d.length<7) return null;
   const g=d.charAt(6); const cen=({"1":"19","2":"19","3":"20","4":"20","5":"19","6":"19","7":"20","8":"20","9":"18","0":"18"})[g]||"19";
   return { birth8: cen+d.slice(0,6), sex: (parseInt(g,10)%2===1)?"남":"여" };
 }
-function birthValid(d){ d=String(d||"").replace(/\D/g,""); const mm=+d.slice(2,4), dd=+d.slice(4,6); return d.length===7 && mm>=1 && mm<=12 && dd>=1 && dd<=31; }
+function birthValid(){ const f=$("su-birth-front").value.replace(/\D/g,""), b=$("su-birth-back").value.replace(/\D/g,""); if(f.length!==6||b.length!==1) return false; const mm=+f.slice(2,4), dd=+f.slice(4,6); return mm>=1 && mm<=12 && dd>=1 && dd<=31; }
 // 버튼 = 이름 칸이 등장하고 한 글자라도 있을 때만 노출(유성). 그 전엔 footbar 자체가 안 뜸
 function vSignup(){
   const phoneOk=$("su-phone").value.replace(/\D/g,"").length===11;
-  const bOk=birthValid($("su-birth").value);
+  const bOk=birthValid();
   const nameShown=!$("tf-name").classList.contains("fhide");
   const nameOk=$("su-name").value.trim().length>0;
   $("su1Foot").style.display=(nameShown && nameOk)?"":"none";
   $("su1Btn").disabled=!(phoneOk && bOk && nameOk);
 }
-$("su-name").oninput=vSignup; $("su-phone").addEventListener("fmt",vSignup); $("su-birth").addEventListener("fmt",vSignup);
+$("su-name").oninput=vSignup; $("su-phone").addEventListener("fmt",vSignup); $("su-birth-front").addEventListener("fmt",vSignup); $("su-birth-back").addEventListener("fmt",vSignup);
 
 // ── 토스식 입력 동작: 포커스 라벨/밑줄 + 우측 X + 값 채워짐(docs §5.5) ──
 function setupTField(tf){
@@ -778,18 +805,18 @@ function setupTField(tf){
   clr.addEventListener("click",()=>{ inp.value=""; inp.dispatchEvent(new Event("input")); inp.focus(); });   // 비우고 검증·서식·has-val 재실행 + 포커스 유지
   upd();
 }
-["tf-name","tf-birth","tf-phone"].forEach(id=>setupTField($(id)));
-// 진보형 입력 초기화 — fresh 진입(boot/재인증) 시 호출. prefillName(재인증)은 이름 미리 채움(생년월일 입력 뒤 등장)
+["tf-name","tf-phone"].forEach(id=>setupTField($(id)));   // 주민번호(tf-birth)는 bindRRN + :focus-within으로 자체 처리(2개 입력칸)
+// 진보형 입력 초기화 — fresh 진입(boot/재인증) 시 호출. prefillName(재인증)은 이름 미리 채움(주민번호 입력 뒤 등장)
 function resetSignupFlow(prefillName){
-  $("su-phone").value=""; $("su-birth").value=""; $("su-name").value=prefillName||"";
+  $("su-phone").value=""; $("su-birth-front").value=""; $("su-birth-back").value=""; $("su-name").value=prefillName||"";
   ["tf-birth","tf-name"].forEach(id=>{ $(id).classList.add("fhide"); $(id).classList.remove("fin"); });
-  ["su-phone","su-birth","su-name"].forEach(id=>$(id).setAttribute("readonly",""));
-  ["tf-name","tf-birth","tf-phone"].forEach(id=>$(id).classList.remove("has-val","focus"));
+  ["su-phone","su-birth-front","su-birth-back","su-name"].forEach(id=>$(id).setAttribute("readonly",""));
+  ["tf-name","tf-phone"].forEach(id=>$(id).classList.remove("has-val","focus"));
   $("su1Note").textContent=""; $("su1Foot").style.display="none"; $("su1Btn").disabled=true;
 }
 
 // 인증번호 받기 → 동의 먼저(개인정보·생년월일·성별 수집 + 문자 발송) → 동의 시 OTP 발송
-function openConsent(){ $("su-name").blur(); $("su-phone").blur(); $("su-birth").blur(); $("consentDim").classList.add("on"); $("consentSheet").classList.add("on"); }   // 키보드 닫고 시트 = 시트 가림 방지
+function openConsent(){ $("su-name").blur(); $("su-phone").blur(); $("su-birth-front").blur(); $("su-birth-back").blur(); $("consentDim").classList.add("on"); $("consentSheet").classList.add("on"); }   // 키보드 닫고 시트 = 시트 가림 방지
 function closeConsent(){ $("consentDim").classList.remove("on"); $("consentSheet").classList.remove("on"); }
 $("su1Btn").onclick=()=>{ if(!$("su1Btn").disabled){ openConsent(); } };   // 검증 통과(버튼 활성)면 동의 시트
 $("consentDim").onclick=closeConsent;
@@ -1714,6 +1741,17 @@ initSheetDrag($("consentSheet"), closeConsent);
 initSheetDrag($("oathSheet"), ()=>{ closeOath(); location.href="./index.html"; });   // 서약 거절(드래그)도 허브로 — 닫기/dim과 동일(안 그러면 빈 화면 갇힘)
 { const m=document.querySelector("#delModal .modal"); if(m) initSheetDrag(m, ()=>$("delModal").classList.remove("show")); }
 
+// 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). 회색/텍스트형은 CSS scale로만(원칙 §7.2)
+function pressRipple(btn){
+  btn.addEventListener("pointerdown",e=>{
+    const r=btn.getBoundingClientRect();
+    const sp=document.createElement("span"); sp.className="rip"; sp.style.left=(e.clientX-r.left)+"px";
+    btn.appendChild(sp); requestAnimationFrame(()=>sp.classList.add("go"));
+    const end=()=>{ sp.classList.add("fade"); setTimeout(()=>{ if(sp.parentNode) sp.remove(); },340); btn.removeEventListener("pointerup",end); btn.removeEventListener("pointerleave",end); };
+    btn.addEventListener("pointerup",end); btn.addEventListener("pointerleave",end);
+  });
+}
+document.querySelectorAll(".btn,.s-btn,.cm-btn.primary").forEach(pressRipple);
 boot();
 </script>
 </body>
