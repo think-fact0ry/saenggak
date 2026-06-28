@@ -90,8 +90,11 @@
   .s-later{width:100%;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--g500);padding:14px;margin-top:4px;cursor:pointer;}
 
   .note{text-align:center;font-size:13.5px;margin:12px 2px 0;color:var(--g500);min-height:18px;}
-  .su-reset{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;font-weight:600;padding:15px;border-radius:14px;border:1.5px solid #cfe6d8;background:#fff;color:#2f6f4d;cursor:pointer;margin-top:16px;word-break:keep-all;}   /* 기기 한도 시 복구 = 다른 기기 전부 로그아웃(분실폰 대비). provider-map .sm-ghost와 같은 토큰 */
-  .su-reset:active{background:#f0f7f3;}
+  /* 진보형 본인확인 입력 — 휴대폰→생년월일·성별→이름 순서대로 한 칸씩 등장, 활성칸이 맨 위(flex order). 완료칸은 아래로 */
+  .su-fields{display:flex;flex-direction:column;}
+  .tfield.fhide{display:none;}
+  .tfield.fin{animation:ffin .28s ease;}
+  @keyframes ffin{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
   /* 센터 모달(가운데 알림 다이얼로그) — 타이머 종료 등. 시트(§5.7)와 별개=짧은 확인용, 버튼 가로 2개 */
   .cmodal-dim{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s;}
   .cmodal-dim.on{opacity:1;pointer-events:auto;}
@@ -314,24 +317,32 @@
   <div class="wrap">
     <button class="back" id="su1Back" aria-label="뒤로" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <h1>본인 확인을 할게요</h1>
-    <div class="tfield" id="tf-name">
-      <label for="su-name">이름</label>
-      <div class="tin-wrap">
-        <input id="su-name" type="text" placeholder="홍길동" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
-        <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="su-fields">
+      <div class="tfield fhide" id="tf-name" style="order:0">
+        <label for="su-name">이름</label>
+        <div class="tin-wrap">
+          <input id="su-name" type="text" placeholder="홍길동" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+          <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
       </div>
-    </div>
-    <div class="tfield" id="tf-phone">
-      <label for="su-phone">전화번호</label>
-      <div class="tin-wrap">
-        <input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
-        <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <div class="tfield fhide" id="tf-birth" style="order:1">
+        <label for="su-birth">생년월일·성별</label>
+        <div class="tin-wrap">
+          <input id="su-birth" type="text" inputmode="numeric" placeholder="991231 - 1" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+          <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      </div>
+      <div class="tfield" id="tf-phone" style="order:2">
+        <label for="su-phone">휴대폰 번호</label>
+        <div class="tin-wrap">
+          <input id="su-phone" type="text" inputmode="numeric" placeholder="010-0000-0000" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+          <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
       </div>
     </div>
     <div class="note" id="su1Note"></div>
-    <button class="su-reset" id="su1Reset" type="button" style="display:none">다른 기기 전부 로그아웃하고 이 기기 쓰기</button>
   </div>
-  <div class="footbar"><div class="inner"><button class="btn" id="su1Btn" disabled>인증번호 받기</button></div></div>
+  <div class="footbar" id="su1Foot" style="display:none"><div class="inner"><button class="btn" id="su1Btn" disabled>인증번호 받기</button></div></div>
 </div>
 
 <!-- ═══ 본인 확인 동의 바텀시트 (OTP 발송 전) ═══ -->
@@ -339,7 +350,7 @@
 <div class="sheet" id="consentSheet">
   <h2>본인 확인을 위해<br>동의가 필요해요</h2>
   <div class="agree-list">
-    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>개인정보 수집·이용 동의</span></div>
+    <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>개인정보(이름·휴대폰 번호·생년월일·성별) 수집·이용 동의</span></div>
     <div class="agree-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">필수</span>본인 확인 문자 발송·수신 동의</span></div>
   </div>
   <button class="s-btn" id="consentAgree">동의하고 인증받기</button>
@@ -710,7 +721,12 @@ window.addEventListener('popstate', function(){
 // 고정길이 자동닫힘 — 단, *고치러 다시 연 경우*(포커스 시점에 이미 가득)엔 안 닫음(수정 방해 방지). 원칙 §5.
 function bindPhone(el){
   el.addEventListener("focus",()=>{ el._wasFull = el.value.replace(/\D/g,"").length>=11; });
-  el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,11); if(d.length<4) el.value=d; else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3); else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7); el.dispatchEvent(new Event("fmt")); if(d.length===11 && !el._wasFull) el.blur(); };
+  el.oninput=()=>{ let d=el.value.replace(/\D/g,"").slice(0,11); if(d.length<4) el.value=d; else if(d.length<8) el.value=d.slice(0,3)+"-"+d.slice(3); else el.value=d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7); el.dispatchEvent(new Event("fmt")); if(d.length===11 && !el._wasFull) revealBirth(); };   // 11자리 차면 blur 대신 생년월일 칸으로 자동 이동(키패드 유지)
+}
+// 생년월일·성별 = 주민번호 앞 7자리(생년월일6 + 뒤 1자리). 7자리 차고 유효하면 이름 칸으로 자동 이동
+function bindBirth(el){
+  el.addEventListener("focus",()=>{ el._wasFull = el.value.replace(/\D/g,"").length>=7; });
+  el.oninput=()=>{ $("su1Note").textContent=""; let d=el.value.replace(/\D/g,"").slice(0,7); let out=d.slice(0,6); if(d.length>6) out+=" - "+d.slice(6,7); el.value=out; el.dispatchEvent(new Event("fmt")); if(d.length===7 && !el._wasFull){ if(birthValid(d)) revealName(); else { $("su1Note").className="note err"; $("su1Note").textContent="생년월일을 확인해 주세요"; } } };
 }
 function bindDate(el){
   el.addEventListener("focus",()=>{ el._wasFull = el.value.replace(/\D/g,"").length>=8; });
@@ -727,33 +743,55 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("sho
 // 로딩 표시 = 글자 + 출렁이는 점 3개(진행 중임이 보이게). innerHTML이라 텍스트는 우리가 만든 고정 문자열만 넣음.
 function loadingNote(el, text){ el.className="note"; el.innerHTML='<span class="ld">'+text+'<span class="ld-dots"><i></i><i></i><i></i></span></span>'; }
 
-// ════ 가입 1: 이름·전화 → OTP ════
-bindPhone($("su-phone"));
-function v1(){ $("su1Btn").disabled = !($("su-name").value.trim() && $("su-phone").value.replace(/\D/g,"").length>=10); }
-$("su-name").oninput=v1; $("su-phone").addEventListener("fmt",v1);
+// ════ 가입 1: 진보형 입력 — 휴대폰→생년월일·성별→이름 한 칸씩(활성칸 맨 위) → OTP ════
+//  키패드 유지 + 자동 커서 이동(안드로이드 최적, iOS는 키패드 내려갈 수 있어 §5.5 footbar 폴백). 첫 칸은 사용자가 1번 탭(웹은 자동 키보드 못 띄움)
+bindPhone($("su-phone"));   // 11자리 → 생년월일 칸
+bindBirth($("su-birth"));   // 7자리 유효 → 이름 칸
+function revealField(tfId, inId){ const tf=$(tfId); if(tf.classList.contains("fhide")){ tf.classList.remove("fhide"); tf.classList.add("fin"); } $("su1Note").textContent=""; const inp=$(inId); inp.removeAttribute("readonly"); inp.focus(); vSignup(); }   // 칸 등장 + 커서 이동(동기 포커스=키패드 유지)
+function revealBirth(){ revealField("tf-birth","su-birth"); }
+function revealName(){ revealField("tf-name","su-name"); }
+// 주민번호 앞 7자리 → 생년월일(YYYYMMDD)+성별 디코드(원문 7자리 미저장 = 주민번호 아님, 일반 개인정보). 7번째=세기·성별
+function decodeBirth(){
+  const d=$("su-birth").value.replace(/\D/g,"").slice(0,7); if(d.length<7) return null;
+  const g=d.charAt(6); const cen=({"1":"19","2":"19","3":"20","4":"20","5":"19","6":"19","7":"20","8":"20","9":"18","0":"18"})[g]||"19";
+  return { birth8: cen+d.slice(0,6), sex: (parseInt(g,10)%2===1)?"남":"여" };
+}
+function birthValid(d){ d=String(d||"").replace(/\D/g,""); const mm=+d.slice(2,4), dd=+d.slice(4,6); return d.length===7 && mm>=1 && mm<=12 && dd>=1 && dd<=31; }
+// 버튼 = 이름 칸이 등장하고 한 글자라도 있을 때만 노출(유성). 그 전엔 footbar 자체가 안 뜸
+function vSignup(){
+  const phoneOk=$("su-phone").value.replace(/\D/g,"").length===11;
+  const bOk=birthValid($("su-birth").value);
+  const nameShown=!$("tf-name").classList.contains("fhide");
+  const nameOk=$("su-name").value.trim().length>0;
+  $("su1Foot").style.display=(nameShown && nameOk)?"":"none";
+  $("su1Btn").disabled=!(phoneOk && bOk && nameOk);
+}
+$("su-name").oninput=vSignup; $("su-phone").addEventListener("fmt",vSignup); $("su-birth").addEventListener("fmt",vSignup);
 
 // ── 토스식 입력 동작: 포커스 라벨/밑줄 + 우측 X + 값 채워짐(docs §5.5) ──
 function setupTField(tf){
   const inp=tf.querySelector("input"), clr=tf.querySelector(".clr");
   const upd=()=>tf.classList.toggle("has-val", inp.value.length>0);
-  inp.addEventListener("focus",()=>{ inp.removeAttribute("readonly"); tf.classList.add("focus"); });   // readonly 해제=자동완성 차단 후 입력. 스크롤 안 함=화면 고정(반가워요·화살표 유지)
+  inp.addEventListener("focus",()=>{ inp.removeAttribute("readonly"); tf.classList.add("focus"); });   // readonly 해제=자동완성 차단 후 입력
   inp.addEventListener("blur",()=>tf.classList.remove("focus"));
   inp.addEventListener("input",upd);
-  clr.addEventListener("click",()=>{ inp.value=""; inp.dispatchEvent(new Event("input")); inp.focus(); });   // 비우고 기존 검증·서식·has-val 재실행(input 리스너) + 포커스 유지
+  clr.addEventListener("click",()=>{ inp.value=""; inp.dispatchEvent(new Event("input")); inp.focus(); });   // 비우고 검증·서식·has-val 재실행 + 포커스 유지
   upd();
 }
-["tf-name","tf-phone"].forEach(id=>setupTField($(id)));
+["tf-name","tf-birth","tf-phone"].forEach(id=>setupTField($(id)));
+// 진보형 입력 초기화 — fresh 진입(boot/재인증) 시 호출. prefillName(재인증)은 이름 미리 채움(생년월일 입력 뒤 등장)
+function resetSignupFlow(prefillName){
+  $("su-phone").value=""; $("su-birth").value=""; $("su-name").value=prefillName||"";
+  ["tf-birth","tf-name"].forEach(id=>{ $(id).classList.add("fhide"); $(id).classList.remove("fin"); });
+  ["su-phone","su-birth","su-name"].forEach(id=>$(id).setAttribute("readonly",""));
+  ["tf-name","tf-birth","tf-phone"].forEach(id=>$(id).classList.remove("has-val","focus"));
+  $("su1Note").textContent=""; $("su1Foot").style.display="none"; $("su1Btn").disabled=true;
+}
 
-// 키보드 위로 액션 버튼(KeyboardAboveView) = onViewport/liftActiveFooter에서 단일 처리(docs §5.5)
-
-// 인증번호 받기 → 동의 먼저(개인정보 수집·문자 발송) → 동의 시 OTP 발송
-function openConsent(){ $("su-name").blur(); $("su-phone").blur(); $("consentDim").classList.add("on"); $("consentSheet").classList.add("on"); }   // 키보드 닫고 시트 = 시트 가림 방지
+// 인증번호 받기 → 동의 먼저(개인정보·생년월일·성별 수집 + 문자 발송) → 동의 시 OTP 발송
+function openConsent(){ $("su-name").blur(); $("su-phone").blur(); $("su-birth").blur(); $("consentDim").classList.add("on"); $("consentSheet").classList.add("on"); }   // 키보드 닫고 시트 = 시트 가림 방지
 function closeConsent(){ $("consentDim").classList.remove("on"); $("consentSheet").classList.remove("on"); }
-$("su1Btn").onclick=()=>{ if(!$("su1Btn").disabled){ _suReset=false; suResetShow(false); openConsent(); } };   // 검증 통과(버튼 활성)면 동의 시트. 일반 발송=reset 모드 해제
-// 기기 한도(2대) 복구 = '다른 기기 전부 로그아웃하고 이 기기 쓰기'(폰을 안 가져왔을 때). 백엔드 reset=캡 우회+기존 세션 전부 비움. 동의는 이미 한 세션이라 바로 재발송
-let _suReset=false;
-function suResetShow(on){ const b=$("su1Reset"); if(b) b.style.display = on?"block":"none"; }
-$("su1Reset").onclick=()=>{ _suReset=true; suResetShow(false); doSendOtp(); };
+$("su1Btn").onclick=()=>{ if(!$("su1Btn").disabled){ openConsent(); } };   // 검증 통과(버튼 활성)면 동의 시트
 $("consentDim").onclick=closeConsent;
 $("consentLater").onclick=closeConsent;
 $("consentAgree").onclick=()=>{ closeConsent(); doSendOtp(); };
@@ -762,13 +800,13 @@ function doSendOtp(){
   if(otpSendBusy) return; otpSendBusy=true;   // 더블탭 가드 = 문자 2번 발송 방지
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
   const note=$("su1Note"); loadingNote(note,"확인하고 있어요"); $("su1Btn").disabled=true;
-  post({action:"staff_start", name, phone, device:getDevice(), reset:_suReset}).then(d=>{
+  post({action:"staff_start", name, phone, device:getDevice()}).then(d=>{
     otpSendBusy=false; $("su1Btn").disabled=false;
     if(d && d.ok){
       $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
       note.textContent=""; $("su2Note").className="note"; $("su2Note").textContent="";
       $("su-code").value=""; $("su-code").disabled=false; show("s-signup2"); startOtpTimer(); $("su-code").focus();
-    } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; suResetShow(d && d.code==="devlimit"); }   // 기기 한도 → '전부 로그아웃' 버튼 노출
+    } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
   }).catch(()=>{ otpSendBusy=false; $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
 };
 
@@ -779,7 +817,8 @@ function doVerify(){
   su2Busy=true;
   const note=$("su2Note"); loadingNote(note,"확인하고 있어요");
   const device=getDevice();
-  post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device, dlabel:deviceLabel(), reset:_suReset}).then(d=>{
+  const bd=decodeBirth()||{};   // 생년월일·성별(주민번호 앞 7자리 디코드) — 등록 시 저장
+  post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device, dlabel:deviceLabel(), birth:bd.birth8||"", sex:bd.sex||""}).then(d=>{
     su2Busy=false;
     if(d && d.ok){
       const prev=loadSess()||{};
@@ -833,7 +872,7 @@ function resendOtp(){
   const note=$("su2Note"); loadingNote(note,"다시 보내고 있어요");
   // 실패해도 '다시 받기' 버튼을 되살림(막다른 화면 방지, §3 나갈 선택지)
   function failNote(msg){ note.className="note err"; note.innerHTML=msg+' <button class="lk" id="otpResend">다시 받기</button>'; const b=$("otpResend"); if(b) b.onclick=resendOtp; }
-  post({action:"staff_start", name, phone, device:getDevice(), reset:_suReset}).then(d=>{   // reset 모드면 재전송도 유지
+  post({action:"staff_start", name, phone, device:getDevice()}).then(d=>{
     resendBusy=false;
     if(d && d.ok){
       $("su2Sub").textContent=(d.phone||"")+" 로 보낸 6자리 숫자를 적어 주세요.";
@@ -911,7 +950,7 @@ function gateBad(){
   clearTimeout(gatePadTimer); gatePadTimer=setTimeout(buildPad,550);     // 흔들림·리플 끝난 뒤 재섞기(중복 타이머 방지)
 }
 async function gateCheck(){
-  const s=loadSess(); if(!s){ show("s-signup1"); return; }
+  const s=loadSess(); if(!s){ resetSignupFlow(); show("s-signup1"); return; }
   const h=await sha256(s.device + ":" + gateEntry);
   if(h===s.pinHash){ s.lastAuth=Date.now(); saveSess(s); markUnlocked(); gateEntry=""; gateDots(); enterApp(); }
   else gateBad();
@@ -936,7 +975,7 @@ async function setupStep(){
     return;
   }
   if(gateEntry===setupPin1){                           // 2차 일치 → 저장 후 진입
-    const s=loadSess(); if(!s){ gateMode="verify"; show("s-signup1"); return; }
+    const s=loadSess(); if(!s){ resetSignupFlow(); gateMode="verify"; show("s-signup1"); return; }
     s.pinHash=await sha256(s.device+":"+gateEntry); s.lastAuth=Date.now(); saveSess(s);
     gateMode="verify"; markUnlocked(); gateEntry=""; gateDots(); enterApp();
   } else {                                             // 불일치 → 1차부터 다시
@@ -950,7 +989,7 @@ async function setupStep(){
 function setupCancel(){   // PIN 설정 취소 = 세션 비우고 로그인부터(허브 무한 게이트 방지)
   clearTimeout(gatePadTimer); clearTimeout(forgotTimer);   // 떠도는 재배치·타이머 정리
   gateMode="verify"; const s=loadSess()||{}; s.session=""; saveSess(s);
-  $("su1Back").style.display="none"; $("su-phone").value=""; show("s-signup1");   // 자동포커스 X(위 boot과 동일 이유)
+  resetSignupFlow(); $("su1Back").style.display="none"; show("s-signup1");   // 자동포커스 X(위 boot과 동일 이유)
 }
 function gatePress(k){
   if(gateLocked) return;                                                 // 기회 소진 = 키패드 잠금(본인확인 이동 중)
@@ -969,8 +1008,8 @@ $("g-pad").addEventListener("click",e=>{
 });
 // 비밀번호 분실(또는 기회 소진) → 본인 확인(OTP)으로. 통과 후 PIN 재설정(forgotPin).
 // OTP 재인증 진입(분실·비번변경 공용) — 세션 있는 진입이라 뒤로(허브) 허용
-function enterReauth(noteText){ clearTimeout(forgotTimer); forgotPin=true; const s=loadSess()||{}; if(s.name){ $("su-name").value=s.name; $("su-name").dispatchEvent(new Event("input")); } const n=$("su1Note"); if(n){ n.className="note"; n.textContent=noteText; } $("su1Back").style.display="flex"; show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100); }   // clearTimeout = 숨겨진 화면서 강조버튼 켜지는 잔여 타이머 방지
-function goForgot(){ enterReauth("비밀번호 대신 본인 확인으로 들어갈게요. 전화번호를 적어 주세요."); }
+function enterReauth(noteText){ clearTimeout(forgotTimer); forgotPin=true; const s=loadSess()||{}; resetSignupFlow(s.name||""); const n=$("su1Note"); if(n){ n.className="note"; n.textContent=noteText; } $("su1Back").style.display="flex"; show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100); }   // 재인증=이름 미리채움(생년월일 입력 뒤 등장), 휴대폰부터   // clearTimeout = 숨겨진 화면서 강조버튼 켜지는 잔여 타이머 방지
+function goForgot(){ enterReauth("비밀번호 대신 본인 확인으로 들어갈게요. 휴대폰 번호를 적어 주세요."); }
 $("g-forgot").onclick=()=>{ gateMode==="setup" ? setupCancel() : goForgot(); };
 $("su1Back").onclick=()=>{ location.href="./index.html"; };   // 세션 있는 재인증 진입에서만 보임 → 허브로(허브가 PIN 게이트 처리)
 function markUnlocked(){ try{ sessionStorage.setItem(UNLOCK_KEY,"1"); }catch(e){} }
@@ -981,7 +1020,7 @@ function boot(){
   forgotPin=false;                  // 새 로드 = 분실 재인증 의도 초기화
   if(DEMO){ enterApp(); return; }   // 디자인·시연: 신원 우회
   const s=loadSess();
-  if(!s || !s.session){ $("su1Back").style.display="none"; show("s-signup1"); return; }   // 자동포커스 X — 웹은 키보드를 못 띄우면서 :focus-within만 켜져 첫 화면이 좁아짐. 사용자가 탭하면 그때 키보드+축소레이아웃
+  if(!s || !s.session){ resetSignupFlow(); $("su1Back").style.display="none"; show("s-signup1"); return; }   // 새 가입=진보형 초기화(휴대폰칸만). 자동포커스 X — 웹은 키보드를 못 띄우면서 :focus-within만 켜져 첫 화면이 좁아짐. 사용자가 탭하면 그때 키보드+축소레이아웃
   if(PIN_CHANGE){ startPinChange(); return; }           // 마이페이지 '비밀번호 변경' → OTP 재인증 → PIN 재설정
   if(!s.pinHash){ openSetup(); return; }   // 세션은 있는데 이 기기에 PIN 없음 → 지금 설정(키패드 2회, 모든 기기 PIN)
   if(needGate(s)){ openGate(); return; }                // PIN 있고 잠김(콜드런치/6시간 경과) → PIN 입력
@@ -1000,7 +1039,7 @@ function sessExpired(){
   s.session=""; saveSess(s);                      // 죽은 토큰 비움 → 재진입도 가입으로
   clearClientCaches();                            // 다른 상담사 재인증 시 이전 상담사 명단·기록 깜빡임(PII) 방지
   if(s.name){ $("su-name").value=s.name; $("su-name").dispatchEvent(new Event("input")); }   // 이름 미리 채움(편의·X버튼 활성), 전화는 다시 입력
-  const note=$("su1Note"); if(note){ note.className="note"; note.textContent="로그인한 지 오래돼서 다시 한 번 확인할게요. 전화번호를 적어 주세요."; }   // 30일 세션 만료(능동형 §2-2; 멀티기기 캡 차단과 별개 — 캡은 가입 시작 단계서 안내)
+  const note=$("su1Note"); if(note){ note.className="note"; note.textContent="로그인한 지 오래돼서 다시 한 번 확인할게요. 휴대폰 번호를 적어 주세요."; }   // 30일 세션 만료(능동형 §2-2; 멀티기기 캡 차단과 별개 — 캡은 가입 시작 단계서 안내)
   $("su1Back").style.display="none"; show("s-signup1"); setTimeout(()=>$("su-phone").focus(),100);
 }
 // 상담사 식별이 바뀔 수 있는 시점(세션만료·다른 상담사 가입)에 메모리 캐시 비우기 — 공유 태블릿 PII 보호.
