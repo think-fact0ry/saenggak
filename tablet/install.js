@@ -6,6 +6,10 @@
 (function(){
   if (window.__tfinstall) return; window.__tfinstall = true;
 
+  // 서비스워커 등록 = 설치 가능(WebAPK) 요건. 이게 없는 페이지에서 '추가'를 누르면 크롬이 *앱*이 아니라 *바로가기*만 만든다.
+  // (허브 index는 <head> 리다이렉트가 먼저라 body의 SW 등록이 안 돌 수 있어, 진입 페이지마다 여기서 보장.)
+  if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js'); } catch(e){} }
+
   function installed(){
     return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
   }
