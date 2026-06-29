@@ -41,10 +41,14 @@
 
 <style>
   :root{
-    --green:#3a8a5f; --green-d:#2f6f4d;
+    /* 초록 — OKLCH 스케일(green600=#3a8a5f 앵커) §4.3 */
+    --green50:#f4fdf7; --green100:#e0fcea; --green200:#c4f6d6; --green300:#a4e8bf; --green400:#7ecb9d;
+    --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
+    --green:var(--green600); --green-d:var(--green700); --green-l:var(--green100);   /* 별칭 호환 */
     --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);   /* 라운드 토큰(반응형) — 홈과 동일 스케일. 알약(99px)·원(50%) 제외 (유성 2026-06-29) */
-    --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
-    --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
+    /* 회색 — 토스 TDS 그레이 풀스케일 §4.3 */
+    --g900:#191f28; --g800:#333d4b; --g700:#4e5968; --g600:#6b7684; --g500:#8b95a1;
+    --g400:#b0b8c1; --g300:#d1d6db; --g200:#e5e8eb; --g100:#f2f4f6; --g50:#f9fafb; --red:#f04452;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 텍스트 선택 차단 = 롱프레스→구글검색 방지(ex9) */
   input,textarea{-webkit-user-select:text;user-select:text;}   /* 입력칸은 선택 허용 */
