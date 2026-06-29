@@ -147,6 +147,16 @@
   .install-bar .add{font-size:14px; font-weight:700; border-radius:11px; padding:10px 16px; background:#fff; color:var(--green-d);}
   .install-bar .add:active{background:#eef0f3;}
   .install-bar .x{background:transparent; color:#fff; font-size:20px; padding:4px 6px; opacity:.85;}
+  /* 설치 방법 안내 카드 — 네이티브 설치창이 없을 때(크롬 휴리스틱 미충족·iOS) 수동 단계 안내 */
+  .ig-dim{position:fixed; inset:0; z-index:400; background:rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .2s;}
+  .ig-dim.on{opacity:1; pointer-events:auto;}
+  .ig-card{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%) scale(.96); z-index:401; width:min(380px,88vw); background:#fff; border-radius:20px; padding:24px 22px calc(20px + env(safe-area-inset-bottom)); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; box-shadow:0 12px 40px rgba(0,0,0,.2);}
+  .ig-card.on{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
+  .ig-card h3{font-size:18px; font-weight:700; letter-spacing:-.4px; margin-bottom:14px;}
+  .ig-card ol{margin:0 0 18px; padding-left:22px;}
+  .ig-card li{font-size:15px; color:var(--g700); font-weight:500; line-height:1.75; word-break:keep-all;}
+  .ig-card li b{color:var(--green-d); font-weight:700;}
+  .ig-card .ig-note{font-size:13px; color:var(--g500); font-weight:500; line-height:1.5; margin:-8px 0 16px; word-break:keep-all;}
 
   /* ═ 역할 분리(제공인력/이용자) — 앱 켤 때 첫 화면 ═ */
   #roleGate{position:fixed; inset:0; z-index:10000; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 26px calc(40px + env(safe-area-inset-bottom));}
@@ -592,6 +602,13 @@
   <button class="add" id="installBtn">추가</button>
   <button class="x" id="installX" aria-label="닫기">×</button>
 </div>
+<div class="ig-dim" id="igDim"></div>
+<div class="ig-card" id="igCard">
+  <h3 id="igTitle">앱으로 추가하기</h3>
+  <p class="ig-note" id="igNote"></p>
+  <ol id="igSteps"></ol>
+  <button class="s-btn" id="igClose">알겠어요</button>
+</div>
 
 <div class="net-toast" id="netToast">와이파이가 연결되면 볼 수 있어요</div>
 <div class="net-toast upd" id="updateToast">✓ 새 버전으로 업데이트했어요</div>
@@ -980,7 +997,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.29c';
+var APP_VERSION = '26.06.29d';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
@@ -1014,18 +1031,52 @@ if ('serviceWorker' in navigator) {
   function installed(){
     return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
   }
+  // 기기 판별 — iOS(아이패드 포함, Mac UA 위장 보정) vs 안드로이드(크롬) vs 그 외
+  var ua = navigator.userAgent;
+  var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var iosNotSafari = isIOS && /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);   // 아이패드인데 크롬·기타 = 사파리로 열어야 standalone
+
+  // 설치 방법 안내 카드(네이티브 설치창이 없을 때) — 기기별 단계
+  function openGuide(){
+    var title = '앱으로 추가하기', note = '', steps = [];
+    if (isIOS) {
+      note = iosNotSafari ? '아이패드·아이폰은 크롬이 아니라 사파리로 열어야 앱처럼 추가돼요.' : '';
+      steps = ['아래 <b>공유 버튼</b>(네모에 화살표)을 눌러요', "<b>'홈 화면에 추가'</b>를 눌러요", "오른쪽 위 <b>'추가'</b>를 누르면 끝이에요"];
+    } else {
+      steps = ['오른쪽 위 <b>⋮</b>(점 3개)를 눌러요', "<b>'앱 설치'</b> 또는 <b>'홈 화면에 추가'</b>를 눌러요", "<b>'설치'</b>를 누르면 끝이에요"];
+    }
+    document.getElementById('igTitle').textContent = title;
+    var n = document.getElementById('igNote'); n.innerHTML = note; n.style.display = note ? '' : 'none';
+    document.getElementById('igSteps').innerHTML = steps.map(function(s){ return '<li>'+s+'</li>'; }).join('');
+    document.getElementById('igDim').classList.add('on'); document.getElementById('igCard').classList.add('on');
+  }
+  function closeGuide(){ document.getElementById('igDim').classList.remove('on'); document.getElementById('igCard').classList.remove('on'); }
+  document.getElementById('igClose').addEventListener('click', closeGuide);
+  document.getElementById('igDim').addEventListener('click', closeGuide);
+
   window.addEventListener('beforeinstallprompt', function(e){
     e.preventDefault();              // 크롬 기본 미니바 억제 → 우리 바로 통일
     deferred = e;
-    if (!installed()) bar.classList.add('show');
+    if (!installed()) bar.classList.add('show');   // 네이티브 설치 가능 → 1탭 설치 바
   });
   btn.addEventListener('click', function(){
-    if (!deferred) { bar.classList.remove('show'); return; }
-    deferred.prompt();
-    deferred.userChoice.then(function(){ deferred = null; bar.classList.remove('show'); });
+    if (deferred) {                                // 네이티브 설치창(크롬이 설치 가능 판정한 경우)
+      deferred.prompt();
+      deferred.userChoice.then(function(){ deferred = null; bar.classList.remove('show'); });
+    } else {
+      openGuide();                                 // 프롬프트 없음(휴리스틱 미충족·iOS) → 수동 단계 안내
+    }
   });
-  x.addEventListener('click', function(){ bar.classList.remove('show'); });   // 이번 세션만 닫기
+  x.addEventListener('click', function(){ bar.classList.remove('show'); try{ sessionStorage.setItem('tf_install_x','1'); }catch(e){} });   // 이번 세션만 닫기
   window.addEventListener('appinstalled', function(){ bar.classList.remove('show'); deferred = null; });
+
+  // ★ 폴백: beforeinstallprompt가 안 떠도(크롬 휴리스틱·iOS) 브라우저로 열렸으면 바를 띄운다(유성 요청 2026-06-29).
+  //   deferred가 나중에 오면 위 핸들러가 1탭 설치로 업그레이드, 안 오면 버튼이 수동 안내를 연다.
+  function maybeShowBar(){
+    var dismissed = false; try{ dismissed = sessionStorage.getItem('tf_install_x') === '1'; }catch(e){}
+    if (!installed() && !dismissed) bar.classList.add('show');
+  }
+  setTimeout(maybeShowBar, 1200);   // 잠깐 기다려 beforeinstallprompt가 먼저 오면 그걸 쓰게
 })();
 
 // 오프라인이면 인터넷 필요한 타일(활동 이야기·제공인력 지도)은 이동 막고 안내.
