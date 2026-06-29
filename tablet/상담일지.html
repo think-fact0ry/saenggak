@@ -924,7 +924,7 @@ function doSendOtp(){
 let su2Busy=false, forgotPin=false;   // forgotPin = '비밀번호를 몰라요'로 들어온 재인증(통과 후 PIN 재설정)
 function doVerify(){
   if(su2Busy || $("su-code").value.length!==6) return;
-  su2Busy=true;
+  su2Busy=true; $("su2Btn").disabled=true;   // 확인 중엔 버튼 비활성(초록·재탭 방지)
   const note=$("su2Note"); loadingNote(note,"확인하고 있어요");
   const device=getDevice();
   const bd=decodeBirth()||{};   // 생년월일·성별(주민번호 앞 7자리 디코드) — 등록 시 저장
@@ -948,7 +948,7 @@ function doVerify(){
       if(expired){ otpExpired(); }
       else { note.className="err"; note.innerHTML='<span class="eic">!</span>인증번호가 틀렸어요'; $("otpBox").classList.add("err"); otpErr=true; renderOtp(); $("su2Btn").disabled=true; }  // 틀림=빨강+숫자 유지(ex20.1) / 다시 탭하면 비우고 재입력
     }
-  }).catch(()=>{ su2Busy=false; note.className="note err"; note.textContent="연결이 안 됐어요"; });
+  }).catch(()=>{ su2Busy=false; $("su2Btn").disabled=$("su-code").value.length!==6; note.className="note err"; note.textContent="연결이 안 됐어요"; });   // 네트워크 실패=6자리 남아있으면 재시도 가능하게 버튼 복구
 }
 // OTP 6칸 — 투명 입력이 셀 위를 덮음(탭=키보드). 입력 글자를 셀에 렌더. 입력된 칸=흰색(정적), 안 친 칸=물결(CSS).
 let otpErr=false, prevOtpLen=0;
