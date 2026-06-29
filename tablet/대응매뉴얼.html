@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <style>
   :root{
+    --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);   /* 라운드 토큰(반응형)·홈과 동일 (유성 2026-06-29) */
     --green:#3a8a5f; --green-d:#2f6f4d; --green-l:#eaf5ee;
     --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
     --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452; --amber:#c77700; --amber-l:#fff8ec;
@@ -28,11 +29,11 @@
   .bar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;gap:6px;
     background:#fff;border-bottom:1px solid var(--g200);
     height:calc(var(--bar) + env(safe-area-inset-top));padding:0 8px;padding-top:env(safe-area-inset-top);}
-  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:none;background:transparent;text-decoration:none;color:var(--g700);cursor:pointer;flex-shrink:0;}
+  .back{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:var(--r-md);border:none;background:transparent;text-decoration:none;color:var(--g700);cursor:pointer;flex-shrink:0;}
   .back svg{width:24px;height:24px;display:block;}   /* §5.8 라인 SVG ←(바는 유지, 아이콘만) */
   .back:active{background:var(--g100);}
   .bar-title{font-size:17px;font-weight:700;letter-spacing:-.4px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .icon-btn{display:flex;align-items:center;justify-content:center;width:42px;height:40px;border-radius:12px;border:none;background:transparent;font-size:21px;color:var(--g700);cursor:pointer;flex-shrink:0;}
+  .icon-btn{display:flex;align-items:center;justify-content:center;width:42px;height:40px;border-radius:var(--r-md);border:none;background:transparent;font-size:21px;color:var(--g700);cursor:pointer;flex-shrink:0;}
   .icon-btn:active{background:var(--g100);}
   .icon-btn svg{width:22px;height:22px;}
 
@@ -46,7 +47,7 @@
     padding:8px 12px 6px;margin-top:16px;border-top:1px solid var(--g200);}
   .toc-group:first-of-type{margin-top:2px;border-top:none;}
   nav a{display:block;text-decoration:none;color:var(--g700);font-size:14.5px;font-weight:600;
-    padding:8px 12px;border-radius:9px;letter-spacing:-.3px;line-height:1.35;}
+    padding:8px 12px;border-radius:var(--r-sm);letter-spacing:-.3px;line-height:1.35;}
   nav a.sub{font-size:13px;font-weight:500;color:var(--g500);padding:6px 12px 6px 24px;margin-top:0;}
   nav a:not(.sub){margin-top:8px;}      /* 섹션(H2)끼리는 띄우고, 하위(분기 등)는 바짝 */
   nav .toc-group + a{margin-top:0;}
@@ -59,12 +60,12 @@
     transform:translateY(-110%);transition:transform .22s cubic-bezier(.2,.8,.3,1);padding-top:env(safe-area-inset-top);max-height:88vh;display:flex;flex-direction:column;}
   #searchPanel.on{transform:translateY(0);}
   .sp-top{display:flex;align-items:center;gap:8px;padding:8px 12px;}
-  .search{flex:1;min-width:0;font-family:inherit;font-size:16px;font-weight:500;padding:12px 15px;border-radius:13px;
+  .search{flex:1;min-width:0;font-family:inherit;font-size:16px;font-weight:500;padding:12px 15px;border-radius:var(--r-md);
     border:1.5px solid var(--g200);background:var(--g100);color:var(--g900);outline:none;}
   .search:focus{border-color:var(--green);background:#fff;}
   .search::placeholder{color:var(--g500);}
   .sp-close{border:none;background:transparent;color:var(--g500);cursor:pointer;flex-shrink:0;
-    width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;}
+    width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);}
   .sp-close:active{background:var(--g100);}
   .sp-close svg{width:22px;height:22px;}
   .sp-body{padding:4px 14px 18px;flex:1;min-height:0;overflow-y:auto;}
@@ -88,7 +89,7 @@
   .doc{font-size:15.5px;}
 
   .group-head{font-size:13px;font-weight:800;letter-spacing:.3px;color:var(--green);
-    background:var(--green-l);border-radius:10px;padding:9px 14px;margin:48px 0 8px;}
+    background:var(--green-l);border-radius:var(--r-sm);padding:9px 14px;margin:48px 0 8px;}
   .group-head:first-child{margin-top:6px;}
 
   .doc h1{font-size:24px;font-weight:800;letter-spacing:-.7px;margin:2px 0 14px;}
@@ -138,18 +139,18 @@
   .doc blockquote.note em{color:#8a5a00;}
 
   /* 콜아웃 라벨 */
-  .doc p.call{font-size:14.5px;font-weight:700;border-radius:10px;padding:9px 13px;margin:24px 0 6px;letter-spacing:-.2px;}
+  .doc p.call{font-size:14.5px;font-weight:700;border-radius:var(--r-sm);padding:9px 13px;margin:24px 0 6px;letter-spacing:-.2px;}
   .doc p.call.warn{background:var(--amber-l);color:#8a5a00;}
   .doc p.call.no{background:#fdecee;color:#c0303c;}
   .doc p.call.yes{background:var(--green-l);color:var(--g900);}
   .doc p.call.sos{background:#fdecee;color:#c0303c;}
 
   /* 메모·보고 양식 */
-  .doc pre{background:var(--g900);color:#e8edf2;border-radius:12px;padding:14px 16px;margin:9px 0;
+  .doc pre{background:var(--g900);color:#e8edf2;border-radius:var(--r-md);padding:14px 16px;margin:9px 0;
     overflow-x:auto;font-size:13.5px;line-height:1.75;
     font-family:'Pretendard',-apple-system,sans-serif;white-space:pre-wrap;word-break:break-word;}
   .doc code{font-family:inherit;}
-  .doc :not(pre)>code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:14px;}
+  .doc :not(pre)>code{background:var(--g100);padding:1px 6px;border-radius:var(--r-sm);font-size:14px;}
 
   /* 양식 박스 복사 버튼(전역 복사차단이라 버튼으로만 복사) */
   .doc pre{position:relative;padding-top:38px;}
@@ -160,12 +161,12 @@
   .copy-btn svg{width:13px;height:13px;}
   .copy-toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));
     transform:translateX(-50%) translateY(8px);background:var(--g900);color:#F9FBFA;font-size:13.5px;
-    padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;z-index:200;
+    padding:10px 16px;border-radius:var(--r-sm);opacity:0;pointer-events:none;z-index:200;
     box-shadow:0 6px 20px rgba(0,0,0,.18);transition:opacity .18s,transform .18s;}
   .copy-toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 
   /* 표 — 화면 폭에 맞춰 줄바꿈(가로 스크롤 X) */
-  .tbl{border:1px solid var(--g200);border-radius:12px;overflow:hidden;margin:11px 0;}
+  .tbl{border:1px solid var(--g200);border-radius:var(--r-md);overflow:hidden;margin:11px 0;}
   .tbl table{width:100%;border-collapse:collapse;table-layout:auto;font-size:13.5px;}
   .tbl th,.tbl td{border-bottom:1px solid var(--g200);border-right:1px solid var(--g200);
     padding:9px 10px;text-align:left;vertical-align:top;word-break:keep-all;overflow-wrap:normal;line-height:1.45;}
@@ -192,7 +193,7 @@
   /* 게이트 */
   #gate{position:fixed;inset:0;z-index:9999;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;padding-bottom:calc(40px + env(safe-area-inset-bottom));}
   #gate.on{display:flex;}
-  .gate-logo{width:60px;height:60px;border-radius:18px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px;}
+  .gate-logo{width:60px;height:60px;border-radius:var(--r-md);background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px;}
   .gate-title{font-size:19px;font-weight:700;letter-spacing:-.4px;}
   .gate-sub{font-size:14px;color:var(--g500);font-weight:500;margin-top:6px;}
   .gate-dots{display:flex;gap:14px;margin:28px 0 4px;}
@@ -203,7 +204,7 @@
   .gate-err.shake{animation:gshake .35s;}
   @keyframes gshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
   .gate-pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px;margin-top:22px;}
-  .gate-key{height:64px;border-radius:18px;background:var(--g100);border:none;cursor:pointer;font-family:inherit;font-size:26px;font-weight:600;color:var(--g900);display:flex;align-items:center;justify-content:center;transition:background .1s,transform .08s;}
+  .gate-key{height:64px;border-radius:var(--r-md);background:var(--g100);border:none;cursor:pointer;font-family:inherit;font-size:26px;font-weight:600;color:var(--g900);display:flex;align-items:center;justify-content:center;transition:background .1s,transform .08s;}
   .gate-key:active{background:var(--g200);transform:scale(.94);}
   .gate-key.fn{font-size:15px;font-weight:600;color:var(--g500);background:transparent;}
 

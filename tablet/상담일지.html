@@ -14,6 +14,7 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
+    --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);   /* 라운드 토큰(반응형)·홈과 동일 (유성 2026-06-29) */
     --green:#3a8a5f; --green-d:#2f6f4d; --green-l:#eaf5ee;
     --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g400:#b0b8c1; --g300:#d1d6db;
     --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
@@ -34,24 +35,24 @@
   .kbf .wrap{flex:1;min-height:0;display:flex;flex-direction:column;padding-bottom:0;}
   .kbf .kbf-head{flex-shrink:0;}
   .kbf .kbf-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:96px;}
-  .back{display:flex;align-items:center;justify-content:flex-start;width:40px;height:40px;margin:0 0 4px 0;border-radius:12px;border:none;background:#fff;text-decoration:none;color:var(--g700);cursor:pointer;position:sticky;top:0;z-index:5;}   /* 좌측 정렬 + sticky=스크롤해도 뒤로화살표 맨 위 유지(전 화면) */
+  .back{display:flex;align-items:center;justify-content:flex-start;width:40px;height:40px;margin:0 0 4px 0;border-radius:var(--r-md);border:none;background:#fff;text-decoration:none;color:var(--g700);cursor:pointer;position:sticky;top:0;z-index:5;}   /* 좌측 정렬 + sticky=스크롤해도 뒤로화살표 맨 위 유지(전 화면) */
   .back svg{width:24px;height:24px;display:block;}
   .back:active{background:var(--g100);}
   h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 0 6px;}
   .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 0 22px;}
   #su2Stub{text-align:center;margin-bottom:6px;min-height:1.4em;}   /* OTP 타이머 = 중앙정렬 + 셀과 가깝게 + 항상 높이 차지(0:00 돼도 위치 고정, 유성) */
-  .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:8px;padding:5px 11px;margin:0 2px 18px;}
+  .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:var(--r-sm);padding:5px 11px;margin:0 2px 18px;}
   .head-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 
   /* 입력 공통 */
   .field{margin-bottom:18px;}
   .field label{display:block;font-size:14px;font-weight:600;color:var(--g700);margin:0 2px 8px;}
-  .field input,.field textarea{width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
+  .field input,.field textarea{width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:var(--r-md);border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
   .field textarea{font-size:16px;line-height:1.65;resize:vertical;min-height:300px;}
   .field input::placeholder,.field textarea::placeholder{color:var(--g400);font-weight:500;}
   /* OTP 6칸(토스식 ex20) — 빈칸 회색 / 입력칸 흰색+얇은 테두리 / 활성칸 초록 깜빡 커서 / 입력 시 팝 애니. 투명 입력이 위 덮음 */
   .otp-box{position:relative;display:flex;gap:7px;justify-content:center;margin:8px 0 4px;}
-  .otp-cell{flex:1;max-width:50px;height:60px;border-radius:14px;background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:27px;font-weight:700;color:var(--green);transition:background .15s;}   /* 볼드 800→700(유성: 너무 굵음) */
+  .otp-cell{flex:1;max-width:50px;height:60px;border-radius:var(--r-md);background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:27px;font-weight:700;color:var(--green);transition:background .15s;}   /* 볼드 800→700(유성: 너무 굵음) */
   .otp-cell.active,.otp-cell.filled{background:#fff;box-shadow:inset 0 0 0 1px var(--g200);}   /* 입력칸=흰색+얇은 테두리(유성) */
   .otp-cell.active::after{content:"";width:2px;height:30px;background:var(--green);border-radius:1px;animation:otpCaret 1.06s step-end infinite;}   /* 다음 칸 안 초록 깜빡 커서(유성) */
   @keyframes otpCaret{0%,49%{opacity:1}50%,100%{opacity:0}}
@@ -89,14 +90,14 @@
   .screen:has(input:focus,textarea:focus) .footbar .inner{max-width:none;gap:0;}
   .screen:has(input:focus,textarea:focus) .footbar .btn{border-radius:0;padding:19px;}
   .footbar .inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px;}   /* column = 재발송 링크가 확인 버튼 위로 쌓임 */
-  .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
+  .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
   .btn:active{transform:scale(.97);background:var(--green-d);}
   .btn:disabled{background:var(--g200);color:var(--g500);cursor:default;transform:none;}
 
   /* 본인 확인 동의 바텀시트 */
   .sheet-dim{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .25s;}
   .sheet-dim.on{opacity:1;pointer-events:auto;}
-  .sheet{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:1001;background:#fff;border-radius:24px;padding:14px 24px 24px;max-width:560px;margin:0 auto;transform:translateY(calc(100% + 16px + env(safe-area-inset-bottom)));transition:transform .3s cubic-bezier(.2,.8,.3,1);touch-action:none;}   /* 좌·우·아래 여백 + 4면 라운드 + 드래그(§5.7). 닫힘 transform은 safe-area까지 덮음 */
+  .sheet{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:1001;background:#fff;border-radius:var(--r-lg);padding:14px 24px 24px;max-width:560px;margin:0 auto;transform:translateY(calc(100% + 16px + env(safe-area-inset-bottom)));transition:transform .3s cubic-bezier(.2,.8,.3,1);touch-action:none;}   /* 좌·우·아래 여백 + 4면 라운드 + 드래그(§5.7). 닫힘 transform은 safe-area까지 덮음 */
   .sheet.on{transform:translateY(0);}
   /* 시트 열리면 내용(텍스트·버튼 전체)이 위에서부터 아래로 부드럽게 순차 등장(유성) */
   .sheet.on>*{animation:sheetItem .6s cubic-bezier(.22,.7,.25,1) both;}   /* 더 천천히·부드럽게(유성, .4s→.6s ease-out) */
@@ -108,11 +109,11 @@
   .sheet::before{content:'';display:block;width:40px;height:4px;background:var(--g200);border-radius:99px;margin:0 auto 18px;}   /* 드래그 핸들 */
   .sheet h2{font-size:21px;font-weight:700;letter-spacing:-.5px;line-height:1.4;margin-bottom:22px;}
   .sheet-sub{font-size:14.5px;color:var(--g500);font-weight:500;line-height:1.5;margin:-12px 0 20px;}
-  .oath-note{font-size:13px;color:var(--g500);font-weight:500;line-height:1.5;background:var(--g100);border-radius:12px;padding:12px 14px;margin-bottom:20px;}
+  .oath-note{font-size:13px;color:var(--g500);font-weight:500;line-height:1.5;background:var(--g100);border-radius:var(--r-md);padding:12px 14px;margin-bottom:20px;}
   .oath-note b{color:var(--g700);font-weight:700;}
   .agree-list{display:flex;flex-direction:column;gap:7px;margin-bottom:24px;}   /* 필수↔필수 가깝게(유성 2026-06-29, 9→7) */
   .agree-item{display:flex;align-items:flex-start;gap:9px;font-size:15px;color:var(--g700);font-weight:500;line-height:1.45;}
-  button.agree-item{width:100%;background:none;border:none;font-family:inherit;text-align:left;cursor:pointer;padding:5px 6px;margin:0 -6px;border-radius:12px;transition:background .12s;}   /* 탭 가능한 동의 줄 = 리스트행 누름(§7.2 박스형) */
+  button.agree-item{width:100%;background:none;border:none;font-family:inherit;text-align:left;cursor:pointer;padding:5px 6px;margin:0 -6px;border-radius:var(--r-md);transition:background .12s;}   /* 탭 가능한 동의 줄 = 리스트행 누름(§7.2 박스형) */
   button.agree-item:active{background:var(--g100);}
   .agree-item .ck{flex-shrink:0;color:var(--green);display:flex;margin-top:1px;}
   .agree-item .ck svg{width:19px;height:19px;display:block;}
@@ -132,7 +133,7 @@
   .doc-row{margin-bottom:19px;}
   .doc-row .dl{font-size:13px;font-weight:700;color:var(--g500);margin-bottom:5px;}
   .doc-row .dv{font-size:15.5px;font-weight:500;color:var(--g800);line-height:1.6;word-break:keep-all;}
-  .s-btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
+  .s-btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
   .s-btn:active{transform:scale(.97);background:var(--green-d);}
   .s-later{width:100%;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--g500);padding:14px;margin-top:4px;cursor:pointer;transition:transform .12s;}
   .s-later:active{transform:scale(.93);}   /* 회색 텍스트 버튼(동의 안함·닫기) = 누르면 텍스트 살짝 축소(색버튼과 다른 인터랙션, 유성) */
@@ -161,12 +162,12 @@
   /* 센터 모달(가운데 알림 다이얼로그) — 타이머 종료 등. 시트(§5.7)와 별개=짧은 확인용, 버튼 가로 2개 */
   .cmodal-dim{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s;}
   .cmodal-dim.on{opacity:1;pointer-events:auto;}
-  .cmodal{position:fixed;left:50%;top:50%;z-index:1201;width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:20px;padding:24px 22px 18px;text-align:left;opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.96);transition:opacity .2s,transform .2s;}   /* 텍스트 왼쪽정렬(유성) */
+  .cmodal{position:fixed;left:50%;top:50%;z-index:1201;width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:var(--r-lg);padding:24px 22px 18px;text-align:left;opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.96);transition:opacity .2s,transform .2s;}   /* 텍스트 왼쪽정렬(유성) */
   .cmodal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
   .cmodal h3{font-size:18px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px;color:var(--g900);word-break:keep-all;}
   .cmodal p{font-size:14.5px;color:var(--g500);font-weight:500;margin-bottom:20px;word-break:keep-all;}
   .cmodal-row{display:flex;gap:8px;}
-  .cm-btn{flex:1;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:13px;border:none;background:var(--g100);color:var(--g700);cursor:pointer;transition:transform .12s;}
+  .cm-btn{flex:1;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:var(--r-md);border:none;background:var(--g100);color:var(--g700);cursor:pointer;transition:transform .12s;}
   .cm-btn:active{background:var(--g200);}   /* 닫기 = 박스버튼이라 배경만(텍스트형 아님) */
   .cm-btn.primary{background:var(--green);color:#fff;position:relative;overflow:hidden;}
   .cm-btn.primary:active{background:var(--green-d);transform:scale(.97);}
@@ -199,7 +200,7 @@
   .g-dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(58,138,95,.18);}  /* 채움 = 작은 초록 코어 + 옅은 초록 링(이중, 작게) */
   @keyframes gshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
   .g-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(7px,1.3vh,12px) 14px;width:100%;max-width:min(336px,90vw);}   /* 90vw 캡 = 좁은 폰서도 안 잘림 */
-  .g-key{position:relative;height:clamp(50px,7.4vh,64px);border-radius:18px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:27px;font-weight:500;color:var(--g900);display:flex;align-items:center;justify-content:center;transition:transform .18s cubic-bezier(.2,.7,.3,1);}  /* overflow 없음 → 리플이 버튼 밖으로 자연스레 퍼지고 끝선 없음. 살짝 덜 굵게(500) */
+  .g-key{position:relative;height:clamp(50px,7.4vh,64px);border-radius:var(--r-md);background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:27px;font-weight:500;color:var(--g900);display:flex;align-items:center;justify-content:center;transition:transform .18s cubic-bezier(.2,.7,.3,1);}  /* overflow 없음 → 리플이 버튼 밖으로 자연스레 퍼지고 끝선 없음. 살짝 덜 굵게(500) */
   .g-key:active{transform:scale(.9);}                              /* 부드러운 프레스(회색 X) */
   .g-key .kd{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;}
   .g-key.fn{color:var(--g700);opacity:0;pointer-events:none;transition:opacity .22s ease,transform .18s cubic-bezier(.2,.7,.3,1);}  /* 뒤로가기 = 입력 있을 때만 */
@@ -208,19 +209,19 @@
   .ripple{position:absolute;left:50%;top:50%;width:175%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle, rgba(58,138,95,.42) 0%, rgba(58,138,95,.16) 42%, rgba(58,138,95,0) 70%);transform:translate(-50%,-50%) scale(.2);pointer-events:none;z-index:0;animation:grip .58s ease-out forwards;}  /* 0%까지 부드럽게 페이드 = 끝선 없음 */
   @keyframes grip{0%{transform:translate(-50%,-50%) scale(.2);opacity:.95;}100%{transform:translate(-50%,-50%) scale(1.75);opacity:0;}}
   .g-forgot-wrap{margin-top:14px;width:100%;max-width:min(336px,90vw);}   /* 키패드 좌우 라인에 맞춤 + 키패드 쪽으로 조금 올림 */
-  .g-forgot{width:100%;background:none;border:none;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--g500);opacity:.4;text-decoration:none;cursor:pointer;padding:15px;border-radius:15px;transition:background .45s ease,opacity .45s ease,transform .3s cubic-bezier(.2,.7,.3,1);}  /* 회색일 땐 밑줄 없음·투명도·무테두리·풀폭·스무스 */
+  .g-forgot{width:100%;background:none;border:none;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--g500);opacity:.4;text-decoration:none;cursor:pointer;padding:15px;border-radius:var(--r-md);transition:background .45s ease,opacity .45s ease,transform .3s cubic-bezier(.2,.7,.3,1);}  /* 회색일 땐 밑줄 없음·투명도·무테두리·풀폭·스무스 */
   .g-forgot.as-btn{background:rgba(58,138,95,.06);opacity:1;color:var(--green-d);text-decoration:none;}  /* 3초 무입력 → 아주 옅은 배경 + 선명해짐(딱 한번) */
   .g-forgot:active{transform:scale(.93);}   /* 텍스트형 클릭 = 누르면 축소 */
 
   /* 내담자 검색 + 목록 */
   .search{position:relative;margin-bottom:16px;}
-  .search input{width:100%;font-family:inherit;font-size:16px;padding:15px 16px 15px 46px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
+  .search input{width:100%;font-family:inherit;font-size:16px;padding:15px 16px 15px 46px;border-radius:var(--r-md);border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
   .search input:focus{background:#fff;border-color:var(--green);}
   .search .ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--g400);display:flex;}
   .search .ico svg{width:20px;height:20px;}
   .count{font-size:13.5px;color:var(--g500);font-weight:600;margin:0 2px 10px;}
   .client-list{display:flex;flex-direction:column;gap:10px;}
-  .client-card{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:16px 18px 16px 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:transform .2s cubic-bezier(.2,.7,.3,1),border-color .12s,background .12s;-webkit-touch-callout:none;}
+  .client-card{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:16px 18px 16px 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:transform .2s cubic-bezier(.2,.7,.3,1),border-color .12s,background .12s;-webkit-touch-callout:none;}
   #gw-opinion{margin-top:10px;}
   .client-card:active{border-color:var(--green);background:#F6FAF6;}
   .client-card .nm{font-size:16.5px;font-weight:700;letter-spacing:-.3px;}
@@ -232,16 +233,16 @@
   /* 일반 내담자 명단 관리(2026-06-23): 메모(우측)·드래그 정렬(들어올림)·연필. 아이콘=라인 SVG(이모지 금지, 원칙 §4) */
   .btn.ghost{flex:0 0 auto;padding:17px 22px;background:var(--g100);color:var(--g700);}
   .btn.ghost:active{background:var(--g200);}
-  .icobtn{width:38px;height:38px;border-radius:11px;border:none;background:var(--g100);color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .icobtn{width:38px;height:38px;border-radius:var(--r-sm);border:none;background:var(--g100);color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .icobtn:active{background:var(--g200);}
   .icobtn.on{background:var(--green-l);color:var(--green-d);}
   .icobtn svg{width:19px;height:19px;}
   .client-card .cc-main{flex:1;min-width:0;}
   .client-card .cmemo{flex:0 1 auto;max-width:44%;text-align:right;font-size:12.5px;color:var(--green-d);font-weight:600;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;}
   .client-card.dragging{position:fixed;z-index:400;margin:0;transition:none;box-shadow:0 14px 34px rgba(0,0,0,.22);border-color:var(--green);background:#fff;}  /* 손가락 따라 떠다님(자기는 transition 없음, 주변만 FLIP 애니메이션) */
-  .gcl-ph{border:2px dashed var(--green);border-radius:16px;background:#F6FAF6;}  /* 들어갈 자리 표시 */
+  .gcl-ph{border:2px dashed var(--green);border-radius:var(--r-md);background:#F6FAF6;}  /* 들어갈 자리 표시 */
   /* 초기상담(인테이크) 진입 카드 + 섹션 구분(2026-06-23 슬라이스 B) */
-  .intake-card{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-family:inherit;text-align:left;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:15px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:14px;transition:.12s;}
+  .intake-card{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-family:inherit;text-align:left;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:15px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:14px;transition:.12s;}
   .intake-card:active{border-color:var(--green);background:#F6FAF6;}
   .intake-card.done{border-color:var(--green);background:#F6FAF6;}
   .intake-card .ic-main{flex:1;min-width:0;}
@@ -258,14 +259,14 @@
 
   /* 월 네비 */
   .month-nav{display:flex;align-items:center;justify-content:center;gap:18px;margin:4px 0 22px;}
-  .month-nav button{width:42px;height:42px;border-radius:12px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .month-nav button{width:42px;height:42px;border-radius:var(--r-md);border:1.5px solid var(--g200);background:#fff;color:var(--g700);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .month-nav button:active{background:var(--g100);}
   .month-nav button:disabled{opacity:.35;cursor:default;}
   .month-nav .ym{font-size:18px;font-weight:700;letter-spacing:-.3px;min-width:130px;text-align:center;}
 
   /* 회차 그리드 */
   .round-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .round{position:relative;background:#fff;border:1.5px solid var(--g200);border-radius:16px;padding:22px 16px;cursor:pointer;text-align:center;transition:.12s;}
+  .round{position:relative;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:22px 16px;cursor:pointer;text-align:center;transition:.12s;}
   .round:active{transform:scale(.985);}
   .round .rn{font-size:16px;font-weight:700;}
   .round .st{font-size:12.5px;font-weight:600;color:var(--g400);margin-top:6px;}
@@ -275,7 +276,7 @@
 
   /* 모드 선택 카드 */
   .mode-list{display:flex;flex-direction:column;gap:12px;}
-  .mode-card{text-align:left;width:100%;font-family:inherit;background:#fff;border:1.5px solid var(--g200);border-radius:18px;padding:22px 20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:.12s;}
+  .mode-card{text-align:left;width:100%;font-family:inherit;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:22px 20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:.12s;}
   .mode-card:active{border-color:var(--green);background:#F6FAF6;transform:scale(.99);}
   .mode-card .mc-tl{font-size:18px;font-weight:700;letter-spacing:-.3px;color:var(--g900);}
   .mode-card .mc-ds{font-size:14px;color:var(--g500);font-weight:500;margin-top:6px;line-height:1.5;}
@@ -292,7 +293,7 @@
 
   /* 세그먼트(평가척도·위험) */
   .seg{display:flex;gap:8px;}
-  .seg button{flex:1;font-family:inherit;font-size:14.5px;font-weight:600;padding:9px 0;border-radius:10px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
+  .seg button{flex:1;font-family:inherit;font-size:14.5px;font-weight:600;padding:9px 0;border-radius:var(--r-sm);border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
   .seg button.on{border-color:var(--green);background:var(--green-l);color:var(--green-d);font-weight:700;}
   .seg button.danger.on{border-color:var(--red);background:#FEF2F3;color:var(--red);}
   .seg button.warn.on{border-color:#e8a317;background:#fff8ea;color:#b07a12;}
@@ -309,7 +310,7 @@
   .block{padding:12px 2px;border-bottom:1px solid var(--g100);}
   .blabel{display:block;font-size:14px;font-weight:600;color:var(--g700);margin:0 0 7px;}
   .blabel .opt{font-size:12.5px;font-weight:500;color:var(--g400);margin-left:5px;}
-  .block textarea{width:100%;font-family:inherit;font-size:16px;line-height:1.65;padding:14px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;resize:vertical;min-height:150px;transition:.15s;}
+  .block textarea{width:100%;font-family:inherit;font-size:16px;line-height:1.65;padding:14px;border-radius:var(--r-md);border:2px solid transparent;background:var(--g100);outline:none;resize:vertical;min-height:150px;transition:.15s;}
   .block textarea.sm{min-height:64px;margin-top:0;}
   .block textarea:focus{background:#fff;border-color:var(--green);}
   .block textarea::placeholder{color:var(--g400);font-weight:500;}
@@ -329,23 +330,23 @@
 
   /* 회기 카드 삭제(X) */
   .client-card .cc-main{flex:1;min-width:0;}
-  .client-card .del{flex:0 0 auto;width:36px;height:36px;border-radius:11px;border:none;background:var(--g100);color:var(--g500);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .client-card .del{flex:0 0 auto;width:36px;height:36px;border-radius:var(--r-sm);border:none;background:var(--g100);color:var(--g500);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .client-card .del:active{background:#FDECEE;color:var(--red);}
 
   /* 토스식 확인 모달(바텀시트) */
   .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end;justify-content:center;z-index:300;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));}
   .modal-bg.show{display:flex;}
-  .modal{background:#fff;width:100%;max-width:480px;border-radius:24px;padding:14px 22px 24px;touch-action:none;transition:transform .3s cubic-bezier(.2,.8,.3,1);}   /* 좌·우·아래 여백 + 4면 라운드 + 드래그(§5.7) */
+  .modal{background:#fff;width:100%;max-width:480px;border-radius:var(--r-lg);padding:14px 22px 24px;touch-action:none;transition:transform .3s cubic-bezier(.2,.8,.3,1);}   /* 좌·우·아래 여백 + 4면 라운드 + 드래그(§5.7) */
   .modal::before{content:'';display:block;width:40px;height:4px;background:var(--g200);border-radius:99px;margin:0 auto 16px;}   /* 드래그 핸들 */
   .modal h3{font-size:19px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px;}
   .modal p{font-size:14.5px;color:var(--g500);font-weight:500;line-height:1.55;margin-bottom:22px;}
   .modal .mbtns{display:flex;gap:10px;}
-  .modal .mbtns button{flex:1;font-family:inherit;font-size:16.5px;font-weight:700;padding:16px;border-radius:14px;border:none;cursor:pointer;}
+  .modal .mbtns button{flex:1;font-family:inherit;font-size:16.5px;font-weight:700;padding:16px;border-radius:var(--r-md);border:none;cursor:pointer;}
   .modal .mclose{background:var(--g100);color:var(--g700);}
   .modal .mdel{background:var(--red);color:#fff;}
 
   /* 완료 토스트 */
-  .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--g900);color:#F9FBFA;font-size:14px;font-weight:600;padding:11px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.2s;z-index:200;}
+  .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--g900);color:#F9FBFA;font-size:14px;font-weight:600;padding:11px 18px;border-radius:var(--r-md);opacity:0;pointer-events:none;transition:.2s;z-index:200;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
   /* 008 월 상담일지 출력 */

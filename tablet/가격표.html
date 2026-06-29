@@ -7,6 +7,7 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
+    --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);   /* 라운드 토큰(반응형)·홈과 동일 (유성 2026-06-29) */
     --green:#3a8a5f; --green-d:#2f6f4d;
     --g900:#191f28; --g700:#4e5968; --g500:#8b95a1; --g300:#d1d6db;
     --g200:#e5e8eb; --g100:#f2f4f6; --red:#f04452;
@@ -22,7 +23,7 @@
 
   .topbar{display:flex; align-items:center; gap:6px; height:44px; margin-bottom:14px;}
   .back{
-    width:40px; height:40px; border-radius:12px; border:none; background:transparent;
+    width:40px; height:40px; border-radius:var(--r-md); border:none; background:transparent;
     color:var(--g700); cursor:pointer; display:flex;
     align-items:center; justify-content:flex-start; text-decoration:none;
     position:sticky; top:0; z-index:5;   /* §5.8 = 인증번호 확인 페이지식(좌상단·제목 위) */
@@ -36,11 +37,11 @@
   .sec{margin-bottom:34px;}
   .sec-h{display:flex; align-items:baseline; gap:8px; margin:0 2px 14px;}
   .sec-h .t{font-size:19px; font-weight:700; letter-spacing:-.4px;}
-  .sec-h .badge{font-size:12px; font-weight:700; color:var(--green); background:#eaf5ee; padding:3px 9px; border-radius:8px;}
+  .sec-h .badge{font-size:12px; font-weight:700; color:var(--green); background:#eaf5ee; padding:3px 9px; border-radius:var(--r-sm);}
   .sec-h .badge.gray{color:var(--g500); background:var(--g100);}
 
   .card{
-    background:#fff; border:1.5px solid var(--g200); border-radius:18px;
+    background:#fff; border:1.5px solid var(--g200); border-radius:var(--r-md);
     padding:18px 18px 16px; margin-bottom:12px;
   }
   .card .head-row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:14px;}
@@ -66,12 +67,12 @@
   .note.warn{color:var(--red);}
 
   .fill{
-    display:inline-block; min-width:64px; height:20px; border-radius:6px;
+    display:inline-block; min-width:64px; height:20px; border-radius:var(--r-sm);
     border:1.5px dashed var(--g300); background:repeating-linear-gradient(45deg,#fafbfc,#fafbfc 5px,#f2f4f6 5px,#f2f4f6 10px);
     vertical-align:middle;
   }
   .tofill-banner{
-    background:#fff7ed; border:1.5px solid #fed7aa; border-radius:14px;
+    background:#fff7ed; border:1.5px solid #fed7aa; border-radius:var(--r-md);
     padding:13px 15px; font-size:13.5px; color:#9a3412; font-weight:500; margin-bottom:24px;
   }
   .tofill-banner b{font-weight:700;}
