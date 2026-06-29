@@ -50,15 +50,17 @@
   .field input,.field textarea{width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:var(--r-md);border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
   .field textarea{font-size:16px;line-height:1.65;resize:vertical;min-height:300px;}
   .field input::placeholder,.field textarea::placeholder{color:var(--g400);font-weight:500;}
-  /* OTP 6칸(토스식 ex20) — 빈칸 회색 / 입력칸 흰색+얇은 테두리 / 활성칸 초록 깜빡 커서 / 입력 시 팝 애니. 투명 입력이 위 덮음 */
+  /* OTP 6칸 — 입력된 칸만 흰색(정적) / 안 친 칸 전체는 왼→오 물결(회색↔흰)로 켜졌다 꺼졌다 / 입력 시 팝. 투명 입력이 위 덮음. 커서 없음(유성 2026-06-29) */
   .otp-box{position:relative;display:flex;gap:7px;justify-content:center;margin:8px 0 4px;}
-  .otp-cell{flex:1;max-width:50px;height:60px;border-radius:var(--r-md);background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:27px;font-weight:700;color:var(--green);transition:background .15s;}   /* 볼드 800→700(유성: 너무 굵음) */
-  .otp-cell.active,.otp-cell.filled{background:#fff;box-shadow:inset 0 0 0 1px var(--g200);}   /* 입력칸=흰색+얇은 테두리(유성) */
-  .otp-cell.active::after{content:"";width:2px;height:30px;background:var(--green);border-radius:1px;animation:otpCaret 1.06s step-end infinite;}   /* 다음 칸 안 초록 깜빡 커서(유성) */
-  @keyframes otpCaret{0%,49%{opacity:1}50%,100%{opacity:0}}
+  .otp-cell{flex:1;max-width:50px;height:60px;border-radius:var(--r-md);background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:27px;font-weight:700;color:var(--green);}
+  .otp-cell.filled{background:#fff;box-shadow:inset 0 0 0 1px var(--g200);}   /* 입력된 칸=흰색+얇은 테두리(정적) */
+  .otp-cell:not(.filled){animation:otpWave 1.6s ease-in-out infinite;}        /* 안 친 칸=물결 깜빡 */
+  .otp-cell:not(.filled):nth-child(2){animation-delay:.13s} .otp-cell:not(.filled):nth-child(3){animation-delay:.26s}
+  .otp-cell:not(.filled):nth-child(4){animation-delay:.39s} .otp-cell:not(.filled):nth-child(5){animation-delay:.52s} .otp-cell:not(.filled):nth-child(6){animation-delay:.65s}   /* 왼→오 스태거 = 물결(delay는 안 친 칸에만 → 팝 지연 방지) */
+  @keyframes otpWave{0%,100%{background:var(--g100);box-shadow:inset 0 0 0 0 transparent}50%{background:#fff;box-shadow:inset 0 0 0 1px var(--g200)}}
   .otp-cell.pop{animation:otpPop .2s ease-out;}   /* 숫자 입력 시 박스 작아졌다 부드럽게 커짐(유성) */
   @keyframes otpPop{0%{transform:scale(.55)}100%{transform:scale(1)}}
-  .otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);}   /* 오류=연빨강+빨강테두리(ex20.1) */
+  .otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);animation:none;}   /* 오류=연빨강+빨강테두리(물결 정지, ex20.1) */
   #su-code{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;background:none;font-size:16px;cursor:pointer;color:transparent;caret-color:transparent;}   /* 셀 위 투명 입력 = 탭하면 키보드, 글자·캐럿 숨김 */
   #su2Note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;color:var(--g500);margin-top:10px;min-height:20px;}
   #su2Note.err{color:var(--red);}
@@ -89,6 +91,8 @@
   .screen:has(input:focus,textarea:focus) .footbar{padding:0;border-top:none;transition:none;}
   .screen:has(input:focus,textarea:focus) .footbar .inner{max-width:none;gap:0;}
   .screen:has(input:focus,textarea:focus) .footbar .btn{border-radius:0;padding:19px;}
+  /* 키보드 올라온 edge-to-edge 상태: 비활성 버튼이 전체폭 회색 띠가 돼 '회색 선'처럼 보임 → 흰 배경+회색 글자로(띠 제거, 유성 2026-06-29) */
+  .footbar.kb .btn:disabled, .screen:has(input:focus,textarea:focus) .footbar .btn:disabled{background:#fff;color:var(--g400);}
   .footbar .inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px;}   /* column = 재발송 링크가 확인 버튼 위로 쌓임 */
   .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
   .btn:active{transform:scale(.97);background:var(--green-d);}
@@ -943,15 +947,14 @@ function doVerify(){
     }
   }).catch(()=>{ su2Busy=false; note.className="note err"; note.textContent="연결이 안 됐어요"; });
 }
-// OTP 6칸 — 투명 입력이 셀 위를 덮음(탭=키보드). 입력 글자를 셀에 렌더, 활성칸(왼쪽부터) 반짝.
+// OTP 6칸 — 투명 입력이 셀 위를 덮음(탭=키보드). 입력 글자를 셀에 렌더. 입력된 칸=흰색(정적), 안 친 칸=물결(CSS).
 let otpErr=false, prevOtpLen=0;
 function renderOtp(){
   const v=$("su-code").value, cells=document.querySelectorAll("#otpBox .otp-cell");
   cells.forEach((c,i)=>{
     const ch=v[i]||"";
     c.textContent=ch;
-    c.classList.toggle("filled", !!ch && !otpErr);                 // 입력된 칸=흰색
-    c.classList.toggle("active", !otpErr && v.length<6 && i===v.length);   // 다음 칸=커서
+    c.classList.toggle("filled", !!ch && !otpErr);                 // 입력된 칸만 흰색(나머지는 :not(.filled) 물결)
   });
   if(v.length>prevOtpLen){ const nc=cells[v.length-1]; if(nc){ nc.classList.remove("pop"); void nc.offsetWidth; nc.classList.add("pop"); } }   // 막 입력된 칸 팝 애니
   prevOtpLen=v.length;
