@@ -204,19 +204,26 @@ function initProvider(){
   loadAllData();
 }
 
+// 전면 로딩 실패 = 빈 화면/무한스피너 X → 메시지 + 재시도 버튼(§4.5-4 전면 오류, 우=주액션)
+function errState(){ return '<div class="state">연결이 안 됐어요.<br>잠시 후 다시 시도해 주세요.<div style="margin-top:14px"><button class="search-btn" onclick="loadAllData()">다시 시도</button></div></div>'; }
 async function loadAllData(){
-  const res = await apiCall({ action:'queryMyAllData', staffId:sess.staffId, session:sess.session });
-  if(res.error){
-    if(isAuthError(res.error)){ bounceAuth(); return; }
-    $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return;
+  $('resultWrap').innerHTML = loadingHTML('불러오는 중');   // 첫 로드·재시도 공통 스피너
+  try{
+    const res = await apiCall({ action:'queryMyAllData', staffId:sess.staffId, session:sess.session });
+    if(res.error){
+      if(isAuthError(res.error)){ bounceAuth(); return; }
+      $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return;
+    }
+    allRecords=res.records||[]; availableMonths=res.months||[]; latestUpdate=res.latestUpdate||'';
+    if(res.providerName) $('who').textContent=res.providerName+' 선생님';
+    if(availableMonths.length===0){ $('resultWrap').innerHTML='<div class="state">이용내역이 없어요.</div>'; return; }
+    const years=[...new Set(availableMonths.map(m=>m.year))].sort((a,b)=>b-a);
+    const ys=$('yearSel'); ys.innerHTML='';
+    years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y+'년'; ys.appendChild(o); });
+    updateMonthSelect(); setDefaultMonth(); renderMonthView();
+  }catch(e){
+    $('resultWrap').innerHTML = errState();   // 네트워크 다운·GAS 500(HTML)·깨진 응답 = json() reject → 여기
   }
-  allRecords=res.records||[]; availableMonths=res.months||[]; latestUpdate=res.latestUpdate||'';
-  if(res.providerName) $('who').textContent=res.providerName+' 선생님';
-  if(availableMonths.length===0){ $('resultWrap').innerHTML='<div class="state">이용내역이 없어요.</div>'; return; }
-  const years=[...new Set(availableMonths.map(m=>m.year))].sort((a,b)=>b-a);
-  const ys=$('yearSel'); ys.innerHTML='';
-  years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y+'년'; ys.appendChild(o); });
-  updateMonthSelect(); setDefaultMonth(); renderMonthView();
 }
 // 기본 선택 = 이번 달(가용하면), 없으면 updateMonthSelect의 최신 유지
 function setDefaultMonth(){
