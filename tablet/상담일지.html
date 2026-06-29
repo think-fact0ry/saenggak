@@ -41,7 +41,18 @@
   .field input,.field textarea{width:100%;font-family:inherit;font-size:17px;padding:16px 17px;border-radius:14px;border:2px solid transparent;background:var(--g100);outline:none;transition:.15s;}
   .field textarea{font-size:16px;line-height:1.65;resize:vertical;min-height:300px;}
   .field input::placeholder,.field textarea::placeholder{color:var(--g400);font-weight:500;}
-  #su-code::placeholder{font-size:11px;letter-spacing:6px;font-weight:400;color:var(--g300);}   /* 인증번호 예시 동그라미 = 작게(유성: 너무 커/굵어). 입력 글자는 17px 유지 */
+  /* OTP 6칸(토스식 ex20) — 라운드 회색칸·큰 볼드 숫자·활성칸 회색↔흰 반짝·투명 입력이 위 덮음 */
+  .otp-box{position:relative;display:flex;gap:9px;justify-content:center;margin:10px 0 4px;}
+  .otp-cell{flex:1;max-width:54px;height:62px;border-radius:14px;background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:27px;font-weight:800;color:var(--g900);transition:background .2s,box-shadow .2s;}
+  .otp-cell.active{animation:otpPulse 1.15s ease-in-out infinite;}   /* 다음 칸(왼쪽부터) 회색↔흰 반짝 */
+  @keyframes otpPulse{0%,100%{background:var(--g100);box-shadow:inset 0 0 0 0 transparent;}50%{background:#fff;box-shadow:inset 0 0 0 2px var(--g200);}}
+  .otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);}   /* 오류=연빨강+빨강테두리(ex20.1) */
+  #su-code{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;background:none;font-size:16px;cursor:pointer;color:transparent;caret-color:transparent;}   /* 셀 위 투명 입력 = 탭하면 키보드, 글자·캐럿 숨김 */
+  #su2Note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;color:var(--g500);margin-top:10px;min-height:20px;}
+  #su2Note.err{color:var(--red);}
+  #su2Note .eic{flex-shrink:0;width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
+  .lk-resend{display:block;margin:20px auto 0;background:none;border:none;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--g500);text-decoration:underline;cursor:pointer;transition:transform .12s;}
+  .lk-resend:active{transform:scale(.93);}   /* 박스 없는 텍스트형(§7.2) */
   .field input:focus,.field textarea:focus{background:#fff;border-color:var(--green);}
   .field input.pin{letter-spacing:14px;text-align:center;font-size:22px;}
 
@@ -88,9 +99,9 @@
   .sheet-sub{font-size:14.5px;color:var(--g500);font-weight:500;line-height:1.5;margin:-12px 0 20px;}
   .oath-note{font-size:13px;color:var(--g500);font-weight:500;line-height:1.5;background:var(--g100);border-radius:12px;padding:12px 14px;margin-bottom:20px;}
   .oath-note b{color:var(--g700);font-weight:700;}
-  .agree-list{display:flex;flex-direction:column;gap:15px;margin-bottom:26px;}
+  .agree-list{display:flex;flex-direction:column;gap:9px;margin-bottom:24px;}   /* 필수↔필수 가깝게(유성 2026-06-29) */
   .agree-item{display:flex;align-items:flex-start;gap:9px;font-size:15px;color:var(--g700);font-weight:500;line-height:1.45;}
-  button.agree-item{width:100%;background:none;border:none;font-family:inherit;text-align:left;cursor:pointer;padding:8px 6px;margin:0 -6px;border-radius:12px;transition:background .12s;}   /* 탭 가능한 동의 줄 = 리스트행 누름(§7.2 박스형) */
+  button.agree-item{width:100%;background:none;border:none;font-family:inherit;text-align:left;cursor:pointer;padding:5px 6px;margin:0 -6px;border-radius:12px;transition:background .12s;}   /* 탭 가능한 동의 줄 = 리스트행 누름(§7.2 박스형) */
   button.agree-item:active{background:var(--g100);}
   .agree-item .ck{flex-shrink:0;color:var(--green);display:flex;margin-top:1px;}
   .agree-item .ck svg{width:19px;height:19px;display:block;}
@@ -129,7 +140,7 @@
   .rrn-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;column-gap:8px;padding-top:4px;}   /* dash 정중앙(양쪽 1fr) + 우측 끝까지 풀폭 */
   .rrn-in{border:none;border-bottom:2px solid var(--g200);background:none;outline:none;font-family:inherit;font-size:22px;font-weight:600;color:var(--g900);caret-color:var(--green);font-variant-numeric:tabular-nums;padding:2px 0 5px;transition:border-color .15s;}
   .rrn-front{width:100%;text-align:left;}                  /* 좌측 절반 채움(반 밑줄) */
-  .rrn-back{width:100%;text-align:left;flex:0 0 1.6ch;}     /* 뒤 1자리(밑줄) */
+  .rrn-back{width:100%;text-align:center;flex:0 0 5ch;min-width:0;}     /* 뒤 1자리(밑줄) — 폭 넓혀(5ch) 숫자를 dash와 점 사이 가운데로·밑줄 우측으로 길게. min-width:0=input 기본폭이 flex-basis 무시·mask 밀어내는 것 차단(유성 2026-06-29) */
   .rrn-in:focus{border-color:var(--green);}
   .rrn-dash{color:var(--g400);font-size:20px;font-weight:600;padding-bottom:4px;}
   .rrn-back-grp{display:flex;align-items:end;gap:8px;min-width:0;}   /* 우측 절반 = 뒤1자리 + 동그라미 */
@@ -431,12 +442,16 @@
 <div class="screen" id="s-signup2">
   <div class="wrap">
     <button class="back" id="su2Back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-    <h1>인증번호 확인</h1>
-    <p class="sub" id="su2Sub">문자로 받은 6자리 숫자를 적어 주세요.</p>
-    <div class="field"><label>인증번호</label><input id="su-code" type="text" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off"></div>
-    <div class="note" id="su2Note"></div>
-    <div class="stub" id="su2Stub"></div>
+    <h1>문자로 받은<br>인증번호 6자리를 알려주세요</h1>
+    <p class="sub" id="su2Stub"></p>
+    <div class="otp-box" id="otpBox">
+      <div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div>
+      <input id="su-code" type="text" inputmode="numeric" autocomplete="one-time-code" aria-label="인증번호" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div id="su2Note"></div>
+    <button type="button" class="lk-resend" id="otpResendLink">문자가 안 오나요?</button>
   </div>
+  <div class="footbar" id="su2Foot"><div class="inner"><button class="btn" id="su2Btn" disabled>확인</button></div></div>
 </div>
 
 <!-- ═══ 인증 시간 만료 센터 모달 ═══ -->
@@ -881,9 +896,8 @@ function doSendOtp(){
   post({action:"staff_start", name, phone, device:getDevice()}).then(d=>{
     otpSendBusy=false; $("su1Btn").disabled=false;
     if(d && d.ok){
-      $("su2Sub").textContent = (d.phone||"") + " 로 보낸 6자리 숫자를 적어 주세요.";
-      note.textContent=""; $("su2Note").className="note"; $("su2Note").textContent="";
-      $("su-code").value=""; $("su-code").disabled=false; show("s-signup2"); startOtpTimer(); $("su-code").focus();
+      note.textContent="";
+      resetOtp(); show("s-signup2"); startOtpTimer(); $("su-code").focus();
     } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
   }).catch(()=>{ otpSendBusy=false; $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
 };
@@ -914,12 +928,28 @@ function doVerify(){
       // 만료(클라 타이머 종료됨 || 서버가 만료 응답) → 일반 에러 대신 재전송 UI로(막다른 화면·되살릴 수 없는 코드 방지)
       const expired = !otpTimer || (d && d.error && d.error.indexOf("만료")>=0);
       if(expired){ otpExpired(); }
-      else { note.className="note err"; note.textContent=(d&&d.error)||"인증번호가 달라요"; $("su-code").value=""; $("su-code").focus(); }  // 틀리면 비우고 재입력 → 6자리 차면 자동 재확인
+      else { note.className="err"; note.innerHTML='<span class="eic">!</span>인증번호가 틀렸어요'; $("otpBox").classList.add("err"); otpErr=true; renderOtp(); $("su2Btn").disabled=true; }  // 틀림=빨강+숫자 유지(ex20.1) / 다시 탭하면 비우고 재입력
     }
   }).catch(()=>{ su2Busy=false; note.className="note err"; note.textContent="연결이 안 됐어요"; });
 }
-// 6자리 채우면 자동 확인 (확인 버튼 없음).
-$("su-code").oninput=()=>{ $("su-code").value=$("su-code").value.replace(/\D/g,"").slice(0,6); if($("su-code").value.length===6){ $("su-code").blur(); doVerify(); } };   // 6자리 = 키패드 닫고 자동 확인
+// OTP 6칸 — 투명 입력이 셀 위를 덮음(탭=키보드). 입력 글자를 셀에 렌더, 활성칸(왼쪽부터) 반짝.
+let otpErr=false;
+function renderOtp(){
+  const v=$("su-code").value, cells=document.querySelectorAll("#otpBox .otp-cell");
+  cells.forEach((c,i)=>{ c.textContent=v[i]||""; c.classList.toggle("active", !otpErr && v.length<6 && i===v.length); });
+}
+function clearOtpErr(){ if(!otpErr) return; otpErr=false; $("otpBox").classList.remove("err"); $("su2Note").className=""; $("su2Note").textContent=""; renderOtp(); }
+function resetOtp(){ otpErr=false; $("otpBox").classList.remove("err"); $("su2Note").className=""; $("su2Note").textContent=""; $("su-code").value=""; $("su-code").disabled=false; renderOtp(); $("su2Btn").disabled=true; }
+$("su-code").oninput=()=>{
+  let v=$("su-code").value.replace(/\D/g,"");
+  if(otpErr){ clearOtpErr(); v=v.slice(-1); }                 // 오류 후 첫 입력 = 새로 시작(마지막 글자만)
+  v=v.slice(0,6); $("su-code").value=v; renderOtp();
+  $("su2Btn").disabled = v.length!==6;                        // 6자리 = 확인 버튼 초록(활성)
+  if(v.length===6){ $("su-code").blur(); doVerify(); }        // + 자동 확인
+};
+$("su-code").addEventListener("focus",()=>{ if(otpErr){ clearOtpErr(); $("su-code").value=""; renderOtp(); $("su2Btn").disabled=true; } });   // 오류 후 다시 탭 = 비우고 새로
+$("su2Btn").onclick=doVerify;
+$("otpResendLink").onclick=resendOtp;
 $("su2Back").onclick=()=>show("s-signup1");
 
 // ── OTP 3분 카운트다운 (서버 만료 180초와 일치) ──
@@ -934,8 +964,8 @@ function tickOtp(){
 }
 function startOtpTimer(){ stopOtpTimer(); otpDeadline=Date.now()+OTP_TTL*1000; tickOtp(); otpTimer=setInterval(tickOtp,1000); }
 function otpExpired(){
-  $("su-code").disabled=true; $("su-code").value="";
-  $("su2Note").textContent=""; $("su2Note").className="note";   // 인라인 링크 대신 센터 모달(유성 2026-06-28)
+  clearOtpErr(); $("su-code").value=""; renderOtp(); $("su-code").disabled=true; $("su2Btn").disabled=true;
+  $("su2Note").textContent=""; $("su2Note").className="";   // 인라인 링크 대신 센터 모달(유성 2026-06-28)
   showOtpEx();
 }
 function showOtpEx(){ $("otpExDim").classList.add("on"); $("otpExModal").classList.add("on"); }
@@ -946,6 +976,7 @@ $("otpExResend").onclick=()=>{ closeOtpEx(); resendOtp(); };   // resendOtp 성�
 let resendBusy=false;
 function resendOtp(){
   if(resendBusy) return; resendBusy=true;                     // 더블탭 가드: 보내는 동안 버튼이 사라져 재탭 불가 + 플래그로 belt-and-suspenders
+  clearOtpErr();                                              // 이전 오류(빨강 박스) 정리 — 재발송 실패해도 잔류 안 하게
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
   const note=$("su2Note"); loadingNote(note,"다시 보내고 있어요");
   // 실패해도 '다시 받기' 버튼을 되살림(막다른 화면 방지, §3 나갈 선택지)
@@ -953,9 +984,7 @@ function resendOtp(){
   post({action:"staff_start", name, phone, device:getDevice()}).then(d=>{
     resendBusy=false;
     if(d && d.ok){
-      $("su2Sub").textContent=(d.phone||"")+" 로 보낸 6자리 숫자를 적어 주세요.";
-      note.className="note"; note.textContent="인증번호를 다시 보냈어요.";
-      $("su-code").value=""; $("su-code").disabled=false; startOtpTimer(); $("su-code").focus();
+      resetOtp(); note.className=""; note.textContent="인증번호를 다시 보냈어요."; startOtpTimer(); $("su-code").focus();
     } else { failNote((d&&d.error)||"잠시 후 다시 받아 주세요"); }
   }).catch(()=>{ resendBusy=false; failNote("연결이 안 됐어요. 와이파이를 확인해 주세요"); });
 }
