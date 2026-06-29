@@ -76,14 +76,26 @@
   x.addEventListener('click', function(){ bar.classList.remove('show'); try{ sessionStorage.setItem('tf_install_x','1'); }catch(e){} });
   window.addEventListener('appinstalled', function(){ bar.classList.remove('show'); deferred = null; });
 
-  // 입력 중(로그인 등)엔 하단 footbar와 겹치지 않게 바를 내림
-  document.addEventListener('focusin', function(e){ var t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) bar.classList.remove('show'); });
+  // 상호작용(인풋·버튼·footbar·링크 탭) 시 바를 내림 — 로그인 진행 등에서 하단 footbar와 겹치지 않게.
+  //   ※ position:fixed footbar는 offsetParent가 null이라 그걸로 못 잡음 → 이벤트 기반이 확실(focusin은 헤드리스서 불안정).
+  document.addEventListener('pointerdown', function(e){
+    var t = e.target; if (!t || !t.closest) return;
+    if (t.closest('.tfi-bar, .tfi-card')) return;                 // 설치 UI 자체는 제외
+    if (t.closest('input, textarea, button, a, .footbar')) bar.classList.remove('show');
+  }, true);
 
+  // 하단 액션바(footbar=다음·확인 등)가 보이는 화면이면 설치 바가 그 위를 덮으므로 안 띄운다.
+  function footbarVisible(){
+    var fbs = document.querySelectorAll('.footbar');
+    for (var i=0;i<fbs.length;i++){ var r = fbs[i].getBoundingClientRect(); if (r.height > 0 && r.width > 0) return true; }   // fixed라도 rect로 판별
+    return false;
+  }
   // 폴백: beforeinstallprompt가 안 떠도(크롬 휴리스틱·iOS·시크릿) 브라우저면 바를 띄움.
   function maybeShow(){
     var dismissed = false; try{ dismissed = sessionStorage.getItem('tf_install_x') === '1'; }catch(e){}
     var ae = document.activeElement;
     if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;   // 입력 중이면 안 띄움
+    if (footbarVisible()) return;                                              // 하단 버튼바 있는 화면이면 안 띄움(겹침 방지)
     if (!installed() && !dismissed) bar.classList.add('show');
   }
   setTimeout(maybeShow, 1200);

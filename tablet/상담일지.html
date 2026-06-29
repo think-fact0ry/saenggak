@@ -39,6 +39,7 @@
   .back:active{background:var(--g100);}
   h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 0 6px;}
   .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 0 22px;}
+  #su2Stub{text-align:center;margin-bottom:6px;}   /* OTP 타이머 = 중앙정렬 + 셀과 가깝게(유성) */
   .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:8px;padding:5px 11px;margin:0 2px 18px;}
   .head-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 
@@ -50,7 +51,7 @@
   .field input::placeholder,.field textarea::placeholder{color:var(--g400);font-weight:500;}
   /* OTP 6칸(토스식 ex20) — 라운드 회색칸·큰 볼드 숫자·활성칸 회색↔흰 반짝·투명 입력이 위 덮음 */
   .otp-box{position:relative;display:flex;gap:9px;justify-content:center;margin:10px 0 4px;}
-  .otp-cell{flex:1;max-width:54px;height:62px;border-radius:14px;background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:27px;font-weight:800;color:var(--g900);transition:background .2s,box-shadow .2s;}
+  .otp-cell{flex:1;max-width:54px;height:62px;border-radius:14px;background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:27px;font-weight:800;color:var(--green);transition:background .2s,box-shadow .2s;}   /* 입력 숫자 초록(유성) */
   .otp-cell.active{animation:otpPulse 1.15s ease-in-out infinite;}   /* 다음 칸(왼쪽부터) 회색↔흰 반짝 */
   @keyframes otpPulse{0%,100%{background:var(--g100);box-shadow:inset 0 0 0 0 transparent;}50%{background:#fff;box-shadow:inset 0 0 0 2px var(--g200);}}
   .otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);}   /* 오류=연빨강+빨강테두리(ex20.1) */
@@ -58,7 +59,7 @@
   #su2Note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;color:var(--g500);margin-top:10px;min-height:20px;}
   #su2Note.err{color:var(--red);}
   #su2Note .eic{flex-shrink:0;width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
-  .lk-resend{display:block;margin:20px auto 0;background:none;border:none;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--g500);text-decoration:underline;cursor:pointer;transition:transform .12s;}
+  .lk-resend{align-self:center;background:none;border:none;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--green);cursor:pointer;padding:10px;transition:transform .12s;}   /* 확인 버튼 위·초록(유성) */
   .lk-resend:active{transform:scale(.93);}   /* 박스 없는 텍스트형(§7.2) */
   .field input:focus,.field textarea:focus{background:#fff;border-color:var(--green);}
   .field input.pin{letter-spacing:14px;text-align:center;font-size:22px;}
@@ -84,7 +85,7 @@
   .screen:has(input:focus,textarea:focus) .footbar{padding:0;border-top:none;transition:none;}
   .screen:has(input:focus,textarea:focus) .footbar .inner{max-width:none;gap:0;}
   .screen:has(input:focus,textarea:focus) .footbar .btn{border-radius:0;padding:19px;}
-  .footbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px;}
+  .footbar .inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px;}   /* column = 재발송 링크가 확인 버튼 위로 쌓임 */
   .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:15px;border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
   .btn:active{transform:scale(.97);background:var(--green-d);}
   .btn:disabled{background:var(--g200);color:var(--g500);cursor:default;transform:none;}
@@ -106,7 +107,7 @@
   .sheet-sub{font-size:14.5px;color:var(--g500);font-weight:500;line-height:1.5;margin:-12px 0 20px;}
   .oath-note{font-size:13px;color:var(--g500);font-weight:500;line-height:1.5;background:var(--g100);border-radius:12px;padding:12px 14px;margin-bottom:20px;}
   .oath-note b{color:var(--g700);font-weight:700;}
-  .agree-list{display:flex;flex-direction:column;gap:9px;margin-bottom:24px;}   /* 필수↔필수 가깝게(유성 2026-06-29) */
+  .agree-list{display:flex;flex-direction:column;gap:7px;margin-bottom:24px;}   /* 필수↔필수 가깝게(유성 2026-06-29, 9→7) */
   .agree-item{display:flex;align-items:flex-start;gap:9px;font-size:15px;color:var(--g700);font-weight:500;line-height:1.45;}
   button.agree-item{width:100%;background:none;border:none;font-family:inherit;text-align:left;cursor:pointer;padding:5px 6px;margin:0 -6px;border-radius:12px;transition:background .12s;}   /* 탭 가능한 동의 줄 = 리스트행 누름(§7.2 박스형) */
   button.agree-item:active{background:var(--g100);}
@@ -381,7 +382,7 @@
       <div class="tfield fhide" id="tf-name" style="order:0">
         <label for="su-name">이름</label>
         <div class="tin-wrap">
-          <input id="su-name" type="text" placeholder="홍길동" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+          <input id="su-name" type="text" lang="ko" placeholder="홍길동" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
           <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>
@@ -406,7 +407,7 @@
     </div>
     <div class="note" id="su1Note"></div>
   </div>
-  <div class="footbar" id="su1Foot" style="display:none"><div class="inner"><button class="btn" id="su1Btn" disabled>인증번호 받기</button></div></div>
+  <div class="footbar" id="su1Foot" style="display:none"><div class="inner"><button class="btn" id="su1Btn" disabled>다음</button></div></div>
 </div>
 
 <!-- ═══ 본인 확인 동의 바텀시트 (OTP 발송 전) ═══ -->
@@ -456,9 +457,8 @@
       <input id="su-code" type="text" inputmode="numeric" autocomplete="one-time-code" aria-label="인증번호" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <div id="su2Note"></div>
-    <button type="button" class="lk-resend" id="otpResendLink">문자가 안 오나요?</button>
   </div>
-  <div class="footbar" id="su2Foot"><div class="inner"><button class="btn" id="su2Btn" disabled>확인</button></div></div>
+  <div class="footbar" id="su2Foot"><div class="inner"><button type="button" class="lk-resend" id="otpResendLink">문자가 안 오나요?</button><button class="btn" id="su2Btn" disabled>확인</button></div></div>
 </div>
 
 <!-- ═══ 인증 시간 만료 센터 모달 ═══ -->
