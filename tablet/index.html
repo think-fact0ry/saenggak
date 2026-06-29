@@ -232,13 +232,20 @@
   .key-in{width:100%; font-family:inherit; font-size:19px; font-weight:600; letter-spacing:1px; padding:15px 16px; border-radius:14px; border:2px solid var(--g200); background:var(--g100); outline:none; margin-bottom:8px; text-align:center;}
   .key-in:focus{background:#fff; border-color:var(--green);}
   .key-in::placeholder{color:var(--g300); letter-spacing:6px;}   /* 빈칸일 때 ● ● ● ● 회색 안내(몇 글자 넣는지 보이게) */
+  #cnumKey::placeholder{font-size:12px; font-weight:400;}   /* 점 작게(상담일지 su-code와 통일, 원칙 §5.6-7) */
+  #phOtp::placeholder{font-size:12px; font-weight:400; letter-spacing:4px;}
   .key-err{min-height:18px; font-size:13px; color:var(--red); font-weight:600; text-align:center; margin-bottom:12px;}
-  .s-btn{width:100%; font-family:inherit; font-size:17px; font-weight:700; padding:17px; border-radius:15px; border:none; background:var(--green); color:#fff; cursor:pointer;}
-  .s-btn:active{background:var(--green-d);}
+  .s-btn{width:100%; font-family:inherit; font-size:17px; font-weight:700; padding:17px; border-radius:15px; border:none; background:var(--green); color:#fff; cursor:pointer; position:relative; overflow:hidden;}
+  .s-btn:active{background:var(--green-d); transform:scale(.97);}
   .s-btn:disabled{background:var(--g200); color:var(--g500);}
   .s-btn.danger{background:var(--red);}
   .s-btn.danger:active{background:#d63a48;}
-  .s-later{width:100%; background:none; border:none; font-family:inherit; font-size:15px; font-weight:600; color:var(--g500); padding:14px; margin-top:4px; cursor:pointer;}
+  /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 (원칙 §7.2) */
+  .rip{position:absolute; top:50%; width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.16); transform:translate(-50%,-50%) scale(0); pointer-events:none;}
+  .rip.go{transform:translate(-50%,-50%) scale(16); transition:transform .5s cubic-bezier(.25,.6,.3,1);}
+  .rip.fade{opacity:0; transition:opacity .3s;}
+  .s-later{width:100%; background:none; border:none; font-family:inherit; font-size:15px; font-weight:600; color:var(--g500); padding:14px; margin-top:4px; cursor:pointer; transition:transform .12s;}
+  .s-later:active{transform:scale(.93);}   /* 박스 없는 텍스트형 = 누르면 살짝 축소(원칙 §7.2) */
 
   /* ═ 내 정보·주소 관리 (2026-06-26) ═ */
   .mp-profile{width:100%; font-family:inherit; text-align:left; background:none; border:none; cursor:pointer; padding:14px 18px; margin:0 0 14px; border-radius:16px; transition:background .12s, transform .08s;}   /* 우측·화살표 라인을 아래 mp-group 행에 맞춤(여백 없이 wrap 폭) */
@@ -274,8 +281,8 @@
   .tfield.focus .tin{border-color:var(--green);}
   .tin input{width:100%; border:none; background:none; outline:none; font-family:inherit; font-size:20px; font-weight:600; color:var(--g900); padding:2px 36px 6px 0; caret-color:var(--green);}
   .tin input::placeholder{color:var(--g300); font-weight:500;}
-  .tin .clr{position:absolute; right:0; top:6px; width:19px; height:19px; border-radius:50%; background:var(--g300); border:none; display:none; align-items:center; justify-content:center; cursor:pointer; padding:0;}
-  .tfield.has .clr{display:flex;} .tin .clr svg{width:10px; height:10px; color:#fff;}
+  .tin .clr{position:absolute; right:0; top:8px; width:15px; height:15px; border-radius:50%; background:var(--g300); border:none; display:none; align-items:center; justify-content:center; cursor:pointer; padding:0;}   /* 작게(상담일지와 통일, 원칙 §5.5-4) */
+  .tfield.has .clr{display:flex;} .tin .clr svg{width:7px; height:7px; color:#fff;}
   .ed-note{font-size:13.5px; color:var(--g500); font-weight:500; margin:2px; min-height:18px;} .ed-note.err{color:var(--red);}
   /* 로딩 = 글자 + 점 3개 위아래 출렁(진행 중임이 보이게, 토스식) — 상담일지 loadingNote와 동일 규칙. 정적 '…' 금지(디자인_UX_원칙 §7) */
   .ld{display:inline-flex; align-items:center; gap:9px; color:var(--g500); font-weight:500;}
@@ -973,7 +980,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.28f';
+var APP_VERSION = '26.06.29';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
@@ -1037,6 +1044,18 @@ if ('serviceWorker' in navigator) {
     });
   }
 })();
+
+// 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). 텍스트형(.s-later)은 CSS scale로만 (원칙 §7.2)
+function pressRipple(btn){
+  btn.addEventListener("pointerdown",function(e){
+    var r=btn.getBoundingClientRect();
+    var sp=document.createElement("span"); sp.className="rip"; sp.style.left=(e.clientX-r.left)+"px";
+    btn.appendChild(sp); requestAnimationFrame(function(){ sp.classList.add("go"); });
+    var end=function(){ sp.classList.add("fade"); setTimeout(function(){ if(sp.parentNode) sp.remove(); },340); btn.removeEventListener("pointerup",end); btn.removeEventListener("pointerleave",end); };
+    btn.addEventListener("pointerup",end); btn.addEventListener("pointerleave",end);
+  });
+}
+document.querySelectorAll(".s-btn").forEach(pressRipple);
 </script>
 </body>
 </html>
