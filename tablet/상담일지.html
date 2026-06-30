@@ -152,7 +152,7 @@
   .s-later:active{transform:scale(.93);}   /* 회색 텍스트 버튼(동의 안함·닫기) = 누르면 텍스트 살짝 축소(색버튼과 다른 인터랙션, 유성) */
   /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 */
   .rip{position:absolute;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.16);transform:translate(-50%,-50%) scale(0);pointer-events:none;}
-  .rip.go{transform:translate(-50%,-50%) scale(16);transition:transform .5s cubic-bezier(.25,.6,.3,1);}
+  .rip.go{transform:translate(-50%,-50%) scale(var(--rs,16));transition:transform .42s cubic-bezier(.25,.6,.3,1);}
   .rip.fade{opacity:0;transition:opacity .3s;}
 
   .note{text-align:center;font-size:13.5px;margin:12px 2px 0;color:var(--g500);min-height:18px;}
@@ -1863,7 +1863,9 @@ initSheetDrag($("oathSheet"), ()=>{ closeOath(); location.href="./index.html"; }
 function pressRipple(btn){
   btn.addEventListener("pointerdown",e=>{
     const r=btn.getBoundingClientRect();
-    const sp=document.createElement("span"); sp.className="rip"; sp.style.left=(e.clientX-r.left)+"px";
+    const x=e.clientX-r.left;
+    const sp=document.createElement("span"); sp.className="rip"; sp.style.left=x+"px";
+    sp.style.setProperty("--rs", Math.ceil(Math.hypot(Math.max(x,r.width-x), r.height/2)/15)+1);   // 누른 지점→가장 먼 모서리까지 덮도록 scale 동적 계산(끝까지 어두워짐)
     btn.appendChild(sp); requestAnimationFrame(()=>sp.classList.add("go"));
     const end=()=>{ sp.classList.add("fade"); setTimeout(()=>{ if(sp.parentNode) sp.remove(); },340); btn.removeEventListener("pointerup",end); btn.removeEventListener("pointerleave",end); };
     btn.addEventListener("pointerup",end); btn.addEventListener("pointerleave",end);
