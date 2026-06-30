@@ -66,7 +66,7 @@
   .otp-cell.active::after{content:"";width:2px;height:30px;background:var(--green);border-radius:1px;animation:otpCaret 1.06s step-end infinite;}   /* 커서칸 안 초록 깜빡 커서(물결과 함께) */
   @keyframes otpCaret{0%,49%{opacity:1}50%,100%{opacity:0}}
   .otp-cell.pop{animation:otpPop .2s ease-out;}   /* 숫자 입력 시 박스 작아졌다 부드럽게 커짐(유성) */
-  @keyframes otpPop{0%{transform:scale(.55)}100%{transform:scale(1)}}
+  @keyframes otpPop{0%{transform:scale(.8)}100%{transform:scale(1)}}
   .otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);animation:none;}   /* 오류=연빨강+빨강테두리(물결 정지, ex20.1) */
   #su-code{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;background:none;font-size:16px;cursor:pointer;color:transparent;caret-color:transparent;}   /* 셀 위 투명 입력 = 탭하면 키보드, 글자·캐럿 숨김 */
   #su2Note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;color:var(--g500);margin-top:10px;min-height:20px;}
