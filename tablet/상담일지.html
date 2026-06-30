@@ -75,11 +75,11 @@
   .otp-box.filling .otp-cell{opacity:0;transition:opacity .28s ease;}    /* 숫자는 *초록 채워질 때* 가려져 사라짐(선 등장 때 아님 — 유성) */
   /* 라운드 선 = 6칸 둘레(inset:0, 반응형 rect 100%) 시계방향으로 그려짐(top-left→, pathLength 정규화·px 측정 X). 갑툭튀 X */
   .otp-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
-  .otp-frame rect{fill:none;stroke:var(--green);stroke-width:2.5;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1);}
+  .otp-frame rect{fill:none;stroke:var(--green);stroke-width:2.5;stroke-dasharray:100;stroke-dashoffset:100;rx:var(--r-sm);transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1);}   /* rx=반응형 토큰(살짝 덜 굴림, 유성) — 하드코딩 px 폐기 */
   .otp-box.done .otp-frame rect{stroke-dashoffset:0;}   /* .done=시계방향 draw(100→0) / 제거 시 반대로 un-draw(0→100, 불일치 복구) */
   .otp-box.filling .otp-frame{opacity:0;transition:opacity .3s ease;}    /* 초록 채워질 때 선은 페이드(초록이 덮음) */
   /* morph = 초록 채움 → 중앙 원 → 체크. 모두 입력 자리에서(눈 이동 없음) */
-  .otp-morph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;box-sizing:border-box;border:none;background:transparent;border-radius:var(--r-md);opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:width .45s cubic-bezier(.5,0,.2,1),height .45s cubic-bezier(.5,0,.2,1),border-radius .45s cubic-bezier(.5,0,.2,1),background-color .3s ease,opacity .22s ease;}
+  .otp-morph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;box-sizing:border-box;border:none;background:transparent;border-radius:var(--r-sm);opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:width .45s cubic-bezier(.5,0,.2,1),height .45s cubic-bezier(.5,0,.2,1),border-radius .45s cubic-bezier(.5,0,.2,1),background-color .3s ease,opacity .22s ease;}
   .otp-box.done .otp-morph{opacity:1;}                                   /* (투명 — 채움 전엔 안 보임) */
   .otp-morph.fill{background:var(--green);}                              /* 초록 채워짐 */
   .otp-morph.circle{width:64px;height:64px;border-radius:50%;}           /* 원으로 줄며 중앙 소멸 */
@@ -495,7 +495,7 @@
     <div class="otp-box" id="otpBox">
       <div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div>
       <input id="su-code" type="text" inputmode="numeric" autocomplete="one-time-code" aria-label="인증번호" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <svg class="otp-frame" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13" pathLength="100" vector-effect="non-scaling-stroke"/></svg>
+      <svg class="otp-frame" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="10" pathLength="100" vector-effect="non-scaling-stroke"/></svg>
       <div class="otp-morph" id="otpMorph"><svg class="om-check" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 12 9 17 20 6" pathLength="1"/></svg></div>
     </div>
     <div class="otp-done-text" id="otpDoneText">인증을 마쳤어요!</div>
