@@ -866,7 +866,10 @@ function svcFull(s){ s=String(s||""); if(s.indexOf('아동')>=0||s.indexOf('아�
 function post(obj){ return fetch(GAS_EXEC, {method:"POST", body:JSON.stringify(obj)}).then(r=>{ if(!r.ok) throw new Error("서버 오류 "+r.status); return r.json(); }); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
 // 로딩 표시 = 글자 + 출렁이는 점 3개(진행 중임이 보이게). innerHTML이라 텍스트는 우리가 만든 고정 문자열만 넣음.
-function loadingNote(el, text){ el.className="note"; el.innerHTML='<span class="ld">'+text+'<span class="ld-dots"><i></i><i></i><i></i></span></span>'; }
+function loadingHTML(text){ return '<span class="ld">'+text+'<span class="ld-dots"><i></i><i></i><i></i></span></span>'; }
+function loadingNote(el, text){ el.className="note"; el.innerHTML=loadingHTML(text); }
+function btnLoad(btn, text){ if(!btn) return; if(btn.dataset.lbl==null) btn.dataset.lbl=btn.innerHTML; btn.disabled=true; btn.innerHTML=loadingHTML(text); }   // 색버튼 누르면 그 버튼 위에 로딩 텍스트+점(§2.6-4·§7.1) — 별도 note 대신
+function btnDone(btn){ if(!btn||btn.dataset.lbl==null) return; btn.innerHTML=btn.dataset.lbl; delete btn.dataset.lbl; }   // 원래 라벨 복구(실패·재진입)
 
 // ════ 가입 1: 진보형 입력 — 휴대폰→생년월일·성별→이름 한 칸씩(활성칸 맨 위) → OTP ════
 //  키패드 유지 + 자동 커서 이동(안드로이드 최적, iOS는 키패드 내려갈 수 있어 §5.5 footbar 폴백). 첫 칸은 사용자가 1번 탭(웹은 자동 키보드 못 띄움)
@@ -951,22 +954,22 @@ let otpSendBusy=false;
 function doSendOtp(){
   if(otpSendBusy) return; otpSendBusy=true;   // 더블탭 가드 = 문자 2번 발송 방지
   const name=$("su-name").value.trim(), phone=$("su-phone").value;
-  const note=$("su1Note"); loadingNote(note,"확인하고 있어요"); $("su1Btn").disabled=true;
+  const note=$("su1Note"); note.textContent=""; btnLoad($("su1Btn"),"인증번호를 보내고 있어요");   // 로딩을 '다음' 버튼 위에(§2.6-4)
   post({action:"staff_start", name, phone, device:getDevice()}).then(d=>{
-    otpSendBusy=false; $("su1Btn").disabled=false;
+    otpSendBusy=false; btnDone($("su1Btn")); $("su1Btn").disabled=false;
     if(d && d.ok){
       note.textContent="";
       resetOtp(); show("s-signup2"); startOtpTimer(); $("su-code").focus();
     } else { note.className="note err"; note.textContent=(d&&d.error)||"확인이 안 됐어요"; }
-  }).catch(()=>{ otpSendBusy=false; $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
+  }).catch(()=>{ otpSendBusy=false; btnDone($("su1Btn")); $("su1Btn").disabled=false; note.className="note err"; note.textContent="연결이 안 됐어요. 와이파이를 확인해 주세요"; });
 };
 
 // ════ 가입 2: OTP → 등록 → PIN ════
 let su2Busy=false, forgotPin=false;   // forgotPin = '비밀번호를 몰라요'로 들어온 재인증(통과 후 PIN 재설정)
 function doVerify(){
   if(su2Busy || $("su-code").value.length!==6) return;
-  su2Busy=true; $("su2Btn").disabled=true;   // 확인 중엔 버튼 비활성(초록·재탭 방지)
-  const note=$("su2Note"); loadingNote(note,"확인하고 있어요");
+  su2Busy=true; btnLoad($("su2Btn"),"확인하고 있어요");   // 확인 중 로딩을 버튼 위에(§2.6-4) + 재탭 방지
+  const note=$("su2Note");
   const device=getDevice();
   const bd=decodeBirth()||{};   // 생년월일·성별(주민번호 앞 7자리 디코드) — 등록 시 저장
   post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device, dlabel:deviceLabel(), birth:bd.birth8||"", sex:bd.sex||""}).then(d=>{
@@ -988,10 +991,10 @@ function doVerify(){
     else {
       // 만료(클라 타이머 종료됨 || 서버가 만료 응답) → 일반 에러 대신 재전송 UI로(막다른 화면·되살릴 수 없는 코드 방지)
       const expired = !otpTimer || (d && d.error && d.error.indexOf("만료")>=0);
-      if(expired){ otpExpired(); }
-      else { note.className="err"; note.innerHTML='<span class="eic">!</span>인증번호가 틀렸어요'; $("otpBox").classList.add("err"); otpErr=true; renderOtp(); $("su2Btn").disabled=true; }  // 틀림=빨강+숫자 유지(ex20.1) / 다시 탭하면 비우고 재입력
+      if(expired){ btnDone($("su2Btn")); otpExpired(); }
+      else { btnDone($("su2Btn")); note.className="err"; note.innerHTML='<span class="eic">!</span>인증번호가 틀렸어요'; $("otpBox").classList.add("err"); otpErr=true; renderOtp(); $("su2Btn").disabled=true; }  // 틀림=빨강+숫자 유지(ex20.1) / 다시 탭하면 비우고 재입력
     }
-  }).catch(()=>{ su2Busy=false; $("su2Btn").disabled=$("su-code").value.length!==6; note.className="note err"; note.textContent="연결이 안 됐어요"; });   // 네트워크 실패=6자리 남아있으면 재시도 가능하게 버튼 복구
+  }).catch(()=>{ su2Busy=false; btnDone($("su2Btn")); $("su2Btn").disabled=$("su-code").value.length!==6; note.className="note err"; note.textContent="연결이 안 됐어요"; });   // 네트워크 실패=6자리 남아있으면 재시도 가능하게 버튼 복구
 }
 // OTP 6칸 — 투명 입력이 셀 위를 덮음(탭=키보드). 입력 글자를 셀에 렌더. 입력된 칸=흰색(정적), 안 친 칸=물결(CSS).
 let otpErr=false, prevOtpLen=0;
@@ -1361,19 +1364,19 @@ function saveRound(retry){
   if(_saving) return;
   if(DEMO){ roundData[curRound]={date:ymd($("w-date").value), content:$("w-content").value.trim()}; toast(curRound+"회차 저장(데모)"); openMonth(curYm); return; }
   _saving=true;
-  const note=$("w-note"); loadingNote(note,"저장하고 있어요"); $("w-save").disabled=true;
+  const note=$("w-note"); note.className="note"; note.textContent=""; btnLoad($("w-save"),"저장하고 있어요");   // 로딩을 저장 버튼 위에(§2.6-4)
   const s=loadSess()||{};
   const body={ action:"journal", staffId:s.staffId, session:s.session,
     child:{ name:curClient.name, birth:curClient.birth }, service:curClient.service||"",
     ym:curYm, round:curRound, date:ymd($("w-date").value), content:$("w-content").value.trim() };
   post(body).then(d=>{
-    if(d && d.ok){ _saving=false; roundData[curRound]={date:body.date, content:body.content}; toast(curRound+"회차 저장했어요"); openMonth(curYm); return; }
+    if(d && d.ok){ _saving=false; btnDone($("w-save")); roundData[curRound]={date:body.date, content:body.content}; toast(curRound+"회차 저장했어요"); openMonth(curYm); return; }
     if(d && d.code==="auth"){ _saving=false; sessExpired(); return; }
     throw new Error((d&&d.error)||"저장 실패");
   }).catch(err=>{
     _saving=false; note.className="note err";
-    if(retry){ loadingNote(note,"다시 시도하고 있어요"); setTimeout(()=>saveRound(false),1500); return; }
-    $("w-save").disabled=false;
+    if(retry){ btnLoad($("w-save"),"다시 시도하고 있어요"); note.textContent=""; setTimeout(()=>saveRound(false),1500); return; }
+    btnDone($("w-save")); $("w-save").disabled=false;
     note.innerHTML='저장이 안 됐어요. <button class="lk" id="retrySave">다시 저장</button>';
     const b=$("retrySave"); if(b) b.onclick=()=>saveRound(true);
   });

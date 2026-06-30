@@ -690,6 +690,8 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   // 로딩 표시 = 글자 + 출렁이는 점 3개(정적 '…' 대신 진행 중임이 보이게). 텍스트는 우리 고정 문자열만.
   function loadingHTML(text){ return '<span class="ld">'+text+'<span class="ld-dots"><i></i><i></i><i></i></span></span>'; }
   function loadingNote(el, text){ if(!el) return; el.classList.remove('err','empty'); el.innerHTML=loadingHTML(text); }
+  function btnLoad(btn, text){ if(!btn) return; if(btn.dataset.lbl==null) btn.dataset.lbl=btn.innerHTML; btn.disabled=true; btn.innerHTML=loadingHTML(text); }   // 색버튼 누르면 그 버튼 위에 로딩 텍스트+점(§2.6-4·§7.1)
+  function btnDone(btn){ if(!btn||btn.dataset.lbl==null) return; btn.innerHTML=btn.dataset.lbl; delete btn.dataset.lbl; }
   // 기기 종류 라벨(종류·OS) 로컬 산출 — 현재 기기가 라벨 없을 때(배포 전 세션) 폴백. 상담일지 deviceLabel과 동일 규칙 + 아이패드(Mac UA 위장) 보정.
   function deviceLabelLocal(){
     var ua=navigator.userAgent||'';
@@ -743,9 +745,9 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   $('drBtn').onclick = async function(){
     if(drBusy) return; var d=devCache[drIdx]; if(!d){ hideScreen('mpDevRename'); return; }
     var nick=$('drIn').value.trim().slice(0,20);
-    drBusy=true; $('drBtn').disabled=true; loadingNote($('drNote'),'저장하고 있어요');
+    drBusy=true; btnLoad($('drBtn'),'저장하고 있어요');
     var r; try{ r=await rpc('mypage_device_rename',{device:d.d, nick:nick}); }catch(e){ r={ok:false}; }
-    drBusy=false; $('drBtn').disabled=false;
+    drBusy=false; btnDone($('drBtn')); $('drBtn').disabled=false;
     if(r&&r.ok){ d.n=r.nick||''; renderDevices(); hideScreen('mpDevRename'); }
     else { $('drNote').className='ed-note err'; $('drNote').textContent=(r&&r.error)||'잠시 후 다시 시도해 주세요'; if(r&&r.code==='gone') loadDevices(); }   // 로그아웃·만료로 사라진 기기 = 목록 새로고침(뒤로가면 최신)
   };
@@ -891,18 +893,18 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     if(phBusy) return; var r;
     if(phStage==='input'){
       var np=$('phIn').value.replace(/\D/g,''); if(np.length!==11) return;
-      phBusy=true; $('phBtn').disabled=true; loadingNote($('phNote'),'인증번호를 보내고 있어요');
+      phBusy=true; $('phBtn').disabled=true; $('phBtn').innerHTML=loadingHTML('인증번호를 보내고 있어요'); $('phNote').textContent='';   // 로딩을 버튼 위에(§2.6-4)
       try{ r=await rpc('mypage_phone_start',{newPhone:np}); }catch(e){ r={ok:false,error:'잠시 후 다시 시도해 주세요'}; }
       phBusy=false;
       if(r&&r.ok){ phStage='otp'; $('phOtpF').style.display=''; $('phBtn').textContent='확인'; $('phBtn').disabled=true; $('phNote').textContent=(r.phone||'')+' 로 인증번호를 보냈어요'; }
-      else { $('phBtn').disabled=false; $('phNote').className='ed-note err'; $('phNote').textContent=(r&&r.error)||'발송에 실패했어요'; }
+      else { $('phBtn').textContent='인증번호 받기'; $('phBtn').disabled=false; $('phNote').className='ed-note err'; $('phNote').textContent=(r&&r.error)||'발송에 실패했어요'; }
     } else {
       var np2=$('phIn').value.replace(/\D/g,''), code=$('phOtp').value.replace(/\D/g,''); if(code.length!==6) return;
-      phBusy=true; $('phBtn').disabled=true; $('phNote').className='ed-note'; $('phNote').textContent='확인하고 있어요…';
+      phBusy=true; $('phBtn').disabled=true; $('phBtn').innerHTML=loadingHTML('확인하고 있어요'); $('phNote').className='ed-note'; $('phNote').textContent='';   // 로딩을 버튼 위에(§2.6-4)
       try{ r=await rpc('mypage_phone_verify',{newPhone:np2, code:code}); }catch(e){ r={ok:false,error:'잠시 후 다시 시도해 주세요'}; }
       phBusy=false;
       if(r&&r.ok){ var s=sess()||{}; s.phone=np2; saveS(s); $('ivPhone').textContent=fmtPhone(np2); hideScreen('mpPhoneEdit'); }
-      else { $('phBtn').disabled=false; $('phNote').className='ed-note err'; $('phNote').textContent=(r&&r.error)||'인증번호가 달라요'; }
+      else { $('phBtn').textContent='확인'; $('phBtn').disabled=false; $('phNote').className='ed-note err'; $('phNote').textContent=(r&&r.error)||'인증번호가 달라요'; }
     }
   };
   // ── 집 주소 변경 (다음 우편번호 검색 → 실주소 → 11이 카카오로 좌표 연동) ──
@@ -932,9 +934,9 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
     if(adBusy || !adRoadVal) return; var r;
     var detail=$('adDetail').value.trim();
     var addr = adRoadVal + (detail ? (' '+detail) : '');
-    adBusy=true; $('adBtn').disabled=true; loadingNote($('adNote'),'저장하고 있어요');
+    adBusy=true; btnLoad($('adBtn'),'저장하고 있어요');
     try{ r=await rpc('mypage_addr_save',{addr:addr}); }catch(e){ r={ok:false,error:'잠시 후 다시 시도해 주세요'}; }
-    adBusy=false;
+    adBusy=false; btnDone($('adBtn'));
     var saved = r&&r.ok&&((r.hr>0)||r.mapStatus==='반영');   // 인사시트 갱신 또는 지도 반영 = 어딘가 저장됨
     if(saved){
       $('acAddr').textContent=addr; $('acAddr').classList.remove('empty');
@@ -969,7 +971,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.06.30c';
+var APP_VERSION = '26.06.30d';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
