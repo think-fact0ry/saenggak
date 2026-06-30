@@ -68,27 +68,22 @@
   .otp-cell.pop{animation:otpPop .2s ease-out;}   /* 숫자 입력 시 박스 작아졌다 부드럽게 커짐(유성) */
   @keyframes otpPop{0%{transform:scale(.8)}100%{transform:scale(1)}}
   .otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);animation:none;}   /* 오류=연빨강+빨강테두리(물결 정지, ex20.1) */
-  /* ── OTP 인증 성공 토스식 연출 (1.숫자모임 2.초록선 3.텍스트사라짐 4.중앙체크 5.왼쪽슬라이드) ── */
+  /* ── OTP 인증 성공 토스식 연출 (입력 자리에서: 라운드선 나타남+숫자작아짐 → 초록채움+원으로 소멸 → 체크 왼쪽부터 → 텍스트 → 왼쪽 슬라이드). 시계방향 없음 ── */
   .otp-box{transition:transform .45s cubic-bezier(.4,0,.2,1);}
-  .otp-box.done{transform:scale(.94);}                                         /* 1. 숫자 살짝 작아지며 중앙으로(프레임도 자식이라 같이 줄어 hug 유지) */
-  .otp-box.done .otp-cell{box-shadow:none!important;background:transparent!important;animation:none!important;}   /* 각 칸 회색 테두리 사라짐 */
-  .otp-box.suc-fade{opacity:0;transition:opacity .4s ease;}
-  /* 2. 초록 선 = 6칸 박스에 딱 맞는 반응형 SVG(JS px 측정 X). inset:0=칸 그룹, rect 100%, pathLength=100 정규화로 그려지는 애니 */
-  .otp-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
-  .otp-frame rect{fill:none;stroke:var(--green);stroke-width:2.5;stroke-dasharray:100;stroke-dashoffset:100;}
-  .otp-box.done .otp-frame rect{stroke-dashoffset:0;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1);}
-  #s-signup2.suc-textout .wrap>h1,#s-signup2.suc-textout #su2Stub,#s-signup2.suc-textout #su2Note,#s-signup2.suc-textout .back,#s-signup2.suc-textout #su2Foot{opacity:0;transition:opacity .35s ease;pointer-events:none;}   /* 3. 모든 텍스트 사라짐 */
-  #s-signup2.suc-slide{transform:translateX(-100%);transition:transform .42s cubic-bezier(.4,0,.2,1);}             /* 5. 왼쪽 슬라이드 아웃 */
-  .otp-done{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;opacity:0;pointer-events:none;}
-  .otp-done.on{opacity:1;}
-  .otp-done.suc-slide{transform:translateX(-100%);transition:transform .42s cubic-bezier(.4,0,.2,1);}   /* 5. 화면과 함께 왼쪽 슬라이드(body 레벨이라 기준=viewport 고정, 점프 없음) */
-  .od-circle{width:84px;height:84px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;transform:scale(.4);}
-  .otp-done.on .od-circle{animation:odPop .5s cubic-bezier(.2,.9,.3,1.5) forwards;}   /* 4. 초록 원+흰 체크 뙇 */
-  .od-circle svg{width:40px;height:40px;}
-  .od-text{font-size:19px;font-weight:700;color:var(--g900);opacity:0;}
-  .otp-done.on .od-text{animation:odText .45s ease .15s forwards;}
-  @keyframes odPop{0%{transform:scale(.4)}100%{transform:scale(1)}}
+  .otp-box.done{transform:scale(.94);}                                   /* 1. 박스·숫자 살짝 작아짐 */
+  .otp-box.done .otp-cell{opacity:0;transition:opacity .25s ease;}       /* 숫자 사라짐 */
+  /* morph = 6칸 둘레(inset:0, 반응형) 라운드선 → 초록채움 → 중앙 원. 모두 입력 자리에서(눈 이동 없음) */
+  .otp-morph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;box-sizing:border-box;border:2.5px solid var(--green);background:transparent;border-radius:var(--r-md);opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:width .45s cubic-bezier(.5,0,.2,1),height .45s cubic-bezier(.5,0,.2,1),border-radius .45s cubic-bezier(.5,0,.2,1),background-color .3s ease,opacity .22s ease;}
+  .otp-box.done .otp-morph{opacity:1;}                                   /* 라운드 선 나타남 */
+  .otp-morph.fill{background:var(--green);}                              /* 초록 채워짐 */
+  .otp-morph.circle{width:64px;height:64px;border-radius:50%;}           /* 원으로 줄며 중앙 소멸 */
+  .om-check{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;}
+  .otp-morph.checked .om-check{stroke-dashoffset:0;transition:stroke-dashoffset .4s cubic-bezier(.5,0,.3,1);}   /* 체크 왼쪽부터 그려짐 */
+  .otp-done-text{text-align:center;font-size:19px;font-weight:700;color:var(--g900);margin-top:18px;opacity:0;}
+  #s-signup2.suc-done .otp-done-text{animation:odText .45s ease forwards;}
   @keyframes odText{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  #s-signup2.suc-textout .wrap>h1,#s-signup2.suc-textout #su2Stub,#s-signup2.suc-textout #su2Note,#s-signup2.suc-textout .back,#s-signup2.suc-textout #su2Foot{opacity:0;transition:opacity .35s ease;pointer-events:none;}   /* 주변 텍스트·버튼 사라짐(otp-box·성공텍스트는 남음) */
+  #s-signup2.suc-slide{transform:translateX(-100%);transition:transform .42s cubic-bezier(.4,0,.2,1);}            /* 화면 전체 왼쪽 슬라이드 아웃 → 다음 */
   #su-code{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;background:none;font-size:16px;cursor:pointer;color:transparent;caret-color:transparent;}   /* 셀 위 투명 입력 = 탭하면 키보드, 글자·캐럿 숨김 */
   #su2Note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;color:var(--g500);margin-top:10px;min-height:20px;}
   #su2Note.err{color:var(--red);}
@@ -493,17 +488,12 @@
     <div class="otp-box" id="otpBox">
       <div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div>
       <input id="su-code" type="text" inputmode="numeric" autocomplete="one-time-code" aria-label="인증번호" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <svg class="otp-frame" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13" pathLength="100" vector-effect="non-scaling-stroke"/></svg>
+      <div class="otp-morph" id="otpMorph"><svg class="om-check" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 12 9 17 20 6" pathLength="1"/></svg></div>
     </div>
+    <div class="otp-done-text" id="otpDoneText">인증을 마쳤어요!</div>
     <div id="su2Note"></div>
   </div>
   <div class="footbar" id="su2Foot"><div class="inner"><button type="button" class="lk-resend" id="otpResendLink">문자가 안 오나요?</button><button class="btn" id="su2Btn" disabled>확인</button></div></div>
-</div>
-
-<!-- OTP 인증 성공 오버레이 (body 레벨 — 슬라이드 시 fixed 기준 안 바뀌게) -->
-<div class="otp-done" id="otpDone">
-  <div class="od-circle"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-  <div class="od-text">인증을 마쳤어요!</div>
 </div>
 
 <!-- ═══ 인증 시간 만료 센터 모달 ═══ -->
@@ -1024,18 +1014,17 @@ $("otpResendLink").onclick=resendOtp;
 $("su2Back").onclick=()=>show("s-signup1");
 
 // ── OTP 인증 성공 토스식 연출: 회색사라짐+숫자모임 → 초록선 그림 → 텍스트사라짐 → 중앙 체크 → 왼쪽 슬라이드 ──
-const SUCCESS_HOLD = 1500;   // 중앙 체크 보여주는 시간(ms) — 라이브 보고 조정
-// 초록선은 CSS가 그림(.otp-box.done .otp-frame rect, pathLength=100 정규화) — JS px 측정 없음(반응형)
-function otpSuccessReset(screen,box,done){   // 다음 화면으로 넘어간 뒤(숨김 상태) 원복 → 재진입 깨끗
-  screen.classList.remove("suc-textout","suc-slide"); box.classList.remove("done","suc-fade");
-  done.classList.remove("on","suc-slide");
+const SUCCESS_HOLD = 1500;   // 체크 보여주는 시간(ms) — 라이브 보고 조정
+function otpSuccessReset(screen,box,morph){   // 다음 화면으로 넘어간 뒤(숨김 상태) 원복 → 재진입 깨끗
+  screen.classList.remove("suc-textout","suc-done","suc-slide");
+  box.classList.remove("done"); morph.classList.remove("fill","circle","checked");
 }
-function otpSuccessAnim(next){
-  const screen=$("s-signup2"), box=$("otpBox"), done=$("otpDone");
-  box.classList.add("done");                                                                 // 1+2: 숫자 모임(scale) + 초록선 그려짐(CSS)
-  setTimeout(()=>screen.classList.add("suc-textout"), 680);                                  // 3: 선 그린 뒤 텍스트 사라짐
-  setTimeout(()=>{ box.classList.add("suc-fade"); done.classList.add("on"); }, 1080);        // 4: 박스 페이드 + 중앙 체크
-  setTimeout(()=>{ screen.classList.add("suc-slide"); done.classList.add("suc-slide"); setTimeout(()=>{ next(); otpSuccessReset(screen,box,done); }, 440); }, 1080+SUCCESS_HOLD);  // 5: 화면+체크 함께 왼쪽 슬라이드 → 다음
+function otpSuccessAnim(next){   // 토스식: 입력 자리에서 라운드선 나타남 → 초록채움+원 소멸 → 체크 왼쪽부터 → 텍스트 → 슬라이드
+  const screen=$("s-signup2"), box=$("otpBox"), morph=$("otpMorph");
+  box.classList.add("done");                                                                          // 1: 라운드선 나타남 + 숫자·박스 작아짐
+  setTimeout(()=>{ morph.classList.add("fill","circle"); screen.classList.add("suc-textout"); }, 260); // 2: 초록 채움 + 원으로 소멸 + 주변 텍스트·버튼 사라짐
+  setTimeout(()=>{ morph.classList.add("checked"); screen.classList.add("suc-done"); }, 720);          // 3: 체크 왼쪽부터 그려짐 + '인증을 마쳤어요!'
+  setTimeout(()=>{ screen.classList.add("suc-slide"); setTimeout(()=>{ next(); otpSuccessReset(screen,box,morph); }, 440); }, 720+SUCCESS_HOLD);  // 4: 화면 전체 왼쪽 슬라이드 → 다음
 }
 
 // ── OTP 5분 카운트다운 (서버 만료 300초와 일치) ──
