@@ -69,8 +69,8 @@
   @keyframes otpPop{0%{transform:scale(.8)}100%{transform:scale(1)}}
   .otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);animation:none;}   /* 오류=연빨강+빨강테두리(물결 정지, ex20.1) */
   /* ── OTP 인증 성공 토스식 연출 (1.숫자모임 2.초록선 3.텍스트사라짐 4.중앙체크 5.왼쪽슬라이드) ── */
-  .otp-box{transition:transform .45s cubic-bezier(.4,0,.2,1), gap .45s ease;}
-  .otp-box.done{gap:4px;transform:scale(.9);}                                  /* 1. 숫자 살짝 작아지며 중앙으로 */
+  .otp-box{transition:transform .45s cubic-bezier(.4,0,.2,1);}
+  .otp-box.done{transform:scale(.9);}                                          /* 1. 숫자 살짝 작아지며 중앙으로(프레임도 자식이라 같이 줄어 hug 유지) */
   .otp-box.done .otp-cell{box-shadow:none!important;background:transparent!important;animation:none!important;}   /* 각 칸 회색 테두리 사라짐 */
   .otp-box.suc-fade{opacity:0;transition:opacity .4s ease;}
   .otp-frame{position:absolute;pointer-events:none;overflow:visible;}          /* 2. 초록 선이 왼쪽→시계방향으로 그려짐(path=JS 생성) */
@@ -78,6 +78,7 @@
   #s-signup2.suc-slide{transform:translateX(-100%);transition:transform .42s cubic-bezier(.4,0,.2,1);}             /* 5. 왼쪽 슬라이드 아웃 */
   .otp-done{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;opacity:0;pointer-events:none;}
   .otp-done.on{opacity:1;}
+  .otp-done.suc-slide{transform:translateX(-100%);transition:transform .42s cubic-bezier(.4,0,.2,1);}   /* 5. 화면과 함께 왼쪽 슬라이드(body 레벨이라 기준=viewport 고정, 점프 없음) */
   .od-circle{width:84px;height:84px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;transform:scale(.4);}
   .otp-done.on .od-circle{animation:odPop .5s cubic-bezier(.2,.9,.3,1.5) forwards;}   /* 4. 초록 원+흰 체크 뙇 */
   .od-circle svg{width:40px;height:40px;}
@@ -492,11 +493,13 @@
     </div>
     <div id="su2Note"></div>
   </div>
-  <div class="otp-done" id="otpDone">
-    <div class="od-circle"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-    <div class="od-text">인증을 마쳤어요!</div>
-  </div>
   <div class="footbar" id="su2Foot"><div class="inner"><button type="button" class="lk-resend" id="otpResendLink">문자가 안 오나요?</button><button class="btn" id="su2Btn" disabled>확인</button></div></div>
+</div>
+
+<!-- OTP 인증 성공 오버레이 (body 레벨 — 슬라이드 시 fixed 기준 안 바뀌게) -->
+<div class="otp-done" id="otpDone">
+  <div class="od-circle"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+  <div class="od-text">인증을 마쳤어요!</div>
 </div>
 
 <!-- ═══ 인증 시간 만료 센터 모달 ═══ -->
@@ -1014,29 +1017,34 @@ $("otpResendLink").onclick=resendOtp;
 $("su2Back").onclick=()=>show("s-signup1");
 
 // ── OTP 인증 성공 토스식 연출: 회색사라짐+숫자모임 → 초록선 그림 → 텍스트사라짐 → 중앙 체크 → 왼쪽 슬라이드 ──
-const SUCCESS_HOLD = 1200;   // 중앙 체크 보여주는 시간(ms) — 라이브 보고 조정
-function drawOtpFrame(box){   // 6칸 전체를 감싸는 초록 라운드선을 왼쪽-중앙에서 시계방향으로 그림
+const SUCCESS_HOLD = 1500;   // 중앙 체크 보여주는 시간(ms) — 라이브 보고 조정
+function drawOtpFrame(box){   // 6칸 '실제 span'에 맞춘 초록 라운드선을 왼쪽-중앙에서 시계방향으로. (clientWidth=컨테이너 전체폭이라 X → 첫 칸~마지막 칸 실측)
+  const cells=box.querySelectorAll(".otp-cell"); if(!cells.length) return;
+  const br=box.getBoundingClientRect();                          // .done(scale) 전에 호출 = scale1 기준 측정, 프레임은 box 자식이라 이후 같이 scale
+  const a=cells[0].getBoundingClientRect(), z=cells[cells.length-1].getBoundingClientRect();
+  const padX=12, padY=9;
+  const x=(a.left-br.left)-padX, y=(a.top-br.top)-padY, w=(z.right-a.left)+padX*2, h=(a.bottom-a.top)+padY*2;
   let f=box.querySelector(".otp-frame");
   if(!f){ f=document.createElementNS("http://www.w3.org/2000/svg","svg"); f.setAttribute("class","otp-frame"); f.innerHTML='<path fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"/>'; box.appendChild(f); }
-  const pad=8, w=box.clientWidth+pad*2, h=box.clientHeight+pad*2, r=14, s=2, my=h/2;
   f.setAttribute("viewBox","0 0 "+w+" "+h);
-  f.style.cssText="position:absolute;pointer-events:none;overflow:visible;left:"+(-pad)+"px;top:"+(-pad)+"px;width:"+w+"px;height:"+h+"px;";
-  const p=f.querySelector("path");
+  f.style.cssText="position:absolute;pointer-events:none;overflow:visible;left:"+x+"px;top:"+y+"px;width:"+w+"px;height:"+h+"px;";
+  const r=14, s=2, my=h/2, p=f.querySelector("path");
   p.setAttribute("d","M "+s+" "+my+" L "+s+" "+r+" A "+(r-s)+" "+(r-s)+" 0 0 1 "+r+" "+s+" L "+(w-r)+" "+s+" A "+(r-s)+" "+(r-s)+" 0 0 1 "+(w-s)+" "+r+" L "+(w-s)+" "+(h-r)+" A "+(r-s)+" "+(r-s)+" 0 0 1 "+(w-r)+" "+(h-s)+" L "+r+" "+(h-s)+" A "+(r-s)+" "+(r-s)+" 0 0 1 "+s+" "+(h-r)+" Z");
   const len=p.getTotalLength();
   p.style.transition="none"; p.style.strokeDasharray=len; p.style.strokeDashoffset=len; void p.getBoundingClientRect();
   requestAnimationFrame(()=>{ p.style.transition="stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)"; p.style.strokeDashoffset="0"; });
 }
-function otpSuccessReset(screen,box){   // 다음 화면으로 넘어간 뒤(숨김 상태) 원복 → 재진입 깨끗
+function otpSuccessReset(screen,box,done){   // 다음 화면으로 넘어간 뒤(숨김 상태) 원복 → 재진입 깨끗
   screen.classList.remove("suc-textout","suc-slide"); box.classList.remove("done","suc-fade");
-  $("otpDone").classList.remove("on"); const f=box.querySelector(".otp-frame"); if(f) f.remove();
+  done.classList.remove("on","suc-slide"); const f=box.querySelector(".otp-frame"); if(f) f.remove();
 }
 function otpSuccessAnim(next){
-  const screen=$("s-signup2"), box=$("otpBox");
-  box.classList.add("done"); drawOtpFrame(box);                                              // 1+2: 숫자 모임 + 초록선
+  const screen=$("s-signup2"), box=$("otpBox"), done=$("otpDone");
+  drawOtpFrame(box);                                                                         // 2: scale 전에 측정 → 6칸에 딱 맞는 초록선
+  box.classList.add("done");                                                                 // 1: 숫자 모임(scale .9) — 프레임도 자식이라 같이 줄어 hug 유지
   setTimeout(()=>screen.classList.add("suc-textout"), 680);                                  // 3: 선 그린 뒤 텍스트 사라짐
-  setTimeout(()=>{ box.classList.add("suc-fade"); $("otpDone").classList.add("on"); }, 1080); // 4: 박스 페이드 + 중앙 체크
-  setTimeout(()=>{ screen.classList.add("suc-slide"); setTimeout(()=>{ next(); otpSuccessReset(screen,box); }, 440); }, 1080+SUCCESS_HOLD);  // 5: 왼쪽 슬라이드 → 다음
+  setTimeout(()=>{ box.classList.add("suc-fade"); done.classList.add("on"); }, 1080);        // 4: 박스 페이드 + 중앙 체크
+  setTimeout(()=>{ screen.classList.add("suc-slide"); done.classList.add("suc-slide"); setTimeout(()=>{ next(); otpSuccessReset(screen,box,done); }, 440); }, 1080+SUCCESS_HOLD);  // 5: 화면+체크 함께 왼쪽 슬라이드 → 다음
 }
 
 // ── OTP 5분 카운트다운 (서버 만료 300초와 일치) ──
