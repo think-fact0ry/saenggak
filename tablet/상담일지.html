@@ -68,14 +68,19 @@
   .otp-cell.pop{animation:otpPop .2s ease-out;}   /* 숫자 입력 시 박스 작아졌다 부드럽게 커짐(유성) */
   @keyframes otpPop{0%{transform:scale(.8)}100%{transform:scale(1)}}
   .otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);animation:none;}   /* 오류=연빨강+빨강테두리(물결 정지, ex20.1) */
-  /* ── OTP 인증 성공 토스식 연출 (입력 자리에서: 라운드선 나타남+숫자작아짐 → 초록채움+원으로 소멸 → 체크 왼쪽부터 → 텍스트 → 왼쪽 슬라이드). 시계방향 없음 ── */
+  /* ── OTP 인증 성공 토스식 연출 (입력 자리에서: 라운드선 *시계방향 draw*+숫자작아짐 → 초록채움+원으로 소멸 → 체크 왼쪽부터 → 텍스트 → 왼쪽 슬라이드) ── */
   .otp-box{transition:transform .45s cubic-bezier(.4,0,.2,1);}
   .otp-box.done{transform:scale(.94);}                                   /* 1. 박스·숫자 같이 살짝 작아짐(숫자는 계속 보임) */
   .otp-box.done .otp-cell{background:transparent!important;box-shadow:none!important;}   /* 개별 칸 박스만 사라져 = 하나의 라운드 박스 안 숫자(숫자는 유지) */
   .otp-box.filling .otp-cell{opacity:0;transition:opacity .28s ease;}    /* 숫자는 *초록 채워질 때* 가려져 사라짐(선 등장 때 아님 — 유성) */
-  /* morph = 6칸 둘레(inset:0, 반응형) 라운드선 → 초록채움 → 중앙 원. 모두 입력 자리에서(눈 이동 없음) */
-  .otp-morph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;box-sizing:border-box;border:2.5px solid var(--green);background:transparent;border-radius:var(--r-md);opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:width .45s cubic-bezier(.5,0,.2,1),height .45s cubic-bezier(.5,0,.2,1),border-radius .45s cubic-bezier(.5,0,.2,1),background-color .3s ease,opacity .22s ease;}
-  .otp-box.done .otp-morph{opacity:1;}                                   /* 라운드 선 나타남 */
+  /* 라운드 선 = 6칸 둘레(inset:0, 반응형 rect 100%) 시계방향으로 그려짐(top-left→, pathLength 정규화·px 측정 X). 갑툭튀 X */
+  .otp-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
+  .otp-frame rect{fill:none;stroke:var(--green);stroke-width:2.5;stroke-dasharray:100;stroke-dashoffset:100;}
+  .otp-box.done .otp-frame rect{stroke-dashoffset:0;transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1);}   /* 시계방향 draw */
+  .otp-box.filling .otp-frame{opacity:0;transition:opacity .3s ease;}    /* 초록 채워질 때 선은 페이드(초록이 덮음) */
+  /* morph = 초록 채움 → 중앙 원 → 체크. 모두 입력 자리에서(눈 이동 없음) */
+  .otp-morph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;box-sizing:border-box;border:none;background:transparent;border-radius:var(--r-md);opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:width .45s cubic-bezier(.5,0,.2,1),height .45s cubic-bezier(.5,0,.2,1),border-radius .45s cubic-bezier(.5,0,.2,1),background-color .3s ease,opacity .22s ease;}
+  .otp-box.done .otp-morph{opacity:1;}                                   /* (투명 — 채움 전엔 안 보임) */
   .otp-morph.fill{background:var(--green);}                              /* 초록 채워짐 */
   .otp-morph.circle{width:64px;height:64px;border-radius:50%;}           /* 원으로 줄며 중앙 소멸 */
   .om-check{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;}
@@ -208,6 +213,7 @@
 
   /* 로딩 = 점 3개 위아래 출렁(인증번호 발송·확인) — 토스식, 진행 중임이 보이게 */
   .ld{display:inline-flex;align-items:center;gap:9px;color:var(--g500);font-weight:500;}
+  .btn .ld,.s-btn .ld{color:var(--g800);font-weight:700;}   /* 버튼 위 '기다려주세요'는 회색 너무 옅으면 안읽힘 → 더 검게(유성) */
   .ld-dots{display:inline-flex;gap:5px;}
   .ld-dots i{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:ldb 1.1s ease-in-out infinite;}
   .ld-dots i:nth-child(2){animation-delay:.16s;}
@@ -489,6 +495,7 @@
     <div class="otp-box" id="otpBox">
       <div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div>
       <input id="su-code" type="text" inputmode="numeric" autocomplete="one-time-code" aria-label="인증번호" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <svg class="otp-frame" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13" pathLength="100" vector-effect="non-scaling-stroke"/></svg>
       <div class="otp-morph" id="otpMorph"><svg class="om-check" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 12 9 17 20 6" pathLength="1"/></svg></div>
     </div>
     <div class="otp-done-text" id="otpDoneText">인증을 마쳤어요!</div>
@@ -855,6 +862,9 @@ function svcFull(s){ s=String(s||""); if(s.indexOf('아동')>=0||s.indexOf('아�
 
 // ════ 공통 POST ════
 function post(obj){ return fetch(GAS_EXEC, {method:"POST", body:JSON.stringify(obj)}).then(r=>{ if(!r.ok) throw new Error("서버 오류 "+r.status); return r.json(); }); }
+// GAS 콜드스타트(유휴 첫 호출 2~5초) 완화: 신청 화면 들어올 때 가벼운 doGet 핑을 미리 쏴 인스턴스를 데움 → 제출(staff_start/verify) 땐 따뜻해서 빠름. fire-and-forget(응답 안 읽음=no-cors). 최근 1분 내 중복 핑 방지
+let _warmAt=0;
+function warmGas(){ const now=Date.now(); if(now-_warmAt<60000) return; _warmAt=now; try{ fetch(GAS_EXEC, {method:"GET", mode:"no-cors", cache:"no-store"}).catch(()=>{}); }catch(e){} }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
 // 로딩 표시 = 글자 + 출렁이는 점 3개(진행 중임이 보이게). innerHTML이라 텍스트는 우리가 만든 고정 문자열만 넣음.
 function loadingHTML(text){ return '<span class="ld">'+text+'<span class="ld-dots"><i></i><i></i><i></i></span></span>'; }
@@ -900,6 +910,7 @@ function setupTField(tf){
 ["tf-name","tf-phone"].forEach(id=>setupTField($(id)));   // 주민번호(tf-birth)는 bindRRN + :focus-within으로 자체 처리(2개 입력칸)
 // 진보형 입력 초기화 — fresh 진입(boot/재인증) 시 호출. prefillName(재인증)은 이름 미리 채움(주민번호 입력 뒤 등장)
 function resetSignupFlow(prefillName){
+  warmGas();   // 신청 화면 진입 = GAS 미리 데우기(제출 시 콜드스타트 지연 줄임)
   $("su-phone").value=""; $("su-birth-front").value=""; $("su-birth-back").value=""; $("su-name").value=prefillName||"";
   ["tf-birth","tf-name"].forEach(id=>{ $(id).classList.add("fhide"); $(id).classList.remove("fin"); });
   ["su-phone","su-birth-front","su-birth-back","su-name"].forEach(id=>$(id).setAttribute("readonly",""));
@@ -1022,10 +1033,10 @@ function otpSuccessReset(screen,box,morph){   // 다음 화면으로 넘어간 �
 }
 function otpSuccessAnim(next){   // 토스식: 입력 자리에서 라운드선 나타남 → 초록채움+원 소멸 → 체크 왼쪽부터 → 텍스트 → 슬라이드
   const screen=$("s-signup2"), box=$("otpBox"), morph=$("otpMorph");
-  box.classList.add("done");                                                                          // 1: 라운드선 나타남 + 숫자·박스 작아짐
-  setTimeout(()=>{ morph.classList.add("fill","circle"); box.classList.add("filling"); screen.classList.add("suc-textout"); }, 260); // 2: 초록 채움(숫자 가려져 사라짐) + 원으로 소멸 + 주변 텍스트·버튼 사라짐
-  setTimeout(()=>{ morph.classList.add("checked"); screen.classList.add("suc-done"); }, 720);          // 3: 체크 왼쪽부터 그려짐 + '인증을 마쳤어요!'
-  setTimeout(()=>{ screen.classList.add("suc-slide"); setTimeout(()=>{ next(); otpSuccessReset(screen,box,morph); }, 440); }, 720+SUCCESS_HOLD);  // 4: 화면 전체 왼쪽 슬라이드 → 다음
+  box.classList.add("done");                                                                          // 1: 라운드선 시계방향 그려짐(~.5s) + 숫자·박스 작아짐(숫자 유지)
+  setTimeout(()=>{ morph.classList.add("fill","circle"); box.classList.add("filling"); screen.classList.add("suc-textout"); }, 520); // 2: 선 다 그려진 뒤 초록 채움(숫자 가려져 사라짐) + 원으로 소멸 + 주변 사라짐
+  setTimeout(()=>{ morph.classList.add("checked"); screen.classList.add("suc-done"); }, 980);          // 3: 체크 왼쪽부터 그려짐 + '인증을 마쳤어요!'
+  setTimeout(()=>{ screen.classList.add("suc-slide"); setTimeout(()=>{ next(); otpSuccessReset(screen,box,morph); }, 440); }, 980+SUCCESS_HOLD);  // 4: 화면 전체 왼쪽 슬라이드 → 다음
 }
 
 // ── OTP 5분 카운트다운 (서버 만료 300초와 일치) ──
