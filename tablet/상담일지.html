@@ -70,8 +70,9 @@
   .otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);animation:none;}   /* 오류=연빨강+빨강테두리(물결 정지, ex20.1) */
   /* ── OTP 인증 성공 토스식 연출 (입력 자리에서: 라운드선 나타남+숫자작아짐 → 초록채움+원으로 소멸 → 체크 왼쪽부터 → 텍스트 → 왼쪽 슬라이드). 시계방향 없음 ── */
   .otp-box{transition:transform .45s cubic-bezier(.4,0,.2,1);}
-  .otp-box.done{transform:scale(.94);}                                   /* 1. 박스·숫자 살짝 작아짐 */
-  .otp-box.done .otp-cell{opacity:0;transition:opacity .25s ease;}       /* 숫자 사라짐 */
+  .otp-box.done{transform:scale(.94);}                                   /* 1. 박스·숫자 같이 살짝 작아짐(숫자는 계속 보임) */
+  .otp-box.done .otp-cell{background:transparent!important;box-shadow:none!important;}   /* 개별 칸 박스만 사라져 = 하나의 라운드 박스 안 숫자(숫자는 유지) */
+  .otp-box.filling .otp-cell{opacity:0;transition:opacity .28s ease;}    /* 숫자는 *초록 채워질 때* 가려져 사라짐(선 등장 때 아님 — 유성) */
   /* morph = 6칸 둘레(inset:0, 반응형) 라운드선 → 초록채움 → 중앙 원. 모두 입력 자리에서(눈 이동 없음) */
   .otp-morph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;box-sizing:border-box;border:2.5px solid var(--green);background:transparent;border-radius:var(--r-md);opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:width .45s cubic-bezier(.5,0,.2,1),height .45s cubic-bezier(.5,0,.2,1),border-radius .45s cubic-bezier(.5,0,.2,1),background-color .3s ease,opacity .22s ease;}
   .otp-box.done .otp-morph{opacity:1;}                                   /* 라운드 선 나타남 */
@@ -1017,12 +1018,12 @@ $("su2Back").onclick=()=>show("s-signup1");
 const SUCCESS_HOLD = 1500;   // 체크 보여주는 시간(ms) — 라이브 보고 조정
 function otpSuccessReset(screen,box,morph){   // 다음 화면으로 넘어간 뒤(숨김 상태) 원복 → 재진입 깨끗
   screen.classList.remove("suc-textout","suc-done","suc-slide");
-  box.classList.remove("done"); morph.classList.remove("fill","circle","checked");
+  box.classList.remove("done","filling"); morph.classList.remove("fill","circle","checked");
 }
 function otpSuccessAnim(next){   // 토스식: 입력 자리에서 라운드선 나타남 → 초록채움+원 소멸 → 체크 왼쪽부터 → 텍스트 → 슬라이드
   const screen=$("s-signup2"), box=$("otpBox"), morph=$("otpMorph");
   box.classList.add("done");                                                                          // 1: 라운드선 나타남 + 숫자·박스 작아짐
-  setTimeout(()=>{ morph.classList.add("fill","circle"); screen.classList.add("suc-textout"); }, 260); // 2: 초록 채움 + 원으로 소멸 + 주변 텍스트·버튼 사라짐
+  setTimeout(()=>{ morph.classList.add("fill","circle"); box.classList.add("filling"); screen.classList.add("suc-textout"); }, 260); // 2: 초록 채움(숫자 가려져 사라짐) + 원으로 소멸 + 주변 텍스트·버튼 사라짐
   setTimeout(()=>{ morph.classList.add("checked"); screen.classList.add("suc-done"); }, 720);          // 3: 체크 왼쪽부터 그려짐 + '인증을 마쳤어요!'
   setTimeout(()=>{ screen.classList.add("suc-slide"); setTimeout(()=>{ next(); otpSuccessReset(screen,box,morph); }, 440); }, 720+SUCCESS_HOLD);  // 4: 화면 전체 왼쪽 슬라이드 → 다음
 }
