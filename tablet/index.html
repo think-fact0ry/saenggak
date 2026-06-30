@@ -235,7 +235,7 @@
   .s-btn.danger:active{background:#d63a48;}
   /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 (원칙 §7.2) */
   .rip{position:absolute; top:50%; width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.16); transform:translate(-50%,-50%) scale(0); pointer-events:none;}
-  .rip.go{transform:translate(-50%,-50%) scale(var(--rs,16)); transition:transform .42s cubic-bezier(.25,.6,.3,1);}
+  .rip.go{transform:translate(-50%,-50%) scale(var(--rs,16)); transition:transform .46s cubic-bezier(.25,.6,.3,1);}
   .rip.fade{opacity:0; transition:opacity .3s;}
   .s-later{width:100%; background:none; border:none; font-family:inherit; font-size:15px; font-weight:600; color:var(--g500); padding:14px; margin-top:4px; cursor:pointer; transition:transform .12s;}
   .s-later:active{transform:scale(.93);}   /* 박스 없는 텍스트형 = 누르면 살짝 축소(원칙 §7.2) */
