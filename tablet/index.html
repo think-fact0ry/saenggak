@@ -97,7 +97,7 @@
     transition:transform .08s, background .15s, border-color .15s;
   }
   .tile:active{transform:scale(.985); background:#eef0f3;}
-  .tile.primary{background:#eaf5ee;}
+  .tile.primary{background:var(--green-bg);}
   .tile.primary:active{background:#e1f0e7;}
   .tile.soon{opacity:.62;}
   .tile .ico{font-size:30px; color:var(--green); display:flex; margin-bottom:16px;}
@@ -169,7 +169,7 @@
   .rg-btn{width:100%; font-family:inherit; font-size:16.5px; font-weight:700; letter-spacing:-.3px; padding:20px; border-radius:var(--r-md); border:1.5px solid var(--g200); background:var(--g100); color:var(--g900); cursor:pointer; transition:transform .08s, background .15s, border-color .15s; text-align:left;}
   .rg-btn .rg-d{display:block; font-size:13px; font-weight:500; color:var(--g500); margin-top:3px;}
   .rg-btn:active{transform:scale(.985);}
-  .rg-btn.primary{background:#eaf5ee; border-color:transparent;}
+  .rg-btn.primary{background:var(--green-bg); border-color:transparent;}
   .rg-btn.primary:active{background:#e1f0e7;}
 
   /* ═ 차수 타일 게이팅 ═ */
@@ -251,7 +251,8 @@
   .s-btn.danger{background:var(--red);}
   .s-btn.danger:active{background:#d63a48;}
   /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 (원칙 §7.2) */
-  .rip{position:absolute; top:50%; width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.16); transform:translate(-50%,-50%) scale(0); pointer-events:none;}
+  .bl{position:relative; z-index:1;}   /* 라벨을 ripple 위 레이어로(§5.3 흰 글자 유지) */
+  .rip{position:absolute; z-index:0; top:50%; width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.16); transform:translate(-50%,-50%) scale(0); pointer-events:none;}
   .rip.go{transform:translate(-50%,-50%) scale(var(--rs,16)); transition:transform .46s cubic-bezier(.25,.6,.3,1);}
   .rip.fade{opacity:0; transition:opacity .3s;}
   .s-later{width:100%; background:none; border:none; font-family:inherit; font-size:15px; font-weight:600; color:var(--g500); padding:14px; margin-top:4px; cursor:pointer; transition:transform .12s;}
@@ -989,7 +990,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.07.03a';
+var APP_VERSION = '26.07.03b';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
@@ -1035,6 +1036,7 @@ if ('serviceWorker' in navigator) {
 // 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). 텍스트형(.s-later)은 CSS scale로만 (원칙 §7.2)
 function pressRipple(btn){
   btn.addEventListener("pointerdown",function(e){
+    if(!btn.querySelector(".bl")){ var bl=document.createElement("span"); bl.className="bl"; while(btn.firstChild) bl.appendChild(btn.firstChild); btn.appendChild(bl); }   // 라벨 .bl wrap(§5.3)
     var r=btn.getBoundingClientRect();
     var x=e.clientX-r.left;
     var sp=document.createElement("span"); sp.className="rip"; sp.style.left=x+"px";

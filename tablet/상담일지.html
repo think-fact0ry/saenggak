@@ -190,7 +190,8 @@
   .s-later{width:100%;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--g500);padding:14px;margin-top:4px;cursor:pointer;transition:transform .12s;}
   .s-later:active{transform:scale(.93);}   /* 회색 텍스트 버튼(동의 안함·닫기) = 누르면 텍스트 살짝 축소(색버튼과 다른 인터랙션, 유성) */
   /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 */
-  .rip{position:absolute;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.16);transform:translate(-50%,-50%) scale(0);pointer-events:none;}
+  .bl{position:relative;z-index:1;}   /* 라벨을 ripple 위 레이어로(§5.3 흰 글자 유지) */
+  .rip{position:absolute;z-index:0;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.16);transform:translate(-50%,-50%) scale(0);pointer-events:none;}
   .rip.go{transform:translate(-50%,-50%) scale(var(--rs,16));transition:transform .46s cubic-bezier(.25,.6,.3,1);}
   .rip.fade{opacity:0;transition:opacity .3s;}
 
@@ -1928,6 +1929,7 @@ initSheetDrag($("oathSheet"), ()=>{ closeOath(); location.href="./index.html"; }
 // 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). 회색/텍스트형은 CSS scale로만(원칙 §7.2)
 function pressRipple(btn){
   btn.addEventListener("pointerdown",e=>{
+    if(!btn.querySelector(".bl")){ const bl=document.createElement("span"); bl.className="bl"; while(btn.firstChild) bl.appendChild(btn.firstChild); btn.appendChild(bl); }   // 라벨 .bl wrap(§5.3)
     const r=btn.getBoundingClientRect();
     const x=e.clientX-r.left;
     const sp=document.createElement("span"); sp.className="rip"; sp.style.left=x+"px";
