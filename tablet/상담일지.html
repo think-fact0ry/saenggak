@@ -20,8 +20,10 @@
   --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db;
   --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
   --g800:#333d4b; --g900:#191f28;
-  /* 초록 — §3.1 OKLCH 스케일(회색 명도 사다리 + 우리 채도, green600=브랜드 #3a8a5f 앵커) */
-  --green50:#f4fdf7; --green100:#dafee7; --green200:#baf9d2; --green300:#92edb7; --green400:#6ece98;
+  /* 초록 — §3.1 OKLCH 스케일(회색 명도 사다리 고정, green600=브랜드 #3a8a5f 앵커).
+     밝은 50~400 = 토스 weak 실측 기반 재보정(2026-07-04 유성 #e9f8ee 확정 — ex43 실측 C.021·브랜드 H157,
+     100→500 수렴 가중 1/.85/.62/.40/.20으로 이음새 없음. 옛 A안 채도부스트 값 폐기) */
+  --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
   --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
   --green:var(--green600); --green-dark:var(--green700); --green-bg:var(--green100);  /* 별칭(기존 코드 호환) */
   /* 시맨틱 */
@@ -278,7 +280,7 @@
   .client-list{display:flex;flex-direction:column;gap:10px;}
   .client-card{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:16px 18px 16px 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:transform .2s cubic-bezier(.2,.7,.3,1),border-color .12s,background .12s;-webkit-touch-callout:none;}
   #gw-opinion{margin-top:10px;}
-  .client-card:active{border-color:var(--green);background:#F6FAF6;}
+  .client-card:active{border-color:var(--green);background:var(--green50);}
   .client-card .nm{font-size:16.5px;font-weight:700;letter-spacing:-.3px;}
   .client-card .meta{font-size:13px;color:var(--g500);font-weight:500;}
   .client-card .chev{color:var(--g300);display:flex;}
@@ -295,11 +297,11 @@
   .client-card .cc-main{flex:1;min-width:0;}
   .client-card .cmemo{flex:0 1 auto;max-width:44%;text-align:right;font-size:12.5px;color:var(--green-d);font-weight:600;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;}
   .client-card.dragging{position:fixed;z-index:400;margin:0;transition:none;box-shadow:0 14px 34px rgba(0,0,0,.22);border-color:var(--green);background:#fff;}  /* 손가락 따라 떠다님(자기는 transition 없음, 주변만 FLIP 애니메이션) */
-  .gcl-ph{border:2px dashed var(--green);border-radius:var(--r-md);background:#F6FAF6;}  /* 들어갈 자리 표시 */
+  .gcl-ph{border:2px dashed var(--green);border-radius:var(--r-md);background:var(--green50);}  /* 들어갈 자리 표시 */
   /* 초기상담(인테이크) 진입 카드 + 섹션 구분(2026-06-23 슬라이스 B) */
   .intake-card{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-family:inherit;text-align:left;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:15px 18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:14px;transition:.12s;}
-  .intake-card:active{border-color:var(--green);background:#F6FAF6;}
-  .intake-card.done{border-color:var(--green);background:#F6FAF6;}
+  .intake-card:active{border-color:var(--green);background:var(--green50);}
+  .intake-card.done{border-color:var(--green);background:var(--green50);}
   .intake-card .ic-main{flex:1;min-width:0;}
   .intake-card .ic-tl{font-size:16px;font-weight:700;letter-spacing:-.3px;}
   .intake-card .ic-st{font-size:12.5px;color:var(--g500);font-weight:500;margin-top:3px;}
@@ -332,7 +334,7 @@
   /* 모드 선택 카드 */
   .mode-list{display:flex;flex-direction:column;gap:12px;}
   .mode-card{text-align:left;width:100%;font-family:inherit;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:22px 20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:.12s;}
-  .mode-card:active{border-color:var(--green);background:#F6FAF6;transform:scale(.99);}
+  .mode-card:active{border-color:var(--green);background:var(--green50);transform:scale(.99);}
   .mode-card .mc-tl{font-size:18px;font-weight:700;letter-spacing:-.3px;color:var(--g900);}
   .mode-card .mc-ds{font-size:14px;color:var(--g500);font-weight:500;margin-top:6px;line-height:1.5;}
 

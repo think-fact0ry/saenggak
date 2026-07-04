@@ -47,8 +47,10 @@
   --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db;
   --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
   --g800:#333d4b; --g900:#191f28;
-  /* 초록 — §3.1 OKLCH 스케일(회색 명도 사다리 + 우리 채도, green600=브랜드 #3a8a5f 앵커) */
-  --green50:#f4fdf7; --green100:#dafee7; --green200:#baf9d2; --green300:#92edb7; --green400:#6ece98;
+  /* 초록 — §3.1 OKLCH 스케일(회색 명도 사다리 고정, green600=브랜드 #3a8a5f 앵커).
+     밝은 50~400 = 토스 weak 실측 기반 재보정(2026-07-04 유성 #e9f8ee 확정 — ex43 실측 C.021·브랜드 H157,
+     100→500 수렴 가중 1/.85/.62/.40/.20으로 이음새 없음. 옛 A안 채도부스트 값 폐기) */
+  --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
   --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
   --green:var(--green600); --green-dark:var(--green700); --green-bg:var(--green100);  /* 별칭(기존 코드 호환) */
   /* 시맨틱 */
@@ -98,7 +100,7 @@
   }
   .tile:active{transform:scale(.985); background:#eef0f3;}
   .tile.primary{background:var(--green-bg);}
-  .tile.primary:active{background:#e1f0e7;}
+  .tile.primary:active{background:var(--green200);}
   .tile.soon{opacity:.62;}
   .tile .ico{font-size:30px; color:var(--green); display:flex; margin-bottom:16px;}
   .tile .ico svg{width:30px; height:30px;}
@@ -170,7 +172,7 @@
   .rg-btn .rg-d{display:block; font-size:13px; font-weight:500; color:var(--g500); margin-top:3px;}
   .rg-btn:active{transform:scale(.985);}
   .rg-btn.primary{background:var(--green-bg); border-color:transparent;}
-  .rg-btn.primary:active{background:#e1f0e7;}
+  .rg-btn.primary:active{background:var(--green200);}
 
   /* ═ 차수 타일 게이팅 ═ */
   .tile[data-tier]{display:none;}
@@ -278,7 +280,7 @@
   .info-row .chev{color:var(--g300); display:flex;} .info-row .chev svg{width:18px; height:18px;}
   .info-sec{font-size:14px; font-weight:700; color:var(--g700); margin:26px 2px 8px;}
   .addr-card{display:flex; align-items:flex-start; gap:12px; width:100%; font-family:inherit; text-align:left; background:#fff; border:1.5px solid transparent; border-radius:var(--r-md); padding:16px 18px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.05);}   /* §4.9 면 문법 — 윤곽=그림자 */
-  .addr-card:active{background:#F6FAF6;}
+  .addr-card:active{background:var(--green50);}
   .addr-card .home{color:var(--green); flex-shrink:0; margin-top:1px;} .addr-card .home svg{width:22px; height:22px;}
   .addr-card .ac-main{flex:1; min-width:0;}
   .addr-card .ac-tl{font-size:15px; font-weight:700;}
@@ -991,7 +993,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.07.04g';
+var APP_VERSION = '26.07.04h';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
