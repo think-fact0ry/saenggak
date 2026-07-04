@@ -124,8 +124,13 @@
   .pbtn.primary:active{background:var(--green-d);}
   .pbtn.on{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.13);}
 
-  .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:15px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;}
-  .btn:active{background:var(--green-d);}
+  .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:15px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;position:relative;overflow:hidden;}
+  .btn:active{background:var(--green-d);transform:scale(.97);}
+  /* 누름 ripple(§5.3-1) — 닫기 CTA(풀폭 솔리드)만. 펜툴바·편집툴바는 컴팩트 팔레트라 scale만 유지(F6 유성 결정 2026-07-04) */
+  .bl{position:relative;z-index:1;}
+  .rip{position:absolute;z-index:0;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.16);transform:translate(-50%,-50%) scale(0);pointer-events:none;}
+  .rip.go{transform:translate(-50%,-50%) scale(var(--rs,16));transition:transform .46s cubic-bezier(.25,.6,.3,1);}
+  .rip.fade{opacity:0;transition:opacity .3s;}
 
   /* 토스트 */
   #toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);
@@ -563,6 +568,21 @@ document.addEventListener('keydown', function(e){
 });
 
 loadList();
+
+// 누름 ripple(§5.3-1) — 닫기 CTA만(F6 유성 결정: 펜툴바·편집툴바는 scale.97 유지). 레퍼런스=index.html pressRipple
+function pressRipple(btn){
+  btn.addEventListener("pointerdown",function(e){
+    if(!btn.querySelector(".bl")){ var bl=document.createElement("span"); bl.className="bl"; while(btn.firstChild) bl.appendChild(btn.firstChild); btn.appendChild(bl); }
+    var r=btn.getBoundingClientRect();
+    var x=e.clientX-r.left;
+    var sp=document.createElement("span"); sp.className="rip"; sp.style.left=x+"px";
+    sp.style.setProperty("--rs", Math.ceil(Math.hypot(Math.max(x,r.width-x), r.height/2)/15)+1);
+    btn.appendChild(sp); requestAnimationFrame(function(){ sp.classList.add("go"); });
+    var end=function(){ sp.classList.add("fade"); setTimeout(function(){ if(sp.parentNode) sp.remove(); },340); btn.removeEventListener("pointerup",end); btn.removeEventListener("pointerleave",end); };
+    btn.addEventListener("pointerup",end); btn.addEventListener("pointerleave",end);
+  });
+}
+document.querySelectorAll(".btn").forEach(pressRipple);
 </script>
 </body>
 </html>
