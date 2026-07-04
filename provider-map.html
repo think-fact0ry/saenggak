@@ -562,7 +562,7 @@ var ADMIN_TOKEN_KEY = 'saenggak_admin_token';
 function getAdminToken(){ try { return localStorage.getItem(ADMIN_TOKEN_KEY) || ''; } catch(e){ return ''; } }
 function setAdminToken(t){ try { localStorage.setItem(ADMIN_TOKEN_KEY, (t||'').trim()); } catch(e){} }
 // prompt()는 마스킹 불가 → password 입력 모달로 대체. Promise<string>(현재 토큰) 반환.
-function promptAdminToken(msg){
+function promptAdminToken(msg, blank){
   return new Promise(function(resolve){
     var modal  = document.getElementById('tokenModal');
     var input  = document.getElementById('tokenModalInput');
@@ -571,7 +571,7 @@ function promptAdminToken(msg){
     var cancel = document.getElementById('tokenModalCancel');
     document.getElementById('tokenModalMsg').textContent = msg || '관리자 인증 토큰을 입력하세요';
     input.type  = 'password';
-    input.value = getAdminToken();
+    input.value = blank ? '' : getAdminToken();   // 2회차(틀린 토큰 후)엔 빈칸 시작 — 같은 값 재확인 루프 차단
     modal.style.display = 'flex';
     setTimeout(function(){ input.focus(); input.select(); }, 50);
 
@@ -671,19 +671,46 @@ function _gasUrl(action, params) {
   if (token) url += '&t=' + encodeURIComponent(token);  // GAS doGet의 e.parameter.t와 매칭
   return url;
 }
-function _getJson(url){ return fetch(url, { redirect:'follow' }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
+// GAS /exec → script.googleusercontent.com echo 리다이렉트가 콜드스타트·회사망 프록시에서
+// 간헐적으로 404/HTML(구글 "페이지를 찾을 수 없음")을 냄. 지도 액션은 멱등(셀 last-write)이라
+// 소백오프 재시도로 흡수 → 회사 컴퓨터에서 산발하던 "HTTP 404 로드 실패" 소멸.
+// (Unauthorized 등 정상 JSON은 예외가 아니므로 재시도 없이 즉시 반환 — 재시도는 전송·파싱 실패에만)
+function _getJson(url, tries){
+  tries = (tries == null) ? 3 : tries;
+  return fetch(url, { redirect:'follow', cache:'no-store' }).then(function(r){
+    return r.text().then(function(txt){
+      if (!r.ok) throw new Error('HTTP '+r.status);
+      try { return JSON.parse(txt); }               // 구글 404 HTML 페이지면 파싱 실패 → 재시도 대상
+      catch(e){ throw new Error('BAD_JSON'); }
+    });
+  }).catch(function(e){
+    if (tries > 1) return new Promise(function(res){ setTimeout(res, 500*(4-tries)); }).then(function(){ return _getJson(url, tries-1); });
+    throw e;
+  });
+}
 
 function fetchGAS(action, params) {
-  return _getJson(_gasUrl(action, params)).then(function(data){
-    // 토큰 없음/틀림 → 입력 받아 저장 후 1회 재시도 (무한루프 방지: 한 번만)
-    if (data && data.error === 'Unauthorized') {
-      return promptAdminToken('🔒 관리자 인증 필요/실패 — 토큰을 입력하세요:').then(function(){
-        if (getAdminToken()) return _getJson(_gasUrl(action, params));
-        return data;
-      });
-    }
-    return data;
-  });
+  // 쓰기 액션은 재시도 금지: mutation은 echo 리다이렉트 실패 전에 이미 커밋됨.
+  // assign엔 "이미 배정됨" 가드가 있어 재시도 시 성공을 오류로 오인, status/unassign은 감사로그 중복. → 단발.
+  var WRITE = { assign:1, status:1, unassign:1, saveschedule:1 };
+  var tries = WRITE[action] ? 1 : 3;
+  var asked = 0;                                    // 토큰 재입력 횟수 (무한루프 차단: 최대 2)
+  function attempt(){
+    return _getJson(_gasUrl(action, params), tries).then(function(data){
+      // 토큰 없음/틀림 → 입력 받아 재시도. 2회차부터 빈칸+명시 메시지로 "확인만 눌러 같은 틀린 값 재저장" 루프 차단
+      if (data && data.error === 'Unauthorized' && asked < 2) {
+        asked++;
+        var msg = asked === 1 ? '🔒 관리자 인증 필요 — 토큰을 입력하세요:'
+                              : '❌ 토큰이 올바르지 않습니다. 다시 입력하세요:';
+        return promptAdminToken(msg, asked > 1).then(function(){
+          if (getAdminToken()) return attempt();
+          return data;
+        });
+      }
+      return data;
+    });
+  }
+  return attempt();
 }
 
 // ══ 제공인력 목록 ══
