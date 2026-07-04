@@ -689,6 +689,19 @@ function _getJson(url, tries){
   });
 }
 
+// 토큰 모달은 DOM 1개뿐 → 동시 두 보호요청(부팅 시 mapdata+providers 병렬)이 각자 모달을 열면
+// 두 번째가 첫 번째 핸들러를 덮어써 한쪽 Promise가 영영 안 풀림 = 로딩바 무한회전.
+// 하나의 프롬프트를 공유(in-flight 재사용)해서 확인 1번에 대기 중인 요청들이 모두 함께 재시도되게 한다.
+var _tokenPromptInFlight = null;
+function _promptTokenShared(msg, blank){
+  if (_tokenPromptInFlight) return _tokenPromptInFlight;
+  _tokenPromptInFlight = promptAdminToken(msg, blank).then(
+    function(t){ _tokenPromptInFlight = null; return t; },
+    function(e){ _tokenPromptInFlight = null; throw e; }
+  );
+  return _tokenPromptInFlight;
+}
+
 function fetchGAS(action, params) {
   // 쓰기 액션은 재시도 금지: mutation은 echo 리다이렉트 실패 전에 이미 커밋됨.
   // assign엔 "이미 배정됨" 가드가 있어 재시도 시 성공을 오류로 오인, status/unassign은 감사로그 중복. → 단발.
@@ -702,7 +715,7 @@ function fetchGAS(action, params) {
         asked++;
         var msg = asked === 1 ? '🔒 관리자 인증 필요 — 토큰을 입력하세요:'
                               : '❌ 토큰이 올바르지 않습니다. 다시 입력하세요:';
-        return promptAdminToken(msg, asked > 1).then(function(){
+        return _promptTokenShared(msg, asked > 1).then(function(){
           if (getAdminToken()) return attempt();
           return data;
         });
