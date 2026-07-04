@@ -8,6 +8,15 @@
      실체는 scripts/17 doGet(ALLOWALL)이 서빙하는 프리뷰.html. 허브 타일엔 미등재(직접 링크 배포).
      프리뷰 생명주기 종료(병합/기각) 시 이 파일도 함께 정리. -->
 <link rel="icon" href="/saenggak/android-icon-192x192.png">
+<script>
+// 카톡 인앱 브라우저 → 기본 브라우저 자동 전환 (docs/1 §3.7, 유성 2026-07-04 ex49).
+// 이 래퍼=정적 top-level 입구라 §3.7 적용 대상(GAS iframe 내부엔 안 넣음). 스킴 실패해도 무해.
+(function () {
+  if (/KAKAOTALK/i.test(navigator.userAgent)) {
+    location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+  }
+})();
+</script>
 <style>
   html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#fff;}
   iframe{display:block;width:100%;height:100%;border:none;}
