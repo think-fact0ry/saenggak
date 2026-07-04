@@ -72,10 +72,16 @@
   .toggle button.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);}
 
   /* 버튼 */
-  .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;margin-top:14px;transition:.12s;}
-  .btn:active{transform:scale(.985);background:var(--green-d);}
+  .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;margin-top:14px;transition:.12s;position:relative;overflow:hidden;}
+  .btn:active{transform:scale(.97);background:var(--green-d);}
   .btn:disabled{background:var(--g200);color:var(--g500);cursor:default;transform:none;}
   .btn.ghost{background:var(--g100);color:var(--g700);}
+  .btn.ghost:active{background:var(--g200);}   /* ghost=박스형 → darken만(초록 플래시 X, §5.3-2) */
+  /* 누름 ripple(§5.3-1) — 레퍼런스=index.html pressRipple */
+  .bl{position:relative; z-index:1;}   /* 라벨을 ripple 위 레이어로(흰 글자 유지) */
+  .rip{position:absolute; z-index:0; top:50%; width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.16); transform:translate(-50%,-50%) scale(0); pointer-events:none;}
+  .rip.go{transform:translate(-50%,-50%) scale(var(--rs,16)); transition:transform .46s cubic-bezier(.25,.6,.3,1);}
+  .rip.fade{opacity:0; transition:opacity .3s;}
 
   /* 문항 */
   .q{padding:18px 2px;border-bottom:1px solid var(--g100);}
@@ -1025,6 +1031,21 @@ document.getElementById('resultBack').onclick=()=>{
   if(sess&&sess.staffId&&sess.session) showClients();
   else show('s-gate');
 })();
+
+// 누름 ripple(§5.3-1 솔리드 색버튼) — 레퍼런스=index.html. 라벨 .bl wrap으로 흰 글자 유지, 누른 지점→끝까지 어두워짐
+function pressRipple(btn){
+  btn.addEventListener("pointerdown",function(e){
+    if(!btn.querySelector(".bl")){ var bl=document.createElement("span"); bl.className="bl"; while(btn.firstChild) bl.appendChild(btn.firstChild); btn.appendChild(bl); }
+    var r=btn.getBoundingClientRect();
+    var x=e.clientX-r.left;
+    var sp=document.createElement("span"); sp.className="rip"; sp.style.left=x+"px";
+    sp.style.setProperty("--rs", Math.ceil(Math.hypot(Math.max(x,r.width-x), r.height/2)/15)+1);
+    btn.appendChild(sp); requestAnimationFrame(function(){ sp.classList.add("go"); });
+    var end=function(){ sp.classList.add("fade"); setTimeout(function(){ if(sp.parentNode) sp.remove(); },340); btn.removeEventListener("pointerup",end); btn.removeEventListener("pointerleave",end); };
+    btn.addEventListener("pointerup",end); btn.addEventListener("pointerleave",end);
+  });
+}
+document.querySelectorAll(".btn").forEach(pressRipple);
 </script>
 <script src="tfnav.js"></script>
 </body>
