@@ -333,6 +333,7 @@
   <div class="logo">오감쑥쑥 <span>지도</span></div>
   <a id="dashLink" href="dashboard.html" style="font-size:10px;color:#999;text-decoration:none;border:1px solid #ddd;padding:3px 8px;border-radius:4px">📊</a>
   <button id="staffLoginBtn" onclick="staffLogin()" style="display:none;font-size:11px;color:#3a8a5f;background:#fff;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">👤 제공인력 로그인</button>
+  <button id="adminKeyBtn" onclick="adminKeyLogin()" style="display:none;font-size:11px;color:#3a6b4e;background:#fff;border:1px solid #cdd9d1;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">🔑 행정</button>
   <span id="staffWhoami" style="display:none;font-size:11px;color:#3a8a5f;background:#eef7f1;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px">👤 <b>제공인력</b></span>
   <div class="divider"></div>
   <select id="providerSelect"></select>
@@ -813,6 +814,12 @@ function boot(){
   else if (MODE === 'provider') loadStaffMap();
   else loadBasicMap();
 }
+// 🔑 행정 버튼: basic서 토큰 입력→행정 승격(토큰은 localStorage에 영구 저장, 다음 방문부터 자동 admin)
+function adminKeyLogin(){
+  promptAdminToken('🔑 행정 인증 토큰을 입력하세요:').then(function(){
+    if (getAdminToken()){ MODE='admin'; applyModeUI(); _svcCache={}; loadProviders(); }
+  });
+}
 function applyModeUI(){
   var admin = MODE === 'admin', provider = MODE === 'provider';
   var show = function(id, on){ var el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
@@ -823,6 +830,7 @@ function applyModeUI(){
   show('filterHome', admin || provider);
   show('filterAssigned', admin || provider);
   show('staffLoginBtn', MODE === 'basic');
+  show('adminKeyBtn', MODE === 'basic');   // 신규/초기화 브라우저(basic)서 행정으로 올라갈 입구 — PC 주소 직접진입 대비
   var who = document.getElementById('staffWhoami');
   if (who){
     who.style.display = provider ? '' : 'none';
@@ -995,6 +1003,8 @@ function fitBounds() {
   if (window.innerWidth <= 768) {
     if (map.getLevel() > 8) map.setLevel(8);
     if (michuholCenter) map.setCenter(michuholCenter);
+  } else {
+    map.setLevel(Math.max(1, map.getLevel() - 1));   // PC: setBounds가 다 담느라 살짝 멀어짐 → 한 칸 확대해서 시작(유성 2026-07-04)
   }
 }
 
