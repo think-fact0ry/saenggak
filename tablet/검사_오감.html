@@ -74,7 +74,8 @@
   /* 버튼 */
   .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;margin-top:14px;transition:.12s;position:relative;overflow:hidden;}
   .btn:active{transform:scale(.97);background:var(--green-d);}
-  .btn:disabled{background:var(--g200);color:var(--g500);cursor:default;transform:none;}
+  .btn:disabled{background:var(--p-disabled);color:#fff;cursor:default;transform:none;}   /* §4.14 게이팅 비활성=연초록+흰폰트(F7, 옛 g200/g500) */
+  .btn.loading:disabled{background:var(--green);color:#fff;}   /* 로딩(textContent라 .loading 클래스)=채운초록 유지 */
   .btn.ghost{background:var(--g100);color:var(--g700);}
   .btn.ghost:active{background:var(--g200);}   /* ghost=박스형 → darken만(초록 플래시 X, §5.3-2) */
   /* 누름 ripple(§5.3-1) — 레퍼런스=index.html pressRipple */
@@ -896,13 +897,13 @@ function submitRegister(){
   const sess=getStaffSess();
   if(!sess||!sess.staffId||!sess.session){ show('s-gate'); return; }
   const note=document.getElementById('regNote'); note.textContent='';
-  regBusy=true; const btn=document.getElementById('regBtn'); btn.disabled=true; btn.textContent='등록 중…';   // 더블탭 가드(§5.6-3)
+  regBusy=true; const btn=document.getElementById('regBtn'); btn.disabled=true; btn.classList.add('loading'); btn.textContent='등록 중…';   // 더블탭 가드(§5.6-3) + 로딩=채운초록(F7)
   hubPost({action:'register', child:{name:name, birth:birth8, sex:sex, phone:phone}}).then(d=>{
-    regBusy=false; btn.textContent='등록하기';
+    regBusy=false; btn.classList.remove('loading'); btn.textContent='등록하기';
     if(d&&d.ok){ activeChild=child; openChild(name,birth8); }
     else if(d&&d.code==='auth'){ show('s-gate'); }
     else { btn.disabled=false; note.textContent=(d&&d.error)||'등록에 실패했어요. 잠시 후 다시 시도해 주세요.'; }
-  }).catch(()=>{ regBusy=false; btn.textContent='등록하기'; btn.disabled=false; note.textContent='등록에 실패했어요. 잠시 후 다시 시도해 주세요.'; });
+  }).catch(()=>{ regBusy=false; btn.classList.remove('loading'); btn.textContent='등록하기'; btn.disabled=false; note.textContent='등록에 실패했어요. 잠시 후 다시 시도해 주세요.'; });
 }
 
 // ── ② 아동 상세(검사 종류 + 지난 검사 이력) ─────────────────

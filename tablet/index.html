@@ -247,7 +247,8 @@
   .key-err{min-height:18px; font-size:13px; color:var(--red); font-weight:600; text-align:center; margin-bottom:12px;}
   .s-btn{width:100%; font-family:inherit; font-size:17px; font-weight:700; padding:17px; border-radius:var(--r-md); border:none; background:var(--green); color:#fff; cursor:pointer; position:relative; overflow:hidden;}
   .s-btn:active{background:var(--green-d); transform:scale(.97);}
-  .s-btn:disabled{background:var(--g200); color:var(--g500);}
+  .s-btn:disabled{background:var(--p-disabled); color:#fff;}   /* §4.14 게이팅 비활성=연초록+흰폰트(F7, 옛 g200/g500) */
+  .s-btn:disabled:has(.ld){background:var(--green); color:#fff;}   /* 로딩(.ld)=비활성 아니라 진행중 → 채운초록 유지 */
   .s-btn.danger{background:var(--red);}
   .s-btn.danger:active{background:#d63a48;}
   /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 (원칙 §7.2) */
@@ -297,7 +298,7 @@
   .ed-note{font-size:13.5px; color:var(--g500); font-weight:500; margin:2px; min-height:18px;} .ed-note.err{color:var(--red);}
   /* 로딩 = 글자 + 점 3개 위아래 출렁(진행 중임이 보이게, 토스식) — 상담일지 loadingNote와 동일 규칙. 정적 '…' 금지(디자인_UX_원칙 §7) */
   .ld{display:inline-flex; align-items:center; gap:9px; color:var(--g500); font-weight:500;}
-  .btn .ld,.s-btn .ld{color:var(--g800); font-weight:700;}   /* 버튼 위 로딩 문구는 더 검게(안읽힘 방지, 유성) */
+  .btn .ld,.s-btn .ld{color:#fff; font-weight:700;}   /* 로딩=채운초록 배경(F7) → 흰 글자(옛 회색배경 전제 g800 폐기) */
   .ld-dots{display:inline-flex; gap:5px;}
   .ld-dots i{width:6px; height:6px; border-radius:50%; background:var(--green); display:inline-block; animation:ldb 1.1s ease-in-out infinite;}
   .ld-dots i:nth-child(2){animation-delay:.16s;} .ld-dots i:nth-child(3){animation-delay:.32s;}
@@ -990,7 +991,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.07.04b';
+var APP_VERSION = '26.07.04c';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
