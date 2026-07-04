@@ -221,7 +221,7 @@
   .mp-dev .dc{flex-shrink:0; font-size:11.5px; font-weight:700; color:var(--green-d); background:var(--green-l); border-radius:var(--r-sm); padding:3px 8px;}
   .mp-dev .dedit{flex-shrink:0; color:var(--g300); display:flex;} .mp-dev .dedit svg{width:18px; height:18px;}
   .mp-dev-msg{padding:38px 18px; text-align:center; color:var(--g400); font-size:14px; font-weight:500;}
-  .dev-logout{display:block; width:100%; font-family:inherit; font-size:16px; font-weight:700; padding:16px; margin-top:24px; border:none; border-radius:var(--r-md); background:#fdecee; color:var(--red); cursor:pointer;}   /* 기기 상세에서 다른 기기 로그아웃(보조 danger — 푸터 '저장'과 안 겹치게 솔리드 X) */
+  .dev-logout{display:block; width:100%; font-family:inherit; font-size:16px; font-weight:700; padding:16px; margin-top:24px; border:none; border-radius:var(--r-md); background:var(--danger-weak-bg); color:var(--danger-weak-fg); cursor:pointer;}   /* 기기 상세에서 다른 기기 로그아웃 = §4.14-2 weak-danger(연빨강 채움+동색조 진한 폰트 — 푸터 '저장'과 안 겹치게 솔리드 X. fg --red→--danger-weak-fg conform, F8 2026-07-04) */
   .dev-logout:active{background:#fbdce0;}
 
   /* ═ 바텀시트(서약·행정키) ═ */
@@ -991,7 +991,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.07.04c';
+var APP_VERSION = '26.07.04d';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
