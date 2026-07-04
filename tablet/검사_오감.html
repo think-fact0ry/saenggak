@@ -78,6 +78,8 @@
   .btn:active{transform:scale(.97);background:var(--green-d);}
   .btn:disabled{background:var(--p-disabled);color:#fff;cursor:default;transform:none;}   /* §4.14 게이팅 비활성=연초록+흰폰트(F7, 옛 g200/g500) */
   .btn.loading:disabled{background:var(--green);color:#fff;}   /* 로딩(textContent라 .loading 클래스)=채운초록 유지 */
+  @keyframes shakeX{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
+  .btn.shake{animation:shakeX .4s cubic-bezier(.36,.07,.19,.97);}   /* 비활성 버튼 탭=좌우 흔들림(§4.9 '지금 못 눌러요' 능동표시, 상담일지 패턴) */
   .btn.ghost{background:var(--g100);color:var(--g700);}
   .btn.ghost:active{background:var(--g200);}   /* ghost=박스형 → darken만(초록 플래시 X, §5.3-2) */
   /* 누름 ripple(§5.3-1) — 레퍼런스=index.html pressRipple */
@@ -145,6 +147,12 @@
   .list-card .lc-meta{font-size:13px;color:var(--g500);font-weight:600;white-space:nowrap;flex-shrink:0;text-align:right;}
   .list-card .lc-meta .lc-draw{display:block;color:var(--green-d);font-weight:700;}
   .list-empty{text-align:center;color:var(--g500);font-size:14.5px;padding:40px 16px;line-height:1.6;}
+  /* §5.4 스켈레톤 — 목록 로드=구조 미리보기(실제 카드와 같은 위치·크기 회색 바). 점(§5.2)은 버튼 액션·짧은 대기용 */
+  .sk-b{background:var(--g100);border-radius:7px;animation:skp 1.2s ease-in-out infinite;}
+  @keyframes skp{0%,100%{opacity:1}50%{opacity:.5}}
+  .list-card.skel{pointer-events:none;}
+  .retry-btn{display:inline-block;margin-top:12px;padding:12px 26px;border:none;border-radius:var(--r-md);background:var(--green);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;position:relative;overflow:hidden;}   /* §4.5 경량 골격(F9) */
+  .retry-btn:active{background:var(--green-d);transform:scale(.97);}
   /* 로딩 = 글자 + 점 3개 출렁(정적 '…' 금지, 1_원칙_디자인UX §7.1) — 상담일지 loadingNote와 동일 */
   .ld{display:inline-flex;align-items:center;gap:9px;color:var(--g500);font-weight:500;}
   .ld-dots{display:inline-flex;gap:5px;}
@@ -845,18 +853,22 @@ function setExamWho(){
   var s=getStaffSess()||{}; var nm=String(s.name||'').trim();
   el.textContent = !nm ? '' : (s.admin ? ('행정 '+nm) : (s.oath ? ('상담사 '+nm) : (nm+' 선생님')));
 }
+// §5.4 스켈레톤 — 목록 뜰 자리에 카드 골격 미리보기(점 대신 — 점은 버튼·짧은 대기용)
+function skelCards(box,n){ box.innerHTML=''; for(let i=0;i<n;i++){ const d=document.createElement('div'); d.className='list-card skel'; d.innerHTML='<div class="lc-main"><div class="sk-b" style="width:96px;height:17px;"></div><div class="sk-b" style="width:140px;height:13px;margin-top:6px;"></div></div><div class="sk-b" style="width:72px;height:13px;"></div>'; box.appendChild(d); } }
+// 목록=화면 본문 로드 실패 = 재시도 주액션 1개(§4.5 경량 골격, F9)
+function listFail(box,msg,fn){ const w=document.createElement('div'); w.className='list-empty'; w.textContent=msg; const b=document.createElement('button'); b.className='retry-btn'; b.textContent='다시 시도'; b.onclick=fn; pressRipple(b); w.appendChild(document.createElement('br')); w.appendChild(b); box.innerHTML=''; box.appendChild(w); }
 function showClients(){
   show('s-clients'); setExamWho();
   const box=document.getElementById('clientList');
   if(DEMO){ renderClients(MOCK_CLIENTS); return; }
   const sess=getStaffSess();
   if(!sess||!sess.staffId||!sess.session){ show('s-gate'); return; }
-  box.innerHTML='<div class="list-empty"><span class="ld">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></span></div>';
+  skelCards(box,4);
   hubPost({action:'exam_clients'}).then(d=>{
     if(d&&d.ok){ renderClients(d.clients||[]); }
     else if(d&&d.code==='auth'){ show('s-gate'); }
-    else box.innerHTML='<div class="list-empty">목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
-  }).catch(()=>{ box.innerHTML='<div class="list-empty">목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>'; });
+    else listFail(box,'목록을 불러오지 못했어요.',showClients);
+  }).catch(()=>{ listFail(box,'목록을 불러오지 못했어요.',showClients); });
 }
 function renderClients(clients){
   const box=document.getElementById('clientList');
@@ -922,12 +934,12 @@ function openChild(name,birth){
 function loadChildHistory(name,b8){
   const box=document.getElementById('childHistory');
   if(DEMO){ childResults=MOCK_HISTORY[name]||[]; sittings=groupSittings(childResults); renderChildHistory(); return; }
-  box.innerHTML='<div class="list-empty"><span class="ld">불러오는 중<span class="ld-dots"><i></i><i></i><i></i></span></span></div>';
+  skelCards(box,3);
   hubPost({action:'exam_history', child:{name:name, birth:b8}}).then(d=>{
     if(d&&d.ok){ childResults=d.results||[]; sittings=groupSittings(childResults); renderChildHistory(); }
     else if(d&&d.code==='auth'){ show('s-gate'); }
-    else box.innerHTML='<div class="list-empty">이력을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
-  }).catch(()=>{ box.innerHTML='<div class="list-empty">이력을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>'; });
+    else listFail(box,'이력을 불러오지 못했어요.',()=>loadChildHistory(name,b8));
+  }).catch(()=>{ listFail(box,'이력을 불러오지 못했어요.',()=>loadChildHistory(name,b8)); });
 }
 // 도구별 행 → 실시(같은 실시일시=SDQ+K-ARS 한 번) 단위로 묶음, 시간순
 function groupSittings(results){
@@ -1004,6 +1016,14 @@ function liftActiveFooter(){
 }
 window.addEventListener('resize',liftActiveFooter);
 if(window.visualViewport){ window.visualViewport.addEventListener('resize',liftActiveFooter); window.visualViewport.addEventListener('scroll',liftActiveFooter); }
+
+// §4.9 비활성 버튼 탭=흔들림 — disabled 버튼은 이벤트 투명이라 footbar(부모)가 탭을 받음 → 그 안 비활성 .btn을 흔든다(상담일지 패턴)
+document.addEventListener('pointerdown',function(e){
+  var fb=e.target.closest('.footbar'); if(!fb) return;
+  if(e.target.closest('a,button:not([disabled])')) return;   // 활성 링크·버튼 탭은 제외
+  var b=fb.querySelector('.btn[disabled]'); if(!b) return;
+  b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+},true);
 
 // ── 버튼·뒤로가기 라우팅 ───────────────────────────────────
 document.getElementById('newClient').onclick=()=>startRegister();

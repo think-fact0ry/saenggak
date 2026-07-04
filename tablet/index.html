@@ -251,6 +251,8 @@
   .s-btn:active{background:var(--green-d); transform:scale(.97);}
   .s-btn:disabled{background:var(--p-disabled); color:#fff;}   /* §4.14 게이팅 비활성=연초록+흰폰트(F7, 옛 g200/g500) */
   .s-btn:disabled:has(.ld){background:var(--green); color:#fff;}   /* 로딩(.ld)=비활성 아니라 진행중 → 채운초록 유지 */
+  @keyframes shakeX{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
+  .s-btn.shake{animation:shakeX .4s cubic-bezier(.36,.07,.19,.97);}   /* 비활성 버튼 탭=좌우 흔들림(§4.9, 상담일지 패턴) */
   .s-btn.danger{background:var(--danger);}   /* 파괴 버튼=--danger(§4.14 fill-danger, --red는 상태알림 전용 — 유성 통일 2026-07-04) */
   .s-btn.danger:active{background:#b2474a;}   /* --danger 15% darken */
   /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 (원칙 §7.2) */
@@ -714,6 +716,15 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   function loadingNote(el, text){ if(!el) return; el.classList.remove('err','empty'); el.innerHTML=loadingHTML(text); }
   function btnLoad(btn, text){ if(!btn) return; if(btn.dataset.lbl==null) btn.dataset.lbl=btn.innerHTML; btn.disabled=true; btn.innerHTML=loadingHTML(text); }   // 색버튼 누르면 그 버튼 위에 로딩 텍스트+점(§2.6-4·§7.1)
   function btnDone(btn){ if(!btn||btn.dataset.lbl==null) return; btn.innerHTML=btn.dataset.lbl; delete btn.dataset.lbl; }
+  // §4.9 비활성 버튼 탭=흔들림. disabled 버튼은 이벤트 투명이라 부모(시트·마이페이지 푸터)가 탭을 받음 → 좌표가 버튼 위일 때만 흔든다(시트엔 입력·텍스트가 많아 footbar식 전체 위임은 과반응).
+  document.addEventListener('pointerdown', function(e){
+    var c=e.target.closest('.sheet,.ed-foot'); if(!c) return;
+    if(e.target.closest('a,button:not([disabled]),input,textarea')) return;
+    var b=c.querySelector('.s-btn[disabled]'); if(!b) return;
+    var r=b.getBoundingClientRect();   // 이벤트 히트테스트(레이아웃 px 하드코딩 아님)
+    if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom) return;
+    b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+  }, true);
   // 기기 종류 라벨(종류·OS) 로컬 산출 — 현재 기기가 라벨 없을 때(배포 전 세션) 폴백. 상담일지 deviceLabel과 동일 규칙 + 아이패드(Mac UA 위장) 보정.
   function deviceLabelLocal(){
     var ua=navigator.userAgent||'';
@@ -993,7 +1004,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.07.04h';
+var APP_VERSION = '26.07.04i';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:

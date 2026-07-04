@@ -284,6 +284,10 @@
   .client-card .nm{font-size:16.5px;font-weight:700;letter-spacing:-.3px;}
   .client-card .meta{font-size:13px;color:var(--g500);font-weight:500;}
   .client-card .chev{color:var(--g300);display:flex;}
+  /* §5.4 스켈레톤 — 목록 로드=구조 미리보기(실제 카드와 같은 위치·크기 회색 바). 점(§5.2)은 버튼 액션·짧은 대기용 */
+  .sk-b{background:var(--g100);border-radius:7px;animation:skp 1.2s ease-in-out infinite;}
+  @keyframes skp{0%,100%{opacity:1}50%{opacity:.5}}
+  .client-card.skel,.round.skel{pointer-events:none;border-color:var(--g100);box-shadow:none;cursor:default;}
   /* "끌 수 있다" 표시 = 왼쪽 옅은 회색 세로 바(│). 드래그는 *박스 전체* 길게누름(이 바만이 아님). margin-right=바↔이름 여백 */
   .client-card .drag{flex:0 0 auto;width:3px;height:20px;border-radius:2px;background:var(--g300);margin-right:13px;}
   .empty{text-align:center;color:var(--g400);font-size:14px;font-weight:500;padding:40px 0;}
@@ -895,6 +899,9 @@ function loadingNote(el, text){ el.className="note"; el.innerHTML=loadingHTML(te
 function btnLoad(btn, text){ if(!btn) return; if(btn.dataset.lbl==null) btn.dataset.lbl=btn.innerHTML; btn.disabled=true; btn.innerHTML=loadingHTML(text); }   // 색버튼 누르면 그 버튼 위에 로딩 텍스트+점(§2.6-4·§7.1) — 별도 note 대신
 function btnDone(btn){ if(!btn||btn.dataset.lbl==null) return; btn.innerHTML=btn.dataset.lbl; delete btn.dataset.lbl; }   // 원래 라벨 복구(실패·재진입)
 function noteRetry(note, fn){ const b=document.createElement("button"); b.className="retry-btn"; b.textContent="다시 시도"; b.onclick=fn; pressRipple(b); note.appendChild(document.createElement("br")); note.appendChild(b); }   // 목록 로드 실패 = 새로고침 말곤 복구 경로가 없던 자리에 주액션 1개(§4.5, F9)
+// §5.4 스켈레톤 — 목록 뜰 자리에 카드 골격 미리보기(점 대신 — 점은 버튼·짧은 대기용)
+function skelCards(box,n){ box.innerHTML=""; for(let i=0;i<n;i++){ const d=document.createElement("div"); d.className="client-card skel"; d.innerHTML='<div class="cc-main"><div class="sk-b" style="width:88px;height:17px;"></div><div class="sk-b" style="width:150px;height:13px;margin-top:7px;"></div></div>'; box.appendChild(d); } }
+function skelRounds(box){ box.innerHTML=""; for(let i=0;i<4;i++){ const d=document.createElement("div"); d.className="round skel"; d.innerHTML='<div class="sk-b" style="width:52px;height:16px;margin:0 auto;"></div><div class="sk-b" style="width:64px;height:12px;margin:8px auto 0;"></div>'; box.appendChild(d); } }
 
 // ════ 가입 1: 진보형 입력 — 휴대폰→생년월일·성별→이름 한 칸씩(활성칸 맨 위) → OTP ════
 //  키패드 유지 + 자동 커서 이동(안드로이드 최적, iOS는 키패드 내려갈 수 있어 §5.5 footbar 폴백). 첫 칸은 사용자가 1번 탭(웹은 자동 키보드 못 띄움)
@@ -1298,13 +1305,13 @@ function loadClients(){
   if(DEMO){ allClients = MOCK_CLIENTS.slice(); $("cs-note").textContent=""; renderClients(""); return; }
   const note=$("cs-note");
   if(allClients.length){ renderClients($("cs-search").value); note.className="note"; note.textContent=""; }   // 이미 불러온 적 있으면 즉시(스피너 X) → 아래서 조용히 갱신
-  else { loadingNote(note,"담당 내담자를 불러오고 있어요"); $("cs-list").innerHTML=""; $("cs-count").textContent=""; }
+  else { note.className="note"; note.textContent=""; skelCards($("cs-list"),5); $("cs-count").textContent=""; }   // §5.4 첫 로드=스켈레톤(점 대신)
   const s=loadSess()||{};
   post({action:"staff_clients", staffId:s.staffId, session:s.session}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
     if(d && d.ok){ allClients = d.clients||[]; note.textContent=""; renderClients($("cs-search").value); }
-    else if(!allClients.length){ note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; noteRetry(note, loadClients); }
-  }).catch(()=>{ if(!allClients.length){ note.className="note err"; note.textContent="연결이 안 됐어요"; noteRetry(note, loadClients); } });
+    else if(!allClients.length){ $("cs-list").innerHTML=""; note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; noteRetry(note, loadClients); }
+  }).catch(()=>{ if(!allClients.length){ $("cs-list").innerHTML=""; note.className="note err"; note.textContent="연결이 안 됐어요"; noteRetry(note, loadClients); } });
 }
 
 function renderClients(q){
@@ -1342,8 +1349,8 @@ function openMonth(ym){
   $("m-subject").innerHTML='<div class="nm">'+curClient.name+' <span style="font-size:14px;color:var(--g500);font-weight:500;">('+fmtBirth(curClient.birth)+')</span></div><div class="meta">'+svcFull(curClient.service)+'</div>';
   $("m-ym").textContent = ymLabel(ym);
   $("m-next").disabled = (ym >= thisMonth());   // 미래 월로 못 넘어가게
-  $("m-rounds").innerHTML='';
-  loadingNote($("m-note"),"불러오는 중");
+  skelRounds($("m-rounds"));   // §5.4 회차 그리드 스켈레톤(점 대신)
+  $("m-note").className="note"; $("m-note").textContent="";
   show("s-month");
   if(DEMO){ roundData = JSON.parse(JSON.stringify(MOCK_ROUNDS[curClient.name]||{})); $("m-note").textContent=""; renderRounds(); return; }
   const s=loadSess()||{};
@@ -1353,7 +1360,7 @@ function openMonth(ym){
     if(d && d.ok){ (d.rounds||[]).forEach(r=>{ roundData[r.round]={date:r.date, content:r.content}; }); $("m-note").textContent=""; }
     else { $("m-note").className="note err"; $("m-note").textContent=(d&&d.error)||"조회 실패"; noteRetry($("m-note"), ()=>openMonth(curYm)); }
     renderRounds();
-  }).catch(()=>{ $("m-note").className="note err"; $("m-note").textContent="연결이 안 됐어요"; noteRetry($("m-note"), ()=>openMonth(curYm)); });
+  }).catch(()=>{ $("m-rounds").innerHTML=""; $("m-note").className="note err"; $("m-note").textContent="연결이 안 됐어요"; noteRetry($("m-note"), ()=>openMonth(curYm)); });
 }
 function renderRounds(){
   const box=$("m-rounds"); box.innerHTML="";
@@ -1466,13 +1473,13 @@ function loadGClients(){
   if(DEMO){ gClients=DEMO_GCLIENTS.slice(); $("gcl-note").textContent=""; renderGClients(""); return; }
   const note=$("gcl-note");
   if(gClients.length){ renderGClients(""); note.className="note"; note.textContent=""; }   // 이미 불러온 적 있으면 즉시 표시(스피너 X) → 아래서 조용히 갱신
-  else { loadingNote(note,"내담자를 불러오고 있어요"); $("gcl-list").innerHTML=""; $("gcl-count").textContent=""; }
+  else { note.className="note"; note.textContent=""; skelCards($("gcl-list"),4); $("gcl-count").textContent=""; }   // §5.4 첫 로드=스켈레톤(점 대신)
   const s=loadSess()||{};
   post({action:"gclient_list", staffId:s.staffId, session:s.session}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
     if(d && d.ok){ gClients=d.clients||[]; note.textContent=""; if(!gDragActive) renderGClients($("gcl-search").value); }   // 드래그 중이면 재렌더 보류(드래그 카드 보호)
-    else if(!gClients.length){ note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; noteRetry(note, loadGClients); }
-  }).catch(()=>{ if(!gClients.length){ note.className="note err"; note.textContent="연결이 안 됐어요"; noteRetry(note, loadGClients); } });
+    else if(!gClients.length){ $("gcl-list").innerHTML=""; note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; noteRetry(note, loadGClients); }
+  }).catch(()=>{ if(!gClients.length){ $("gcl-list").innerHTML=""; note.className="note err"; note.textContent="연결이 안 됐어요"; noteRetry(note, loadGClients); } });
 }
 function renderGClients(q){
   q=(q||"").trim();
@@ -1764,14 +1771,14 @@ function loadGRounds(){
   loadGIntakeStatus();           // 초기상담 카드 상태(백그라운드, 스피너 없음)
   if(DEMO){ gRounds = JSON.parse(JSON.stringify(DEMO_GROUNDS[gClient.name]||{})); $("gr-note").textContent=""; renderGRounds(); return; }
   if(gRoundsCache[key]){ gRounds=gRoundsCache[key]; $("gr-note").className="note"; $("gr-note").textContent=""; renderGRounds(); }   // 캐시(메모리) 즉시 — 재진입 스피너 없음
-  else { gRounds={}; $("gr-list").innerHTML=""; $("gr-count").textContent=""; loadingNote($("gr-note"),"불러오는 중"); }
+  else { gRounds={}; skelCards($("gr-list"),3); $("gr-count").textContent=""; $("gr-note").className="note"; $("gr-note").textContent=""; }   // §5.4 첫 로드=스켈레톤(점 대신)
   const s=loadSess()||{};
   post({action:"gjournal_get", staffId:s.staffId, session:s.session, child:{name:gClient.name, birth:gClient.birth}}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
     if(key!==gCurKey) return;    // 그새 다른 내담자로 이동 → 엉뚱한 캐시 슬롯에 쓰지 않기(레이스)
     if(d && d.ok){ const ng={}; (d.rounds||[]).forEach(r=>{ ng[r.round]=r; }); gRounds=ng; gRoundsCache[key]=ng; $("gr-note").textContent=""; renderGRounds(); }
-    else if(!gRoundsCache[key]){ $("gr-note").className="note err"; $("gr-note").textContent=(d&&d.error)||"조회를 못 했어요"; noteRetry($("gr-note"), loadGRounds); }
-  }).catch(()=>{ if(key===gCurKey && !gRoundsCache[key]){ $("gr-note").className="note err"; $("gr-note").textContent="연결이 안 됐어요"; noteRetry($("gr-note"), loadGRounds); } });
+    else if(!gRoundsCache[key]){ $("gr-list").innerHTML=""; $("gr-note").className="note err"; $("gr-note").textContent=(d&&d.error)||"조회를 못 했어요"; noteRetry($("gr-note"), loadGRounds); }
+  }).catch(()=>{ if(key===gCurKey && !gRoundsCache[key]){ $("gr-list").innerHTML=""; $("gr-note").className="note err"; $("gr-note").textContent="연결이 안 됐어요"; noteRetry($("gr-note"), loadGRounds); } });
 }
 function renderGRounds(){
   const rounds=Object.keys(gRounds).map(Number).sort((a,b)=>a-b);

@@ -75,6 +75,10 @@
   .msg.err{color:var(--red);}
   .retry-btn{display:inline-block;margin-top:12px;padding:12px 26px;border:none;border-radius:var(--r-md);background:var(--green);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;position:relative;overflow:hidden;}   /* §4.5 경량 골격(F9) */
   .retry-btn:active{background:var(--green-d);transform:scale(.97);}
+  /* §5.4 스켈레톤 — 목차 로드=구조 미리보기(아이템과 같은 위치·크기 바). 점(§5.2)·전면 dim은 버튼 액션·짧은 대기용 */
+  .sk-b{background:var(--g200);border-radius:7px;animation:skp 1.2s ease-in-out infinite;}   /* 아이템 배경이 g100이라 바는 한 단계 진하게 */
+  @keyframes skp{0%,100%{opacity:1}50%{opacity:.5}}
+  .item.skel{pointer-events:none;}
 
   /* 미리보기 */
   #preview{display:none;}
@@ -295,16 +299,24 @@ function gasGet(action, params){
 }
 
 // ── 목차 ──
+// §5.4 스켈레톤 — 목차 뜰 자리에 아이템 골격 미리보기(전면 dim 대신 — dim은 짧은 액션 대기용)
+function skelItems(n){
+  var box=document.getElementById('list'); box.innerHTML='';
+  for(var i=0;i<n;i++){
+    var el=document.createElement('div'); el.className='item skel';
+    el.innerHTML='<div class="sk-b" style="width:24px;height:28px;flex-shrink:0;"></div><div class="meta"><div class="sk-b" style="width:150px;height:15px;"></div><div class="sk-b" style="width:76px;height:12px;margin-top:6px;"></div></div>';
+    box.appendChild(el);
+  }
+}
 function loadList(){
   // 암호 게이트 제거(유성 2026-06-24) — 허브 OTP+PIN 로그인으로 대체, GAS 토큰 게이트도 제거됨. #gate 키패드는 미사용(dormant)
-  showLoad(true);
+  skelItems(6);
   document.getElementById('listMsg').style.display = 'none';
   gasGet('list').then(function(d){
-    showLoad(false);
-    if (d && d.error === 'Unauthorized'){ setToken(''); openGate(); return; }
+    if (d && d.error === 'Unauthorized'){ setToken(''); document.getElementById('list').innerHTML=''; openGate(); return; }
     if (d && d.error){ return showListMsg('불러오기 실패: ' + d.error, true, true); }
     renderList((d && d.files) || []);
-  }).catch(function(){ showLoad(false); showListMsg('네트워크 오류예요. 와이파이를 확인해 주세요.', true, true); });
+  }).catch(function(){ showListMsg('네트워크 오류예요. 와이파이를 확인해 주세요.', true, true); });
 }
 function showListMsg(t, err, retry){
   var el = document.getElementById('listMsg');

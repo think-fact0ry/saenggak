@@ -77,10 +77,10 @@
   .row-gap td{border:none;height:8px;background:#fff;padding:0;}
 
   .state{text-align:center;padding:48px 20px;color:var(--g500);font-size:14.5px;}
-  .ld-dots{display:inline-block;margin-left:2px;}
-  .ld-dots i{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--g400);margin:0 1.5px;animation:bo 1s infinite;}
-  .ld-dots i:nth-child(2){animation-delay:.15s;} .ld-dots i:nth-child(3){animation-delay:.3s;}
-  @keyframes bo{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-4px);opacity:1;}}
+  /* §5.4 스켈레톤 — 내역 로드=구조 미리보기(제목바+행 바, 실제 표와 같은 자리). 옛 점 로딩(.ld-dots) 대체 */
+  .sk-b{background:var(--g100);border-radius:7px;animation:skp 1.2s ease-in-out infinite;}
+  @keyframes skp{0%,100%{opacity:1}50%{opacity:.5}}
+  .sk-wrap{padding:18px 4px;}
 
   /* 다른 아동 경계 = 검정 구분선(같은 아동 내 월/서비스 전환은 기본 회색 간격) */
   .row-gap.big td{height:0;padding:0;border:none;border-top:2px solid var(--g900);}
@@ -154,7 +154,7 @@ else { $('who').textContent = ((sess && sess.name) ? sess.name : '') + ' 선생�
 let latestUpdate = '';
 function payClass(t){ if(t==='소급'||t==='취소') return 'pay-red'; if(t==='보강') return 'pay-bold'; return ''; }
 function dispType(t){ return t==='보강'?'-보강':t; }
-function loadingHTML(text){ return '<div class="state">'+text+'<span class="ld-dots"><i></i><i></i><i></i></span></div>'; }
+function skelHTML(){ var h='<div class="sk-wrap"><div class="sk-b" style="width:38%;max-width:200px;height:18px;margin-bottom:16px;"></div>'; for(var i=0;i<6;i++) h+='<div class="sk-b" style="height:40px;margin-bottom:9px;"></div>'; return h+'</div>'; }   // §5.4 스켈레톤(제목바+행6) — 목록 로드는 점 대신 구조 미리보기
 
 function renderTable(records, titleText){
   const wrap=$('resultWrap');
@@ -206,7 +206,7 @@ function initProvider(){
   $('controls').innerHTML =
     '<div class="row" id="monthControls"><select id="yearSel"></select><select id="monthSel"></select></div>'+
     '<div class="row" id="childControls" style="display:none;"><input class="search-in" type="text" id="childInput" placeholder="아동 이름"><button class="search-btn" id="childBtn">검색</button></div>';
-  $('resultWrap').innerHTML = loadingHTML('불러오는 중');
+  $('resultWrap').innerHTML = skelHTML();
 
   bindSeg(tab=>{
     if(tab==='child'){
@@ -227,7 +227,7 @@ function initProvider(){
 // 전면 로딩 실패 = 빈 화면/무한스피너 X → 메시지 + 재시도 버튼(§4.5-4 전면 오류, 우=주액션)
 function errState(){ return '<div class="state">연결이 안 됐어요.<br>잠시 후 다시 시도해 주세요.<div style="margin-top:14px"><button class="search-btn" onclick="loadAllData()">다시 시도</button></div></div>'; }
 async function loadAllData(){
-  $('resultWrap').innerHTML = loadingHTML('불러오는 중');   // 첫 로드·재시도 공통 스피너
+  $('resultWrap').innerHTML = skelHTML();   // 첫 로드·재시도 공통 스켈레톤(§5.4)
   try{
     const res = await apiCall({ action:'queryMyAllData', staffId:sess.staffId, session:sess.session });
     if(res.error){
@@ -271,7 +271,7 @@ async function pSearchChild(){
   const name=$('childInput').value.trim();
   if(!name){ alert('아동 이름을 적어주세요.'); $('childInput').focus(); return; }
   if(name.length<2){ alert('아동 이름을 2글자 이상 적어주세요.'); $('childInput').focus(); return; }
-  $('resultWrap').innerHTML=loadingHTML('검색하고 있어요');
+  $('resultWrap').innerHTML=skelHTML();
   try{
     const res=await apiCall({ action:'queryAllByChild', staffId:sess.staffId, session:sess.session, child:name });
     if(res.error){ if(isAuthError(res.error)){ bounceAuth(); return; } $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return; }
@@ -315,7 +315,7 @@ async function aSearchProvider(){
   const prov=$('provInput').value.trim();
   if(!prov){ alert('제공인력 이름을 적어주세요.'); $('provInput').focus(); return; }
   const year=$('aYear').value, month=$('aMonth').value;
-  $('resultWrap').innerHTML=loadingHTML('검색하고 있어요');
+  $('resultWrap').innerHTML=skelHTML();
   try{
     const res=await apiCall({ action:'queryProviderAdmin', t:adminToken, provider:prov, year:year, month:month });
     if(res.error){ if(res.error.indexOf('Unauthorized')>=0){ bounceAdmin(); return; } $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return; }
@@ -328,7 +328,7 @@ async function aSearchChild(){
   const name=$('acInput').value.trim();
   if(!name){ alert('아동 이름을 적어주세요.'); $('acInput').focus(); return; }
   if(name.length<2){ alert('아동 이름을 2글자 이상 적어주세요.'); $('acInput').focus(); return; }
-  $('resultWrap').innerHTML=loadingHTML('검색하고 있어요');
+  $('resultWrap').innerHTML=skelHTML();
   try{
     const res=await apiCall({ action:'queryChildAdmin', t:adminToken, child:name });
     if(res.error){ if(res.error.indexOf('Unauthorized')>=0){ bounceAdmin(); return; } $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return; }
