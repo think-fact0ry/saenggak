@@ -398,7 +398,7 @@
   .modal .mbtns{display:flex;gap:10px;}
   .modal .mbtns button{flex:1;font-family:inherit;font-size:16.5px;font-weight:700;padding:16px;border-radius:var(--r-md);border:none;cursor:pointer;}
   .modal .mclose{background:var(--g100);color:var(--g700);}
-  .modal .mdel{background:var(--red);color:#fff;}
+  .modal .mdel{background:var(--danger);color:#fff;}   /* 파괴 버튼=--danger(§4.14 fill-danger, --red는 상태알림 전용 — 유성 통일 2026-07-04) */
 
   /* 완료 토스트 */
   .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--g900);color:#F9FBFA;font-size:14px;font-weight:600;padding:11px 18px;border-radius:var(--r-md);opacity:0;pointer-events:none;transition:.2s;z-index:200;}

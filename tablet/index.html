@@ -249,8 +249,8 @@
   .s-btn:active{background:var(--green-d); transform:scale(.97);}
   .s-btn:disabled{background:var(--p-disabled); color:#fff;}   /* §4.14 게이팅 비활성=연초록+흰폰트(F7, 옛 g200/g500) */
   .s-btn:disabled:has(.ld){background:var(--green); color:#fff;}   /* 로딩(.ld)=비활성 아니라 진행중 → 채운초록 유지 */
-  .s-btn.danger{background:var(--red);}
-  .s-btn.danger:active{background:#d63a48;}
+  .s-btn.danger{background:var(--danger);}   /* 파괴 버튼=--danger(§4.14 fill-danger, --red는 상태알림 전용 — 유성 통일 2026-07-04) */
+  .s-btn.danger:active{background:#b2474a;}   /* --danger 15% darken */
   /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 (원칙 §7.2) */
   .bl{position:relative; z-index:1;}   /* 라벨을 ripple 위 레이어로(§5.3 흰 글자 유지) */
   .rip{position:absolute; z-index:0; top:50%; width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.16); transform:translate(-50%,-50%) scale(0); pointer-events:none;}
@@ -991,7 +991,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.07.04d';
+var APP_VERSION = '26.07.04e';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:
