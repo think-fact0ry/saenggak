@@ -348,10 +348,10 @@
 
   /* 세그먼트(평가척도·위험) */
   .seg{display:flex;gap:8px;}
-  .seg button{flex:1;font-family:inherit;font-size:14.5px;font-weight:600;padding:9px 0;border-radius:var(--r-sm);border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
-  .seg button.on{border-color:var(--green);background:var(--green-l);color:var(--green-d);font-weight:700;}
-  .seg button.danger.on{border-color:var(--red);background:#FEF2F3;color:var(--red);}
-  .seg button.warn.on{border-color:#e8a317;background:#fff8ea;color:#b07a12;}
+  .seg button{flex:1;font-family:inherit;font-size:14.5px;font-weight:600;padding:9px 0;border-radius:var(--r-sm);border:1.5px solid transparent;background:var(--g100);color:var(--g700);cursor:pointer;transition:.12s;}   /* §4.9 면 문법(테두리 0, 2026-07-04) */
+  .seg button.on{background:var(--green-l);color:var(--green-d);font-weight:700;}
+  .seg button.danger.on{background:#FEF2F3;color:var(--red);}
+  .seg button.warn.on{background:#fff8ea;color:#b07a12;}
   .seg button:active{transform:scale(.97);}
 
   /* 작성 폼: 인라인 행(라벨 좌·입력 우) */
