@@ -77,7 +77,9 @@
   .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;margin-top:14px;transition:.12s;position:relative;overflow:hidden;}
   .btn:active{transform:scale(.97);background:var(--green-d);}
   .btn:disabled{background:var(--p-disabled);color:#fff;cursor:default;transform:none;}   /* §4.14 게이팅 비활성=연초록+흰폰트(F7, 옛 g200/g500) */
-  .btn.loading:disabled{background:var(--green);color:#fff;}   /* 로딩(textContent라 .loading 클래스)=채운초록 유지 */
+  .btn.loading:disabled{background:var(--green);color:#fff;}   /* 로딩(.loading 클래스)=채운초록 유지 */
+  .btn.loading .ld-dots{margin-left:8px;vertical-align:middle;}
+  .btn.loading .ld-dots i{background:#fff;}   /* 초록 버튼 위 점=흰색(§4.13-4) */
   @keyframes shakeX{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
   .btn.shake{animation:shakeX .4s cubic-bezier(.36,.07,.19,.97);}   /* 비활성 버튼 탭=좌우 흔들림(§4.9 '지금 못 눌러요' 능동표시, 상담일지 패턴) */
   .btn.ghost{background:var(--g100);color:var(--g700);}
@@ -911,7 +913,7 @@ function submitRegister(){
   const sess=getStaffSess();
   if(!sess||!sess.staffId||!sess.session){ show('s-gate'); return; }
   const note=document.getElementById('regNote'); note.textContent='';
-  regBusy=true; const btn=document.getElementById('regBtn'); btn.disabled=true; btn.classList.add('loading'); btn.textContent='등록 중…';   // 더블탭 가드(§5.6-3) + 로딩=채운초록(F7)
+  regBusy=true; const btn=document.getElementById('regBtn'); btn.disabled=true; btn.classList.add('loading'); btn.innerHTML='등록하고 있어요<span class="ld-dots"><i></i><i></i><i></i></span>';   // 더블탭 가드(§5.6-3) + 로딩=채운초록(F7) + 문구·점(§5.2 — 옛 정적 '등록 중…' 폐기 2026-07-04)
   hubPost({action:'register', child:{name:name, birth:birth8, sex:sex, phone:phone}}).then(d=>{
     regBusy=false; btn.classList.remove('loading'); btn.textContent='등록하기';
     if(d&&d.ok){ activeChild=child; openChild(name,birth8); }
