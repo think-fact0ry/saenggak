@@ -399,6 +399,8 @@
   .modal .mbtns button{flex:1;font-family:inherit;font-size:16.5px;font-weight:700;padding:16px;border-radius:var(--r-md);border:none;cursor:pointer;}
   .modal .mclose{background:var(--g100);color:var(--g700);}
   .modal .mdel{background:var(--danger);color:#fff;}   /* 파괴 버튼=--danger(§4.14 fill-danger, --red는 상태알림 전용 — 유성 통일 2026-07-04) */
+  .retry-btn{display:inline-block;margin-top:12px;padding:12px 26px;border:none;border-radius:var(--r-md);background:var(--green);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;position:relative;overflow:hidden;}   /* 목록 전면 실패=재시도 주액션 1개(§4.5 경량 골격, voucher errState 결 — F9 2026-07-04) */
+  .retry-btn:active{background:var(--green-d);transform:scale(.97);}
 
   /* 완료 토스트 */
   .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--g900);color:#F9FBFA;font-size:14px;font-weight:600;padding:11px 18px;border-radius:var(--r-md);opacity:0;pointer-events:none;transition:.2s;z-index:200;}
@@ -890,6 +892,7 @@ function loadingHTML(text){ return '<span class="ld">'+text+'<span class="ld-dot
 function loadingNote(el, text){ el.className="note"; el.innerHTML=loadingHTML(text); }
 function btnLoad(btn, text){ if(!btn) return; if(btn.dataset.lbl==null) btn.dataset.lbl=btn.innerHTML; btn.disabled=true; btn.innerHTML=loadingHTML(text); }   // 색버튼 누르면 그 버튼 위에 로딩 텍스트+점(§2.6-4·§7.1) — 별도 note 대신
 function btnDone(btn){ if(!btn||btn.dataset.lbl==null) return; btn.innerHTML=btn.dataset.lbl; delete btn.dataset.lbl; }   // 원래 라벨 복구(실패·재진입)
+function noteRetry(note, fn){ const b=document.createElement("button"); b.className="retry-btn"; b.textContent="다시 시도"; b.onclick=fn; pressRipple(b); note.appendChild(document.createElement("br")); note.appendChild(b); }   // 목록 로드 실패 = 새로고침 말곤 복구 경로가 없던 자리에 주액션 1개(§4.5, F9)
 
 // ════ 가입 1: 진보형 입력 — 휴대폰→생년월일·성별→이름 한 칸씩(활성칸 맨 위) → OTP ════
 //  키패드 유지 + 자동 커서 이동(안드로이드 최적, iOS는 키패드 내려갈 수 있어 §5.5 footbar 폴백). 첫 칸은 사용자가 1번 탭(웹은 자동 키보드 못 띄움)
@@ -1298,8 +1301,8 @@ function loadClients(){
   post({action:"staff_clients", staffId:s.staffId, session:s.session}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
     if(d && d.ok){ allClients = d.clients||[]; note.textContent=""; renderClients($("cs-search").value); }
-    else if(!allClients.length){ note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; }
-  }).catch(()=>{ if(!allClients.length){ note.className="note err"; note.textContent="연결이 안 됐어요"; } });
+    else if(!allClients.length){ note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; noteRetry(note, loadClients); }
+  }).catch(()=>{ if(!allClients.length){ note.className="note err"; note.textContent="연결이 안 됐어요"; noteRetry(note, loadClients); } });
 }
 
 function renderClients(q){
@@ -1346,9 +1349,9 @@ function openMonth(ym){
     if(d && d.code==="auth"){ sessExpired(); return; }
     roundData = {};
     if(d && d.ok){ (d.rounds||[]).forEach(r=>{ roundData[r.round]={date:r.date, content:r.content}; }); $("m-note").textContent=""; }
-    else { $("m-note").className="note err"; $("m-note").textContent=(d&&d.error)||"조회 실패"; }
+    else { $("m-note").className="note err"; $("m-note").textContent=(d&&d.error)||"조회 실패"; noteRetry($("m-note"), ()=>openMonth(curYm)); }
     renderRounds();
-  }).catch(()=>{ $("m-note").className="note err"; $("m-note").textContent="연결이 안 됐어요"; });
+  }).catch(()=>{ $("m-note").className="note err"; $("m-note").textContent="연결이 안 됐어요"; noteRetry($("m-note"), ()=>openMonth(curYm)); });
 }
 function renderRounds(){
   const box=$("m-rounds"); box.innerHTML="";
@@ -1466,8 +1469,8 @@ function loadGClients(){
   post({action:"gclient_list", staffId:s.staffId, session:s.session}).then(d=>{
     if(d && d.code==="auth"){ sessExpired(); return; }
     if(d && d.ok){ gClients=d.clients||[]; note.textContent=""; if(!gDragActive) renderGClients($("gcl-search").value); }   // 드래그 중이면 재렌더 보류(드래그 카드 보호)
-    else if(!gClients.length){ note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; }
-  }).catch(()=>{ if(!gClients.length){ note.className="note err"; note.textContent="연결이 안 됐어요"; } });
+    else if(!gClients.length){ note.className="note err"; note.textContent=(d&&d.error)||"목록을 못 불러왔어요"; noteRetry(note, loadGClients); }
+  }).catch(()=>{ if(!gClients.length){ note.className="note err"; note.textContent="연결이 안 됐어요"; noteRetry(note, loadGClients); } });
 }
 function renderGClients(q){
   q=(q||"").trim();
@@ -1765,8 +1768,8 @@ function loadGRounds(){
     if(d && d.code==="auth"){ sessExpired(); return; }
     if(key!==gCurKey) return;    // 그새 다른 내담자로 이동 → 엉뚱한 캐시 슬롯에 쓰지 않기(레이스)
     if(d && d.ok){ const ng={}; (d.rounds||[]).forEach(r=>{ ng[r.round]=r; }); gRounds=ng; gRoundsCache[key]=ng; $("gr-note").textContent=""; renderGRounds(); }
-    else if(!gRoundsCache[key]){ $("gr-note").className="note err"; $("gr-note").textContent=(d&&d.error)||"조회를 못 했어요"; }
-  }).catch(()=>{ if(key===gCurKey && !gRoundsCache[key]){ $("gr-note").className="note err"; $("gr-note").textContent="연결이 안 됐어요"; } });
+    else if(!gRoundsCache[key]){ $("gr-note").className="note err"; $("gr-note").textContent=(d&&d.error)||"조회를 못 했어요"; noteRetry($("gr-note"), loadGRounds); }
+  }).catch(()=>{ if(key===gCurKey && !gRoundsCache[key]){ $("gr-note").className="note err"; $("gr-note").textContent="연결이 안 됐어요"; noteRetry($("gr-note"), loadGRounds); } });
 }
 function renderGRounds(){
   const rounds=Object.keys(gRounds).map(Number).sort((a,b)=>a-b);

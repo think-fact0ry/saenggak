@@ -71,6 +71,8 @@
   .item .arrow{color:var(--g300);font-size:20px;}
   .msg{text-align:center;color:var(--g500);font-size:14px;padding:40px 16px;}
   .msg.err{color:var(--red);}
+  .retry-btn{display:inline-block;margin-top:12px;padding:12px 26px;border:none;border-radius:var(--r-md);background:var(--green);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;position:relative;overflow:hidden;}   /* §4.5 경량 골격(F9) */
+  .retry-btn:active{background:var(--green-d);transform:scale(.97);}
 
   /* 미리보기 */
   #preview{display:none;}
@@ -298,14 +300,19 @@ function loadList(){
   gasGet('list').then(function(d){
     showLoad(false);
     if (d && d.error === 'Unauthorized'){ setToken(''); openGate(); return; }
-    if (d && d.error){ return showListMsg('불러오기 실패: ' + d.error, true); }
+    if (d && d.error){ return showListMsg('불러오기 실패: ' + d.error, true, true); }
     renderList((d && d.files) || []);
-  }).catch(function(){ showLoad(false); showListMsg('네트워크 오류예요. 와이파이를 확인해 주세요.', true); });
+  }).catch(function(){ showLoad(false); showListMsg('네트워크 오류예요. 와이파이를 확인해 주세요.', true, true); });
 }
-function showListMsg(t, err){
+function showListMsg(t, err, retry){
   var el = document.getElementById('listMsg');
   el.textContent = t; el.className = 'msg' + (err ? ' err' : ''); el.style.display = 'block';
   document.getElementById('list').innerHTML = '';
+  if (retry){   // 목록=화면 본문이라 로드 실패는 전면 실패 → 재시도 주액션 1개(§4.5 경량 골격, F9 2026-07-04)
+    var b = document.createElement('button'); b.className = 'retry-btn'; b.textContent = '다시 시도';
+    b.onclick = loadList; pressRipple(b);
+    el.appendChild(document.createElement('br')); el.appendChild(b);
+  }
 }
 function renderList(files){
   var box = document.getElementById('list');
