@@ -34,7 +34,6 @@
   --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
   /* TOKENS:END */
-    --green-d:var(--green700); --green-l:var(--green100);   /* 폐기 별칭 호환(usage 미교체 — rename은 3-G 점진) */
     --mint-h:#d8e4e2; --mint-l:#eef4ef;   /* 검사_오감 전용 */
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 롱프레스→구글검색 차단(ex9) */
@@ -62,7 +61,7 @@
   .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 2px 24px;}
   .head-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .head-row h1{margin-bottom:0;}
-  .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:var(--r-sm);padding:5px 11px;white-space:nowrap;}   /* 우상단 상담사/행정명(상담일지와 동일) */
+  .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green700);background:var(--green100);border-radius:var(--r-sm);padding:5px 11px;white-space:nowrap;}   /* 우상단 상담사/행정명(상담일지와 동일) */
 
   /* 입력 */
   .field{margin-bottom:18px;}
@@ -72,11 +71,11 @@
   .field input:focus{background:#fff;border-color:var(--green);}
   .toggle{display:flex;gap:10px;}
   .toggle button{flex:1;font-family:inherit;font-size:16px;font-weight:600;padding:15px;border-radius:var(--r-md);border:2px solid transparent;background:var(--g100);color:var(--g700);cursor:pointer;transition:.12s;}   /* §4.9 면 문법(테두리 0, 2026-07-04) */
-  .toggle button.on{background:var(--green-l);color:var(--green-d);}
+  .toggle button.on{background:var(--green100);color:var(--green700);}
 
   /* 버튼 */
   .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;margin-top:14px;transition:.12s;position:relative;overflow:hidden;}
-  .btn:active{transform:scale(.97);background:var(--green-d);}
+  .btn:active{transform:scale(.97);background:var(--green700);}
   .btn:disabled{background:var(--p-disabled);color:#fff;cursor:default;transform:none;}   /* §4.14 게이팅 비활성=연초록+흰폰트(F7, 옛 g200/g500) */
   .btn.loading:disabled{background:var(--green);color:#fff;}   /* 로딩(.loading 클래스)=채운초록 유지 */
   .btn.loading .ld-dots{margin-left:8px;vertical-align:middle;}
@@ -116,7 +115,7 @@
   table.rt thead th{background:var(--mint-h);font-weight:700;height:32px;}
   table.rt tbody tr{height:40px;}                  /* 하위영역 행 높이 균일 */
   .method{background:var(--mint-l);font-weight:700;line-height:1.55;}
-  .method .mtag{color:var(--green-d);}
+  .method .mtag{color:var(--green700);}
   .critcell{padding:6px 8px!important;}
   .crit{width:100%;border-collapse:collapse;font-size:11px;}
   .crit th,.crit td{border:1px solid var(--g300);padding:0 4px;height:24px;text-align:center;white-space:nowrap;}  /* crit 행 높이 균일 */
@@ -130,7 +129,7 @@
   .sc-prev{color:var(--g400);font-weight:600;}
   .sc-arr{color:var(--g400);}
   .dlt{display:inline-block;font-size:10px;font-weight:700;padding:1px 5px;border-radius:var(--r-sm);margin-left:2px;white-space:nowrap;}
-  .dlt.up{background:var(--green-l);color:var(--green-d);}   /* 개선 */
+  .dlt.up{background:var(--green100);color:var(--green700);}   /* 개선 */
   .dlt.down{background:#fdecee;color:var(--red);}            /* 심화 */
   .dlt.same{background:var(--g100);color:var(--g500);}       /* 유지 */
   .rfoot{font-size:12.5px;line-height:1.6;padding:13px 18px;text-align:center;}
@@ -143,19 +142,19 @@
   .list-card{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;
     background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:16px 18px;margin-bottom:10px;
     box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer;font-family:inherit;transition:.12s;}
-  .list-card:active{border-color:var(--green);background:var(--green-l);}
+  .list-card:active{border-color:var(--green);background:var(--green100);}
   .list-card .lc-main{min-width:0;}
   .list-card .lc-name{font-size:17px;font-weight:700;color:var(--g900);letter-spacing:-.3px;}
   .list-card .lc-sub{font-size:13px;color:var(--g500);margin-top:3px;font-weight:500;}
   .list-card .lc-meta{font-size:13px;color:var(--g500);font-weight:600;white-space:nowrap;flex-shrink:0;text-align:right;}
-  .list-card .lc-meta .lc-draw{display:block;color:var(--green-d);font-weight:700;}
+  .list-card .lc-meta .lc-draw{display:block;color:var(--green700);font-weight:700;}
   .list-empty{text-align:center;color:var(--g500);font-size:14.5px;padding:40px 16px;line-height:1.6;}
   /* §5.4 스켈레톤 — 목록 로드=구조 미리보기(실제 카드와 같은 위치·크기 회색 바). 점(§5.2)은 버튼 액션·짧은 대기용 */
   .sk-b{background:var(--g100);border-radius:7px;animation:skp 1.2s ease-in-out infinite;}
   @keyframes skp{0%,100%{opacity:1}50%{opacity:.5}}
   .list-card.skel{pointer-events:none;}
   .retry-btn{display:inline-block;margin-top:12px;padding:12px 26px;border:none;border-radius:var(--r-md);background:var(--green);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;position:relative;overflow:hidden;}   /* §4.5 경량 골격(F9) */
-  .retry-btn:active{background:var(--green-d);transform:scale(.97);}
+  .retry-btn:active{background:var(--green700);transform:scale(.97);}
   /* 로딩 = 글자 + 점 3개 출렁(정적 '…' 금지, 1_원칙_디자인UX §7.1) — 상담일지 loadingNote와 동일 */
   .ld{display:inline-flex;align-items:center;gap:9px;color:var(--g500);font-weight:500;}
   .ld-dots{display:inline-flex;gap:5px;}
@@ -196,12 +195,12 @@
   /* ===== 아동 상세: 검사 종류 카드 / 사정·사후 선택 ===== */
   .sec-h{font-size:14px;font-weight:700;color:var(--g700);margin:26px 2px 12px;}
   .type-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:18px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer;font-family:inherit;transition:.12s;}
-  .type-card:active{border-color:var(--green);background:var(--green-l);}
+  .type-card:active{border-color:var(--green);background:var(--green100);}
   .type-card.soon{opacity:.55;cursor:default;box-shadow:none;}
   .type-card .tc-name{font-size:16px;font-weight:700;color:var(--g900);}
   .type-card .tc-sub{font-size:13px;color:var(--g500);margin-top:2px;font-weight:500;}
   .pick-card{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r-md);padding:20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer;font-family:inherit;transition:.12s;}
-  .pick-card:active{border-color:var(--green);background:var(--green-l);}
+  .pick-card:active{border-color:var(--green);background:var(--green100);}
   .pick-card .pc-name{font-size:18px;font-weight:700;color:var(--g900);}
   .pick-card .pc-sub{font-size:13.5px;color:var(--g500);margin-top:4px;font-weight:500;}
 
@@ -795,7 +794,7 @@ function saveExam(retry){
       console.error("검사 저장 실패:", err);
       if(retry){ setTimeout(()=>saveExam(false), 1500); return; }   // 1회 자동 재시도
       if(note){
-        note.innerHTML='결과 저장에 실패했어요. <button id="retrySave" style="font:inherit;color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;padding:0;">다시 저장</button>';
+        note.innerHTML='결과 저장에 실패했어요. <button id="retrySave" style="font:inherit;color:var(--green700);background:none;border:none;text-decoration:underline;cursor:pointer;padding:0;">다시 저장</button>';
         const b=document.getElementById("retrySave"); if(b) b.onclick=()=>saveExam(true);
       }
     });

@@ -68,7 +68,6 @@
   --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
   /* TOKENS:END */
-    --green-d:var(--green700); --green-l:var(--green100);   /* 폐기 별칭 호환(usage 미교체 — rename은 3-G 점진) */
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 텍스트 선택 차단 = 롱프레스→구글검색 방지(ex9) */
   input,textarea{-webkit-user-select:text;user-select:text;}   /* 입력칸은 선택 허용 */
@@ -221,7 +220,7 @@
   .mp-dev .dmain{flex:1; min-width:0;}
   .mp-dev .dn{font-size:15px; font-weight:600; color:var(--g900); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .mp-dev .dsub{font-size:12.5px; color:var(--g500); font-weight:500; margin-top:2px;}
-  .mp-dev .dc{flex-shrink:0; font-size:11.5px; font-weight:700; color:var(--green-d); background:var(--green-l); border-radius:var(--r-sm); padding:3px 8px;}
+  .mp-dev .dc{flex-shrink:0; font-size:11.5px; font-weight:700; color:var(--green700); background:var(--green100); border-radius:var(--r-sm); padding:3px 8px;}
   .mp-dev .dedit{flex-shrink:0; color:var(--g300); display:flex;} .mp-dev .dedit svg{width:18px; height:18px;}
   .mp-dev-msg{padding:38px 18px; text-align:center; color:var(--g400); font-size:14px; font-weight:500;}
   .dev-logout{display:block; width:100%; font-family:inherit; font-size:16px; font-weight:700; padding:16px; margin-top:24px; border:none; border-radius:var(--r-md); background:var(--danger-weak-bg); color:var(--danger-weak-fg); cursor:pointer;}   /* 기기 상세에서 다른 기기 로그아웃 = §4.14-2 weak-danger(연빨강 채움+동색조 진한 폰트 — 푸터 '저장'과 안 겹치게 솔리드 X. fg --red→--danger-weak-fg conform, F8 2026-07-04) */
@@ -249,7 +248,7 @@
   #phOtp::placeholder{font-size:12px; font-weight:400; letter-spacing:4px;}
   .key-err{min-height:18px; font-size:13px; color:var(--red); font-weight:600; text-align:center; margin-bottom:12px;}
   .s-btn{width:100%; font-family:inherit; font-size:17px; font-weight:700; padding:17px; border-radius:var(--r-md); border:none; background:var(--green); color:#fff; cursor:pointer; position:relative; overflow:hidden;}
-  .s-btn:active{background:var(--green-d); transform:scale(.97);}
+  .s-btn:active{background:var(--green700); transform:scale(.97);}
   .s-btn:disabled{background:var(--p-disabled); color:#fff;}   /* §4.14 게이팅 비활성=연초록+흰폰트(F7, 옛 g200/g500) */
   .s-btn:disabled:has(.ld){background:var(--green); color:#fff;}   /* 로딩(.ld)=비활성 아니라 진행중 → 채운초록 유지 */
   @keyframes shakeX{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
@@ -1005,7 +1004,7 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
 
 // ════ 버전 표시 + 자동 업데이트 ════
 // APP_VERSION은 배포할 때마다 올린다(푸터에 표시 → 전화로 최신 여부 확인용). sw.js의 CACHE도 함께 올릴 것.
-var APP_VERSION = '26.07.05a';
+var APP_VERSION = '26.07.05b';
 (function(){ var v = document.getElementById('ver'); if (v) v.textContent = 'v' + APP_VERSION; })();
 
 // 자동 업데이트:

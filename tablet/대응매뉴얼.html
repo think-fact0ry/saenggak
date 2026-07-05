@@ -39,7 +39,6 @@
   --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
   /* TOKENS:END */
-    --green-d:var(--green700); --green-l:var(--green100);   /* 폐기 별칭 호환(usage 미교체 — rename은 3-G 점진) */
     --amber:#c77700; --amber-l:#fff8ec; --bar:56px;   /* 대응매뉴얼 전용 */
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 롱프레스→구글검색 차단(ex9) */
@@ -76,7 +75,7 @@
   nav a:not(.sub){margin-top:8px;}      /* 섹션(H2)끼리는 띄우고, 하위(분기 등)는 바짝 */
   nav .toc-group + a{margin-top:0;}
   nav a:active{background:var(--g100);}
-  nav a.active{background:var(--green-l);color:var(--green-d);font-weight:700;}
+  nav a.active{background:var(--green100);color:var(--green700);font-weight:700;}
 
   /* ── 검색 오버레이 (돋보기) ── */
   #searchPanel{position:fixed;top:0;left:0;right:0;z-index:70;background:#fff;
@@ -99,7 +98,7 @@
   .chips{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{font-family:inherit;font-size:14px;font-weight:600;color:var(--g700);background:var(--g100);
     border:1.5px solid var(--g200);border-radius:999px;padding:9px 15px;cursor:pointer;}
-  .chip:active{background:var(--green-l);border-color:var(--green);color:var(--green-d);}
+  .chip:active{background:var(--green100);border-color:var(--green);color:var(--green700);}
   .results{margin-top:6px;}
   .result-item{display:block;width:100%;text-align:left;background:transparent;border:none;
     border-bottom:1px solid var(--g100);padding:13px 6px;cursor:pointer;font-family:inherit;}
@@ -113,7 +112,7 @@
   .doc{font-size:15.5px;}
 
   .group-head{font-size:13px;font-weight:800;letter-spacing:.3px;color:var(--green);
-    background:var(--green-l);border-radius:var(--r-sm);padding:9px 14px;margin:48px 0 8px;}
+    background:var(--green100);border-radius:var(--r-sm);padding:9px 14px;margin:48px 0 8px;}
   .group-head:first-child{margin-top:6px;}
 
   .doc h1{font-size:24px;font-weight:800;letter-spacing:-.7px;margin:2px 0 14px;}
@@ -134,20 +133,20 @@
   .doc li{margin:8px 0;}
   .doc li::marker{color:var(--g500);}
   .doc hr{display:none;}
-  .doc a{color:var(--green-d);text-decoration:underline;}
+  .doc a{color:var(--green700);text-decoration:underline;}
 
   /* 소분류(블록 앵커: 증상/상황 예시·대응 절차·문자 양식·메모·자주 묻는 질문·예시) = 초록 강조 + 좌측 바 */
-  .doc p.lbl{font-size:15px;font-weight:800;letter-spacing:-.2px;color:var(--green-d);
+  .doc p.lbl{font-size:15px;font-weight:800;letter-spacing:-.2px;color:var(--green700);
     margin:36px 0 8px;padding-left:11px;border-left:3px solid var(--green);line-height:1.3;}
   /* 세부(Step·번호 항목) = 좌측 바 없음, 한 단계 작게 */
-  .doc p.step{font-size:14px;font-weight:800;letter-spacing:-.2px;color:var(--green-d);
+  .doc p.step{font-size:14px;font-weight:800;letter-spacing:-.2px;color:var(--green700);
     margin:20px 0 6px;line-height:1.3;}
-  .doc p.step strong{font-weight:800;color:var(--green-d);}
-  .doc p.lbl strong{font-weight:800;color:var(--green-d);}
+  .doc p.step strong{font-weight:800;color:var(--green700);}
+  .doc p.lbl strong{font-weight:800;color:var(--green700);}
   .doc p.lbl em{font-weight:500;color:var(--g500);font-style:normal;}
   /* 대사 화자(담당자/보호자) 색 구분 — 한 블록에 섞여도 단어별로 */
   .spk{font-weight:800;}
-  .spk-staff{color:var(--green-d);}
+  .spk-staff{color:var(--green700);}
   .spk-parent{color:#2f6f9e;}
   .doc p.qa{font-size:15.5px;font-weight:700;color:var(--g900);margin:14px 0 4px;}
   .doc p.qa + blockquote{margin-top:4px;}
@@ -157,7 +156,7 @@
     padding:10px 15px;margin:6px 0;}
   .doc blockquote p{margin:4px 0;}
   .doc blockquote em{color:var(--g500);font-style:normal;font-size:13.5px;}
-  .doc blockquote.say-staff{background:var(--green-l);border-left-color:var(--green);}
+  .doc blockquote.say-staff{background:var(--green100);border-left-color:var(--green);}
   .doc blockquote.say-parent{background:var(--g100);border-left-color:var(--g300);color:var(--g700);}
   .doc blockquote.note{background:var(--amber-l);border-left-color:var(--amber);font-size:14.5px;color:#8a5a00;margin:16px 0;}
   .doc blockquote.note em{color:#8a5a00;}
@@ -166,7 +165,7 @@
   .doc p.call{font-size:14.5px;font-weight:700;border-radius:var(--r-sm);padding:9px 13px;margin:24px 0 6px;letter-spacing:-.2px;}
   .doc p.call.warn{background:var(--amber-l);color:#8a5a00;}
   .doc p.call.no{background:#fdecee;color:#c0303c;}
-  .doc p.call.yes{background:var(--green-l);color:var(--g900);}
+  .doc p.call.yes{background:var(--green100);color:var(--g900);}
   .doc p.call.sos{background:#fdecee;color:#c0303c;}
 
   /* 메모·보고 양식 */

@@ -39,7 +39,6 @@
   --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
   /* TOKENS:END */
-    --green-d:var(--green700); --green-l:var(--green100);   /* 폐기 별칭 호환(usage 미교체 — rename은 3-G 점진) */
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 롱프레스→구글검색 차단(ex9) */
   input,textarea{-webkit-user-select:text;user-select:text;}
@@ -75,7 +74,7 @@
   .msg{text-align:center;color:var(--g500);font-size:14px;padding:40px 16px;}
   .msg.err{color:var(--red);}
   .retry-btn{display:inline-block;margin-top:12px;padding:12px 26px;border:none;border-radius:var(--r-md);background:var(--green);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;position:relative;overflow:hidden;}   /* §4.5 경량 골격(F9) */
-  .retry-btn:active{background:var(--green-d);transform:scale(.97);}
+  .retry-btn:active{background:var(--green700);transform:scale(.97);}
   /* §5.4 스켈레톤 — 목차 로드=구조 미리보기(아이템과 같은 위치·크기 바). 점(§5.2)·전면 dim은 버튼 액션·짧은 대기용 */
   .sk-b{background:var(--g200);border-radius:7px;animation:skp 1.2s ease-in-out infinite;}   /* 아이템 배경이 g100이라 바는 한 단계 진하게 */
   @keyframes skp{0%,100%{opacity:1}50%{opacity:.5}}
@@ -130,11 +129,11 @@
   .pbtn span{font-size:20px;}
   .pbtn:active{transform:scale(.97);background:var(--g100);}
   .pbtn.primary{background:var(--green);border-color:var(--green);color:#fff;}
-  .pbtn.primary:active{background:var(--green-d);}
+  .pbtn.primary:active{background:var(--green700);}
   .pbtn.on{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.13);}
 
   .btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:15px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;position:relative;overflow:hidden;}
-  .btn:active{background:var(--green-d);transform:scale(.97);}
+  .btn:active{background:var(--green700);transform:scale(.97);}
   /* 누름 ripple(§5.3-1) — 닫기 CTA(풀폭 솔리드)만. 펜툴바·편집툴바는 컴팩트 팔레트라 scale만 유지(F6 유성 결정 2026-07-04) */
   .bl{position:relative;z-index:1;}
   .rip{position:absolute;z-index:0;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.16);transform:translate(-50%,-50%) scale(0);pointer-events:none;}

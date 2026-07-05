@@ -41,7 +41,6 @@
   --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
   /* TOKENS:END */
-    --green-d:var(--green700); --green-l:var(--green100);   /* 폐기 별칭 호환(usage 미교체 — rename은 3-G 점진) */
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 롱프레스→구글검색 차단(ex9) */
   input,textarea{-webkit-user-select:text;user-select:text;}   /* 입력칸은 선택 허용 */
@@ -65,7 +64,7 @@
   h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 0 6px;}
   .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 0 22px;}
   #su2Stub{text-align:center;margin-bottom:6px;min-height:1.4em;}   /* OTP 타이머 = 중앙정렬 + 셀과 가깝게 + 항상 높이 차지(0:00 돼도 위치 고정, 유성) */
-  .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:var(--r-sm);padding:5px 11px;margin:0 2px 18px;}
+  .who{display:inline-block;font-size:13px;font-weight:700;color:var(--green700);background:var(--green100);border-radius:var(--r-sm);padding:5px 11px;margin:0 2px 18px;}
   .head-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 
   /* 입력 공통 */
@@ -144,7 +143,7 @@
   .footbar.kb .btn:disabled, .screen:has(input:focus,textarea:focus) .footbar .btn:disabled{background:#fff;color:var(--g400);}
   .footbar .inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px;}   /* column = 재발송 링크가 확인 버튼 위로 쌓임 */
   .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
-  .btn:active{transform:scale(.97);background:var(--green-d);}
+  .btn:active{transform:scale(.97);background:var(--green700);}
   .btn:disabled{background:var(--p-disabled);color:#fff;cursor:default;transform:none;}   /* §4.14 게이팅 비활성=연초록+흰폰트(F7, 옛 g200/g500) */
   .btn:disabled:has(.ld){background:var(--green);color:#fff;}   /* 로딩(.ld)=진행중 → 채운초록 유지. 키보드 footbar(위 .footbar.kb 룰)는 구체성 높아 흰배경 유지 */
   @keyframes shakeX{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
@@ -190,7 +189,7 @@
   .doc-row .dl{font-size:13px;font-weight:700;color:var(--g500);margin-bottom:5px;}
   .doc-row .dv{font-size:15.5px;font-weight:500;color:var(--g800);line-height:1.6;word-break:keep-all;}
   .s-btn{width:100%;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
-  .s-btn:active{transform:scale(.97);background:var(--green-d);}
+  .s-btn:active{transform:scale(.97);background:var(--green700);}
   .s-later{width:100%;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--g500);padding:14px;margin-top:4px;cursor:pointer;transition:transform .12s;}
   .s-later:active{transform:scale(.93);}   /* 회색 텍스트 버튼(동의 안함·닫기) = 누르면 텍스트 살짝 축소(색버튼과 다른 인터랙션, 유성) */
   /* 색버튼 누름 = 누른 지점 기준 좌우로 퍼지는 어두움(ripple). pressRipple()이 .rip 삽입 */
@@ -227,9 +226,9 @@
   .cm-btn{flex:1;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:var(--r-md);border:none;background:var(--g100);color:var(--g700);cursor:pointer;transition:transform .12s;}
   .cm-btn:active{background:var(--g200);}   /* 닫기 = 박스버튼이라 배경만(텍스트형 아님) */
   .cm-btn.primary{background:var(--green);color:#fff;position:relative;overflow:hidden;}
-  .cm-btn.primary:active{background:var(--green-d);transform:scale(.97);}
+  .cm-btn.primary:active{background:var(--green700);transform:scale(.97);}
   .note.err{color:var(--red);font-weight:600;}
-  .note .lk{color:var(--green-d);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;transition:transform .12s;display:inline-block;}
+  .note .lk{color:var(--green700);background:none;border:none;text-decoration:underline;cursor:pointer;font:inherit;padding:0;transition:transform .12s;display:inline-block;}
   .note .lk:active{transform:scale(.93);}   /* 박스 없는 텍스트형 클릭 = 누르면 축소(유성) */
   .stub{text-align:center;font-size:12.5px;color:var(--g400);margin-top:10px;}
 
@@ -268,7 +267,7 @@
   @keyframes grip{0%{transform:translate(-50%,-50%) scale(.2);opacity:.95;}100%{transform:translate(-50%,-50%) scale(1.75);opacity:0;}}
   .g-forgot-wrap{margin-top:14px;width:100%;max-width:min(336px,90vw);}   /* 키패드 좌우 라인에 맞춤 + 키패드 쪽으로 조금 올림 */
   .g-forgot{width:100%;background:none;border:none;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--g500);opacity:.4;text-decoration:none;cursor:pointer;padding:15px;border-radius:var(--r-md);transition:background .45s ease,opacity .45s ease,transform .3s cubic-bezier(.2,.7,.3,1);}  /* 회색일 땐 밑줄 없음·투명도·무테두리·풀폭·스무스 */
-  .g-forgot.as-btn{background:rgba(58,138,95,.06);opacity:1;color:var(--green-d);text-decoration:none;}  /* 3초 무입력 → 아주 옅은 배경 + 선명해짐(딱 한번) */
+  .g-forgot.as-btn{background:rgba(58,138,95,.06);opacity:1;color:var(--green700);text-decoration:none;}  /* 3초 무입력 → 아주 옅은 배경 + 선명해짐(딱 한번) */
   .g-forgot:active{transform:scale(.93);}   /* 텍스트형 클릭 = 누르면 축소 */
 
   /* 내담자 검색 + 목록 */
@@ -293,14 +292,12 @@
   .client-card .drag{flex:0 0 auto;width:3px;height:20px;border-radius:2px;background:var(--g300);margin-right:13px;}
   .empty{text-align:center;color:var(--g400);font-size:14px;font-weight:500;padding:40px 0;}
   /* 일반 내담자 명단 관리(2026-06-23): 메모(우측)·드래그 정렬(들어올림)·연필. 아이콘=라인 SVG(이모지 금지, 원칙 §4) */
-  .btn.ghost{flex:0 0 auto;padding:17px 22px;background:var(--g100);color:var(--g700);}
-  .btn.ghost:active{background:var(--g200);}
   .icobtn{width:38px;height:38px;border-radius:var(--r-sm);border:none;background:var(--g100);color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .icobtn:active{background:var(--g200);}
-  .icobtn.on{background:var(--green-l);color:var(--green-d);}
+  .icobtn.on{background:var(--green100);color:var(--green700);}
   .icobtn svg{width:19px;height:19px;}
   .client-card .cc-main{flex:1;min-width:0;}
-  .client-card .cmemo{flex:0 1 auto;max-width:44%;text-align:right;font-size:12.5px;color:var(--green-d);font-weight:600;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;}
+  .client-card .cmemo{flex:0 1 auto;max-width:44%;text-align:right;font-size:12.5px;color:var(--green700);font-weight:600;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;}
   .client-card.dragging{position:fixed;z-index:400;margin:0;transition:none;box-shadow:0 14px 34px rgba(0,0,0,.22);border-color:var(--green);background:#fff;}  /* 손가락 따라 떠다님(자기는 transition 없음, 주변만 FLIP 애니메이션) */
   .gcl-ph{border:2px dashed var(--green);border-radius:var(--r-md);background:var(--green50);}  /* 들어갈 자리 표시 */
   /* 초기상담(인테이크) 진입 카드 + 섹션 구분(2026-06-23 슬라이스 B) */
@@ -310,9 +307,9 @@
   .intake-card .ic-main{flex:1;min-width:0;}
   .intake-card .ic-tl{font-size:16px;font-weight:700;letter-spacing:-.3px;}
   .intake-card .ic-st{font-size:12.5px;color:var(--g500);font-weight:500;margin-top:3px;}
-  .intake-card.done .ic-st{color:var(--green-d);}
+  .intake-card.done .ic-st{color:var(--green700);}
   .intake-card .chev{color:var(--g300);display:flex;}
-  .sec-div{font-size:13.5px;font-weight:700;color:var(--green-d);margin:20px 2px 4px;padding-top:14px;border-top:1px solid var(--g100);}
+  .sec-div{font-size:13.5px;font-weight:700;color:var(--green700);margin:20px 2px 4px;padding-top:14px;border-top:1px solid var(--g100);}
 
   /* 내담자 헤더(월·작성 화면 공통) */
   .subject{margin:4px 2px 12px;}
@@ -332,9 +329,9 @@
   .round:active{transform:scale(.985);}
   .round .rn{font-size:16px;font-weight:700;}
   .round .st{font-size:12.5px;font-weight:600;color:var(--g400);margin-top:6px;}
-  .round.done{border-color:var(--green);background:var(--green-l);}
-  .round.done .rn{color:var(--green-d);}
-  .round.done .st{color:var(--green-d);}
+  .round.done{border-color:var(--green);background:var(--green100);}
+  .round.done .rn{color:var(--green700);}
+  .round.done .st{color:var(--green700);}
 
   /* 모드 선택 카드 */
   .mode-list{display:flex;flex-direction:column;gap:12px;}
@@ -350,13 +347,13 @@
   /* 호소 태그 칩 */
   .chips{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{font-family:inherit;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:.12s;}
-  .chip.on{border-color:var(--green);background:var(--green-l);color:var(--green-d);}
+  .chip.on{border-color:var(--green);background:var(--green100);color:var(--green700);}
   .chip:active{transform:scale(.96);}
 
   /* 세그먼트(평가척도·위험) */
   .seg{display:flex;gap:8px;}
   .seg button{flex:1;font-family:inherit;font-size:14.5px;font-weight:600;padding:9px 0;border-radius:var(--r-sm);border:1.5px solid transparent;background:var(--g100);color:var(--g700);cursor:pointer;transition:.12s;}   /* §4.9 면 문법(테두리 0, 2026-07-04) */
-  .seg button.on{background:var(--green-l);color:var(--green-d);font-weight:700;}
+  .seg button.on{background:var(--green100);color:var(--green700);font-weight:700;}
   .seg button.danger.on{background:#FEF2F3;color:var(--red);}
   .seg button.warn.on{background:#fff8ea;color:#b07a12;}
   .seg button:active{transform:scale(.97);}
@@ -380,7 +377,7 @@
 
   /* 회기 평가 슬라이더(모니터링 14 패턴) */
   .sl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;}
-  .sl-val{font-size:15px;font-weight:700;color:var(--green-d);}
+  .sl-val{font-size:15px;font-weight:700;color:var(--green700);}
   .sl-val.empty{color:var(--g400);font-weight:500;}
   .scale-label{display:flex;justify-content:space-between;font-size:12px;color:var(--g500);margin-top:2px;}
   input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;outline:none;margin:4px 0;cursor:pointer;}
@@ -408,7 +405,7 @@
   .modal .mclose{background:var(--g100);color:var(--g700);}
   .modal .mdel{background:var(--danger);color:#fff;}   /* 파괴 버튼=--danger(§4.14 fill-danger, --red는 상태알림 전용 — 유성 통일 2026-07-04) */
   .retry-btn{display:inline-block;margin-top:12px;padding:12px 26px;border:none;border-radius:var(--r-md);background:var(--green);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;position:relative;overflow:hidden;}   /* 목록 전면 실패=재시도 주액션 1개(§4.5 경량 골격, voucher errState 결 — F9 2026-07-04) */
-  .retry-btn:active{background:var(--green-d);transform:scale(.97);}
+  .retry-btn:active{background:var(--green700);transform:scale(.97);}
 
   /* 완료 토스트 */
   .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--g900);color:#F9FBFA;font-size:14px;font-weight:600;padding:11px 18px;border-radius:var(--r-md);opacity:0;pointer-events:none;transition:.2s;z-index:200;}

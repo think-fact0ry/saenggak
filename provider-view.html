@@ -54,9 +54,9 @@
   .iw-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
   .iw-badge.home{background:#dbeafe;color:#2563eb}.iw-badge.child{background:#dcfce7;color:#16a34a}
   .iw-row{color:#666;font-size:12px}
-  .iw-times{margin-top:3px;font-size:11.5px;color:#7c3aed;font-weight:500}
-  .iw-phone{margin-top:2px;font-size:12px}.iw-phone a{color:#3b82f6;text-decoration:none;font-weight:500}
-  .iw-notes{margin-top:4px;font-size:11px;color:#333;background:#f5f3ef;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap;border-left:2px solid #7c3aed}
+  .iw-times{margin-top:3px;font-size:11.5px;color:#3a6b4e;font-weight:600}
+  .iw-phone{margin-top:2px;font-size:12px}.iw-phone a{color:#3a6b4e;text-decoration:none;font-weight:600}
+  .iw-notes{margin-top:4px;font-size:11px;color:#333;background:#f5f3ef;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap;border-left:2px solid #3a6b4e}
   .iw-edit{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:5px;padding:5px 6px;background:#f5f3ef;border-radius:6px}
   .iw-edit-label{font-size:11px;color:#3a6b4e;font-weight:700}
   .iw-edit-sel{padding:3px 5px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit;background:#fff}
@@ -75,7 +75,7 @@
   .rclear{cursor:pointer;color:#ccc;font-size:16px;padding:0 4px}.rclear:hover{color:#999}
   .rarrow{text-align:center;color:#ccc;font-size:11px;margin:2px 0}
   .route-go{display:block;margin-top:8px;padding:10px;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;color:#fff;transition:all .15s}
-  .route-go.ready{background:#3b82f6}.route-go.ready:hover{background:#2563eb}
+  .route-go.ready{background:#3a6b4e}.route-go.ready:hover{background:#2e5540}
   .route-go.disabled{background:#ddd;color:#aaa;pointer-events:none}
   .legend{position:fixed;bottom:16px;left:14px;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-radius:10px;padding:8px 12px;box-shadow:0 2px 12px rgba(0,0,0,.1);font-size:11px;display:flex;gap:12px;pointer-events:none}
   .legend-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
@@ -248,7 +248,7 @@ function buildChildIW(items,hLat,hLng){
   items.forEach(function(c,i){
     if(i>0)h+='<hr style="border:none;border-top:1px solid #eee;margin:6px 0">';
     var name = (c.name||'').replace(/\s+$/,'');
-    var dist='';if(hLat&&hLng&&c.lat&&c.lng)dist='<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;background:#f3e8ff;color:#7c3aed;margin-left:4px;vertical-align:middle">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
+    var dist='';if(hLat&&hLng&&c.lat&&c.lng)dist='<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;background:#e8f0e5;color:#3a6b4e;margin-left:4px;vertical-align:middle">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
     h+='<div class="iw-title">'+esc(name)+'<span class="iw-badge child">배정</span>'+dist+'</div>'
       +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
     if(c.phone)h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
