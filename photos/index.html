@@ -179,8 +179,8 @@
   .kchip{font:inherit; font-size:14px; padding:8px 14px; border-radius:999px; border:none; background:var(--g100); color:var(--g700); cursor:pointer; transition:transform .1s;}   /* §4.9 면 문법 */
   .kchip:active{transform:scale(.96);}
   .kchip.on{background:var(--green-bg); color:var(--green); font-weight:700;}
-  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:3px;}
-  .ph{position:relative; aspect-ratio:1; background:var(--g100); border-radius:var(--r-sm); overflow:hidden; border:none; padding:0; cursor:pointer;}
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; margin:0 -22px;}   /* 인스타 결 — 여백 없이 화면 끝까지(유성 2026-07-05) */
+  .ph{position:relative; aspect-ratio:4/5; background:var(--g100); border-radius:0; overflow:hidden; border:none; padding:0; cursor:pointer;}
   .ph img{width:100%; height:100%; object-fit:cover; display:block;}
   .ph .d{position:absolute; left:0; right:0; bottom:0; padding:14px 7px 5px; font-size:11px; font-weight:600; color:var(--ink-on-dark); background:linear-gradient(transparent,rgba(0,0,0,.45)); text-align:left;}
   .ph.sk{animation:skp 1.2s ease-in-out infinite; pointer-events:none;}   /* 스켈레톤(§5.4) */
