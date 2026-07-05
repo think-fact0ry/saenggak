@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<title>사진 올리기 — 생각공작소</title>
+<link rel="icon" href="/saenggak/android-icon-192x192.png">
+<style>
+  :root{
+    /* TOKENS:START — §3.1 정본 토큰. 직접 편집 금지: docs/1 §3.1 고치고 node 디자인프리뷰/토큰동기.js */
+
+  /* 회색 — §3.1 정본(중립 회색 스케일). 필요한 칸만 골라 써도 되나 이름·값은 이대로 */
+  --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db;
+  --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
+  --g800:#333d4b; --g900:#191f28;
+  /* 초록 — §3.1 OKLCH 스케일(회색 명도 사다리 고정, green600=브랜드 #3a8a5f 앵커).
+     밝은 50~400 = 토스 weak 실측 기반 재보정(2026-07-04 유성 #e9f8ee 확정 — ex43 실측 C.021·브랜드 H157,
+     100→500 수렴 가중 1/.85/.62/.40/.20으로 이음새 없음. 옛 A안 채도부스트 값 폐기) */
+  --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
+  --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
+  --green:var(--green600); --green-dark:var(--green700); --green-bg:var(--green100);  /* 별칭(기존 코드 호환) */
+  /* 시맨틱 */
+  --red:#f04452;           /* 에러·경고 상태(폼 오류·OTP 오류·알림) */
+  --ink-on-dark:#F9FBFA;   /* 어두운 배경 흰 글씨(§3.5 line125) */
+  /* 버튼·뱃지 시맨틱 (§4.14 버튼 체계 — 유성 2026-07-02) */
+  --dark:#525966;          /* dark variant(중립 짙은 회색 버튼/뱃지) + 흰 폰트 */
+  --danger:#D25357;        /* danger variant(파괴적 액션 버튼/뱃지) + 흰 폰트. ※--red(#f04452)와 구분: red=상태알림, danger=버튼 */
+  --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;   /* danger weak(연빨강 채움+진한빨강 폰트) */
+  --p-disabled:#b7e0c8; --dark-disabled:#c8ccd0; --danger-disabled:#f2cdce;   /* disabled = variant 흐린 버전+흰폰트(회색 아님) */
+  /* 라운드 — §3.3 */
+  --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
+  /* 타입 스케일 — §3.2 (큰 제목 clamp 유동 / 본문 고정) */
+  --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
+  --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
+  /* TOKENS:END */
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; min-height:100%; background:#fff;}
+  body{font-family:Pretendard,-apple-system,system-ui,'Apple SD Gothic Neo',sans-serif; color:var(--g900); line-height:1.5; word-break:keep-all; overscroll-behavior:none; user-select:none; -webkit-user-select:none;}
+
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .wrap{max-width:560px; margin:0 auto; padding:20px 22px 130px;}
+  .back{display:flex; align-items:center; justify-content:flex-start; width:40px; height:40px; margin:0 0 4px; border:none; background:#fff; color:var(--g700); cursor:pointer; position:sticky; top:0; z-index:5; border-radius:var(--r-md);}
+  .back svg{width:24px; height:24px; stroke:currentColor; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  h1{font-size:24px; font-weight:700; letter-spacing:-.6px; margin:8px 0 6px; line-height:1.4;}
+  .sub{font-size:14.5px; color:var(--g500); font-weight:500; margin:0 0 22px; line-height:1.6;}
+
+  /* 아이 목록 = 탭 카드(§4.9 면 문법 — 테두리 0) */
+  .kcard{display:flex; align-items:center; width:100%; border:none; text-align:left; font:inherit; background:var(--g100); border-radius:var(--r-md); padding:17px 18px; margin-bottom:10px; cursor:pointer; transition:transform .1s, background .15s;}
+  .kcard:active{transform:scale(.98); background:var(--g200);}
+  .kcard .nm{flex:1; font-size:17px; font-weight:700;}
+  .kcard .chev{width:18px; height:18px; color:var(--g400);}
+  .kcard .chev svg{width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;}
+  .kcard.sk{height:58px; animation:skp 1.2s ease-in-out infinite; pointer-events:none;}   /* 스켈레톤(§5.4) */
+  @keyframes skp{0%,100%{opacity:1} 50%{opacity:.5}}
+  .empty,.errbox{padding:48px 10px; text-align:center;}
+  .empty p,.errbox p{font-size:15px; color:var(--g500); margin:0 0 18px; line-height:1.7;}
+  .retry-btn{font:inherit; font-size:15px; font-weight:700; color:#fff; background:var(--green); border:none; border-radius:var(--r-md); padding:13px 26px; cursor:pointer; position:relative; overflow:hidden;}
+  .retry-btn:active{background:var(--green-dark); transform:scale(.97);}
+  .login-btn{display:inline-block; text-decoration:none; font:inherit; font-size:15px; font-weight:700; color:#fff; background:var(--green); border:none; border-radius:var(--r-md); padding:13px 26px; cursor:pointer;}
+
+  /* 수업일(짧은 값 = 한 줄 인라인, §4.13-2) */
+  .drow{display:flex; align-items:center; justify-content:space-between; padding:6px 2px 18px;}
+  .drow label{font-size:14px; font-weight:600; color:var(--g500);}
+  .drow input{border:none; background:var(--g100); border-radius:var(--r-sm); font:inherit; font-size:15px; font-weight:600; color:var(--g900); padding:9px 12px; outline:none;}
+  .drow input:focus{background:#fff; box-shadow:inset 0 0 0 2px var(--green);}
+
+  /* 사진 고르기 + 미리보기 그리드 */
+  .pick{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; border:2px dashed var(--g300); background:#fff; color:var(--g600); border-radius:var(--r-md); padding:22px; font:inherit; font-size:15px; font-weight:600; cursor:pointer;}   /* 점선=기능 표시(§4.9 예외) */
+  .pick:active{background:var(--g50);}
+  .pick svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:14px;}
+  .pv{position:relative; aspect-ratio:1; border-radius:var(--r-sm); overflow:hidden; background:var(--g100);}
+  .pv img{width:100%; height:100%; object-fit:cover; display:block;}
+  .pv .rm{position:absolute; top:5px; right:5px; width:22px; height:22px; border-radius:50%; border:none; background:rgba(0,0,0,.55); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;}
+  .pv .rm svg{width:9px; height:9px; fill:none; stroke:currentColor; stroke-width:3; stroke-linecap:round;}
+  .pv .st{position:absolute; left:0; right:0; bottom:0; font-size:11px; font-weight:700; text-align:center; padding:3px 0; color:#fff;}
+  .pv .st.ok{background:rgba(58,138,95,.85);}
+  .pv .st.fail{background:rgba(210,83,87,.9);}
+
+  /* 진행률(업로드=아는 작업 → 결정형 막대, §4.9) */
+  .pbar{height:6px; border-radius:3px; background:var(--g100); overflow:hidden; margin:16px 0 8px; display:none;}
+  .pbar.on{display:block;}
+  .pbar i{display:block; height:100%; width:0; background:var(--green); border-radius:3px; transition:width .25s ease;}
+  .pnote{text-align:center; font-size:13.5px; color:var(--g500); min-height:18px;}
+
+  .footbar{position:fixed; left:0; right:0; bottom:0; background:#fff; padding:12px 22px calc(12px + env(safe-area-inset-bottom)); z-index:10;}
+  .footbar .inner{max-width:560px; margin:0 auto;}
+  .btn{width:100%; padding:16px; border:none; border-radius:var(--r-md); font:inherit; font-size:16px; font-weight:700; color:#fff; background:var(--green); cursor:pointer; transition:background .2s,transform .1s; letter-spacing:-.3px; position:relative; overflow:hidden;}
+  .btn:active{background:var(--green-dark); transform:scale(.97);}
+  .btn:disabled{background:var(--p-disabled); cursor:default; transform:none;}
+  .btn:disabled:has(.ld-dots){background:var(--green);}
+  .btn .bl{position:relative; z-index:1;}
+  .btn .rip{position:absolute; z-index:0; width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%; background:rgba(0,0,0,.20); pointer-events:none; transform:scale(0);}
+  .btn .rip.go{transform:scale(var(--rs,16)); opacity:0; transition:transform .46s ease-out, opacity .46s ease-out;}
+  .ld-dots{display:inline-flex; gap:3px; margin-left:7px; vertical-align:middle;}
+  .ld-dots i{width:4px; height:4px; border-radius:50%; background:#fff; animation:ldb .9s infinite ease-in-out;}
+  .ld-dots i:nth-child(2){animation-delay:.16s;} .ld-dots i:nth-child(3){animation-delay:.32s;}
+  @keyframes ldb{0%,80%,100%{transform:translateY(0); opacity:.45;} 40%{transform:translateY(-4px); opacity:1;}}
+
+  /* 완료(§4.6 — 팝인 원+체크, 잠깐 보여주고 자동 복귀) */
+  #s-done .wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:70vh; text-align:center; padding-bottom:20px;}
+  .done-ic{width:64px; height:64px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; animation:dPop .35s cubic-bezier(.3,1.4,.5,1);}
+  @keyframes dPop{from{transform:scale(.4); opacity:0} to{transform:scale(1); opacity:1}}
+  .done-ic svg{width:30px; height:30px; fill:none; stroke:#fff; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:1; stroke-dashoffset:1; animation:dChk .4s .25s cubic-bezier(.5,0,.3,1) forwards;}
+  @keyframes dChk{to{stroke-dashoffset:0}}
+  #s-done h2{font-size:21px; font-weight:800; margin:20px 0 0; letter-spacing:-.3px;}
+
+  .toast{position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(20px); background:#222; color:#fff; font-size:14px; padding:12px 18px; border-radius:12px; max-width:90%; text-align:center; white-space:pre-line; opacity:0; transition:opacity .2s,transform .2s; pointer-events:none; z-index:1300; line-height:1.5;}
+  .toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- ═══ 아이 목록(동의 활성 아이만 = P3 업로드 게이트가 목록부터) ═══ -->
+<div class="screen active" id="s-kids">
+  <div class="wrap">
+    <h1>누구 사진을 올릴까요?</h1>
+    <p class="sub">보호자가 동의한 아이만 보여요. 올린 사진은 검수 후 보호자에게 열려요.</p>
+    <div id="kidList"></div>
+  </div>
+</div>
+
+<!-- ═══ 사진 선택·업로드 ═══ -->
+<div class="screen" id="s-up">
+  <div class="wrap">
+    <button class="back" id="upBack" aria-label="이전"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+    <h1 id="upTitle"></h1>
+    <div class="drow"><label for="upDate">수업일</label><input type="date" id="upDate"></div>
+    <button class="pick" id="pickBtn"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>사진 고르기</button>
+    <input type="file" id="fileIn" accept="image/*" multiple hidden>
+    <div class="pgrid" id="pgrid"></div>
+    <div class="pbar" id="pbar"><i id="pfill"></i></div>
+    <div class="pnote" id="pnote"></div>
+  </div>
+  <div class="footbar"><div class="inner"><button class="btn" id="upBtn" disabled><span class="bl">올리기</span></button></div></div>
+</div>
+
+<!-- ═══ 완료 ═══ -->
+<div class="screen" id="s-done">
+  <div class="wrap">
+    <div class="done-ic"><svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6" pathLength="1"/></svg></div>
+    <h2 id="doneMsg">사진을 올렸어요</h2>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_EXEC="https://script.google.com/macros/s/AKfycbw5K71HEBZKP9TQr84YxkGed_bG3mvbzWfAMwkhcDJcCLDNBiDql5TjeYHCEuiMuvGAbQ/exec";
+const $=id=>document.getElementById(id);
+function post(obj, retries){
+  const go=()=>fetch(GAS_EXEC,{method:"POST",body:JSON.stringify(obj)}).then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); });
+  if(!retries) return go();
+  return go().catch(()=>new Promise(res=>setTimeout(res,700)).then(go)).catch(()=>new Promise(res=>setTimeout(res,1600)).then(go));
+}
+let _warmAt=0;
+function warmGas(){ const now=Date.now(); if(now-_warmAt<60000) return; _warmAt=now; try{ fetch(GAS_EXEC,{method:"GET",mode:"no-cors",cache:"no-store"}).catch(()=>{}); }catch(e){} }
+function staffSess(){ try{ return JSON.parse(localStorage.getItem("tf_staff_v1")||"null"); }catch(e){ return null; } }   // 11 세션 재사용(상담일지와 공유)
+const loadingHTML=t=>t+'<span class="ld-dots"><i></i><i></i><i></i></span>';
+function btnLoad(btn,text){ if(btn.dataset.lbl==null) btn.dataset.lbl=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="bl">'+loadingHTML(text)+'</span>'; }
+function btnDone(btn){ if(btn.dataset.lbl==null) return; btn.innerHTML=btn.dataset.lbl; delete btn.dataset.lbl; btn.disabled=false; }
+function pressRipple(btn,e){
+  if(!btn.querySelector(".bl")){ const bl=document.createElement("span"); bl.className="bl"; while(btn.firstChild) bl.appendChild(btn.firstChild); btn.appendChild(bl); }
+  const r=btn.getBoundingClientRect();
+  const x=(e.clientX!=null?e.clientX:r.left+r.width/2)-r.left;
+  const rs=Math.ceil(Math.hypot(Math.max(x,r.width-x),r.height/2)/15)+1;
+  const rip=document.createElement("span"); rip.className="rip";
+  rip.style.left=x+"px"; rip.style.top=(r.height/2)+"px"; rip.style.setProperty("--rs",rs);
+  btn.appendChild(rip); requestAnimationFrame(()=>rip.classList.add("go"));
+  setTimeout(()=>rip.remove(),480);
+}
+document.addEventListener("pointerdown",e=>{
+  const b=e.target.closest(".btn,.retry-btn"); if(b&&!b.disabled) pressRipple(b,e);
+  const d=e.target.closest(".btn:disabled");
+  if(d) d.animate([{transform:"translateX(0)"},{transform:"translateX(-5px)"},{transform:"translateX(5px)"},{transform:"translateX(-3px)"},{transform:"translateX(0)"}],{duration:260});
+});
+let toastT; function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2600); }
+
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); window.scrollTo(0,0); }
+
+// ── 아이 목록 ──
+function loadKids(){
+  const s=staffSess();
+  const box=$("kidList");
+  if(!s || !s.staffId || !s.session){
+    box.innerHTML='<div class="errbox"><p>로그인이 필요해요.<br>상담일지 앱에서 로그인하면 여기서도 쓸 수 있어요.</p><a class="login-btn" href="상담일지.html">로그인하러 가기</a></div>';
+    return;
+  }
+  box.innerHTML='<div class="kcard sk"></div><div class="kcard sk"></div><div class="kcard sk"></div>';   // 스켈레톤(§5.4)
+  post({action:"t_children", staffId:s.staffId, staffToken:s.session},true).then(d=>{
+    if(!(d&&d.ok)){
+      if(d&&d.error==="unauthorized"){ box.innerHTML='<div class="errbox"><p>로그인 기간이 지났어요.<br>상담일지 앱에서 다시 로그인해 주세요.</p><a class="login-btn" href="상담일지.html">로그인하러 가기</a></div>'; return; }
+      throw new Error();
+    }
+    if(!d.children.length){
+      box.innerHTML='<div class="empty"><p>아직 보호자가 동의한 아이가 없어요.<br>보호자가 앱에서 동의하면 여기에 떠요.</p></div>';
+      return;
+    }
+    box.innerHTML="";
+    d.children.forEach(c=>{
+      const b=document.createElement("button"); b.className="kcard";
+      b.innerHTML='<span class="nm"></span><span class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></span>';
+      b.querySelector(".nm").textContent=c.name;
+      b.onclick=()=>openUp(c);
+      box.appendChild(b);
+    });
+  }).catch(()=>{
+    box.innerHTML='<div class="errbox"><p>목록을 불러오지 못했어요.<br>잠시 후 다시 시도해 주세요.</p><button class="retry-btn" onclick="loadKids()">다시 시도</button></div>';
+  });
+}
+
+// ── 사진 선택·리사이즈 ──
+let curChild=null, photos=[], upBusy=false;   // photos = [{file, img(b64), thumb(b64), url, state:''|'ok'|'fail'}]
+function openUp(c){
+  curChild=c; photos=[]; upBusy=false;
+  $("upTitle").textContent=c.name;
+  $("upDate").value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  $("pgrid").innerHTML=""; $("pbar").classList.remove("on"); $("pfill").style.width="0"; $("pnote").textContent="";
+  updUpBtn(); show("s-up");
+}
+$("upBack").onclick=()=>{
+  if(upBusy){ toast("올리는 중이에요. 잠깐만요"); return; }
+  if(photos.some(p=>p.state!=="ok") && !confirm("안 올린 사진이 있어요. 안 올리고 나갈까요?")) return;   // 미저장 가드(§4.11-3, 실패분 포함 — 리뷰 MED)
+  show("s-kids"); loadKids();
+};
+$("pickBtn").onclick=()=>{ if(!upBusy) $("fileIn").click(); };
+$("fileIn").onchange=async e=>{
+  const files=[...e.target.files]; e.target.value="";
+  for(const f of files){
+    if(photos.length>=20){ toast("한 번에 20장까지 올릴 수 있어요"); break; }
+    try{
+      const p=await resizePair(f);
+      p.state=""; photos.push(p); addPv(p);
+    }catch(err){ toast("사진 한 장을 읽지 못했어요"); }
+  }
+  updUpBtn();
+};
+function addPv(p){
+  const d=document.createElement("div"); d.className="pv";
+  d.innerHTML='<img alt=""><button class="rm" aria-label="빼기"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><span class="st"></span>';
+  d.querySelector("img").src="data:image/jpeg;base64,"+p.thumb;
+  d.querySelector(".rm").onclick=()=>{ if(upBusy) return; photos=photos.filter(x=>x!==p); d.remove(); updUpBtn(); };
+  p.el=d; $("pgrid").appendChild(d);
+}
+function updUpBtn(){
+  const n=photos.filter(p=>p.state!=="ok").length;
+  const b=$("upBtn");
+  if(b.dataset.lbl!=null) return;
+  b.disabled=!curChild||n===0||upBusy;
+  b.innerHTML='<span class="bl">'+(n>0?n+"장 올리기":"올리기")+"</span>";
+}
+// 캔버스 리사이즈 — 원본(장변 1600, q0.8) + 썸네일(장변 480, q0.72). EXIF 회전=createImageBitmap 우선.
+async function decodeImage(file){
+  if(window.createImageBitmap){
+    try{ return await createImageBitmap(file,{imageOrientation:"from-image"}); }catch(e){}
+    try{ return await createImageBitmap(file); }catch(e){}
+  }
+  return new Promise((res,rej)=>{ const u=URL.createObjectURL(file); const im=new Image();
+    im.onload=()=>{ URL.revokeObjectURL(u); res(im); }; im.onerror=()=>{ URL.revokeObjectURL(u); rej(new Error("decode")); }; im.src=u; });
+}
+function drawScaled(src,w,h,max,q){
+  const sc=Math.min(1,max/Math.max(w,h));
+  const cw=Math.max(1,Math.round(w*sc)), ch=Math.max(1,Math.round(h*sc));
+  const cv=document.createElement("canvas"); cv.width=cw; cv.height=ch;
+  cv.getContext("2d").drawImage(src,0,0,cw,ch);
+  return cv.toDataURL("image/jpeg",q).split(",")[1];
+}
+async function resizePair(file){
+  const bm=await decodeImage(file);
+  const w=bm.width||bm.naturalWidth, h=bm.height||bm.naturalHeight;
+  const img=drawScaled(bm,w,h,1600,.8);
+  const thumb=drawScaled(bm,w,h,480,.72);
+  if(bm.close) bm.close();
+  return {img, thumb};
+}
+
+// ── 업로드(장당 순차 = 진행 표시·부분 재시도) ──
+$("upBtn").onclick=async()=>{
+  if(upBusy) return;
+  const s=staffSess(); if(!s){ toast("로그인이 필요해요"); return; }
+  const date=$("upDate").value;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ toast("수업일을 확인해 주세요"); return; }
+  const targets=photos.filter(p=>p.state!=="ok");
+  if(!targets.length) return;
+  upBusy=true; btnLoad($("upBtn"),"올리고 있어요");
+  $("pbar").classList.add("on"); $("pfill").style.width="0";
+  let done=0, fail=0;
+  for(const p of targets){
+    $("pnote").textContent=(done+1)+" / "+targets.length+"장";
+    try{
+      const d=await post({action:"t_upload", staffId:s.staffId, staffToken:s.session, childKey:curChild.key, date, img:p.img, thumb:p.thumb});
+      if(d && d.ok){ p.state="ok"; mark(p,"ok","올림"); }
+      else { p.state="fail"; fail++; mark(p,"fail","실패"); if(d&&d.error==="unauthorized"){ break; } if(d&&d.error&&d.error.indexOf("동의")>=0){ toast(d.error); break; } }
+    }catch(e){ p.state="fail"; fail++; mark(p,"fail","실패"); }
+    done++; $("pfill").style.width=Math.round(done/targets.length*100)+"%";
+  }
+  upBusy=false; btnDone($("upBtn"));
+  if(fail===0){
+    $("doneMsg").textContent=done+"장을 올렸어요";
+    show("s-done");
+    setTimeout(()=>{ show("s-kids"); loadKids(); },1600);   // §4.6 자동 전환
+  } else {
+    $("pnote").textContent="";
+    toast(fail+"장을 못 올렸어요. 실패한 사진만 다시 올릴 수 있어요");
+    updUpBtn();
+  }
+};
+function mark(p,cls,txt){ if(!p.el) return; const st=p.el.querySelector(".st"); st.className="st "+cls; st.textContent=txt; }
+
+warmGas(); loadKids();
+</script>
+<script src="tfnav.js"></script>
+</body>
+</html>
