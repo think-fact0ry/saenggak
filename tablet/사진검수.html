@@ -102,9 +102,9 @@
 <!-- 키 입력(행정 1회 — 서버 검증) -->
 <div class="screen active" id="s-key">
   <div class="wrap">
-    <h1>검수 키를 알려주세요</h1>
-    <p class="sub">행정용 화면이에요. 처음 한 번만 넣으면 이 기기에 기억돼요.</p>
-    <div class="tfield" id="tfKey"><label for="inKey">검수 키</label><div class="tin-wrap">
+    <h1>행정 비밀번호를 알려주세요</h1>
+    <p class="sub">행정 등록할 때 쓰는 번호예요. 처음 한 번만 넣으면 이 기기에 기억돼요.</p>
+    <div class="tfield" id="tfKey"><label for="inKey">행정 비밀번호</label><div class="tin-wrap">
       <input id="inKey" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true">
     </div></div>
     <div class="note" id="keyNote"></div>
@@ -149,7 +149,7 @@ document.addEventListener("pointerdown",e=>{ const b=e.target.closest(".btn,.ok-
 let toastT; function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2600); }
 function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); window.scrollTo(0,0); }
 
-const KEY="pf_admin_key";
+const KEY="saenggak_admin_token";   // 허브 행정 등록·지도·결제내역과 같은 키(06 ACCESS_TOKEN) — 행정 등록된 기기는 입력 생략(유성 2026-07-05 통일)
 function adminKey(){ try{ return localStorage.getItem(KEY)||""; }catch(e){ return ""; } }
 // 밑줄 포커스
 (function(){ const inp=$("inKey"), tf=$("tfKey");
@@ -157,12 +157,12 @@ function adminKey(){ try{ return localStorage.getItem(KEY)||""; }catch(e){ retur
   inp.addEventListener("blur",()=>tf.classList.remove("focus")); })();
 $("keyBtn").onclick=()=>{
   const k=$("inKey").value.trim();
-  if(!k){ $("keyNote").className="note err"; $("keyNote").textContent="검수 키를 적어주세요"; return; }
+  if(!k){ $("keyNote").className="note err"; $("keyNote").textContent="행정 비밀번호를 적어주세요"; return; }
   btnLoad($("keyBtn"),"확인하고 있어요");
   post({action:"a_list", adminKey:k},true).then(d=>{
     btnDone($("keyBtn"));
     if(d && d.ok){ try{ localStorage.setItem(KEY,k); }catch(e){} show("s-list"); render(d); }
-    else { $("keyNote").className="note err"; $("keyNote").textContent="키가 달라요. 다시 확인해 주세요"; }
+    else { $("keyNote").className="note err"; $("keyNote").textContent="비밀번호가 달라요. 다시 확인해 주세요"; }
   }).catch(()=>{ btnDone($("keyBtn")); $("keyNote").className="note err"; $("keyNote").textContent="연결이 안 됐어요. 잠시 후 다시 시도해 주세요"; });
 };
 
