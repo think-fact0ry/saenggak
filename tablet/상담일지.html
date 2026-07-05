@@ -367,6 +367,7 @@
   .irow input.flat{flex:1;min-width:0;width:100%;font-family:inherit;font-size:16.5px;padding:2px 0;border:none;background:transparent;outline:none;color:var(--g900);}
   .irow input.flat::placeholder{color:var(--g400);font-weight:500;}
   .irow.seg-row .seg{flex:1;}
+  .irow + .field{margin-top:12px;}   /* 압축 행 뒤 풀폭 블록(상세내용 등) 숨 고르기 — L5 §4.13-2 전환(2026-07-05) */
 
   /* 작성 폼: 풀폭 블록(태그·회기내용·평가) */
   .block{padding:12px 2px;border-bottom:1px solid var(--g100);}
@@ -640,8 +641,8 @@
     <button class="back" id="gc-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <h1>일반 상담일지</h1>
     <p class="sub">이름과 생년월일로 회기를 모아 둘게요.</p>
-    <div class="field"><label>이름</label><input id="gc-name" type="text" placeholder="홍길동" autocomplete="off"></div>
-    <div class="field"><label>생년월일</label><input id="gc-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
+    <div class="irow"><label>이름</label><input id="gc-name" class="flat" type="text" placeholder="홍길동" autocomplete="off"></div>
+    <div class="irow"><label>생년월일</label><input id="gc-birth" class="flat" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
     <div class="note" id="gc-note"></div>
   </div>
   <div class="footbar"><div class="inner"><button class="btn" id="gc-btn" disabled>회기 보기</button></div></div>
@@ -670,8 +671,8 @@
     <button class="back" id="ge-back" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <h1>내담자 정보</h1>
     </div><div class="kbf-body">
-    <div class="field"><label>이름</label><input id="ge-name" type="text" placeholder="홍길동" autocomplete="off"></div>
-    <div class="field"><label>생년월일</label><input id="ge-birth" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
+    <div class="irow"><label>이름</label><input id="ge-name" class="flat" type="text" placeholder="홍길동" autocomplete="off"></div>
+    <div class="irow"><label>생년월일</label><input id="ge-birth" class="flat" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
     <div class="field"><label>메모</label><textarea id="ge-memo" class="sm" placeholder="예: OO초 2학년 / OOO아파트 / OO구 OO동 / 우울로 인해 의뢰"></textarea></div>
     <div class="note" id="ge-note"></div>
     </div>
@@ -764,7 +765,7 @@
     <button class="back" id="w-back" aria-label="회차"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div class="subject" id="w-subject"></div>
     </div><div class="kbf-body">
-    <div class="field"><label>상담일</label><input id="w-date" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
+    <div class="irow"><label>상담일</label><input id="w-date" class="flat" type="text" inputmode="numeric" placeholder="0000. 00. 00" autocomplete="off"></div>
     <div class="field"><label>상세내용</label><textarea id="w-content" placeholder="서비스 세부 내용 및 이용자 상태평가 등을 적어요."></textarea></div>
     <div class="note" id="w-note"></div>
     </div>

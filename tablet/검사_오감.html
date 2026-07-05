@@ -136,8 +136,8 @@
   .rfoot{font-size:12.5px;line-height:1.6;padding:13px 18px;text-align:center;}
   .rfoot .flabel{display:block;font-weight:700;margin-bottom:3px;color:var(--g700);}
 
-  .print-row{display:flex;gap:10px;margin-top:16px;}
-  .print-row .btn{margin-top:0;}
+  /* 결과 화면 액션 = 고정 footbar(상담일지 s-print 문법 통일 — L6, 유성 2026-07-05). 옛 .print-row(스크롤 끝 인라인) 폐기 */
+  #s-result .wrap,#s-view .wrap{padding-bottom:120px;}   /* footbar 가림 방지 */
 
   /* ===== 허브 목록 카드(이용자·이력) — 09 카드 톤(흰+옅은 보더+은은한 그림자) ===== */
   .list-card{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;
@@ -315,10 +315,8 @@
   <div class="wrap">
     <button class="back noprint" id="viewBack" aria-label="이력으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div id="viewDoc"></div>
-    <div class="print-row noprint">
-      <button class="btn" id="viewPrint">출력 / PDF 저장</button>
-    </div>
   </div>
+  <div class="footbar noprint"><div class="inner"><button class="btn" id="viewPrint">출력 / PDF 저장</button></div></div>
 </div>
 
 <!-- ===== 화면 2: SDQ ===== -->
@@ -356,12 +354,9 @@
   <div class="wrap">
     <button class="back noprint" id="resultBack" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <div id="resultDoc"></div>
-    <div class="print-row noprint">
-      <button class="btn ghost" id="backEdit">수정</button>
-      <button class="btn" id="doPrint">출력 / PDF 저장</button>
-    </div>
     <div id="saveNote" class="noprint" style="text-align:center;font-size:13px;margin-top:10px;color:var(--g500);"></div>
   </div>
+  <div class="footbar noprint"><div class="inner"><button class="btn ghost" id="backEdit">수정</button><button class="btn" id="doPrint">출력 / PDF 저장</button></div></div>
 </div>
 
 <script>
