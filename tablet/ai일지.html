@@ -194,6 +194,29 @@
   .rchip.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700;}
   .rchip:active{transform:scale(.97);}
   .prov{color:var(--g400);font-size:15px;font-weight:600;letter-spacing:0;}   /* '(가제)' 연한 회색·작은 폰트(유성 2026-07-07) */
+  /* 분류 뱃지(일반/오감/아청/성인) */
+  .cbadge{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:7px;vertical-align:middle;line-height:1.5;}
+  .cb-오감{background:#e9f8ee;color:var(--green-d);} .cb-아청{background:#eef3fb;color:#2f6bb3;} .cb-성인{background:#f3eefb;color:#7a4fb3;} .cb-일반{background:var(--g100);color:var(--g600);}
+  /* + 새 아이 버튼(top-row) */
+  .top-row{display:flex;align-items:center;justify-content:space-between;}
+  .addkid{display:inline-flex;align-items:center;gap:4px;font-family:inherit;font-size:14px;font-weight:700;color:var(--green-d);background:var(--green-l);border:none;border-radius:999px;padding:8px 14px 8px 11px;cursor:pointer;}
+  .addkid svg{width:16px;height:16px;} .addkid:active{transform:scale(.96);}
+  .ne-btn{max-width:240px;margin:18px auto 0;}
+  /* 새 아이 등록/설정 화면 */
+  .nk-field{margin-bottom:14px;}
+  .nk-field label{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin-bottom:7px;}
+  .nk-field input{width:100%;font-family:inherit;font-size:17px;font-weight:600;color:var(--g900);border:none;outline:none;border-bottom:2px solid var(--g200);padding:4px 2px 9px;background:none;caret-color:var(--green);transition:border-color .15s;}
+  .nk-field input:focus{border-color:var(--green);} .nk-field input:disabled{color:var(--g500);-webkit-text-fill-color:var(--g500);border-bottom-style:dashed;}
+  .nk-field input::placeholder{color:var(--g300);font-weight:500;}
+  .nk-label{font-size:13.5px;font-weight:600;color:var(--g600);margin:18px 0 8px;} .nk-hint{font-weight:500;color:var(--g400);font-size:12.5px;margin-left:4px;}
+  .nk-seg{margin-bottom:0;}
+  .nk-days{display:flex;gap:7px;flex-wrap:wrap;}
+  .daychip{width:42px;height:42px;font-family:inherit;font-size:15px;font-weight:600;color:var(--g600);background:var(--g100);border:2px solid transparent;border-radius:50%;cursor:pointer;transition:.12s;}
+  .daychip.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700;} .daychip:active{transform:scale(.94);}
+  /* 아이 화면 설정 기어 */
+  #s-kid .wrap{position:relative;}
+  .kid-gear{position:absolute;top:12px;right:14px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--g500);cursor:pointer;border-radius:50%;}
+  .kid-gear:active{background:var(--g100);} .kid-gear svg{width:22px;height:22px;}
 
   /* 기록 열람(saved 메모 재열람 — 최종 문장이 정본, 복사해 실제 일지에 쓰는 경로) */
   .velt{margin-bottom:14px;border:1.5px solid var(--g200);border-radius:var(--r-lg);padding:14px 16px;}
@@ -323,7 +346,8 @@
 <!-- ══════════ 화면 0 — 메모 목록 (진입 첫 화면, 메모장형 루트) ══════════ -->
 <section id="s-list" class="screen active">
   <div class="wrap">
-    <div class="top-row" style="justify-content:flex-end">
+    <div class="top-row">
+      <button class="addkid" onclick="openNewKid()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>새 아이</button>
       <button class="help" onclick="openHelp()" aria-label="도움말">
         <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       </button>
@@ -335,8 +359,36 @@
     </div>
     <div class="sec-label" id="allLabel" style="display:none;">모든 아이</div>
     <div id="kidList"></div>
-    <p class="list-empty" id="listEmpty" style="display:none;">담당 아이가 없어요.</p>
+    <div class="list-empty" id="listEmpty" style="display:none;">
+      <p>아직 등록된 아이가 없어요.</p>
+      <button class="btn ne-btn" onclick="openNewKid()">+ 새 아이 등록</button>
+    </div>
   </div>
+</section>
+
+<!-- ══════════ 화면 0a — 새 아이 등록 (담당 대장 아이 없어도 작성, 유성 2026-07-07) ══════════ -->
+<section id="s-newkid" class="screen">
+  <div class="wrap">
+    <button class="back" onclick="navBack()" aria-label="뒤로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <h1 id="nkTitle">새 아이 등록</h1>
+    <div class="nk-field"><label for="nkName">이름</label><input id="nkName" placeholder="홍길동" autocomplete="off"></div>
+    <div class="nk-field"><label for="nkBirth">생년월일</label><input id="nkBirth" inputmode="numeric" placeholder="2019.03.15" autocomplete="off"></div>
+    <div class="nk-label">분류</div>
+    <div class="seg nk-seg" id="nkCat">
+      <button type="button" data-cat="오감" class="on">오감</button>
+      <button type="button" data-cat="아청">아청</button>
+      <button type="button" data-cat="성인">성인</button>
+      <button type="button" data-cat="일반">일반</button>
+    </div>
+    <div class="nk-label">요일 <span class="nk-hint">정기 방문 요일(여러 개 가능)</span></div>
+    <div class="nk-days" id="nkDays"></div>
+    <p class="err-note" id="nkErr"></p>
+  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn" id="nkSaveBtn" onclick="saveNewKid()">등록하기</button>
+  </div></div>
 </section>
 
 <!-- ══════════ 화면 0b — 아이 화면 (발달 타일·지난 회기·타임라인, 유성 2026-07-05 v2 GO) ══════════ -->
@@ -344,6 +396,9 @@
   <div class="wrap">
     <button class="back" onclick="navBack()" aria-label="뒤로">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <button class="kid-gear" onclick="openKidSettings()" aria-label="설정">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
     <div class="kid-head">
       <span class="avt" id="kidAvt"></span>
@@ -661,11 +716,11 @@ function loadRoster(){
 // 회차/년월 — 008은 (child_id, 년월, 회차 1~4) upsert라 필수. 새 메모=이번 달·오늘·1회차 기본, 교사가 회차 선택.
 var curYm = '', curRound = 1, curDate = '';
 function renderWriteMeta(){
-  var nm = (cur && cur.name) || '', g = null;
-  for(var i = 0; i < roster.length; i++){ if((roster[i].name || '') === nm){ g = roster[i]; break; } }
-  if(g && cur){ cur.birth = g.birth || ''; cur.service = g.service || ''; curType = serviceToType(g.service); }   // roster가 유형·생년 권위(초안 재열람 포함)
+  var nm = (cur && cur.name) || '', g = null, kids = groupKids();
+  for(var i = 0; i < kids.length; i++){ if(kids[i].name === nm){ g = kids[i]; break; } }   // 대장+수동 아이 통합에서 조회
+  if(g && cur){ cur.birth = g.birth || cur.birth || ''; cur.service = g.service || cur.service || ''; cur.category = g.category || cur.category || '일반'; curType = (CAT[cur.category] || {}).type || 'child'; }
   document.getElementById('wName').textContent = nm || '';
-  document.getElementById('wSvc').textContent = (g && g.service) || (cur && cur.service) || (TYPE_LABEL[curType] || '');
+  document.getElementById('wSvc').textContent = (cur && cur.category ? cur.category + ' · ' : '') + ((g && g.service) || (cur && cur.service) || (TYPE_LABEL[curType] || ''));
   if(!curYm) curYm = thisMonth(); if(!curDate) curDate = todayYmd(); if(!curRound) curRound = 1;
   var box = document.getElementById('wRounds'); box.innerHTML = '';
   [1, 2, 3, 4].forEach(function(n){
@@ -684,17 +739,39 @@ var DOM_ICONS = {
 };
 var RECAP_IC = '<svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/></svg>';
 function kidKey(n){ n = (n || '').trim(); return n || '__noname__'; }
+// ── 분류(카테고리) 체계 (유성 2026-07-07) — 오감/아청/성인/일반. AI 유형·저장 라우팅(dest)·뱃지를 결정 ──
+var CAT = {
+  '오감': { type: 'develop', dest: 'develop', svc: '오감쑥쑥' },
+  '아청': { type: 'child',   dest: 'voucher', svc: '아동청소년심리지원' },
+  '성인': { type: 'adult',   dest: 'voucher', svc: '성인심리상담' },
+  '일반': { type: 'child',   dest: 'general', svc: '일반상담' }
+};
+var CAT_ORDER = ['오감', '아청', '성인', '일반'];
+function catFromService(svc){ svc = String(svc || ''); if(svc.indexOf('오감') >= 0) return '오감'; if(svc.indexOf('성인') >= 0) return '성인'; if(svc.indexOf('아동') >= 0 || svc.indexOf('청소년') >= 0) return '아청'; return '일반'; }   // 대장 서비스→분류(정신토탈 등=일반 폴백)
+// 직접 등록 아이(담당 대장 아이 없어도 작성 가능) — 이 폰 localStorage. {name,birth,category,days:[0~6]}
+var MK_KEY = 'tfp_kids_v1';
+var manualKids = [];
+try{ manualKids = JSON.parse(localStorage.getItem(MK_KEY) || '[]') || []; }catch(e){}
+function persistManual(){ try{ localStorage.setItem(MK_KEY, JSON.stringify(manualKids)); }catch(e){} }
+function findManual(name){ for(var i = 0; i < manualKids.length; i++){ if((manualKids[i].name || '') === name) return manualKids[i]; } return null; }
+
 function groupKids(){
   var map = {}, todayStr = new Date().toDateString();
-  // 1) 대장 배정 명부 = 메모가 없어도 항상 뜨는 아이(생년월일·서비스 보유)
+  // 1) 대장 배정 명부 = 메모가 없어도 항상 뜨는 아이(생년월일·서비스·분류)
   roster.forEach(function(c){
     var k = kidKey(c.name);
-    map[k] = { key: k, name: (c.name || '').trim(), birth: c.birth || '', service: c.service || '', memos: [], saved: 0, last: null, days: {}, touchedToday: false };
+    map[k] = { key: k, name: (c.name || '').trim(), birth: c.birth || '', service: c.service || '', category: catFromService(c.service), setDays: null, memos: [], saved: 0, last: null, days: {}, touchedToday: false };
   });
-  // 2) 로컬 초안·기록 메모 붙이기(명부 밖 이름=폴백 그룹)
+  // 2) 직접 등록 아이(명부에 없으면 추가·있으면 분류/요일 덮어씀 = 수동 우선)
+  manualKids.forEach(function(c){
+    var k = kidKey(c.name);
+    if(!map[k]) map[k] = { key: k, name: (c.name || '').trim(), birth: c.birth || '', service: (CAT[c.category] || {}).svc || '', category: c.category, setDays: c.days || null, memos: [], saved: 0, last: null, days: {}, touchedToday: false };
+    else { map[k].category = c.category; map[k].setDays = c.days || null; if(c.birth) map[k].birth = c.birth; }
+  });
+  // 3) 로컬 초안·기록 메모 붙이기(명부 밖 이름=폴백 그룹=일반)
   memos.forEach(function(m){
     var k = kidKey(m.name);
-    if(!map[k]) map[k] = { key: k, name: (m.name || '').trim(), birth: '', service: '', memos: [], saved: 0, last: null, days: {}, touchedToday: false };
+    if(!map[k]) map[k] = { key: k, name: (m.name || '').trim(), birth: '', service: '', category: '일반', setDays: null, memos: [], saved: 0, last: null, days: {}, touchedToday: false };
     var g = map[k]; g.memos.push(m);
     if(m.status === 'saved') g.saved++;
     if(!g.last || (m.updatedAt || 0) > (g.last.updatedAt || 0)) g.last = m;
@@ -707,6 +784,7 @@ function groupKids(){
   return Object.keys(map).map(function(k){ return map[k]; });
 }
 function kidRegularDays(g){
+  if(g.setDays && g.setDays.length) return g.setDays;   // 직접 등록·설정한 요일이 있으면 그것을 정규 요일로(유성 2026-07-07)
   var strong = [], any = [];
   for(var d = 0; d < 7; d++){ if(g.days[d] >= 2) strong.push(d); if(g.days[d] >= 1) any.push(d); }
   return strong.length ? strong : any;
@@ -741,7 +819,8 @@ function renderList(){
     var cnt = g.saved > 0 ? '<span class="kc-cnt">기록 ' + g.saved + '</span>' : (g.memos.length ? '<span class="kc-cnt draft">쓰던 메모</span>' : '');
     var body = (m && (m.status === 'saved' && m.final ? (m.final.service || m.final.state || m.memo) : m.memo)) || '';
     var b = document.createElement('button'); b.className = 'kid-card'; b.type = 'button';
-    b.innerHTML = '<span class="avt">' + avFor(g) + '</span><div class="kc-mid"><div class="kc-top">' + nm + cnt + '</div><div class="kc-body">' + esc(body) + '</div></div><span class="kc-date">' + fmtDate(m && m.updatedAt) + '</span>';
+    var badge = g.category ? '<span class="cbadge cb-' + g.category + '">' + g.category + '</span>' : '';   // 분류 뱃지(일반/오감/아청/성인, 유성 2026-07-07)
+    b.innerHTML = '<span class="avt">' + avFor(g) + '</span><div class="kc-mid"><div class="kc-top">' + nm + badge + cnt + '</div><div class="kc-body">' + esc(body) + '</div></div><span class="kc-date">' + fmtDate(m && m.updatedAt) + '</span>';
     b.addEventListener('click', function(){ openKid(g.key); });
     box.appendChild(b);
   });
@@ -797,10 +876,11 @@ function renderKid(){
   });
 }
 function newMemoForKid(){
-  var kids = groupKids(), type = 'child', name = '';
-  for(var i = 0; i < kids.length; i++){ if(kids[i].key === curKid){ name = kids[i].name; type = kids[i].service ? serviceToType(kids[i].service) : ((kids[i].last && kids[i].last.type) || 'child'); break; } }
+  var kids = groupKids(), type = 'child', name = '', cat = '일반';
+  for(var i = 0; i < kids.length; i++){ if(kids[i].key === curKid){ name = kids[i].name; cat = kids[i].category || '일반'; type = (CAT[cat] || {}).type || 'child'; break; } }
   curYm = thisMonth(); curRound = 1; curDate = todayYmd();   // 새 메모 = 이번 달·1회차·오늘(교사가 회차 조정)
-  newMemo(name, type);   // → loadCurIntoWrite → s-write → renderWriteMeta가 생년·서비스·회차 렌더
+  newMemo(name, type);   // → loadCurIntoWrite → s-write → renderWriteMeta가 생년·서비스·분류·회차 렌더
+  if(cur){ cur.category = cat; }
 }
 function newMemo(name, type){
   cur = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name || '', type: TYPES[type] ? type : 'develop', memo: '', status: 'draft', updatedAt: Date.now() };
@@ -808,6 +888,72 @@ function newMemo(name, type){
   loadCurIntoWrite();
   navTo('s-write');
 }
+// ── 새 아이 등록 + 요일 설정 (유성 2026-07-07) ──
+var nkCat = '오감', nkDaysSel = [], nkEditName = null;   // nkEditName != null = 기존 아이 설정(요일·분류) 수정 모드
+function _fmtBirthDot_(b8){ var d = String(b8 || '').replace(/\D/g, ''); return d.length === 8 ? d.slice(0, 4) + '.' + d.slice(4, 6) + '.' + d.slice(6, 8) : d; }
+function groupBirth(name){ var kids = groupKids(); for(var i = 0; i < kids.length; i++){ if(kids[i].name === name) return kids[i].birth; } return ''; }
+function openNewKid(){
+  nkEditName = null;
+  document.getElementById('nkTitle').textContent = '새 아이 등록';
+  document.getElementById('nkSaveBtn').textContent = '등록하기';
+  var ni = document.getElementById('nkName'), bi = document.getElementById('nkBirth');
+  ni.value = ''; bi.value = ''; ni.disabled = false; bi.disabled = false;
+  nkCat = '오감'; nkDaysSel = [];
+  document.getElementById('nkErr').classList.remove('on');
+  document.querySelectorAll('#nkCat button').forEach(function(b){ b.classList.toggle('on', b.dataset.cat === nkCat); });
+  renderNkDays();
+  if(helpOpen) closeHelpRaw();
+  navTo('s-newkid');
+}
+function openKidSettings(){   // 아이 화면 설정 → 요일·분류 변경(이름·생년=정체성 키라 고정)
+  var kids = groupKids(), g = null;
+  for(var i = 0; i < kids.length; i++){ if(kids[i].key === curKid){ g = kids[i]; break; } }
+  if(!g) return;
+  nkEditName = g.name;
+  document.getElementById('nkTitle').textContent = '아이 설정';
+  document.getElementById('nkSaveBtn').textContent = '저장하기';
+  var ni = document.getElementById('nkName'), bi = document.getElementById('nkBirth');
+  ni.value = g.name; bi.value = _fmtBirthDot_(g.birth); ni.disabled = true; bi.disabled = true;
+  nkCat = g.category || '일반'; nkDaysSel = (g.setDays || kidRegularDays(g) || []).slice();
+  document.getElementById('nkErr').classList.remove('on');
+  document.querySelectorAll('#nkCat button').forEach(function(b){ b.classList.toggle('on', b.dataset.cat === nkCat); });
+  renderNkDays();
+  navTo('s-newkid');
+}
+function renderNkDays(){
+  var order = [1, 2, 3, 4, 5, 6, 0];   // 월~일
+  var box = document.getElementById('nkDays'); box.innerHTML = '';
+  order.forEach(function(d){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'daychip' + (nkDaysSel.indexOf(d) > -1 ? ' on' : ''); b.textContent = DAY_KO[d];
+    b.addEventListener('click', function(){ var i = nkDaysSel.indexOf(d); if(i > -1) nkDaysSel.splice(i, 1); else nkDaysSel.push(d); b.classList.toggle('on'); });
+    box.appendChild(b);
+  });
+}
+function saveNewKid(){
+  var err = document.getElementById('nkErr');
+  var name = nkEditName || document.getElementById('nkName').value.trim();
+  if(!name){ err.textContent = '이름을 적어주세요.'; err.classList.add('on'); return; }
+  var mk = findManual(name);
+  if(nkEditName){   // 설정 저장 = 분류·요일만(대장 아이도 로컬 오버라이드 항목으로 저장)
+    if(mk){ mk.category = nkCat; mk.days = nkDaysSel.slice(); }
+    else manualKids.push({ name: name, birth: groupBirth(name) || '', category: nkCat, days: nkDaysSel.slice() });
+    persistManual();
+    navBack();   // 아이 화면 복귀 → showScreenRaw 훅이 renderKid로 갱신(요일·분류 반영)
+    return;
+  }
+  var birth = document.getElementById('nkBirth').value.replace(/\D/g, '').slice(0, 8);
+  if(birth.length !== 8){ err.textContent = '생년월일 8자리를 확인해주세요 (예: 2019.03.15).'; err.classList.add('on'); return; }
+  if(mk){ mk.birth = birth; mk.category = nkCat; mk.days = nkDaysSel.slice(); }
+  else manualKids.push({ name: name, birth: birth, category: nkCat, days: nkDaysSel.slice() });
+  persistManual();
+  curKid = kidKey(name);
+  navStack[navStack.length - 1] = 's-kid'; showScreenRaw('s-kid');   // 등록 화면→아이 화면 제자리 교체(뒤로=목록)
+}
+document.querySelectorAll('#nkCat button').forEach(function(b){
+  b.addEventListener('click', function(){ document.querySelectorAll('#nkCat button').forEach(function(x){ x.classList.remove('on'); }); b.classList.add('on'); nkCat = b.dataset.cat; });
+});
+(function(){ var b = document.getElementById('nkBirth'); if(b) b.addEventListener('input', function(){ if(this.disabled) return; var d = this.value.replace(/\D/g, '').slice(0, 8), o = d.slice(0, 4); if(d.length > 4) o += '.' + d.slice(4, 6); if(d.length > 6) o += '.' + d.slice(6, 8); this.value = o; }); })();
+
 function openMemo(id){
   var m = null;
   for(var i = 0; i < memos.length; i++){ if(memos[i].id === id){ m = memos[i]; break; } }
@@ -1070,6 +1216,7 @@ function doSave(){
   var s = sess()||{};
   var payload = {
     action: 'refine_save', staffId: s.staffId, session: s.session,
+    dest: (CAT[(cur && cur.category) || '일반'] || {}).dest || 'voucher',   // 아청·성인→008 / 일반→일반상담일지 / 오감→이력만(유성 2026-07-07)
     child: { name: (cur && cur.name) || '', birth: (cur && cur.birth) || '', sex: (cur && cur.sex) || '' },
     service: (cur && cur.service) || '', type: curType,
     ym: curYm, round: curRound, date: curDate, content: content,
