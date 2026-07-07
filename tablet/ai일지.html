@@ -33,7 +33,6 @@
   · 미완(P2 폴리싱): 서약(oath) 게이트·회차 자동다음·recap을 journal_get(서버 이력)로. 아바타=파일럿서 이관(iOS clip 검증분).
 -->
 <!-- 아래 스타일·스크립트 = 파일럿 프리뷰.html 원본(설계 보존). 데이터 층만 11로 재배선(head 게이트·EXEC_URL·refine/refine_save·roster·회차년월). -->
--->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
@@ -194,6 +193,7 @@
   .rchip{flex:1;font-family:inherit;font-size:15px;font-weight:600;color:var(--g600);background:var(--g100);border:2px solid transparent;border-radius:var(--r-md);padding:11px 4px;cursor:pointer;transition:.12s;}
   .rchip.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700;}
   .rchip:active{transform:scale(.97);}
+  .prov{color:var(--g400);font-size:15px;font-weight:600;letter-spacing:0;}   /* '(가제)' 연한 회색·작은 폰트(유성 2026-07-07) */
 
   /* 기록 열람(saved 메모 재열람 — 최종 문장이 정본, 복사해 실제 일지에 쓰는 경로) */
   .velt{margin-bottom:14px;border:1.5px solid var(--g200);border-radius:var(--r-lg);padding:14px 16px;}
@@ -328,7 +328,7 @@
         <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       </button>
     </div>
-    <h1 style="margin-bottom:14px">회기 메모</h1>
+    <h1 style="margin-bottom:14px">발달일지 <span class="prov">(가제)</span></h1>
     <div id="todaySec" style="display:none;">
       <div class="sec-label" id="todayLabel" style="margin-top:2px;"></div>
       <div class="today-strip" id="todayStrip"></div>
