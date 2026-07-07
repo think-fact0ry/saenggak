@@ -57,6 +57,7 @@
     cursor:pointer;border:1.5px solid #d4cfc6;background:#fff;color:#666;transition:all .15s;
   }
   .fbtn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e}
+  #filterMark.active{background:#ef4444;border-color:#ef4444}  /* 마크 필터 = 빨강 */
 
   /* ══ 대시보드 바 ══ */
   .dashboard{
@@ -111,7 +112,7 @@
   }
   .legend-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
   .ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-  .ldot.home{background:#3b82f6}.ldot.assigned{background:#22c55e}.ldot.waiting{background:#f59e0b}
+  .ldot.home{background:#3b82f6}.ldot.assigned{background:#22c55e}.ldot.waiting{background:#f59e0b}.ldot.mark{background:#ef4444}
 
   /* ══ 인포윈도우 ══ */
   .iw{padding:10px 12px 10px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:200px;max-width:300px;max-height:300px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
@@ -146,6 +147,8 @@
   .iw-act.reject{border-color:#c0392b;color:#c0392b}.iw-act.reject:hover{background:#fdeaea}
   .iw-act.copy{border-color:#888;color:#555}.iw-act.copy:hover{background:#f0f0f0}
   .iw-act.unassign{border-color:#c0392b;color:#c0392b}.iw-act.unassign:hover{background:#fdeaea}
+  .iw-act.mark{border-color:#ef4444;color:#dc2626}.iw-act.mark:hover{background:#fee2e2}
+  .iw-act.mark.on{background:#ef4444;color:#fff}.iw-act.mark.on:hover{background:#dc2626}
 
   /* ══ 길찾기 패널 ══ */
   .route-panel{
@@ -175,6 +178,7 @@
   .mlbl{padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;transform:translateX(-50%)}
   .mlbl.home{color:#1d4ed8;margin:14px 0 0 0}
   .mlbl.assigned{margin:-46px 0 0 0}
+  .mlbl.mark{color:#dc2626;margin:14px 0 0 0}   /* 마크 아동 이름 = 빨강, 마커 아래 (선생님 라벨 방식) */
 
   /* ══ 추천 ══ */
   .iw-rec{margin-top:6px;padding-top:6px;border-top:1.5px solid #e8f0e5}
@@ -342,6 +346,7 @@
     <button class="fbtn active" id="filterHome" onclick="toggleFilter('home')">선생님</button>
     <button class="fbtn active" id="filterAssigned" onclick="toggleFilter('assigned')">배정</button>
     <button class="fbtn active" id="filterWaiting" onclick="toggleFilter('waiting')">대기</button>
+    <button class="fbtn" id="filterMark" onclick="toggleFilter('mark')">🔖 마크</button>
   </div>
   <div class="divider"></div>
   <div class="svc-filter" id="svcFilter">
@@ -385,6 +390,7 @@
   <div class="legend-item"><div class="ldot home"></div>선생님</div>
   <div class="legend-item"><div class="ldot assigned"></div>배정</div>
   <div class="legend-item"><div class="ldot waiting"></div>대기</div>
+  <div class="legend-item" id="legendMark" style="display:none"><div class="ldot mark"></div>마크</div>
 </div>
 
 <!-- ════ 길찾기 패널 ════ -->
@@ -441,7 +447,7 @@ var CENTERS = [
   { name:'남동 센터(행복마음)', addr:'인천 남동구 소래로669번길 47' },
 ];
 var centerPoints = [];   // [{name, pos}] — 지오코딩 완료분
-var showAssigned = true, showWaiting = true, showHome = true;
+var showAssigned = true, showWaiting = true, showHome = true, showMark = false;   // 마크 = 매칭 shortlist 토글(기본 OFF, 행정만)
 var routeFrom = null, routeTo = null;
 var placesService = null;  // services.Places 인스턴스
 var geocoder = null;       // services.Geocoder (좌표→주소, 우클릭/롱프레스용)
@@ -707,7 +713,7 @@ function _promptTokenShared(msg, blank){
 function fetchGAS(action, params) {
   // 쓰기 액션은 재시도 금지: mutation은 echo 리다이렉트 실패 전에 이미 커밋됨.
   // assign엔 "이미 배정됨" 가드가 있어 재시도 시 성공을 오류로 오인, status/unassign은 감사로그 중복. → 단발.
-  var WRITE = { assign:1, status:1, unassign:1, saveschedule:1 };
+  var WRITE = { assign:1, status:1, unassign:1, saveschedule:1, mark:1 };
   var tries = WRITE[action] ? 1 : 3;
   var asked = 0;                                    // 토큰 재입력 횟수 (무한루프 차단: 최대 2)
   function attempt(){
@@ -830,6 +836,8 @@ function applyModeUI(){
   show('nlFab', admin);                   // 신청폼 리스트 패널 → 행정만
   show('filterHome', admin || provider);
   show('filterAssigned', admin || provider);
+  show('filterMark', admin);              // 마크 = 행정 매칭 shortlist 전용
+  show('legendMark', admin);
   show('staffLoginBtn', MODE === 'basic');
   show('adminKeyBtn', MODE === 'basic');   // 신규/초기화 브라우저(basic)서 행정으로 올라갈 입구 — PC 주소 직접진입 대비
   var who = document.getElementById('staffWhoami');
@@ -841,9 +849,9 @@ function applyModeUI(){
   // 모드별 마커 토글 기본값(서비스 전환 시엔 유지 — applyModeUI는 모드 바뀔 때만 호출)
   if (MODE === 'basic'){ showHome=false; showAssigned=false; showWaiting=true; }
   else if (provider){ showHome=true; showAssigned=true; showWaiting=true; }
-  ['filterHome','filterAssigned','filterWaiting'].forEach(function(id){
+  ['filterHome','filterAssigned','filterWaiting','filterMark'].forEach(function(id){
     var el=document.getElementById(id); if(!el) return;
-    var on = id==='filterHome'?showHome : id==='filterAssigned'?showAssigned : showWaiting;
+    var on = id==='filterHome'?showHome : id==='filterAssigned'?showAssigned : id==='filterMark'?showMark : showWaiting;
     el.classList.toggle('active', on);
   });
   var logo = document.querySelector('.controls .logo span');
@@ -941,7 +949,9 @@ function renderMarkers() {
     }
   }
 
-  if (showAssigned) groupByCoord(d.assigned).forEach(function(g) {
+  // 마크 필터 ON이면 마크된 아동은 배정/대기 레이어에서 빼고 아래 마크 레이어에서 빨강으로 하나만(핀 2개 방지)
+  var baseAssigned = showMark ? d.assigned.filter(function(c){ return !c.marked; }) : d.assigned;
+  if (showAssigned) groupByCoord(baseAssigned).forEach(function(g) {
     addMarker(g.lat, g.lng, 'assigned', g.items.length, buildGroupedAssignedIW(g.items, hLat, hLng));
     var label = '';
     var names = {};
@@ -957,8 +967,22 @@ function renderMarkers() {
 
   if (showWaiting) {
     var filtered = getFilteredWaiting();
+    if (showMark) filtered = filtered.filter(function(c){ return !c.marked; });   // 마크된 대기는 마크 레이어로
     groupByCoord(filtered).forEach(function(g) {
       addMarker(g.lat, g.lng, 'waiting', g.items.length, buildGroupedWaitingIW(g.items, hLat, hLng));
+    });
+  }
+
+  // ── 마크 레이어 (행정 shortlist) ── 빨강 북마크 마커 + 빨강 이름 라벨. 마크된 아동만 뽑아 하나씩.
+  //  대기 마크는 요일/시간 필터 무시(shortlist 전량 노출). 마커/IW는 원 상태(배정/대기) 그대로, 색만 빨강.
+  if (showMark) {
+    groupByCoord(d.assigned.filter(function(c){ return c.marked; })).forEach(function(g) {
+      addMarkMarker(g.lat, g.lng, g.items.length, buildGroupedAssignedIW(g.items, hLat, hLng));
+      addLabel(g.lat, g.lng, markNames(g.items), 'mark');
+    });
+    groupByCoord(d.waiting.filter(function(c){ return c.marked; })).forEach(function(g) {
+      addMarkMarker(g.lat, g.lng, g.items.length, buildGroupedWaitingIW(g.items, hLat, hLng));
+      addLabel(g.lat, g.lng, markNames(g.items), 'mark');
     });
   }
 
@@ -989,6 +1013,26 @@ function addMarker(lat, lng, type, count, iwContent) {
   var pos = new kakao.maps.LatLng(lat, lng);
   var img = getMarkerImage(type, count);
   var m = new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:type==='home'?10:(type==='assigned'?5:1)});
+  kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
+  markers.push(m);
+}
+
+// ══ 마크 마커 (빨강 북마크, 행정 shortlist) ── 기존 빨강(센터=원·검색/지점=물방울)과 모양으로 구분 ══
+function markNames(items){ return items.map(function(c){ return c.name || ''; }).filter(Boolean).join('·'); }
+function markerBookmark(n){
+  var num = n>1 ? '<text x="13" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" font-family="sans-serif">'+n+'</text>' : '';
+  return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="26" height="30" viewBox="0 0 26 30"><path d="M5 1.5h16a2.5 2.5 0 0 1 2.5 2.5v24l-10.5-6.2L2.5 28V4A2.5 2.5 0 0 1 5 1.5z" fill="#ef4444" stroke="#b91c1c" stroke-width="1.3"/>'+num+'</svg>');
+}
+var _markImgCache = {};
+function getMarkImage(count){
+  var key = 'mark|'+(count>1?count:1);
+  if (_markImgCache[key]) return _markImgCache[key];
+  return (_markImgCache[key] = new kakao.maps.MarkerImage(markerBookmark(count>1?count:0), new kakao.maps.Size(26,30), {offset:new kakao.maps.Point(13,28)}));
+}
+function addMarkMarker(lat, lng, count, iwContent) {
+  if (!lat || !lng) return;
+  var pos = new kakao.maps.LatLng(lat, lng);
+  var m = new kakao.maps.Marker({position:pos,image:getMarkImage(count),map:map,zIndex:11});   // 배정(5)·집(10) 위, 센터(12) 아래
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
   markers.push(m);
 }
@@ -1099,6 +1143,12 @@ function assignBtn(row) {
   return '<button class="iw-act assign" onclick="doAssign('+row+')">✓ '+esc(prov)+' 배정</button>';
 }
 
+// 북마크(마크 토글) 버튼 — 대기·배정 IW 공용, 행정만. 마크됨이면 '해제', 아니면 '마크'
+function markActBtn(row, marked) {
+  return '<button class="iw-act mark'+(marked?' on':'')+'" onclick="doMark('+row+','+(marked?'false':'true')+')">'
+    + (marked ? '🔖 해제' : '🔖 마크') + '</button>';
+}
+
 function buildHomeIW(p) {
   return '<div class="iw"><div class="iw-title">'+esc(p.name)+'<span class="iw-badge home">선생님</span></div><div class="iw-row">📍 집 위치</div>'+routeBtns(p.name+' 집',p.lat,p.lng)+'</div>';
 }
@@ -1128,8 +1178,9 @@ function buildGroupedAssignedIW(items, hLat, hLng) {
     var ci = registerCopyData(c);
     h+='<div class="iw-actions">';
     if (isAdmin() && c.formRow) h+='<button class="iw-act unassign" onclick="doUnassign('+c.formRow+')">배정취소</button>';  // 배정취소는 행정만
-    h+='<button class="iw-act copy" onclick="doCopy('+ci+')">📋 복사</button>'
-      +'</div>';
+    h+='<button class="iw-act copy" onclick="doCopy('+ci+')">📋 복사</button>';
+    if (isAdmin() && c.formRow) h+=markActBtn(c.formRow, c.marked);   // 복사 오른쪽 북마크(배정 아동도 마크 가능)
+    h+='</div>';
     h+=routeBtns(c.name,c.lat,c.lng);
   });
   return h+'</div>';
@@ -1161,6 +1212,7 @@ function buildGroupedWaitingIW(items, hLat, hLng) {
         +'<button class="iw-act absent" onclick="doAbsent('+c.row+',\''+esc(c.status||'')+'\')">'+absentLabel+'</button>'
         +'<button class="iw-act reject" onclick="doStatus('+c.row+',\'거절\')">✕</button>'
         +'<button class="iw-act copy" onclick="doCopy('+ci+')">📋</button>'
+        +markActBtn(c.row, c.marked)   // 복사 오른쪽 북마크 → 마크 아동으로
         +'</div>';
     }
     // 출발/도착(길찾기) = 제공인력·행정 (기본지도는 좌표가 뭉개져 있어 숨김)
@@ -1322,6 +1374,17 @@ function doUnassign(row) {
     showLoading(false);
     if (res.error) { showToast(res.error); return; }
     showToast('배정 취소됨', true);
+    _svcCache = {}; reloadCurrent(true);
+  }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
+}
+
+// 마크 토글 (북마크 버튼) — 확인창 없음(가벼운 개인 뷰 토글). 성공 시 캐시 비우고 재로드해 마커 반영
+function doMark(row, on) {
+  showLoading(true); infoWindow.close();
+  fetchGAS('mark', { row: row, on: on ? '1' : '0', service: currentService }).then(function(res) {
+    showLoading(false);
+    if (res.error) { showToast(res.error); return; }
+    showToast(on ? '마크됨' : '마크 해제', true);
     _svcCache = {}; reloadCurrent(true);
   }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
 }
@@ -1684,6 +1747,7 @@ function setupLongPress(el) {
 function toggleFilter(t) {
   if (t==='assigned'){showAssigned=!showAssigned;document.getElementById('filterAssigned').classList.toggle('active',showAssigned)}
   else if (t==='home'){showHome=!showHome;document.getElementById('filterHome').classList.toggle('active',showHome)}
+  else if (t==='mark'){showMark=!showMark;document.getElementById('filterMark').classList.toggle('active',showMark)}
   else{showWaiting=!showWaiting;document.getElementById('filterWaiting').classList.toggle('active',showWaiting)}
   renderMarkers();
 }
