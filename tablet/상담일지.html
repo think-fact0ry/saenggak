@@ -796,7 +796,9 @@ const DEMO = (function(){ try{ return new URLSearchParams(location.search).get('
 //  ✅ 정식 오픈(유성 2026-06-26: 보존기간·동의 법무 확인 완료) → 상담사 모드선택에 일반 노출.
 //     옛 ?ga=1 게이트 해제(법무 미확인 동안 상담사 우발 사용을 막던 임시 플래그였음). 항상 켜짐.
 const GA_ON = true;
-const FROM_HUB = (function(){ try{ return new URLSearchParams(location.search).get('from')==='hub'; }catch(e){ return false; } })();   // 허브가 로그인하러 보냄 → 신원 끝나면 허브로 복귀(서약·일지 건너뜀)
+const RET_FROM = (function(){ try{ return new URLSearchParams(location.search).get('from')||''; }catch(e){ return ''; } })();
+const RET_URL = ({ 'hub':'./index.html', 'ai일지':'./ai일지.html' })[RET_FROM] || '';   // 화이트리스트=오픈리다이렉트 방지. 신원만 끝내고 복귀할 앱(허브·AI일지). 신원 재사용(유성 2026-07-07 A안)
+const FROM_HUB = RET_FROM==='hub';   // 허브가 로그인하러 보냄 → 신원 끝나면 복귀(서약·일지 건너뜀). 하위호환 유지
 const PIN_CHANGE = (function(){ try{ return new URLSearchParams(location.search).get('pin')==='1'; }catch(e){ return false; } })();   // 마이페이지 '비밀번호 변경' → OTP 재인증 후 PIN 재설정
 const MOCK_CLIENTS = [
   {name:'김서준', birth:'20200911', service:'아청심', center:'미추'},
@@ -1253,7 +1255,7 @@ function boot(){
 }
 // 비밀번호 변경 = 분실 재인증과 같은 길(OTP→PIN 재설정), 진입 문구만 다름
 function startPinChange(){
-  try{ history.replaceState({}, '', location.pathname+'?from=hub'); }catch(e){}   // pin=1 제거(재로드·복원 시 OTP 재발동 방지) — from=hub 유지
+  try{ history.replaceState({}, '', location.pathname+'?from='+encodeURIComponent(RET_FROM||'hub')); }catch(e){}   // pin=1 제거(재로드·복원 시 OTP 재발동 방지) — from 유지(복귀 대상)
   enterReauth("");   // 제목('본인 확인을 할게요')·부제가 이미 안내 → 중복 노트 제거(§2, 유성 2026-06-25)
 }
 // 서버가 세션 거부(code:auth) = 서버 토큰이 죽음(만료/재발급/불일치). PIN(로컬)으론 못 살림 → OTP 재인증.
@@ -1278,7 +1280,7 @@ let curRound = 0;             // 1~4
 let roundData = {};           // {round: {date, content}}
 
 function enterApp(){
-  if(FROM_HUB && !DEMO){ location.replace('./index.html'); return; }   // 허브 로그인용 진입 = 신원만 끝내고 허브로(서약·일지는 상담일지 타일로 들어올 때). DEMO는 예외(시연 우회 방지)
+  if(RET_URL && !DEMO){ location.replace(RET_URL); return; }   // 외부 앱(허브·AI일지) 로그인용 진입 = 신원만 끝내고 그 앱으로 복귀(서약·일지는 상담일지 타일로 들어올 때). DEMO는 예외(시연 우회 방지)
   const s=loadSess();
   if(!DEMO && s && !s.oath){ showOath(); return; }   // 상담사 서약 1회 — 동의해야 상담일지 사용
   doEnterApp();
