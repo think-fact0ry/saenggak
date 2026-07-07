@@ -5,8 +5,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <title>AI 상담일지 — 생각공작소</title>
-
-<!-- ═ PWA(홈 화면에 추가) — tablet PWA 재사용(scope /saenggak/) ═ -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
@@ -15,130 +13,1304 @@
 <meta name="apple-mobile-web-app-title" content="생각공작소">
 <link rel="icon" href="/saenggak/android-icon-192x192.png">
 <script src="/saenggak/favicon.js"></script>
-
 <script>
-// 앱 진입 게이트 = 직원 계정 세션 필요. 없으면 상담일지 신원으로 보냄(끝나면 여기로 복귀 — from=ai일지 화이트리스트).
-//  index.html 허브 게이트와 동일 기준(needGate=PIN 6h) 유지 — 한쪽만 바꾸면 루프. 오류=잠그지 말고 통과(fail-open).
-(function(){
-  try{
-    var s = JSON.parse(localStorage.getItem('tf_staff_v1') || 'null');
-    function storageBroken(){ try{ sessionStorage.setItem('_g','1'); sessionStorage.removeItem('_g'); return false; }catch(e){ return true; } }
-    function needGate(s){
-      if(!s.pinHash) return true;          // PIN 미설정 → 상담일지가 설정 받게
-      var u; try{ u = sessionStorage.getItem('tf_staff_unlocked')==='1'; }catch(e){ u=false; }
-      return !u || (Date.now()-(s.lastAuth||0) > 6*3600*1000);   // 잠김(콜드런치) 또는 6시간 경과
-    }
-    if (!(s && s.session && (storageBroken() || !needGate(s)))){
-      location.replace('상담일지.html?from=ai일지');   // 세션 없음 OR PIN 잠김 → 로그인/PIN. 상담일지 신원 끝나면 여기로 복귀
-    }
-  } catch(e){}
-})();
+// 앱 진입 게이트 = 직원 세션 필요. 없으면 상담일지 신원(from=ai일지)→복귀. index.html 허브 게이트와 동일 기준(needGate PIN 6h).
+(function(){ try{
+  var s = JSON.parse(localStorage.getItem('tf_staff_v1')||'null');
+  function storageBroken(){ try{ sessionStorage.setItem('_g','1'); sessionStorage.removeItem('_g'); return false; }catch(e){ return true; } }
+  function needGate(s){ if(!s.pinHash) return true; var u; try{ u=sessionStorage.getItem('tf_staff_unlocked')==='1'; }catch(e){ u=false; } return !u || (Date.now()-(s.lastAuth||0) > 6*3600*1000); }
+  if(!(s && s.session && (storageBroken()||!needGate(s)))){ location.replace('상담일지.html?from=ai일지'); }
+}catch(e){} })();
 </script>
-
+<!--
+  AI 상담일지 (11 병합본, 2026-07-07 P2) — 파일럿 17 프리뷰.html에서 데이터 층 재배선.
+  · 진입: 세션게이트(tf_staff_v1 없으면 상담일지.html?from=ai일지→복귀). PWA=tablet 재사용.
+  · 아이 목록 = 11 staff_clients(대장 배정, 오감 제외). 유형=서비스 자동(아청심→child·성인→adult).
+  · 흐름: 아이 → 메모(자동저장=폰 localStorage 초안) → [AI로 정리]=11 refine(Sonnet 5·세션게이트)
+          → 요소 검토(교사 확정) → 회차/년월 선택 → 확정=11 refine_save(008 바우처상담일지 + 다듬기이력 동시).
+  · 발달영역 칩=develop(오감) 전용이라 008 트랙(child/adult)에선 미노출(코드 보존).
+  · 국외이전 확인됨(유성 2026-07-07)→Anthropic 라우트. AI 출력 자동저장 X(교사 확정=거짓기록 방지).
+  · 미완(P2 폴리싱): 서약(oath) 게이트·회차 자동다음·recap을 journal_get(서버 이력)로. 아바타=파일럿서 이관(iOS clip 검증분).
+-->
+<!-- 아래 스타일·스크립트 = 파일럿 프리뷰.html 원본(설계 보존). 데이터 층만 11로 재배선(head 게이트·EXEC_URL·refine/refine_save·roster·회차년월). -->
+-->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
-    /* TOKENS:START — §3.1 정본 토큰. 직접 편집 금지: docs/1 §3.1 고치고 node 디자인프리뷰/토큰동기.js */
-  --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db;
-  --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
-  --g800:#333d4b; --g900:#191f28;
-  --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
-  --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
-  --green:var(--green600); --green-dark:var(--green700); --green-bg:var(--green100);
-  --red:#f04452;
-  --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
-  --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
-  --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
-    /* TOKENS:END */
+    /* 회색 — §3.1 정본(중립 회색 스케일) */
+    --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db;
+    --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
+    --g800:#333d4b; --g900:#191f28;
+    /* 초록 — §3.1 OKLCH 스케일(2026-07-04 재보정, green600=#3a8a5f 앵커) */
+    --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
+    --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
+    --green:var(--green600); --green-d:var(--green700); --green-l:var(--green100);
+    /* 시맨틱 — §3.1 */
+    --red:#f04452;
+    --p-disabled:#b7e0c8;
+    /* 라운드 — §3.3 */
+    --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}
   input,textarea{-webkit-user-select:text;user-select:text;}
   body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;overscroll-behavior:none;}
-  .wrap{max-width:720px;margin:0 auto;padding:24px 22px 120px;}
-  .head-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px;}
-  h1{font-size:var(--fs-h1);font-weight:800;letter-spacing:-.02em;}
-  .who{font-size:var(--fs-sm);color:var(--g500);flex-shrink:0;}
-  .count{font-size:var(--fs-sm);color:var(--g600);margin:2px 0 16px;}
-  .client-list{display:flex;flex-direction:column;gap:10px;}
-  .client-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px;border-radius:var(--r-md);background:var(--g100);cursor:pointer;transition:transform .12s,background .12s;}
-  .client-card:active{transform:scale(.98);background:var(--g200);}
-  .client-card .nm{font-size:var(--fs-title);font-weight:700;color:var(--g900);}
-  .client-card .meta{font-size:var(--fs-sm);color:var(--g500);margin-top:2px;}
-  .client-card .chev{color:var(--g400);display:flex;flex-shrink:0;}
-  .client-card .chev svg{width:20px;height:20px;}
-  .empty{padding:56px 0;text-align:center;color:var(--g400);font-size:var(--fs-body);}
-  .note{margin-top:18px;text-align:center;font-size:var(--fs-sm);color:var(--g500);}
-  .note.err{color:var(--red);}
-  .note .retry{margin-left:8px;color:var(--green);font-weight:700;cursor:pointer;text-decoration:underline;}
-  /* 로딩 = 출렁이는 점 (§7.1) */
-  .ldb i{display:inline-block;width:5px;height:5px;margin:0 1.5px;border-radius:50%;background:currentColor;animation:ldb 1s infinite ease-in-out;}
-  .ldb i:nth-child(2){animation-delay:.15s;} .ldb i:nth-child(3){animation-delay:.3s;}
-  @keyframes ldb{0%,80%,100%{transform:translateY(0);opacity:.45;}40%{transform:translateY(-4px);opacity:1;}}
-  /* 토스트(P1 임시 안내 — write 흐름은 P2) */
-  .toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(14px);max-width:88%;padding:13px 18px;border-radius:var(--r-md);background:var(--g900);color:#fff;font-size:var(--fs-sm);opacity:0;pointer-events:none;transition:.25s;z-index:100;text-align:center;}
-  .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .wrap{max-width:720px;margin:0 auto;padding:20px 22px 130px;}
+
+  .back{display:flex;align-items:center;justify-content:flex-start;width:40px;height:40px;margin:0 0 4px 0;border-radius:var(--r-md);border:none;background:#fff;color:var(--g700);cursor:pointer;position:sticky;top:0;z-index:5;}   /* sticky=스크롤해도 뒤로화살표 맨 위 유지(§4.10, 상담일지 .back 복제) */
+  .back svg{width:24px;height:24px;display:block;}
+  .back:active{background:var(--g100);}
+  h1{font-size:24px;font-weight:700;letter-spacing:-.6px;margin:8px 0 6px;}
+  .sub{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 0 22px;}
+
+  /* 상단 행 — 시험판 뱃지(§4.15 weak) + ? 도움말 버튼 */
+  .top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .pilot-badge{font-size:12px;font-weight:700;color:var(--g600);background:var(--g100);border-radius:99px;padding:4px 11px;}
+  .help{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:none;background:var(--g100);color:var(--g600);cursor:pointer;transition:transform .12s;}
+  .help svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .help:active{transform:scale(.93);}
+
+  /* 유형 세그먼트 (시험판 전용 — 실서비스는 서비스가 결정, §4.9 흰-필) */
+  .seg{display:flex;background:var(--g100);border-radius:var(--r-md);padding:4px;margin-bottom:18px;}
+  .seg button{flex:1;font-family:inherit;font-size:14px;font-weight:600;color:var(--g600);background:none;border:none;border-radius:calc(var(--r-md) - 3px);padding:10px 4px;cursor:pointer;transition:.15s;}
+  .seg button.on{background:#fff;color:var(--green-d);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1);}
+
+  /* 메모 입력 — 괘선 메모지(유성 2026-07-05 확정: 박스 없이 줄 위에 글, 선은 글자에 거의 붙게).
+     auto-grow + 빈 여백을 칸이 채움(min-height=뷰포트). 괘선=repeating 함수 미사용(§3.6 가드), linear-gradient+background-size 반복.
+     포커스 신호=그린 캐럿(테두리 없음). 상한=MEMO_MAX 2,000자. */
+  .field{margin-bottom:18px;}
+  .field textarea{width:100%;font-family:inherit;font-size:16px;line-height:30px;padding:4px 38px 0 2px;border:none;border-radius:0;background:#fff;outline:none;resize:none;overflow:hidden;min-height:calc(100svh - 330px);caret-color:var(--green);
+    background-image:linear-gradient(transparent calc(100% - 1px), var(--g200) 0);
+    background-size:100% 30px;background-attachment:local;background-position:0 -4px;}
+  .field textarea::placeholder{color:var(--g400);font-weight:500;}
+  #s-write .ta-wrap .clr{top:8px;right:2px;}   /* 무테두리 괘선이라 X를 첫 줄 우측에 */
+  .err-note{display:none;font-size:13px;font-weight:600;color:var(--red);margin:8px 2px 0;}
+  .err-note.on{display:block;}
+
+  /* 요소 제안 카드 */
+  .elt{margin-bottom:16px;border:1.5px solid var(--g200);border-radius:var(--r-lg);padding:16px 16px 14px;transition:border-color .15s;}
+  .elt.focus{border-color:var(--green);}
+  .elt-head{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .elt-num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .elt-title{font-size:15.5px;font-weight:700;color:var(--g900);}
+  .elt-legal{font-size:12px;color:var(--g500);font-weight:500;margin:0 0 10px 30px;}
+  .elt textarea{width:100%;font-family:inherit;font-size:15.5px;line-height:29px;padding:3px 2px 0;border:none;border-radius:0;background:#fff;outline:none;resize:none;overflow:hidden;min-height:58px;color:var(--g900);caret-color:var(--green);
+    background-image:linear-gradient(transparent calc(100% - 1px), var(--g200) 0);background-size:100% 29px;background-attachment:local;background-position:0 -4px;}   /* 메모장 괘선(유성 2026-07-07 — 회색 채움칸 폐기, memo칸 §4.1-8 결·repeating 미사용 §3.6). auto-grow 유지. 우측 X 여백=.ta-wrap textarea padding-right:38 상속 */
+  .elt.focus textarea{background:#fff;}   /* 포커스 신호=그린 캐럿(카드 테두리는 .elt.focus 유지) */
+  #s-review .ta-wrap .clr{top:5px;right:2px;}   /* 무테두리 괘선이라 X를 첫 줄 우측에(memo칸 결) */
+  .elt-orig{font-size:12px;color:var(--g400);font-weight:500;margin:8px 2px 0;display:none;}
+  .elt.edited .elt-orig{display:block;}
+  .elt-orig b{color:var(--g500);font-weight:600;}
+
+  /* 우측 X 지우기 (§4.1-4 — 상담일지 .clr 복제: 15px 회색 원·svg 7px·값 있을 때만 표시).
+     입력이 전부 textarea인 폼이라 X는 칸 우상단 모서리(한 줄 입력의 '우측'에 해당). */
+  .ta-wrap{position:relative;}
+  .ta-wrap textarea{padding-right:38px;}
+  .ta-wrap .clr{position:absolute;top:13px;right:13px;width:15px;height:15px;border-radius:50%;background:var(--g300);border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+  .ta-wrap.has-val .clr{display:flex;}
+  .ta-wrap .clr svg{width:7px;height:7px;color:#fff;display:block;}
+
+  /* ── 아이별 목록 (유성 2026-07-05 확정: 위=오늘 섹션(아바타 스트립)·아래=모든 아이 ㄱㄴㄷ순) ── */
+  .sec-label{font-size:13px;font-weight:700;color:var(--g500);margin:18px 0 8px;}
+  .avt{flex-shrink:0;display:block;border-radius:50%;overflow:hidden;background:#eef3f0;}   /* display:block 필수 — inline span은 iOS서 원형 클립 안 됨(사각형 버그) */
+  .avt svg{width:100%;height:100%;display:block;}
+  .today-strip{display:flex;gap:14px;overflow-x:auto;padding:8px 10px;scrollbar-width:none;}   /* 좌우 10px=미완료 링(-5px)이 안 잘리게 */
+  .today-strip::-webkit-scrollbar{display:none;}
+  .ts-item{display:flex;flex-direction:column;align-items:center;gap:6px;border:none;background:none;font-family:inherit;cursor:pointer;padding:0;transition:opacity .2s;}
+  .ts-item .avt{width:56px;height:56px;}
+  /* 완료표시(아바타프리뷰 @31 이관) — 미완료=단일 초록 링 오버레이(크기 불변=열 정렬)/완료=어둡게+체크 배지(인스타 스토리 결, 유성 2026-07-06) */
+  .ts-avwrap{position:relative;display:inline-flex;isolation:isolate;}   /* inline-flex=baseline 여백 제거(링 중심 정렬) + 스택 컨텍스트(::before z-1 phone배경 안 가림) */
+  .ts-item.todo .ts-avwrap::before{content:'';position:absolute;inset:-5px;border-radius:50%;background:var(--green500);z-index:-1;}
+  .ts-item.todo .ts-avwrap .avt{box-shadow:0 0 0 2px #fff;}   /* 링-아이콘 흰 갭 */
+  .ts-item.done .ts-avwrap .avt{filter:brightness(.6);}   /* 완료=아바타+배경 어둡게(체크는 avt 형제라 선명) */
+  .ts-badge{position:absolute;right:-2px;bottom:-2px;width:21px;height:21px;border-radius:50%;background:var(--green600);border:2px solid #fff;display:flex;align-items:center;justify-content:center;}
+  .ts-badge svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+  .ts-item .tsn{font-size:12.5px;font-weight:600;color:var(--g700);}
+  .ts-item .tsk{font-size:10.5px;font-weight:700;color:var(--green-d);min-height:14px;}
+  .kid-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:inherit;background:#fff;border:none;border-bottom:1px solid var(--g100);padding:13px 2px;cursor:pointer;}
+  .kid-card:active{background:var(--g50);}
+  .kid-card .avt{width:42px;height:42px;}
+  .kc-mid{flex:1;min-width:0;}
+  .kc-top{display:flex;align-items:center;gap:7px;margin-bottom:1px;}
+  .kc-name{font-size:15.5px;font-weight:700;}
+  .kc-name.none{color:var(--g400);font-weight:600;}
+  .kc-cnt{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--green-l);color:var(--green-d);flex-shrink:0;}
+  .kc-cnt.draft{background:var(--g100);color:var(--g600);}
+  .kc-body{font-size:13.5px;color:var(--g500);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .kc-date{font-size:12px;color:var(--g400);font-weight:500;flex-shrink:0;}
+  .list-empty{padding:48px 10px;text-align:center;color:var(--g500);font-size:14.5px;font-weight:500;}
+
+  /* ── 아이 화면 (v2 시안 이식: 아바타 헤더·발달 타일·리캡·도트 타임라인) ── */
+  .kid-head{display:flex;align-items:center;gap:14px;margin:2px 0 6px;}
+  .kid-head .avt{width:52px;height:52px;}
+  .kh-name{font-size:22px;font-weight:700;letter-spacing:-.5px;}
+  .kh-sub{font-size:13.5px;color:var(--g500);font-weight:500;}
+  /* 발달영역 타일 — 강도=단일 그린 명도(관찰 0=중립 / 1 / 2 / 3+), 텍스트=잉크 토큰 */
+  .dom-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+  .dtile{display:flex;flex-direction:column;align-items:center;gap:5px;padding:13px 4px 11px;border-radius:var(--r-lg);background:var(--g50);position:relative;}
+  .dtile svg{width:26px;height:26px;stroke:var(--g300);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .dtile .dl{font-size:12px;font-weight:600;color:var(--g400);}
+  .dtile .dc{position:absolute;top:8px;right:9px;font-size:11px;font-weight:800;color:var(--green-d);display:none;}
+  .dtile.l1{background:var(--green50);} .dtile.l1 svg{stroke:var(--green400);} .dtile.l1 .dl{color:var(--g600);}
+  .dtile.l2{background:var(--green100);} .dtile.l2 svg{stroke:var(--green600);} .dtile.l2 .dl{color:var(--g700);font-weight:700;}
+  .dtile.l3{background:var(--green200);} .dtile.l3 svg{stroke:var(--green700);} .dtile.l3 .dl{color:var(--g800);font-weight:700;}
+  .dtile.l1 .dc,.dtile.l2 .dc,.dtile.l3 .dc{display:block;}
+  #s-kid.active .dtile{animation:tilePop .5s cubic-bezier(.22,.7,.25,1) backwards;}   /* 진입 스태거 팝인(backwards §4.3-6) */
+  #s-kid.active .dtile:nth-child(1){animation-delay:.05s}#s-kid.active .dtile:nth-child(2){animation-delay:.11s}
+  #s-kid.active .dtile:nth-child(3){animation-delay:.17s}#s-kid.active .dtile:nth-child(4){animation-delay:.23s}
+  #s-kid.active .dtile:nth-child(5){animation-delay:.29s}#s-kid.active .dtile:nth-child(6){animation-delay:.35s}
+  @keyframes tilePop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+  .recap{display:flex;gap:12px;background:var(--g50);border-radius:var(--r-lg);padding:15px 16px;}
+  .recap .ric{flex-shrink:0;width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+  .recap .ric svg{width:20px;height:20px;stroke:var(--green-d);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .recap .rt{font-size:12px;font-weight:700;color:var(--g500);margin-bottom:3px;}
+  .recap .rb{font-size:14.5px;line-height:1.55;color:var(--g800);}
+  .tl{position:relative;padding-left:22px;}
+  .tl::before{content:'';position:absolute;left:6px;top:10px;bottom:10px;width:2px;background:var(--g100);border-radius:2px;}
+  .tl-item{position:relative;display:block;width:100%;text-align:left;font-family:inherit;background:none;border:none;padding:9px 0 9px 8px;cursor:pointer;}
+  .tl-item::before{content:'';position:absolute;left:-20px;top:16px;width:10px;height:10px;border-radius:50%;background:var(--green400);box-shadow:0 0 0 3px var(--green100);}
+  .tl-item.draft::before{background:var(--g300);box-shadow:0 0 0 3px var(--g100);}
+  .tl-item:active{background:var(--g50);border-radius:var(--r-md);}
+  .tl-top{display:flex;align-items:center;gap:8px;}
+  .tl-n{font-size:13px;font-weight:700;color:var(--green-d);}
+  .tl-n.draft{color:var(--g500);}
+  .tl-date{margin-left:auto;font-size:12px;color:var(--g400);}
+  .tl-body{font-size:13.5px;color:var(--g600);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* 아이 이름 라벨(선택 한 칸) — §4.1-2 밑줄형(신원류 한 줄 입력)·그린 캐럿 */
+  .name-row{display:flex;align-items:center;gap:10px;margin:2px 0 14px;}
+  .name-row label{font-size:13.5px;font-weight:600;color:var(--g500);flex-shrink:0;}
+  .name-row input{flex:1;min-width:0;font-family:inherit;font-size:17px;font-weight:600;color:var(--g900);border:none;outline:none;border-bottom:2px solid var(--g200);padding:4px 2px 9px;background:none;caret-color:var(--green);transition:border-color .15s;}   /* 글자-밑줄 간격 +(유성 2026-07-07) */
+  .name-row input:focus{border-color:var(--green);}
+  .name-row input::placeholder{color:var(--g300);font-weight:500;}   /* 예시 글자=연한 회색(유성 "너무 진하지 않게") */
+  /* AI일지(11) — 아이 헤더(읽기전용, 이름=대장 배정)·회차 선택 */
+  .w-head{margin:2px 0 4px;}
+  .w-name{font-size:22px;font-weight:800;color:var(--g900);letter-spacing:-.02em;}
+  .w-svc{font-size:13.5px;color:var(--g500);margin-top:2px;}
+  .w-round{margin:14px 0 16px;}
+  .w-round-lb{display:block;font-size:13.5px;font-weight:600;color:var(--g600);margin-bottom:8px;}
+  .w-round-chips{display:flex;gap:8px;}
+  .rchip{flex:1;font-family:inherit;font-size:15px;font-weight:600;color:var(--g600);background:var(--g100);border:2px solid transparent;border-radius:var(--r-md);padding:11px 4px;cursor:pointer;transition:.12s;}
+  .rchip.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700;}
+  .rchip:active{transform:scale(.97);}
+
+  /* 기록 열람(saved 메모 재열람 — 최종 문장이 정본, 복사해 실제 일지에 쓰는 경로) */
+  .velt{margin-bottom:14px;border:1.5px solid var(--g200);border-radius:var(--r-lg);padding:14px 16px;}
+  .velt .vt{font-size:13px;font-weight:700;color:var(--g500);margin-bottom:4px;}
+  .velt .vb{font-size:15.5px;line-height:1.6;color:var(--g900);white-space:pre-wrap;-webkit-user-select:text;user-select:text;}
+
+  /* 되돌리기·복사 토스트 — ex18 알약 결(다크 #191f28 + 오프화이트 §3.5), 텍스트버튼=scale(§5.3-2) */
+  .utoast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);display:flex;align-items:center;gap:14px;background:#191f28;color:#F9FBFA;font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;box-shadow:0 6px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:1200;white-space:nowrap;}
+  .utoast.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0);}
+  .utoast button{font-family:inherit;font-size:14px;font-weight:700;color:var(--green400);background:none;border:none;cursor:pointer;padding:0;transition:transform .12s;}
+  .utoast button:active{transform:scale(.93);}
+
+  /* ── 발달영역 관찰 (구조 씨앗 — develop 전용) ─────────────────────
+     칩 = AI 추출 후보 확인·수정 탭(3층 수정안). 기본 켜짐(근거 있음), 탭=제외.
+     §4.9 면 문법: 값 선택 컨트롤은 테두리 금지 — 켜짐=그린 틴트 채움+초록 볼드,
+     꺼짐=중립 채움(--g100)+회색 글자. (틴트 값 #e9f4ee=현행 유지, 색 탐색 확정 대기) */
+  .dom-box{margin-bottom:16px;border:1.5px solid var(--g200);border-radius:var(--r-lg);padding:16px;}
+  .dom-title{font-size:15.5px;font-weight:700;margin-bottom:2px;}
+  .dom-sub{font-size:12.5px;color:var(--g500);font-weight:500;margin-bottom:12px;}
+  .dom-empty{font-size:13.5px;color:var(--g500);font-weight:500;line-height:1.6;background:var(--g50);border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px;}
+  .dom-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;}
+  .dom-item + .dom-item{border-top:1px solid var(--g100);}
+  .dchip{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;font-family:inherit;font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:99px;border:none;background:#e9f4ee;color:var(--green-d);cursor:pointer;transition:transform .12s,background .15s,color .15s;}
+  .dchip svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+  .dchip:active{transform:scale(.94);}
+  .dom-item.off .dchip{background:var(--g100);color:var(--g500);font-weight:600;}
+  .dom-item.off .dchip svg{display:none;}
+  .dom-ev{flex:1;font-size:12.5px;color:var(--g500);font-weight:500;line-height:1.55;padding-top:8px;}
+  .dom-ev b{color:var(--g600);font-weight:600;}
+  .dom-item.off .dom-ev{color:var(--g400);text-decoration:line-through;text-decoration-color:var(--g300);}
+  /* 직접 추가(교사 단독 관찰) — §4.9 면 문법: 꺼짐=중립 채움, 켜짐=틴트 채움 */
+  .dom-add-label{font-size:12.5px;color:var(--g500);font-weight:600;margin:14px 0 8px;}
+  .dom-add{display:flex;flex-wrap:wrap;gap:8px;}
+  .achip{font-family:inherit;font-size:13.5px;font-weight:600;padding:8px 13px;border-radius:99px;border:none;background:var(--g100);color:var(--g600);cursor:pointer;transition:transform .12s,background .15s,color .15s;}
+  .achip:active{transform:scale(.94);}
+  .achip.on{background:#e9f4ee;color:var(--green-d);font-weight:700;}
+
+  /* 활동 유형 (단일 선택) */
+  .act-row{display:flex;flex-wrap:wrap;gap:8px;}
+
+  /* 하단 고정 버튼 */
+  .footbar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:12px 22px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -1px 0 var(--g100);}
+  .footbar .inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px;}
+  .btn{flex:1;font-family:inherit;font-size:17px;font-weight:700;padding:17px;border-radius:var(--r-md);border:none;background:var(--green);color:#fff;cursor:pointer;transition:.12s;position:relative;overflow:hidden;}
+  .btn:active{transform:scale(.97);background:var(--green-d);}
+  .btn:disabled{background:var(--p-disabled);color:#fff;cursor:default;transform:none;}
+  .btn:disabled:has(.ld){background:var(--green);} /* 로딩=진행중, 비활성 아님(§4.14 상태분기) */
+  .btn.ghost{background:none;color:var(--g600);font-size:15px;font-weight:600;padding:5px;}   /* 세로폭 축소(유성 2026-07-05) */
+  .btn.ghost:active{transform:scale(.93);background:none;}
+  .btn.shake{animation:shakeX .4s cubic-bezier(.36,.07,.19,.97);}   /* 비활성 탭=흔들림(§4.9 '지금 못 눌러요' 능동 표시) */
+  @keyframes shakeX{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-3px)}40%,60%{transform:translateX(3px)}}
+  /* 키보드 위 footbar = edge-to-edge + 비활성은 흰 배경(회색 띠 방지, §4.1-5·§4.2-10). input=아이 이름 칸도 동일 */
+  .screen:has(textarea:focus,input:focus) .footbar{padding:0;box-shadow:none;}
+  .screen:has(textarea:focus,input:focus) .footbar .btn{border-radius:0;padding:19px;}
+  .screen:has(textarea:focus,input:focus) .footbar .btn:disabled:not(:has(.ld)){background:#fff;color:var(--g400);}
+  /* 색버튼 ripple — §5.3-1(누른 지점→가장 먼 모서리까지, 라벨 .bl은 위 레이어) */
+  .btn .bl{position:relative;z-index:1;}
+  .rip{position:absolute;z-index:0;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.16);transform:translate(-50%,-50%) scale(0);pointer-events:none;}
+  .rip.go{transform:translate(-50%,-50%) scale(var(--rs,16));transition:transform .46s cubic-bezier(.25,.6,.3,1);}
+  .rip.fade{opacity:0;transition:opacity .3s;}
+  /* 로딩 점(§5.2 ② 중간 액션 — 'AI로 정리' 버튼 로딩. 유성 2026-07-05 정정: 첫 정리는 마지막 넘김이 아님) */
+  .ld{display:inline-flex;align-items:center;gap:5px;color:#fff;font-weight:700;}
+  .ld i{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;animation:ldb 1s ease-in-out infinite;}
+  .ld i:nth-child(2){animation-delay:.15s;} .ld i:nth-child(3){animation-delay:.3s;}
+  @keyframes ldb{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}
+  /* 전면 로더 = 검토 화면을 갈아끼우거나 끝내는 액션만(다시 정리·확정 저장 — 유성 2026-07-05) */
+  .ovl{position:fixed;inset:0;background:rgba(255,255,255,.75);z-index:1100;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+  .ovl.show{display:flex;}
+  .ovl .spinner{width:40px;height:40px;border:3px solid var(--g200);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;}
+  .ovl p{margin:0;font-size:14.5px;font-weight:600;color:var(--g600);}
+
+  /* 확인 다이얼로그(§5.7.1 센터 — 시트와 별개·텍스트 좌측정렬). '다시 정리'=고친 값 날아갈 수 있어 되묻기(유성 2026-07-07) */
+  .cmodal{position:fixed;inset:0;z-index:1150;display:none;align-items:center;justify-content:center;padding:32px;background:rgba(0,0,0,.4);}
+  .cmodal.on{display:flex;}
+  .cmodal .card{background:#fff;border-radius:20px;padding:22px 20px 16px;max-width:340px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.22);}
+  .cmodal .ct{font-size:17px;font-weight:700;color:var(--g900);margin-bottom:8px;}
+  .cmodal .cs{font-size:14px;color:var(--g600);font-weight:500;line-height:1.55;margin-bottom:20px;}
+  .cmodal .crow{display:flex;gap:8px;}
+  .cmodal .crow button{flex:1;font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:13px;padding:13px;cursor:pointer;transition:transform .12s;}
+  .cmodal .crow button:active{transform:scale(.97);}
+  .cmodal .c-cancel{background:var(--g100);color:var(--g700);}
+  .cmodal .c-ok{background:var(--green);color:#fff;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* 완료 화면 — §4.6 골격(그림=원 팝인+체크 왼→오 드로우 → 자동 전환, 확인 버튼 없음) */
+  #s-done .wrap{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:20vh;transition:transform .44s cubic-bezier(.5,0,.2,1),opacity .44s;}
+  #s-done.suc-slide .wrap{transform:translateX(-36px);opacity:0;}
+  .done-ico{width:64px;height:64px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;margin:0 0 22px;transform:scale(0);}
+  #s-done.go .done-ico{transform:scale(1);transition:transform .35s cubic-bezier(.22,.7,.25,1);}   /* ease-out(§3.6 이징 가드 준수) — 시트 아이템과 동일 이징 */
+  .done-ico svg{width:32px;height:32px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+  .done-ico svg polyline{stroke-dasharray:1;stroke-dashoffset:1;}
+  #s-done.go .done-ico svg polyline{stroke-dashoffset:0;transition:stroke-dashoffset .4s cubic-bezier(.5,0,.3,1) .3s;}   /* 체크 왼쪽부터 그려짐 */
+  .done-t{text-align:center;font-size:21px;font-weight:700;margin-bottom:8px;opacity:0;}
+  .done-s{text-align:center;font-size:14.5px;color:var(--g500);font-weight:500;line-height:1.6;opacity:0;}
+  #s-done.go .done-t,#s-done.go .done-s{opacity:1;transition:opacity .3s ease .35s;}
+
+  /* 더블백 종료 안내 (§4.11-4 ex18 알약 — 06 Apply .exithint 복제, 오프화이트 글자 §3.5).
+     래퍼(ai일지.html)가 풀스크린 iframe이라 iframe 안 fixed = 실화면 하단 — 06 임베드와 달리 postMessage 브릿지 불필요.
+     footbar(하단 고정 버튼) 위에 뜨도록 bottom을 올림. */
+  .exithint{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);background:#191f28;color:#F9FBFA;font-size:14.5px;font-weight:600;padding:9px 20px 9px 9px;border-radius:99px;box-shadow:0 6px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:1200;white-space:nowrap;}
+  .exithint.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .exithint .ck{width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .exithint .ck svg{width:15px;height:15px;}
+
+  /* ? 도움말 바텀시트 — §4.3 규율 풀스펙(핸들·플로팅·순차 등장·드래그 닫기, 상담일지 레퍼런스 복제) */
+  .sheet-dim{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .25s;}
+  .sheet-dim.on{opacity:1;pointer-events:auto;}
+  .sheet{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:1001;background:#fff;border-radius:var(--r-lg);padding:14px 24px 24px;max-width:560px;margin:0 auto;transform:translateY(calc(100% + 16px + env(safe-area-inset-bottom)));transition:transform .3s cubic-bezier(.2,.8,.3,1);touch-action:none;}
+  .sheet.on{transform:translateY(0);}
+  .sheet.on>*{animation:sheetItem .6s cubic-bezier(.22,.7,.25,1) backwards;}   /* backwards 필수 — both면 시트 안 버튼 :active 축소가 죽음(§4.3-6) */
+  .sheet.on>*:nth-child(1){animation-delay:.06s;} .sheet.on>*:nth-child(2){animation-delay:.16s;}
+  .sheet.on>*:nth-child(3){animation-delay:.26s;} .sheet.on>*:nth-child(4){animation-delay:.36s;}
+  .sheet.on>*:nth-child(5){animation-delay:.46s;} .sheet.on>*:nth-child(6){animation-delay:.56s;}
+  .sheet.on>*:nth-child(n+7){animation-delay:.66s;}
+  @keyframes sheetItem{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+  .sheet::before{content:'';display:block;width:40px;height:4px;background:var(--g200);border-radius:99px;margin:0 auto 18px;}   /* 드래그 핸들 */
+  .sheet h2{font-size:21px;font-weight:700;letter-spacing:-.5px;line-height:1.4;margin-bottom:18px;}
+  .help-item{margin-bottom:16px;}
+  .help-item .ht{font-size:15px;font-weight:700;color:var(--g800);margin-bottom:3px;}
+  .help-item .hb{font-size:14px;color:var(--g600);font-weight:500;line-height:1.6;}
+  .help-item .hb b{color:var(--g800);font-weight:700;}
+  .sheet .btn{width:100%;margin-top:6px;}
 </style>
 </head>
 <body>
-<div class="screen" id="s-kids">
+
+<!-- ══════════ 화면 0 — 메모 목록 (진입 첫 화면, 메모장형 루트) ══════════ -->
+<section id="s-list" class="screen active">
   <div class="wrap">
-    <div class="head-row"><h1>AI 상담일지</h1><span class="who" id="whoTag"></span></div>
-    <div class="count" id="k-count"></div>
-    <div class="client-list" id="k-list"></div>
-    <div class="note" id="k-note"></div>
+    <div class="top-row" style="justify-content:flex-end">
+      <button class="help" onclick="openHelp()" aria-label="도움말">
+        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+    </div>
+    <h1 style="margin-bottom:14px">회기 메모</h1>
+    <div id="todaySec" style="display:none;">
+      <div class="sec-label" id="todayLabel" style="margin-top:2px;"></div>
+      <div class="today-strip" id="todayStrip"></div>
+    </div>
+    <div class="sec-label" id="allLabel" style="display:none;">모든 아이</div>
+    <div id="kidList"></div>
+    <p class="list-empty" id="listEmpty" style="display:none;">담당 아이가 없어요.</p>
   </div>
+</section>
+
+<!-- ══════════ 화면 0b — 아이 화면 (발달 타일·지난 회기·타임라인, 유성 2026-07-05 v2 GO) ══════════ -->
+<section id="s-kid" class="screen">
+  <div class="wrap">
+    <button class="back" onclick="navBack()" aria-label="뒤로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div class="kid-head">
+      <span class="avt" id="kidAvt"></span>
+      <div><div class="kh-name" id="kidName"></div><div class="kh-sub" id="kidSub"></div></div>
+    </div>
+    <div class="sec-label" id="kidDomLabel"></div>
+    <div class="dom-grid" id="kidDoms"></div>
+    <div id="kidRecapSec" style="display:none;">
+      <div class="sec-label" id="kidRecapLabel"></div>
+      <div class="recap"><span class="ric" id="kidRecapIc"></span><div><div class="rt" id="kidRecapT"></div><div class="rb" id="kidRecapB"></div></div></div>
+    </div>
+    <div class="sec-label">회기</div>
+    <div class="tl" id="kidTl"></div>
+  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn" onclick="newMemoForKid()">새 메모</button>
+  </div></div>
+</section>
+
+<!-- ══════════ 화면 1 — 메모 쓰기 (자동저장·아이 라벨. h1 없음=목록이 컨텍스트, §2.1-7) ══════════ -->
+<section id="s-write" class="screen">
+  <div class="wrap">
+    <button class="back" onclick="navBack()" aria-label="뒤로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <input id="childName" type="hidden">
+    <div class="seg" id="typeSeg" style="display:none">
+      <button data-type="develop" class="on">오감 발달</button>
+      <button data-type="child">아동 상담</button>
+      <button data-type="adult">성인 상담</button>
+    </div>
+    <div class="w-head"><div class="w-name" id="wName"></div><div class="w-svc" id="wSvc"></div></div>
+    <div class="w-round"><span class="w-round-lb">이번 달 몇 회차예요?</span><div class="w-round-chips" id="wRounds"></div></div>
+
+    <div class="field">
+      <div class="ta-wrap">
+        <textarea id="memo" aria-label="회기 메모"></textarea>
+        <button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <p class="err-note" id="refineErr"></p>
+    </div>
+  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn" id="refineBtn" onclick="doRefine()" disabled>AI로 정리</button>
+  </div></div>
+</section>
+
+<!-- ══════════ 화면 1b — 기록 열람 (확정된 메모 재열람·전체 복사 = 실제 일지 재사용 경로) ══════════ -->
+<section id="s-view" class="screen">
+  <div class="wrap">
+    <button class="back" onclick="navBack()" aria-label="뒤로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <h1 id="viewTitle">기록</h1>
+    <p class="sub" id="viewMeta"></p>
+    <div id="viewBox"></div>
+  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn" onclick="copyFinal()">전체 복사</button>
+    <button class="btn ghost" onclick="editSaved()">수정하기</button>
+  </div></div>
+</section>
+
+<!-- ══════════ 화면 2 — 요소 제안 검토·확정 + 발달영역 칩 ══════════ -->
+<section id="s-review" class="screen">
+  <div class="wrap">
+    <button class="back" onclick="navBack()" aria-label="뒤로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <h1>정리한 내용을 확인해주세요</h1>
+    <p class="sub">사실과 다르면 고쳐주세요.</p>
+
+    <div id="eltBox"></div>
+
+    <!-- 발달영역 관찰 (develop 전용) — AI 후보 칩 확인·수정 = 상호검증의 교사 쪽 -->
+    <div class="dom-box" id="domBox" style="display:none;">
+      <div class="dom-title">발달영역 관찰</div>
+      <div class="dom-sub">AI가 메모에서 찾은 관찰이에요. 아니면 눌러서 빼주세요.</div>
+      <div id="domList"></div>
+      <div class="dom-empty" id="domEmpty" style="display:none;">
+        이번 메모에서는 발달 관찰을 찾지 못했어요. 직접 관찰한 게 있다면 아래에서 골라주세요.
+      </div>
+      <div class="dom-add-label">더 관찰한 영역이 있나요?</div>
+      <div class="dom-add" id="domAdd"></div>
+
+      <div class="dom-add-label" style="margin-top:18px;">활동 유형</div>
+      <div class="act-row" id="actRow"></div>
+    </div>
+
+    <p class="err-note" id="saveErr"></p>
+  </div>
+  <div class="footbar"><div class="inner">
+    <button class="btn" id="saveBtn" onclick="doSave()">확정하고 저장</button>
+    <button class="btn ghost" id="refineBtn2" onclick="confirmReRefine()">다시 정리</button>
+  </div></div>
+</section>
+
+<!-- ══════════ 화면 3 — 완료(§4.6: 그림+제목+서브 1줄, 자동 전환) ══════════ -->
+<section id="s-done" class="screen">
+  <div class="wrap">
+    <div class="done-ico">
+      <svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6" pathLength="1"/></svg>
+    </div>
+    <p class="done-t">기록했어요</p>
+    <p class="done-s">AI 제안과 선생님 최종이 함께 남았어요.</p>
+  </div>
+</section>
+
+<!-- 전면 로더 — 화면을 넘기는 액션 공용(정리·다시 정리·확정 저장, 유성 2026-07-05 통일) -->
+<div class="ovl" id="saveOvl"><div class="spinner"></div><p id="ovlMsg">기록하고 있어요</p></div>
+<!-- '다시 정리' 확인 다이얼로그(§5.7.1 — 막 눌러 고친 값이 날아가는 것 방지, 유성 2026-07-07) -->
+<div class="cmodal" id="reModal" onclick="if(event.target===this)closeReModal()"><div class="card"><div class="ct">AI로 다시 정리할까요?</div><div class="cs">지금 화면에서 고친 내용이 새로 정리한 결과로 바뀔 수 있어요.</div><div class="crow"><button class="c-cancel" onclick="closeReModal()">취소</button><button class="c-ok" onclick="okReRefine()">다시 정리</button></div></div></div>
+
+<!-- 더블백 종료 안내 (§4.11-4 ex18 — 06 Apply 복제) -->
+<div class="exithint" id="exitHint"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>한 번 더 뒤로 가면 나가요.</div>
+
+<!-- 되돌리기·복사 토스트 (X 지우기 오탭 복구 — 자동저장 구조라 지우면 직전본이 없어 undo 필수) -->
+<div class="utoast" id="uToast"><span id="uToastMsg">지웠어요</span><button id="uToastUndo" onclick="undoClear()">되돌리기</button></div>
+
+<!-- ? 도움말 바텀시트 — 시험판 안내·사용법·주의(원문 보존: 이름 금지·기관 시트 기록) -->
+<div class="sheet-dim" id="helpDim" onclick="closeHelp()"></div>
+<div class="sheet" id="helpSheet">
+  <h2>이렇게 써요</h2>
+  <!-- 문안=유성 직접 압축(2026-07-05). '검토를 위해'는 유성이 의문 표해 뺌 — 고지 핵심(기관 시트 기록·외부 안 나감)은 보존 -->
+  <div class="help-item">
+    <div class="ht">메모만 적으면 돼요</div>
+    <div class="hb">메모를 적고 <b>AI로 정리</b>를 누르면 일지 요소로 나눠 제안해요. 확인하고 <b>확정</b>해야 저장돼요.</div>
+  </div>
+  <div class="help-item">
+    <div class="ht">자동으로 남아요</div>
+    <div class="hb">확정하기 전 메모는 이 폰에 자동으로 저장돼요.</div>
+  </div>
+  <div class="help-item">
+    <div class="ht">기록은 이렇게 남아요</div>
+    <div class="hb">확정하면 <b>상담일지에 기록돼요</b>. AI 제안과 선생님이 고친 최종이 함께 남아요.</div>
+  </div>
+  <button class="btn" onclick="closeHelp()">닫기</button>
 </div>
-<div class="toast" id="toast"></div>
 
 <script>
-  var GAS_EXEC = "https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec";   // 11 플랫폼(상담일지와 같은 배포)
-  function $(id){ return document.getElementById(id); }
-  function sess(){ try{ return JSON.parse(localStorage.getItem('tf_staff_v1')||'null'); }catch(e){ return null; } }
-  async function rpc(action, extra){
-    var s = sess()||{};
-    var body = Object.assign({ action:action, staffId:s.staffId, session:s.session }, extra||{});
-    var res = await fetch(GAS_EXEC, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) });
-    return res.json();
+/* ── 유형 정의 (scripts/17 Code.js TYPES와 동기 — 병합 시 단일소스로)
+   placeholder에 'OO이' 표기를 모델링(이름 금지 지침의 자연 안내) ── */
+var TYPES = {
+  develop: {
+    ph: '예) 오늘 OO이랑 클레이로 공룡 만듦. 작게 떼서 다리 붙이는 거 야무지게 함. 완성하고 뿌듯해함. 어머니께 가위질 칭찬 부탁드림.',
+    elements: [
+      {key:'service', title:'서비스 세부내용',      legal:'오늘 어떤 활동을 어떻게 진행했는지'},
+      {key:'state',   title:'아동 상태·발달 관찰',  legal:'활동 중 아이의 반응·참여·표현 관찰'},
+      {key:'parent',  title:'부모 전달사항',        legal:'보호자에게 안내·전달할 내용'}
+    ],
+    hasStruct: true
+  },
+  child: {
+    ph: '예) 오늘 블록놀이랑 그림 그리기 함. OO이 처음엔 눈맞춤 잘 안 됐는데 후반부에 웃으면서 반응 좋아짐. 어머니한테 그림 칭찬 부탁 전달.',
+    elements: [
+      {key:'service', title:'서비스 세부내용', legal:'오늘 무엇을 어떻게 진행했는지'},
+      {key:'state',   title:'아동 상태·평가',  legal:'아이의 반응·상태에 대한 상담사 관찰'},
+      {key:'parent',  title:'부모 전달사항',   legal:'보호자에게 안내·전달할 내용'}
+    ],
+    hasStruct: false
+  },
+  adult: {
+    ph: '예) 직장 스트레스 얘기 이어서 함. 이직 고민 정리해보기로 함. 지난주보다 표정 밝아짐.',
+    elements: [
+      {key:'service', title:'서비스 세부내용',  legal:'오늘 무엇을 어떻게 진행했는지'},
+      {key:'state',   title:'이용자 상태·평가', legal:'이용자의 반응·상태에 대한 상담사 관찰'}
+    ],
+    hasStruct: false
   }
-  function fmtBirth(b8){ var d=String(b8||"").replace(/\D/g,""); return d.length===8 ? d.slice(0,4)+"."+d.slice(4,6)+"."+d.slice(6,8) : d; }
-  var toastT;
-  function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove("on"); }, 2200); }
+};
+var AREAS = ['소근육','대근육','인지','언어','사회성','정서'];
+var ACTS  = ['미술','조작','요리','놀이','역할','신체'];
 
-  var allKids = [];
-  function renderKids(){
-    var box=$("k-list"); box.innerHTML="";
-    $("k-count").textContent = "담당 " + allKids.length + "명";
-    if(!allKids.length){ box.innerHTML='<div class="empty">담당 아이가 없어요</div>'; return; }
-    allKids.forEach(function(c){
-      var el=document.createElement("div"); el.className="client-card";
-      el.innerHTML='<div><div class="nm">'+esc(c.name)+'</div><div class="meta">'+esc(c.service||'')+(c.birth?' · '+fmtBirth(c.birth):'')+'</div></div>'
-        +'<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
-      el.onclick=function(){ toast(esc(c.name)+" 기록 화면은 다음 단계에서 이어져요"); };   // P1=목록까지. write(메모→AI→확정) 흐름=P2
-      box.appendChild(el);
-    });
-  }
-  function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+var TYPE_LABEL = { develop:'오감 발달', child:'아동 상담', adult:'성인 상담' };
 
-  async function loadKids(){
-    var note=$("k-note"); note.className="note"; note.innerHTML='<span class="ldb"><i></i><i></i><i></i></span>';
-    try{
-      var d = await rpc('staff_clients');
-      if(d && d.ok){ allKids = d.clients||[]; note.textContent=""; renderKids(); }
-      else if(d && d.code==='auth'){ location.replace('상담일지.html?from=ai일지'); }   // 서버 세션 죽음 → 재인증
-      else { note.className="note err"; note.innerHTML='목록을 못 불러왔어요<span class="retry" id="k-retry">다시 시도</span>'; $("k-retry").onclick=loadKids; }
-    }catch(e){
-      note.className="note err"; note.innerHTML='연결이 안 됐어요<span class="retry" id="k-retry">다시 시도</span>'; $("k-retry").onclick=loadKids;
+var curType = 'develop';
+var lastProposal = null;      // {service, state, parent?} — AI 원안
+var aiDomains = [];           // [{area, evidence, on}] — AI 후보(기본 켜짐)
+var teacherAdded = {};        // {area:true} — 교사 직접 추가(출처=teacher)
+var aiAct = '';               // AI가 고른 활동 유형
+var selAct = '';              // 최종 선택 활동 유형
+
+/* ── 메모 저장소 (메모장형 — 유성 2026-07-05 B안) ──────────────────────
+   임시메모 = 이 폰 localStorage에만(저장 버튼 없이 쓰는 대로, Keep 결).
+   확정본 = 파일럿이력 시트가 정본 — 로컬 final은 재열람·복사용 사본.
+   임상기록 확정 저장은 여전히 '확정하고 저장' 버튼(2026-06-23 낙관적 저장 금지 결정과 층이 다름). */
+var MEM_KEY = 'tfp_memos_v1';
+var memos = [], memStoreOk = true;
+try{ memos = JSON.parse(localStorage.getItem(MEM_KEY) || '[]') || []; }catch(e){ memStoreOk = false; }   // 스토리지 차단 환경=세션 내 메모리만
+function persistMemos(){ if(!memStoreOk) return; try{ localStorage.setItem(MEM_KEY, JSON.stringify(memos)); }catch(e){} }
+var cur = null;               // 열려 있는 메모(참조)
+var saveT = null;
+function scheduleSave(){ clearTimeout(saveT); saveT = setTimeout(flushCur, 400); }
+function flushCur(){
+  clearTimeout(saveT); saveT = null;
+  if(!cur || cur.status === 'saved') return;   // saved 열람 뒤엔 write 필드가 남의 값 — 덮지 않음
+  cur.name = nameEl.value.trim(); cur.memo = memoEl.value; cur.type = curType; cur.updatedAt = Date.now();
+  persistMemos();
+}
+function pruneEmpty(){   // 빈 초안은 목록에 안 남음(Keep 방식 — 삭제 버튼 없이 깔끔)
+  memos = memos.filter(function(m){ return m.status === 'saved' || (m.memo && m.memo.trim()); });   // 이름만 있고 본문 빈 초안=자동 소멸(유성 2026-07-07: 이름만 써서 목록에 남는 아이 버그 — name 단독 조건 제거). saved 기록은 첫 조건이 보존
+  persistMemos();
+}
+function fmtDate(ts){
+  if(!ts) return '';
+  var d = new Date(ts), now = new Date();
+  if(d.toDateString() === now.toDateString()) return '오늘';
+  if(new Date(now.getTime() - 864e5).toDateString() === d.toDateString()) return '어제';
+  return (d.getMonth() + 1) + '. ' + d.getDate() + '.';
+}
+/* ── 아이 그룹 (이름=1급 키, 유성 2026-07-05 확정) ──
+   요일 판정=소프트: 2회 이상 기록된 요일들=그 아이의 정규 요일 *집합*(한 요일 확정 금지 — 보강 대응),
+   오늘 만진 아이는 무조건 오늘 섹션(보강이어도 기록 순간 등장). 전부 로컬=로딩 0.
+   병합 후 업그레이드 후보=대장 결제 요일 히스토그램(세션 필요·GAS 왕복이라 시험판 제외). */
+var curKid = null;
+var DAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+/* ══════════ 아바타 엔진 (아바타프리뷰.html ?v=avatar @31에서 이관 — 2026-07-07 fable, 랜덤 자동부여만·커스텀 빌더/다문화톤 제외) ══════════ */
+var CK = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';   // 완료 배지 체크
+var HAIRC_RANDOM=['#2b2926','#2b2926','#2b2926','#6b4e35','#8a6a4d','#4a3728']; // 검정 가중
+var HAIRLIGHT={'#2b2926':'#484440','#6b4e35':'#856848','#8a6a4d':'#a3835f','#4a3728':'#63503a','#3a3531':'#565049'};
+var TOPS8=['#e88ba0','#f0a875','#f3c969','#7bcb9c','#6fc7c2','#8db8e8','#b79ae0','#eba0a8']; // 무지개 순
+var RIBBON_C='#e8607f';
+var SKIN_COOL=['#ffece2','#ffe2d7','#f8d3c4'];   // 1~3 쿨
+var SKIN_WARM=['#ffeed8','#ffdec6','#f4d0af'];   // 4~6 웜
+var SKIN_BASE=SKIN_COOL.concat(SKIN_WARM);       // 첫 랜덤(피부톤 후보 확정 시 SKIN_COOL/WARM 교체)
+/* 표정 6 — 점눈/반달눈 + 발그레 볼 + 입 */
+var MOUTHS={
+  smile:'<path d="M21.2 26.6c1.5 1.5 4.1 1.5 5.6 0" fill="none" stroke="#b9603f" stroke-width="1.1" stroke-linecap="round"/>',
+  happy:'<path d="M20.8 26.3c1.6 2 5.8 2 6.4 0" fill="none" stroke="#b9603f" stroke-width="1.2" stroke-linecap="round"/>',
+  grin: '<path d="M20.8 26.2c1.5 2.2 4.9 2.2 6.4 0z" fill="#b1543a"/><path d="M20.9 26.3c1.5-.5 4.8-.5 6.2 0" fill="#fff"/>',
+  calm: '<path d="M22.2 26.9h3.6" fill="none" stroke="#b9603f" stroke-width="1.1" stroke-linecap="round"/>',
+  blush:'<path d="M21.2 26.6c1.5 1.5 4.1 1.5 5.6 0" fill="none" stroke="#b9603f" stroke-width="1.1" stroke-linecap="round"/>',
+  shy:  '<circle cx="24" cy="26.9" r="1.15" fill="none" stroke="#b9603f" stroke-width="1"/>'
+};
+var FACE_KEYS=['smile','happy','grin','calm','blush','shy'];
+function eyesFor(face){
+  if(face==='happy') return '<path d="M17.4 22.8q1.7 -1.7 3.4 0" fill="none" stroke="#33302c" stroke-width="1.2" stroke-linecap="round"/><path d="M27.2 22.8q1.7 -1.7 3.4 0" fill="none" stroke="#33302c" stroke-width="1.2" stroke-linecap="round"/>';
+  if(face==='shy') return '<path d="M17.4 22.4q1.7 -1.3 3.4 0" fill="none" stroke="#33302c" stroke-width="1.2" stroke-linecap="round"/><path d="M27.2 22.4q1.7 -1.3 3.4 0" fill="none" stroke="#33302c" stroke-width="1.2" stroke-linecap="round"/>';
+  return '<ellipse cx="19.45" cy="22.5" rx="1.1" ry="1.4" fill="#231f1c"/><ellipse cx="28.55" cy="22.5" rx="1.1" ry="1.4" fill="#231f1c"/>';   // 살짝 작게+아주 약간 모음(fable 2026-07-07)
+}
+function cheeksFor(face){
+  var o=face==='blush'?'.72':'.42', r=face==='blush'?'2.1':'1.8';
+  return '<circle cx="15.6" cy="25" r="'+r+'" fill="#f4a2ab" opacity="'+o+'"/><circle cx="32.4" cy="25" r="'+r+'" fill="#f4a2ab" opacity="'+o+'"/>';
+}
+function hl(c){ return HAIRLIGHT[c]||'#5a5652'; }
+var HAIR={
+  // 남아 — 순서: 단정·일자·옆가르마·곱슬
+  crop: {sex:'m',label:'단정', front:function(c){ return '<path d="M13.6 19.5 C13.5 10.2 17.7 7.5 24 7.5 C30.3 7.5 34.5 10.2 34.4 19.5 C32.8 14 28.9 12.2 24 12.2 C19.1 12.2 15.2 14 13.6 19.5 Z" fill="'+c+'"/>'; }},
+  bowl: {sex:'m',label:'일자', front:function(c){ return '<path d="M13.6 19 C13.6 9.6 17.7 7 24 7 C30.3 7 34.4 9.6 34.4 19 L33.8 17.2 C33.6 15.4 33 14.8 31.8 14.8 Q24 14.2 16.2 14.8 C15 14.8 14.4 15.4 14.2 17.2 Z" fill="'+c+'"/>'; }},
+  side: {sex:'m',label:'옆가르마', front:function(c){ return '<path d="M13.6 19.4 C13.5 9.6 17.8 7 24 7 C30.4 7 34.5 10.2 34.4 19.4 C34 15 32.6 13.5 30.2 13.1 C28.5 12.8 27.6 12 27.2 10.4 C26.1 12.9 22.6 14.6 18 15.6 C15.9 16.05 14.4 17 13.6 19.4 Z" fill="'+c+'"/><path d="M26.9 11.2 C25.9 13.1 23 14.3 19.8 15.1" fill="none" stroke="'+hl(c)+'" stroke-width="0.7" stroke-linecap="round"/>'; }},
+  curly:{sex:'m',label:'곱슬', front:function(c){ return '<g fill="'+c+'"><circle cx="15.6" cy="14.6" r="3.4"/><circle cx="20.4" cy="11.4" r="3.7"/><circle cx="24" cy="10.6" r="3.8"/><circle cx="27.8" cy="11.4" r="3.7"/><circle cx="32.4" cy="14.6" r="3.4"/><path d="M13.2 19C13.2 13 17.8 11 24 11s10.8 2 10.8 8c-1.6-4-5.2-5.6-10.8-5.6S14.8 15 13.2 19Z"/></g>'; }},
+  // 여아 — 순서: 단발·긴생머리·웨이브·양갈래
+  bob:  {sex:'f',label:'단발', back:function(c){ return '<path d="M11.8 19C11.8 9 17 6.3 24 6.3S36.2 9 36.2 19v7.5c0 3-2.2 3.8-3.4 1.6l-.2-8c0-6-3.4-8.4-8.6-8.4S15.6 14.1 15.6 20l-.2 8c-1.2 2.2-3.6 1.4-3.6-1.6Z" fill="'+c+'"/><path d="M14 15c-1 2.4-1.2 5-1 8" fill="none" stroke="'+hl(c)+'" stroke-width="0.9" stroke-linecap="round"/>'; }, front:function(c){ return '<path d="M13.2 19.4C13.2 10 17.8 7.4 24 7.4s10.8 2.6 10.8 12c-1.6-4.7-5.2-6.6-10.8-6.6S14.8 14.7 13.2 19.4Z" fill="'+c+'"/>'; }},
+  straight:{sex:'f',label:'긴 생머리', back:function(c){ return '<path d="M11.3 19C11.3 8.5 17 6 24 6s12.7 2.5 12.7 13v13.5c0 4.2-2.6 6.4-6.8 6.4H18.1c-4.2 0-6.8-2.2-6.8-6.4Z" fill="'+c+'"/><path d="M13.6 21v14" fill="none" stroke="'+hl(c)+'" stroke-width="0.9" stroke-linecap="round"/><path d="M34.4 21v14" fill="none" stroke="'+hl(c)+'" stroke-width="0.9" stroke-linecap="round"/>'; }, front:function(c){ return '<path d="M13.2 19C13.2 9.6 17.8 7 24 7s10.8 2.6 10.8 12c-1.6-4.7-5.2-6.6-10.8-6.6S14.8 14.3 13.2 19Z" fill="'+c+'"/>'; }},
+  wave: {sex:'f',label:'웨이브', back:function(c){ return '<path d="M12 19C12 9 17.5 6 24 6C30.5 6 36 9 36 19C37.3 21.6 34.9 23.2 36.3 25.8C37.6 28.4 35.1 30 36.5 32.6C37.5 34.8 35 36 35.3 38.2C35.2 39.6 33.4 40 31.9 39.3L16.1 39.3C14.6 40 12.8 39.6 12.7 38.2C13 36 10.5 34.8 11.5 32.6C12.9 30 10.4 28.4 11.7 25.8C13.1 23.2 10.7 21.6 12 19Z" fill="'+c+'"/><path d="M13.4 22C12.6 24.4 14.8 26 13.6 28.4C12.4 30.8 14.6 32.4 13.5 34.6" fill="none" stroke="'+hl(c)+'" stroke-width="0.9" stroke-linecap="round"/><path d="M34.6 22C35.4 24.4 33.2 26 34.4 28.4C35.6 30.8 33.4 32.4 34.5 34.6" fill="none" stroke="'+hl(c)+'" stroke-width="0.9" stroke-linecap="round"/>'; }, front:function(c){ return '<path d="M13 19C13 9.4 17.8 6.8 24 6.8s11 2.6 11 12c-1.6-4.4-5.2-6.4-11-6.4S14.6 14.6 13 19Z" fill="'+c+'"/>'; }},
+  twin: {sex:'f',label:'양갈래', back:function(c){ return '<g fill="'+c+'"><path d="M12.4 19C12.4 9.4 17.4 6.8 24 6.8S35.6 9.4 35.6 19v5c0 3-2.2 3.6-3.4 1.5l-.2-6c0-6-3.4-8.2-8-8.2s-8 2.2-8 8.2l-.2 6C14.6 27.6 12.4 27 12.4 24Z"/><path d="M11 24c-2.2.4-3.6 2.6-3.2 5.4.4 2.6 2.2 4.4 4.2 4 1.6-.3 2.4-2.3 2-4.6-.4-2.4-.8-4.4-3-4.8Z"/><path d="M37 24c2.2.4 3.6 2.6 3.2 5.4-.4 2.6-2.2 4.4-4.2 4-1.6-.3-2.4-2.3-2-4.6.4-2.4.8-4.4 3-4.8Z"/></g>'; }, front:function(c){ return '<path d="M13.4 19C13.4 9.8 18 7.2 24 7.2S34.6 9.8 34.6 19c-1.5-4.2-5.1-6-10.6-6S15 14.8 13.4 19Z" fill="'+c+'"/>'; }}
+};
+var HAIR_M=['crop','bowl','side','curly'];
+var HAIR_F=['bob','straight','wave','twin'];
+function ribbonSVG(hair){
+  if(hair==='twin') return '<g fill="'+RIBBON_C+'"><path d="M6.5 27l3.4-1.7v3.4z"/><path d="M12.5 27l-3.4-1.7v3.4z"/><circle cx="9.5" cy="27" r="1.3"/><path d="M41.5 27l-3.4-1.7v3.4z"/><path d="M35.5 27l3.4-1.7v3.4z"/><circle cx="38.5" cy="27" r="1.3"/></g>';
+  return '<g fill="'+RIBBON_C+'"><path d="M22 8.4l-3.2-1.7v3.4z"/><path d="M26 8.4l3.2-1.7v3.4z"/><circle cx="24" cy="8.4" r="1.4"/></g>';
+}
+var GLASS1='<g fill="none" stroke="#4e5968" stroke-width="0.85"><circle cx="19.1" cy="22.5" r="3.1"/><circle cx="28.9" cy="22.5" r="3.1"/><path d="M22.2 22.4h3.6"/></g>';
+var GLASS2='<g fill="none" stroke="#3a3d42" stroke-width="1.3"><rect x="15.6" y="20" width="7" height="5.2" rx="1.4"/><rect x="25.4" y="20" width="7" height="5.2" rx="1.4"/><path d="M22.6 22.4h2.8"/></g>';
+var HAT1='<path d="M12.8 16.6C12.8 10 17.5 7.4 24 7.4S35.2 10 35.2 16.6z" fill="#4c9f74"/><path d="M15 12.5q4 2 9 2t9-2" fill="none" stroke="#3a8560" stroke-width="1.1"/><rect x="10.5" y="15.4" width="27" height="3.6" rx="1.8" fill="#3a8560"/>';
+var HAT2='<path d="M12.3 16.8C12.3 9.8 17.2 7 24 7C30.8 7 35.7 9.8 35.7 16.8Z" fill="#5b8fd6"/><path d="M28.5 16.6C33 15.6 38 16.4 38.6 18.8C38.2 20.6 33.8 20.4 28.8 19.2Z" fill="#4a7cc0"/>';
+function darken(hex,f){ var h=hex.replace('#',''); var r=Math.round(parseInt(h.slice(0,2),16)*f), g=Math.round(parseInt(h.slice(2,4),16)*f), b=Math.round(parseInt(h.slice(4,6),16)*f); return '#'+[r,g,b].map(function(x){return('0'+x.toString(16)).slice(-2);}).join(''); }   // 피부톤 기반 살짝 어두운 윤곽색
+function avatarSVG(o){
+  var h=HAIR[o.hair]||HAIR.crop;
+  var c=o.hairC, s=[], dk=darken(o.skin,0.84);
+  s.push('<svg viewBox="0 0 48 48">');
+  s.push('<rect width="48" height="48" fill="'+(o.bg||'#eef3f0')+'"/>');
+  if(!o.hat && h.back) s.push(h.back(c));                                                  // back머리 = 옷 뒤(먼저)
+  s.push('<path d="M3.5 48 C5 39.5 10.8 34.8 16.8 34.1 C18.8 33.8 19.9 32.6 20.3 30.6 L27.7 30.6 C28.1 32.6 29.2 33.8 31.2 34.1 C37.2 34.8 43 39.5 44.5 48 Z" fill="'+o.skin+'" stroke="'+dk+'" stroke-width="0.55"/>');   // 피부 흉상 = 목+어깨 연속 1형태
+  s.push('<path d="M3.5 48 C5 39.6 10.8 34.9 16.8 34.3 C19.2 34.1 21.6 35.1 24 35.1 C26.4 35.1 28.8 34.1 31.2 34.3 C37.2 34.9 43 39.6 44.5 48 Z" fill="'+o.top+'"/>');   // 옷=크루넥(얕은 넥라인)
+  s.push('<ellipse cx="24" cy="20" rx="10.5" ry="11" fill="'+o.skin+'" stroke="'+dk+'" stroke-width="0.55"/>');   // 얼굴+턱 윤곽
+  s.push(cheeksFor(o.face)+eyesFor(o.face)+MOUTHS[o.face]);
+  if(o.hat){ s.push(o.hat==='hat2'?HAT2:HAT1); } else { s.push(h.front(c)); }
+  if(o.glasses) s.push(o.glasses==='g2'?GLASS2:GLASS1);
+  if(o.ribbon && !o.hat) s.push(ribbonSVG(o.hair));
+  s.push('</svg>');
+  return s.join('');
+}
+/* ── 결정론 조합 (시드=이름, 파일럿엔 생년월일 없음 — 이름만) ── */
+function hstr(s){ var h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return h>>>0; }
+var MALE=['이준','서준','도윤','하준','시우','은우','지호','유준','선우','도현','이안','수호','건우','예준','태오'];
+var FEMALE=['서아','이서','하윤','아윤','지안','서윤','아린','하린','지아','지우','수아','하은','시아','지유'];
+function genderOf(n){ if(MALE.indexOf(n)>-1)return 'm'; if(FEMALE.indexOf(n)>-1)return 'f'; return null; }
+function bgTint(top){ var m={'#7bcb9c':'#eef7f1','#f3c969':'#fbf5e4','#8db8e8':'#eef3fb','#eba0a8':'#fbeef0','#b79ae0':'#f3eefb','#f0a875':'#fbf2ea','#6fc7c2':'#e9f6f5','#e88ba0':'#fbecf0'}; return m[top]||'#eef3f0'; }
+function partsFor(name, birth){
+  var seed=hstr(name+'|'+(birth||''));
+  var g=genderOf(name)||(seed%2?'m':'f');
+  var pool=g==='m'?HAIR_M:HAIR_F;
+  var top=TOPS8[(seed>>>12)%TOPS8.length];
+  return { gender:g, hair:pool[(seed)%pool.length], hairC:HAIRC_RANDOM[(seed>>>3)%HAIRC_RANDOM.length],
+    skin:SKIN_BASE[(seed>>>15)%SKIN_BASE.length], top:top, bg:bgTint(top),
+    face:FACE_KEYS[(seed>>>18)%FACE_KEYS.length], ribbon:g==='f'&&((seed>>>21)%100<18), glasses:false, hat:false };
+}
+function avFor(g){ return avatarSVG(partsFor(g.name || g.key, g.birth || '')); }   // 대장 생년월일 시드(동명이인 변주)
+// ── 대장 배정 아이 명부(staff_clients) = 항상 뜨는 아이(로컬 메모는 여기에 붙음). 11 세션게이트 ──
+var roster = [];
+function serviceToType(svc){ svc = String(svc || ''); if(svc.indexOf('성인') >= 0) return 'adult'; if(svc.indexOf('아동') >= 0 || svc.indexOf('청소년') >= 0) return 'child'; return 'child'; }   // 오감=명부 제외(008 의무 없음)·정신토탈=미지원→child 폴백
+function thisMonth(){ var d = new Date(), p = function(n){ return ('0' + n).slice(-2); }; return d.getFullYear() + '-' + p(d.getMonth() + 1); }
+function todayYmd(){ var d = new Date(), p = function(n){ return ('0' + n).slice(-2); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
+function loadRoster(){
+  var s = sess() || {};
+  fetch(EXEC_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'staff_clients', staffId:s.staffId, session:s.session }) })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.code === 'auth'){ location.replace('상담일지.html?from=ai일지'); return; }
+      if(res && res.ok){ roster = res.clients || []; renderList(); }
+    }).catch(function(){});   // 실패해도 로컬 메모 기반 목록은 뜸(다음 진입 재시도)
+}
+// 회차/년월 — 008은 (child_id, 년월, 회차 1~4) upsert라 필수. 새 메모=이번 달·오늘·1회차 기본, 교사가 회차 선택.
+var curYm = '', curRound = 1, curDate = '';
+function renderWriteMeta(){
+  var nm = (cur && cur.name) || '', g = null;
+  for(var i = 0; i < roster.length; i++){ if((roster[i].name || '') === nm){ g = roster[i]; break; } }
+  if(g && cur){ cur.birth = g.birth || ''; cur.service = g.service || ''; curType = serviceToType(g.service); }   // roster가 유형·생년 권위(초안 재열람 포함)
+  document.getElementById('wName').textContent = nm || '';
+  document.getElementById('wSvc').textContent = (g && g.service) || (cur && cur.service) || (TYPE_LABEL[curType] || '');
+  if(!curYm) curYm = thisMonth(); if(!curDate) curDate = todayYmd(); if(!curRound) curRound = 1;
+  var box = document.getElementById('wRounds'); box.innerHTML = '';
+  [1, 2, 3, 4].forEach(function(n){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'rchip' + (curRound === n ? ' on' : ''); b.textContent = n + '회차';
+    b.addEventListener('click', function(){ curRound = n; document.querySelectorAll('#wRounds .rchip').forEach(function(x){ x.classList.remove('on'); }); b.classList.add('on'); });
+    box.appendChild(b);
+  });
+}
+var DOM_ICONS = {
+  '소근육': '<svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><line x1="20" y1="4" x2="8.1" y2="15.9"/><line x1="14.5" y1="14.5" x2="20" y2="20"/><line x1="8.1" y1="8.1" x2="12" y2="12"/></svg>',
+  '대근육': '<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  '인지': '<svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4.9 12 4.9 4.9 0 0 1 1.4 3.5V18h7v-.5a4.9 4.9 0 0 1 1.4-3.5A7 7 0 0 0 12 2z"/></svg>',
+  '언어': '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+  '사회성': '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></svg>',
+  '정서': '<svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>'
+};
+var RECAP_IC = '<svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/></svg>';
+function kidKey(n){ n = (n || '').trim(); return n || '__noname__'; }
+function groupKids(){
+  var map = {}, todayStr = new Date().toDateString();
+  // 1) 대장 배정 명부 = 메모가 없어도 항상 뜨는 아이(생년월일·서비스 보유)
+  roster.forEach(function(c){
+    var k = kidKey(c.name);
+    map[k] = { key: k, name: (c.name || '').trim(), birth: c.birth || '', service: c.service || '', memos: [], saved: 0, last: null, days: {}, touchedToday: false };
+  });
+  // 2) 로컬 초안·기록 메모 붙이기(명부 밖 이름=폴백 그룹)
+  memos.forEach(function(m){
+    var k = kidKey(m.name);
+    if(!map[k]) map[k] = { key: k, name: (m.name || '').trim(), birth: '', service: '', memos: [], saved: 0, last: null, days: {}, touchedToday: false };
+    var g = map[k]; g.memos.push(m);
+    if(m.status === 'saved') g.saved++;
+    if(!g.last || (m.updatedAt || 0) > (g.last.updatedAt || 0)) g.last = m;
+    if(m.updatedAt){
+      var d = new Date(m.updatedAt);
+      g.days[d.getDay()] = (g.days[d.getDay()] || 0) + 1;
+      if(d.toDateString() === todayStr) g.touchedToday = true;
     }
-  }
+  });
+  return Object.keys(map).map(function(k){ return map[k]; });
+}
+function kidRegularDays(g){
+  var strong = [], any = [];
+  for(var d = 0; d < 7; d++){ if(g.days[d] >= 2) strong.push(d); if(g.days[d] >= 1) any.push(d); }
+  return strong.length ? strong : any;
+}
+function renderList(){
+  pruneEmpty();
+  var kids = groupKids();
+  var named = kids.filter(function(g){ return g.key !== '__noname__'; });
+  var noname = kids.filter(function(g){ return g.key === '__noname__'; });
+  var today = new Date().getDay(), todayStr = new Date().toDateString();
+  // 오늘 섹션 — 정규 요일 집합에 오늘 포함 or 오늘 만짐(보강)
+  var todays = named.filter(function(g){ return g.touchedToday || kidRegularDays(g).indexOf(today) > -1; });
+  function isDoneToday(g){ return g.memos.some(function(m){ return m.status === 'saved' && m.savedAt && new Date(m.savedAt).toDateString() === todayStr; }); }
+  todays.sort(function(a, b){ return (isDoneToday(a) ? 1 : 0) - (isDoneToday(b) ? 1 : 0) || a.name.localeCompare(b.name, 'ko'); });   // 미완료 왼쪽, 완료 뒤로(유성 2026-07-06) + 이름순
+  var ts = document.getElementById('todayStrip'); ts.innerHTML = '';
+  todays.forEach(function(g){
+    var doneToday = isDoneToday(g);
+    var b = document.createElement('button'); b.className = 'ts-item ' + (doneToday ? 'done' : 'todo'); b.type = 'button';
+    b.innerHTML = '<span class="ts-avwrap"><span class="avt">' + avFor(g) + '</span>' + (doneToday ? '<span class="ts-badge">' + CK + '</span>' : '') + '</span><span class="tsn">' + esc(g.name) + '</span>';   // '기록 끝' 텍스트 삭제(유성 2026-07-07 — 체크 배지+어둡게가 이미 완료를 말함)
+    b.addEventListener('click', function(){ openKid(g.key); });
+    ts.appendChild(b);
+  });
+  document.getElementById('todaySec').style.display = todays.length ? 'block' : 'none';
+  document.getElementById('todayLabel').textContent = '오늘 · ' + DAY_KO[today] + '요일';
+  // 모든 아이 — ㄱㄴㄷ순(유성 확정), 이름 없음은 맨 뒤
+  named.sort(function(a, b){ return a.name.localeCompare(b.name, 'ko'); });
+  var all = named.concat(noname);
+  var box = document.getElementById('kidList'); box.innerHTML = '';
+  all.forEach(function(g){
+    var m = g.last;
+    var nm = g.key === '__noname__' ? '<span class="kc-name none">이름 없음</span>' : '<span class="kc-name">' + esc(g.name) + '</span>';
+    var cnt = g.saved > 0 ? '<span class="kc-cnt">기록 ' + g.saved + '</span>' : (g.memos.length ? '<span class="kc-cnt draft">쓰던 메모</span>' : '');
+    var body = (m && (m.status === 'saved' && m.final ? (m.final.service || m.final.state || m.memo) : m.memo)) || '';
+    var b = document.createElement('button'); b.className = 'kid-card'; b.type = 'button';
+    b.innerHTML = '<span class="avt">' + avFor(g) + '</span><div class="kc-mid"><div class="kc-top">' + nm + cnt + '</div><div class="kc-body">' + esc(body) + '</div></div><span class="kc-date">' + fmtDate(m && m.updatedAt) + '</span>';
+    b.addEventListener('click', function(){ openKid(g.key); });
+    box.appendChild(b);
+  });
+  document.getElementById('allLabel').style.display = all.length ? 'block' : 'none';
+  document.getElementById('listEmpty').style.display = all.length ? 'none' : 'block';
+}
+function openKid(key){ curKid = key; navTo('s-kid'); }   // 렌더는 showScreenRaw 훅이 수행
+function renderKid(){
+  var kids = groupKids(), g = null;
+  for(var i = 0; i < kids.length; i++){ if(kids[i].key === curKid){ g = kids[i]; break; } }
+  if(!g){ showScreenRaw('s-list'); return; }   // 그룹 소멸(빈 메모 정리 등) 방어
+  var av = document.getElementById('kidAvt');
+  av.className = 'avt'; av.innerHTML = avFor(g);
+  document.getElementById('kidName').textContent = g.key === '__noname__' ? '이름 없음' : g.name;
+  var lastType = (g.last && g.last.type) || 'develop';
+  document.getElementById('kidSub').textContent = (TYPE_LABEL[lastType] || '') + (g.saved ? ' · 기록 ' + g.saved : '');
+  document.getElementById('kidDomLabel').textContent = g.key === '__noname__' ? '발달 그림' : g.name + '의 발달 그림';
+  // 발달 타일 — 확정 칩 누적(confirmed+added), 강도=그린 명도 단계
+  var counts = {};
+  g.memos.forEach(function(m){
+    if(m.status === 'saved' && m.chips){ (m.chips.confirmed || []).concat(m.chips.added || []).forEach(function(a){ counts[a] = (counts[a] || 0) + 1; }); }
+  });
+  var dg = document.getElementById('kidDoms'); dg.innerHTML = '';
+  AREAS.forEach(function(a){
+    var c = counts[a] || 0, lv = c >= 3 ? 3 : c;
+    var d = document.createElement('div'); d.className = 'dtile' + (lv ? ' l' + lv : '');
+    d.innerHTML = (c ? '<span class="dc">' + c + '</span>' : '') + DOM_ICONS[a] + '<span class="dl">' + a + '</span>';
+    dg.appendChild(d);
+  });
+  // 지난 회기 리캡 — 최근 확정 기록(Load-last-note의 우리 번역)
+  var lastSaved = null;
+  g.memos.forEach(function(m){ if(m.status === 'saved' && (!lastSaved || (m.savedAt || 0) > (lastSaved.savedAt || 0))) lastSaved = m; });
+  var rs = document.getElementById('kidRecapSec');
+  if(lastSaved && lastSaved.final){
+    rs.style.display = 'block';
+    document.getElementById('kidRecapLabel').textContent = '지난 회기 · ' + fmtDate(lastSaved.savedAt);
+    document.getElementById('kidRecapIc').innerHTML = RECAP_IC;
+    document.getElementById('kidRecapT').textContent = lastSaved.final.activity || TYPE_LABEL[lastSaved.type] || '기록';
+    document.getElementById('kidRecapB').textContent = lastSaved.final.state || lastSaved.final.service || '';
+  } else { rs.style.display = 'none'; }
+  // 회기 타임라인 — 최신순, 확정 순번=오래된 순 1..N
+  var sorted = g.memos.slice().sort(function(a, b){ return (a.updatedAt || 0) - (b.updatedAt || 0); });
+  var ord = {}, n = 0;
+  sorted.forEach(function(m){ if(m.status === 'saved'){ n++; ord[m.id] = n; } });
+  var tl = document.getElementById('kidTl'); tl.innerHTML = '';
+  sorted.slice().reverse().forEach(function(m){
+    var saved = m.status === 'saved';
+    var body = saved && m.final ? (m.final.service || m.final.state || m.memo) : m.memo;
+    var b = document.createElement('button'); b.className = 'tl-item' + (saved ? '' : ' draft'); b.type = 'button';
+    b.innerHTML = '<div class="tl-top"><span class="tl-n' + (saved ? '' : ' draft') + '">' + (saved ? ord[m.id] + '번째' : '쓰던 메모') + '</span><span class="tl-date">' + fmtDate(m.updatedAt) + '</span></div><div class="tl-body">' + esc(body || '') + '</div>';
+    b.addEventListener('click', function(){ openMemo(m.id); });
+    tl.appendChild(b);
+  });
+}
+function newMemoForKid(){
+  var kids = groupKids(), type = 'child', name = '';
+  for(var i = 0; i < kids.length; i++){ if(kids[i].key === curKid){ name = kids[i].name; type = kids[i].service ? serviceToType(kids[i].service) : ((kids[i].last && kids[i].last.type) || 'child'); break; } }
+  curYm = thisMonth(); curRound = 1; curDate = todayYmd();   // 새 메모 = 이번 달·1회차·오늘(교사가 회차 조정)
+  newMemo(name, type);   // → loadCurIntoWrite → s-write → renderWriteMeta가 생년·서비스·회차 렌더
+}
+function newMemo(name, type){
+  cur = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name || '', type: TYPES[type] ? type : 'develop', memo: '', status: 'draft', updatedAt: Date.now() };
+  memos.unshift(cur);
+  loadCurIntoWrite();
+  navTo('s-write');
+}
+function openMemo(id){
+  var m = null;
+  for(var i = 0; i < memos.length; i++){ if(memos[i].id === id){ m = memos[i]; break; } }
+  if(!m) return;
+  cur = m;
+  if(m.status === 'saved'){ renderView(); navTo('s-view'); }
+  else{ loadCurIntoWrite(); navTo('s-write'); }
+}
+function loadCurIntoWrite(){
+  nameEl.value = cur.name || '';
+  curType = TYPES[cur.type] ? cur.type : 'develop';
+  document.querySelectorAll('#typeSeg button').forEach(function(x){ x.classList.toggle('on', x.dataset.type === curType); });
+  applyType();
+  memoEl.value = cur.memo || '';
+  memoEl.dispatchEvent(new Event('input'));   // 게이팅·X has-val 동기
+  hideErr();
+}
 
-  (function boot(){
-    var s = sess();
-    if(!(s && s.session)){ location.replace('상담일지.html?from=ai일지'); return; }   // head 게이트 백스톱
-    $("whoTag").textContent = "상담사 " + (s.name||"");
-    $("s-kids").classList.add("active");
-    loadKids();
-  })();
+/* ── 유형 전환 (시험판 전용 — 메모 속성으로 저장) ── */
+document.querySelectorAll('#typeSeg button').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('#typeSeg button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    curType = b.dataset.type;
+    applyType();
+    scheduleSave();
+  });
+});
+function applyType(){
+  document.getElementById('memo').placeholder = TYPES[curType].ph;
+}
+
+/* ── 메모 게이팅 — 빈 메모=비활성(§4.14 연초록), 비활성 탭=shake(§4.9) + 자동저장 배선 ── */
+var memoEl = document.getElementById('memo');
+var nameEl = document.getElementById('childName');
+function syncGate(){
+  document.getElementById('refineBtn').disabled = refineBusy || !memoEl.value.trim();
+}
+memoEl.addEventListener('input', syncGate);
+memoEl.addEventListener('input', scheduleSave);
+memoEl.addEventListener('input', function(){ autoGrow(memoEl); });
+nameEl.addEventListener('input', scheduleSave);
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') flushCur(); });   // 앱 이탈 순간 즉시 보존
+document.querySelector('#s-write .footbar').addEventListener('pointerdown', function(){
+  var btn = document.getElementById('refineBtn');
+  if(btn.disabled && !refineBusy){
+    btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+  }
+});
+
+/* ── ? 도움말 시트 (§4.3) — 첫 진입 1회 자동 오픈(B안, 유성 2026-07-04 프리뷰 비교로 확정)
+   시트 열기=전진 1칸(§4.11-1: 시야가 바뀌는 모든 전진) → 하드웨어/스와이프 뒤로 = 시트만 한 겹 닫힘.
+   닫기 버튼·딤·드래그도 history.back()으로 모아 같은 경로(§4.11-2 동작 통일). ── */
+var helpOpen=false, _helpPushed=false;
+function openHelp(){
+  document.getElementById('helpDim').classList.add('on');
+  document.getElementById('helpSheet').classList.add('on');
+  if(!helpOpen){ helpOpen=true; _helpPushed=false; try{ history.pushState({tf:'help'},''); _helpPushed=true; }catch(e){} }
+}
+function closeHelpRaw(){
+  helpOpen=false;
+  document.getElementById('helpDim').classList.remove('on');
+  document.getElementById('helpSheet').classList.remove('on');
+}
+function closeHelp(){
+  if(helpOpen && _helpPushed){ try{ history.back(); return; }catch(e){} }   // popstate가 closeHelpRaw 수행
+  closeHelpRaw();
+}
+try{
+  if(!localStorage.getItem('tfp_help_seen')){
+    localStorage.setItem('tfp_help_seen','1');
+    setTimeout(openHelp, 400);   // 화면 뜬 뒤 부드럽게(진입과 동시 X)
+  }
+}catch(e){}   // localStorage 불가 환경 = 자동 오픈 생략(매번 열리는 마찰 방지), ? 버튼은 항상 있음
+
+/* ── 요소 카드 렌더 (유형별 동적) ── */
+function renderElements(){
+  var t = TYPES[curType];
+  var box = document.getElementById('eltBox');
+  box.innerHTML = '';
+  t.elements.forEach(function(e, i){
+    var d = document.createElement('div');
+    d.className = 'elt';
+    d.dataset.key = e.key;
+    d.innerHTML =
+      '<div class="elt-head"><span class="elt-num">'+(i+1)+'</span>'+
+      '<span class="elt-title">'+e.title+'</span></div>'+
+      '<p class="elt-legal">'+e.legal+'</p>'+
+      '<div class="ta-wrap"><textarea data-el></textarea><button class="clr" type="button" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'+
+      '<p class="elt-orig"><b>AI 원안:</b> <span class="orig-txt"></span></p>';
+    box.appendChild(d);
+    var ta = d.querySelector('textarea');
+    setupTaClr(d.querySelector('.ta-wrap'));
+    ta.addEventListener('focus', function(){ d.classList.add('focus'); });
+    ta.addEventListener('blur',  function(){ d.classList.remove('focus'); });
+    ta.addEventListener('input', function(){
+      // 뱃지 없음(유성 2026-07-05 제거) — 수정 사실은 아래 'AI 원안' 줄이 말하고, 확정-차이 데이터는 저장 시 비교로 잡힘
+      var edited = lastProposal && ta.value.trim() !== (lastProposal[e.key]||'').trim();
+      d.classList.toggle('edited', edited);
+      autoGrow(ta);
+    });
+  });
+}
+
+/* ──────────────────────────────────────────────────────────────
+   다듬기 = ★실엔진★ (scripts/17 doPost — Sonnet 5)
+   키워드 스텁 전량 폐기(2026-07-04 유성 B안): 판단=모델, 구조(요소·enum·저장)=우리.
+   모델·프롬프트 버전은 응답(_model/_promptVer)으로 받아 저장 스키마에 스탬프.
+   토큰=게이트용(비밀 아님, 유출 시 GAS 쪽과 함께 문자열 교체).
+   ────────────────────────────────────────────────────────────── */
+// 11 플랫폼(상담일지와 같은 배포). refine/refine_save는 세션으로 서버가 상담사 확정(위조 방지).
+var EXEC_URL = 'https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec';
+function sess(){ try{ return JSON.parse(localStorage.getItem('tf_staff_v1')||'null'); }catch(e){ return null; } }
+var ERR_MSG = {
+  too_long: '메모가 너무 길어요. 2,000자 안으로 줄여주세요.',
+  rate:     '요청이 잦아요. 잠깐 뒤에 다시 눌러주세요.',
+  network:  '연결하지 못했어요. 인터넷을 확인하고 다시 눌러주세요.',
+  server:   '정리하지 못했어요. 잠시 후 다시 눌러주세요.'
+};
+function showErr(code){
+  var el = document.getElementById('refineErr');
+  el.textContent = ERR_MSG[code] || ERR_MSG.server;
+  el.classList.add('on');
+}
+function hideErr(){ document.getElementById('refineErr').classList.remove('on'); }
+
+/* ── 발달영역 칩 렌더 ── */
+function renderDomains(){
+  var box = document.getElementById('domBox');
+  if(!TYPES[curType].hasStruct){ box.style.display='none'; return; }
+  box.style.display='block';
+
+  var list = document.getElementById('domList');
+  list.innerHTML='';
+  aiDomains.forEach(function(d, i){
+    var row = document.createElement('div');
+    row.className = 'dom-item' + (d.on ? '' : ' off');
+    row.innerHTML =
+      '<button class="dchip"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'+d.area+'</button>'+
+      '<div class="dom-ev"><b>근거</b> · '+esc(d.evidence)+'</div>';
+    row.querySelector('.dchip').addEventListener('click', function(){
+      d.on = !d.on;
+      row.classList.toggle('off', !d.on);
+    });
+    list.appendChild(row);
+  });
+  document.getElementById('domEmpty').style.display = aiDomains.length ? 'none' : 'block';
+
+  var add = document.getElementById('domAdd');
+  add.innerHTML='';
+  var aiAreas = {};
+  aiDomains.forEach(function(d){ aiAreas[d.area]=true; });
+  AREAS.filter(function(a){ return !aiAreas[a]; }).forEach(function(a){
+    var b = document.createElement('button');
+    b.className = 'achip' + (teacherAdded[a] ? ' on' : '');
+    b.textContent = a;
+    b.addEventListener('click', function(){
+      teacherAdded[a] = !teacherAdded[a];
+      b.classList.toggle('on', !!teacherAdded[a]);
+    });
+    add.appendChild(b);
+  });
+
+  var acts = document.getElementById('actRow');
+  acts.innerHTML='';
+  var actList = ACTS.slice();
+  if(aiAct && actList.indexOf(aiAct) === -1) actList.push(aiAct);   // 모델이 목록 밖 유형을 주면 함께 표시
+  actList.forEach(function(a){
+    var b = document.createElement('button');
+    b.className = 'achip' + (selAct===a ? ' on' : '');
+    b.textContent = a;
+    b.addEventListener('click', function(){
+      selAct = (selAct===a) ? '' : a;
+      renderDomains();
+    });
+    acts.appendChild(b);
+  });
+}
+
+function confirmReRefine(){ document.getElementById('reModal').classList.add('on'); }   // '다시 정리' 되묻기(고친 값 보호, 유성 2026-07-07)
+function closeReModal(){ document.getElementById('reModal').classList.remove('on'); }
+function okReRefine(){ closeReModal(); doRefine(); }
+function showOvl(msg){ document.getElementById('ovlMsg').textContent = msg; document.getElementById('saveOvl').classList.add('show'); }
+function hideOvl(){ document.getElementById('saveOvl').classList.remove('show'); }
+
+var refineBusy = false;   // 이중 호출(이중 과금) 가드 — '다시 정리'(ghost 버튼)도 이 함수라 공용
+function doRefine(){
+  flushCur();   // 정리 직전 초안 보존(자동저장 debounce 대기분 즉시 flush)
+  var memo = (cur ? (cur.memo || '') : document.getElementById('memo').value).trim();   // 진실원천=cur(수정 모드에선 memoEl이 남의 값일 수 있음)
+  if(!memo){ backToWrite(); document.getElementById('memo').focus(); return; }
+  if(refineBusy) return;
+  refineBusy = true;
+  hideErr();
+  var btn = document.getElementById('refineBtn');
+  var btn2 = document.getElementById('refineBtn2');
+  btn.disabled = true; btn2.disabled = true;
+  // 로딩 경계(유성 2026-07-05 정정): 'AI로 정리'(첫 정리)=중간 액션 → 버튼 …점 / '다시 정리'(검토 화면 갈아끼움)=전면 로더(다른 버튼 탭도 차단)
+  var fromReview = navStack[navStack.length - 1] === 's-review';
+  if(fromReview){ showOvl('다시 정리하고 있어요'); }
+  else{ btn.innerHTML = '<span class="ld">정리하고 있어요 <i></i><i></i><i></i></span>'; }
+  var typeAtCall = curType;   // 응답 오는 사이 유형 전환해도 일관되게
+  var s = sess()||{};
+
+  fetch(EXEC_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'refine', staffId:s.staffId, session:s.session, memo:memo, type:typeAtCall }) })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.code==='auth'){ location.replace('상담일지.html?from=ai일지'); return; }
+      if(!res.ok) throw new Error(res.error || 'server');
+      curType = typeAtCall;
+      var r = res.result;
+      lastProposal = r;
+      renderElements();
+      TYPES[curType].elements.forEach(function(e){
+        var box = document.querySelector('.elt[data-key="'+e.key+'"]');
+        var ta = box.querySelector('textarea');
+        ta.value = r[e.key] || '';
+        box.querySelector('.orig-txt').textContent = r[e.key] || '(빈 칸)';
+        ta.dispatchEvent(new Event('input'));   // 수정뱃지·X버튼 has-val 동기(프로그램 값 주입은 input 미발화)
+      });
+      if(TYPES[curType].hasStruct){
+        aiDomains = (r.domains || []).map(function(d){ return { area:d.area, evidence:d.evidence, on:true }; });
+        aiAct = (r.activity_type && r.activity_type !== '불명') ? r.activity_type : '';
+        selAct = aiAct;
+        teacherAdded = {};
+      }
+      renderDomains();
+      navTo('s-review');
+    })
+    .catch(function(err){
+      var code = (err && err.message) || 'server';
+      showErr(ERR_MSG[code] ? code : (err instanceof TypeError ? 'network' : 'server'));
+      backToWrite();
+    })
+    .then(function(){
+      refineBusy = false;
+      hideOvl();
+      btn.textContent = 'AI로 정리';
+      btn2.disabled = false;
+      syncGate();
+    });
+}
+
+var saveBusy = false;
+function doSave(){
+  // AI 출력을 그대로 자동저장하지 않음 — 이 시점 값(=교사 확정)이 최종.
+  // 파일럿 게이트(유성 2026-07-04): 원본 메모·AI 제안·교사 최종·칩 출처를 시트에 기록.
+  if(saveBusy || !lastProposal) return;
+  saveBusy = true;
+  showOvl('기록하고 있어요');   // 최종 제출 = 전면 로더(§5.2 3층 경계)
+  document.getElementById('saveErr').classList.remove('on');
+
+  var t = TYPES[curType];
+  var fin = {};
+  t.elements.forEach(function(e){
+    var ta = document.querySelector('.elt[data-key="'+e.key+'"] textarea');
+    fin[e.key] = ta ? ta.value.trim() : '';
+  });
+  // 008 상세내용 = 요소 최종문단 결합(제목 + 본문) — 정식 바우처상담일지에 기록
+  var content = t.elements.map(function(e){ return fin[e.key] ? (e.title + '\n' + fin[e.key]) : ''; }).filter(Boolean).join('\n\n');
+  var s = sess()||{};
+  var payload = {
+    action: 'refine_save', staffId: s.staffId, session: s.session,
+    child: { name: (cur && cur.name) || '', birth: (cur && cur.birth) || '', sex: (cur && cur.sex) || '' },
+    service: (cur && cur.service) || '', type: curType,
+    ym: curYm, round: curRound, date: curDate, content: content,
+    memo: ((cur && cur.memo) || '').trim(),   // 진실원천=cur(수정 재저장 시 memoEl은 남의 값일 수 있음)
+    ai: {
+      service: lastProposal.service || '', state: lastProposal.state || '', parent: lastProposal.parent || '',
+      domains: aiDomains.map(function(d){ return { area: d.area, evidence: d.evidence }; }),
+      activity_type: aiAct
+    },
+    final: { service: fin.service || '', state: fin.state || '', parent: fin.parent || '', activity: selAct },
+    chips: {
+      confirmed: aiDomains.filter(function(d){ return d.on; }).map(function(d){ return d.area; }),
+      rejected:  aiDomains.filter(function(d){ return !d.on; }).map(function(d){ return d.area; }),
+      added:     Object.keys(teacherAdded).filter(function(a){ return teacherAdded[a]; })
+    },
+    model: (lastProposal && lastProposal._model) || '', promptVer: (lastProposal && lastProposal._promptVer) || ''
+  };
+
+  fetch(EXEC_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.code==='auth'){ location.replace('상담일지.html?from=ai일지'); return; }
+      if(!res.ok) throw new Error(res.error || 'server');
+      if(cur){   // 확정 → 목록에 '기록했어요'로 남김(재열람·복사·수정 경로. 시트가 정본, 이건 사본)
+        cur.status = 'saved';
+        cur.final = { service: fin.service || '', state: fin.state || '', parent: fin.parent || '', activity: selAct };
+        cur.ai = payload.ai; cur.chips = payload.chips;   // 수정하기 재진입용(원안·칩 상태 복원)
+        cur.savedAt = Date.now(); cur.updatedAt = Date.now();
+        persistMemos();
+      }
+      showDone();
+    })
+    .catch(function(){
+      var el = document.getElementById('saveErr');
+      el.textContent = '기록하지 못했어요. 잠시 후 다시 눌러주세요.';
+      el.classList.add('on');
+    })
+    .then(function(){
+      saveBusy = false;
+      document.getElementById('saveOvl').classList.remove('show');
+    });
+}
+
+/* ── 완료 = §4.6: 원 팝인+체크 드로우 → 잠깐 머문 뒤 자동으로 처음 화면(왼쪽 슬라이드) ── */
+var SUCCESS_HOLD = 1600;
+var _doneT = [];   // 완료 타이머 — 뒤로가기 터미널 복귀 시 취소(안 하면 ~2초 뒤 resetAll이 새로 적던 메모를 지움)
+function showDone(){
+  var s = document.getElementById('s-done');
+  s.classList.remove('go','suc-slide');
+  navTo('s-done');
+  _doneT.forEach(clearTimeout); _doneT.length = 0;
+  _doneT.push(setTimeout(function(){ s.classList.add('go'); }, 60));   /* 표시 커밋 뒤 transition 발동(rAF는 headless·백그라운드서 밀림) */
+  _doneT.push(setTimeout(function(){
+    s.classList.add('suc-slide');
+    _doneT.push(setTimeout(function(){ resetAll(); s.classList.remove('go','suc-slide'); }, 440));
+  }, SUCCESS_HOLD));
+}
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── 우측 X 지우기 (§4.1-4 — 상담일지 setupTField 결) — 비우고 input 디스패치(게이팅·자동저장 재실행)+포커스 유지.
+   자동저장 구조라 지우면 직전본이 바로 덮여 사라짐 → '되돌리기' 토스트가 오탭 복구(유성 2026-07-05 승인). ── */
+var undoVal = null, undoTa = null, toastT = null;
+function setupTaClr(wrap){
+  var ta = wrap.querySelector('textarea'), clr = wrap.querySelector('.clr');
+  var upd = function(){ wrap.classList.toggle('has-val', ta.value.length > 0); };
+  ta.addEventListener('input', upd);
+  clr.addEventListener('click', function(){
+    if(ta.value){ undoVal = ta.value; undoTa = ta; showToast('지웠어요', true); }
+    ta.value=''; ta.dispatchEvent(new Event('input')); ta.focus();
+  });
+  upd();
+}
+function showToast(msg, undoable){
+  var t = document.getElementById('uToast');
+  document.getElementById('uToastMsg').textContent = msg;
+  document.getElementById('uToastUndo').style.display = undoable ? 'block' : 'none';
+  t.classList.add('show'); clearTimeout(toastT);
+  toastT = setTimeout(function(){ t.classList.remove('show'); undoVal = null; undoTa = null; }, 3000);
+}
+function undoClear(){
+  if(undoTa && undoVal != null){ undoTa.value = undoVal; undoTa.dispatchEvent(new Event('input')); undoTa.focus(); }
+  undoVal = null; undoTa = null;
+  document.getElementById('uToast').classList.remove('show'); clearTimeout(toastT);
+}
+
+function autoGrow(ta){   // 내용 따라 칸 자동 확장(유성 2026-07-05 — 내부 스크롤·수동 리사이즈 폐기). display:none 상태선 scrollHeight=0이라 화면 표시 후 재호출 필요
+  if(!ta || !ta.offsetParent && ta.getBoundingClientRect().height === 0) return;
+  ta.style.height = 'auto';
+  ta.style.height = (ta.scrollHeight + (ta.offsetHeight - ta.clientHeight)) + 'px';   // border 보정(box-sizing: scrollHeight엔 border 미포함)
+}
+function showScreenRaw(id){
+  if(id === 's-list'){ flushCur(); renderList(); }   // 목록 복귀 = 어느 경로든(백버튼·스와이프·완료) 초안 보존+목록 갱신
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id === 's-kid') renderKid();          // 뒤로 복귀·기록 후 갱신(타일·타임라인 최신화)
+  if(id === 's-write'){ renderWriteMeta(); autoGrow(memoEl); }   // 아이 헤더·회차 렌더 + 값 주입은 hidden 상태라 표시 직후 높이 계산
+  if(id === 's-review') document.querySelectorAll('#s-review textarea').forEach(autoGrow);
+}
+
+/* ── 화면 단위 단계적 뒤로가기 (§4.11 — 06 Apply.html 패턴 복제) ──────────────
+   실측 근거: 같은 GAS 이중 iframe 임베드(06 폼↔contact)에서 pushState/popstate 단계 뒤로·
+   더블백 종료가 실기기 검증됨(2026-06-30, apply-form-embed-bridge). 전진=navStack push+history 1칸 /
+   스와이프·하드웨어 뒤로(popstate)=한 단계 pop / 루트=더블백 종료 안내(§4.11-4).
+   루트 가드 2칸(로드 시)=진행 없이 즉시 뒤로해도 iframe 경계 전에 안내가 뜨게(06 유래).
+   06 대비 보강 1: 종료 go(-1)의 반향 popstate를 suppress — 안내가 다시 떠 갇히는 루프 방지. */
+var navStack=['s-list'], _exitArmed=false, _exitT=null, _navSuppress=0;   // 루트=메모 목록(메모장형)
+function navTo(id){
+  if(navStack[navStack.length-1]===id){ showScreenRaw(id); return; }
+  _exitArmed=false; navStack.push(id);
+  try{ history.pushState({tf:id},''); }catch(e){}
+  showScreenRaw(id);
+}
+function navBack(){ try{ history.back(); }catch(e){ if(navStack.length>1){ navStack.pop(); showScreenRaw(navStack[navStack.length-1]); } } }
+function backToWrite(){ if(navStack[navStack.length-1]==='s-review'){ navBack(); } else { showScreenRaw('s-write'); } }
+window.addEventListener('popstate', function(){
+  if(_navSuppress>0){ _navSuppress--; return; }
+  if(helpOpen){ closeHelpRaw(); return; }                      // 시트가 떠 있으면 그 한 겹만 닫음(§4.11-1)
+  if(navStack[navStack.length-1]==='s-done'){                  // 완료=터미널: 검토·재저장 복귀 차단 → 목록(06 editDone 결)
+    _doneT.forEach(clearTimeout); _doneT.length=0;
+    var sd=document.getElementById('s-done'); sd.classList.remove('go','suc-slide');
+    navStack=['s-list']; _exitArmed=false; showScreenRaw('s-list');
+    try{ history.pushState({tf:'root'},''); }catch(e){}
+    return;
+  }
+  if(navStack.length>1){ navStack.pop(); showScreenRaw(navStack[navStack.length-1]); return; }
+  if(_exitArmed){ _exitArmed=false; clearTimeout(_exitT); _navSuppress++; try{ history.go(-1); }catch(e){ _navSuppress--; } return; }   // 두 번째 → 가드 소진(다음 뒤로=브라우저/OS가 나감)
+  try{ history.pushState({tf:'root'},''); }catch(e){}          // 첫 번째 → 가드 재생성 + 안내(2초)
+  showExitHint(); _exitArmed=true; clearTimeout(_exitT); _exitT=setTimeout(function(){ _exitArmed=false; },2000);
+});
+function showExitHint(){
+  var e=document.getElementById('exitHint'); if(!e) return;
+  e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(function(){ e.classList.remove('show'); },2000);
+}
+
+function resetAll(){   // 완료 hold 뒤 자동 복귀 → 목록. 전진 칸들을 자체 회수(go는 popstate 1회 → suppress)
+  if(navStack[navStack.length-1]==='s-done' && navStack.length>1){
+    _navSuppress++; try{ history.go(-(navStack.length-1)); }catch(e){ _navSuppress--; }
+    navStack=['s-list'];
+  }
+  showScreenRaw('s-list');
+}
+
+/* ── 기록 열람 + 전체 복사 (saved 메모 — 다듬은 최종을 실제 일지에 재사용하는 경로) ── */
+function renderView(){
+  var t = TYPES[cur.type] || TYPES.child;
+  document.getElementById('viewTitle').textContent = (cur.name && cur.name.trim()) ? cur.name : '기록';
+  document.getElementById('viewMeta').textContent = (TYPE_LABEL[cur.type] || '') + (cur.savedAt ? ' · ' + fmtDate(cur.savedAt) + ' 기록' : '');
+  var box = document.getElementById('viewBox'), html = '';
+  t.elements.forEach(function(e){
+    var v = (cur.final || {})[e.key];
+    if(v) html += '<div class="velt"><div class="vt">' + e.title + '</div><div class="vb">' + esc(v) + '</div></div>';
+  });
+  if(cur.final && cur.final.activity) html += '<div class="velt"><div class="vt">활동 유형</div><div class="vb">' + esc(cur.final.activity) + '</div></div>';
+  box.innerHTML = html || '<p class="sub">기록한 문장이 없어요.</p>';
+}
+function editSaved(){   // 기록한 메모도 수정 가능(유성 2026-07-05) — 검토 화면 재진입, 재확정=시트 새 행 append(이력)
+  if(!cur || cur.status !== 'saved') return;
+  curType = TYPES[cur.type] ? cur.type : 'child';
+  var f = cur.final || {};
+  var ai = cur.ai || { service: f.service || '', state: f.state || '', parent: f.parent || '', domains: [], activity_type: '' };   // 구버전 saved 폴백(원안=최종)
+  lastProposal = ai;
+  renderElements();
+  TYPES[curType].elements.forEach(function(e){
+    var box = document.querySelector('.elt[data-key="' + e.key + '"]');
+    var ta = box.querySelector('textarea');
+    ta.value = f[e.key] || '';
+    box.querySelector('.orig-txt').textContent = ai[e.key] || '(빈 칸)';
+    ta.dispatchEvent(new Event('input'));
+  });
+  if(TYPES[curType].hasStruct){
+    var ch = cur.chips || { confirmed: [], rejected: [], added: [] };
+    aiDomains = (ai.domains || []).map(function(d){ return { area: d.area, evidence: d.evidence, on: (ch.rejected || []).indexOf(d.area) === -1 }; });
+    aiAct = (ai.activity_type && ai.activity_type !== '불명') ? ai.activity_type : '';
+    selAct = f.activity || '';
+    teacherAdded = {};
+    (ch.added || []).forEach(function(a){ teacherAdded[a] = true; });
+  }
+  renderDomains();
+  navTo('s-review');
+}
+
+function copyFinal(){
+  if(!cur || !cur.final) return;
+  var t = TYPES[cur.type] || TYPES.child, parts = [];
+  t.elements.forEach(function(e){ var v = cur.final[e.key]; if(v) parts.push(e.title + '\n' + v); });
+  var txt = parts.join('\n\n');
+  if(!txt) return;
+  var done = function(){ showToast('복사했어요', false); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(function(){ _legacyCopy_(txt); done(); });
+  } else { _legacyCopy_(txt); done(); }
+}
+function _legacyCopy_(txt){   // clipboard API 막힌 웹뷰 폴백(execCommand)
+  var ta = document.createElement('textarea'); ta.value = txt;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  ta.remove();
+}
+
+/* ── 색버튼 ripple — §5.3-1 (상담일지 pressRipple 복제, ghost 텍스트형 제외) ── */
+function pressRipple(btn){
+  btn.addEventListener('pointerdown', function(e){
+    if(btn.disabled) return;
+    if(!btn.querySelector('.bl')){ var bl=document.createElement('span'); bl.className='bl'; while(btn.firstChild) bl.appendChild(btn.firstChild); btn.appendChild(bl); }
+    var r=btn.getBoundingClientRect();
+    var x=e.clientX-r.left;
+    var sp=document.createElement('span'); sp.className='rip'; sp.style.left=x+'px';
+    sp.style.setProperty('--rs', Math.ceil(Math.hypot(Math.max(x,r.width-x), r.height/2)/15)+1);
+    btn.appendChild(sp); requestAnimationFrame(function(){ sp.classList.add('go'); });
+    var end=function(){ sp.classList.add('fade'); setTimeout(function(){ if(sp.parentNode) sp.remove(); },340); btn.removeEventListener('pointerup',end); btn.removeEventListener('pointerleave',end); };
+    btn.addEventListener('pointerup',end); btn.addEventListener('pointerleave',end);
+  });
+}
+document.querySelectorAll('.btn:not(.ghost)').forEach(pressRipple);
+
+/* ── 바텀시트 드래그 닫기 — §4.3-5 (상담일지 initSheetDrag 복제) ── */
+function initSheetDrag(sheet, closeFn){
+  if(!sheet) return;
+  var startY=0, dy=0, dragging=false; var GRAB=72;
+  var move=function(e){ if(!dragging) return; dy=Math.max(0, e.clientY-startY); sheet.style.transform='translateY('+dy+'px) scale(.97)'; };
+  var end=function(){ if(!dragging) return; dragging=false; window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',end); window.removeEventListener('pointercancel',end); sheet.style.transition=''; sheet.style.transform=''; if(dy>80) closeFn(); };
+  sheet.addEventListener('pointerdown', function(e){
+    var r=sheet.getBoundingClientRect();
+    if(e.clientY - r.top > GRAB) return;
+    dragging=true; startY=e.clientY; dy=0;
+    sheet.style.transition='none'; sheet.style.transform='scale(.97)';
+    window.addEventListener('pointermove',move); window.addEventListener('pointerup',end); window.addEventListener('pointercancel',end);
+  });
+}
+initSheetDrag(document.getElementById('helpSheet'), closeHelp);
+
+applyType();
+syncGate();
+setupTaClr(document.querySelector('#s-write .ta-wrap'));
+renderList();
+loadRoster();   // 대장 배정 아이 명부(staff_clients) 로드 → 오면 목록 갱신
+// 루트 가드 2칸 (§4.11 — 06 Apply 유래: 진행 없이 즉시 뒤로 스와이프해도 iframe 경계 전에 더블백 안내가 뜨게. 임베드 스와이프=환경의존, 최종 판정=실기기)
+try{ history.pushState({tf:'root'},''); history.pushState({tf:'root'},''); }catch(e){}
 </script>
-<script src="install.js"></script>
 </body>
 </html>
