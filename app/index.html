@@ -224,7 +224,7 @@
   .app-scroll{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
   .tabpanel{display:none; max-width:460px; margin:0 auto; padding:0 22px 28px;}
   .tabpanel.on{display:block;}
-  .apphead{padding:20px 0 10px;}
+  .apphead{padding:calc(20px + env(safe-area-inset-top)) 0 10px;}
   .apphead .ah-hi{font-size:13px; color:var(--g500); font-weight:600;}
   .apphead .ah-big{font-size:24px; font-weight:800; letter-spacing:-.5px; margin-top:2px; line-height:1.35;}
   .sec-t{font-size:12.5px; font-weight:700; color:var(--g500); margin:20px 2px 8px;}
@@ -249,10 +249,9 @@
   .nrow .ch{font-size:19px; color:var(--g300); font-weight:700; flex-shrink:0; line-height:1;}
 
   /* 렌즈 세그먼트 */
-  .lens{display:flex; gap:6px; margin:0 0 14px;}
-  .lens .l{font:inherit; font-size:13px; font-weight:700; padding:7px 14px; border-radius:999px; border:none; background:var(--g100); color:var(--g600); cursor:pointer; transition:transform .1s;}
-  .lens .l:active{transform:scale(.96);}
-  .lens .l.on{background:var(--g900); color:#fff;}
+  .lens{display:inline-flex; background:var(--g100); border-radius:999px; padding:3px; margin:0 0 16px;}
+  .lens .l{font:inherit; font-size:13px; font-weight:700; padding:8px 16px; border-radius:999px; border:none; background:none; color:var(--g600); cursor:pointer; transition:color .15s;}
+  .lens .l.on{background:#fff; color:var(--g900); box-shadow:0 1px 3px rgba(25,31,40,.10);}
 
   /* 타임라인 척추 */
   .tl{position:relative; padding-left:24px; margin-top:4px;}
@@ -294,6 +293,7 @@
   .me-add:active{transform:scale(.95);}
   .me-out{width:100%; border:1px solid var(--g200); background:#fff; color:var(--g600); font:inherit; font-size:15px; font-weight:700; border-radius:var(--r-md); padding:15px; cursor:pointer; transition:transform .1s,background .15s;}
   .me-out:active{background:var(--g50); transform:scale(.98);}
+  .me-ver{text-align:center; font-size:12px; color:var(--g400); margin-top:22px;}
 
   /* 하단 탭바 */
   .tabbar{flex-shrink:0; display:flex; border-top:1px solid var(--g100); background:#fff; padding:7px 0 calc(9px + env(safe-area-inset-bottom));}
@@ -454,6 +454,7 @@
 
 <script>
 const GAS_EXEC="https://script.google.com/macros/s/AKfycbw5K71HEBZKP9TQr84YxkGed_bG3mvbzWfAMwkhcDJcCLDNBiDql5TjeYHCEuiMuvGAbQ/exec";
+const APP_VERSION="v26.07.08";
 const $=id=>document.getElementById(id);
 
 // ── 통신: text/plain POST(프리플라이트 회피). 읽기=echo 404 재시도([[gas-webapp-echo-404-retry]]), 쓰기=단발 ──
@@ -725,11 +726,10 @@ const emptyPhotos='<div class="empty"><div class="ic"><svg viewBox="0 0 24 24"><
 // ── 홈 = 새 소식(빠른 시계) ──
 function renderHome(){
   const b=$("homeBody");
-  if(dataLoaded===false){ b.innerHTML='<div class="today"><div class="k">오늘의 놀이</div><div class="h">불러오는 중…</div></div>'; return; }
+  if(dataLoaded===false){ b.innerHTML='<div class="sec-t" style="margin-top:8px">새 소식</div><div class="news"><div class="nrow soon"><span class="ic">📷</span><span class="ntx"><span class="t" style="color:var(--g400)">불러오는 중…</span></span></div></div>'; return; }
   if(dataLoaded==="err"){ b.innerHTML=errBox; return; }
-  let h='<div class="today"><div class="k">오늘의 놀이</div><div class="h">곧 만나요</div><div class="bd">아이 발달에 맞춘, 집에서 하는 10분 놀이를 준비하고 있어요.</div></div>';
   const groups=groupByDate(feedItems).slice(0,5);
-  h+='<div class="sec-t">새 소식</div>';
+  let h='<div class="sec-t" style="margin-top:8px">새 소식</div>';
   if(groups.length){
     h+='<div class="news">';
     groups.forEach(g=>{ h+='<button class="nrow" data-go="child"><span class="ic">📷</span><span class="ntx"><span class="t">선생님이 사진 '+g.count+'장을 올렸어요</span><span class="s">'+esc(g.date)+(g.kids?" · "+esc(g.kids):"")+'</span></span><span class="ch">›</span></button>'; });
@@ -737,7 +737,10 @@ function renderHome(){
   } else {
     h+='<div class="empty"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div><p>아직 소식이 없어요.<br>수업이 끝나면 선생님이 사진을 올려요 :)</p></div>';
   }
-  h+='<div class="sec-t">안내</div><div class="news"><div class="nrow soon"><span class="ic pay">💳</span><span class="ntx"><span class="t">본인부담금 안내</span><span class="s">준비 중이에요</span></span></div></div>';
+  h+='<div class="sec-t">곧 만나요</div><div class="news">'
+    +'<div class="nrow soon"><span class="ic">🎨</span><span class="ntx"><span class="t">오늘의 놀이</span><span class="s">집에서 하는 10분 놀이를 준비하고 있어요</span></span></div>'
+    +'<div class="nrow soon"><span class="ic pay">💳</span><span class="ntx"><span class="t">본인부담금 안내</span><span class="s">준비 중이에요</span></span></div>'
+    +'</div>';
   b.innerHTML=h;
   b.querySelectorAll('.nrow[data-go]').forEach(el=>el.onclick=()=>setTab(el.dataset.go));
 }
@@ -748,7 +751,7 @@ function renderKidChips(){
   if(feedKids.length<2){ box.style.display="none"; return; }
   box.style.display="flex";
   const mk=(key,label)=>{ const b=document.createElement("button"); b.className="kchip"+(curKid===key?" on":""); b.textContent=label; b.onclick=()=>{ curKid=key; renderChild(); }; return b; };
-  box.appendChild(mk("all","전체"));
+  box.appendChild(mk("all","모두"));
   feedKids.forEach(k=>box.appendChild(mk(k.key,k.name)));
 }
 function wireConsent(scope){ scope.querySelectorAll('.consent-card button[data-ck]').forEach(el=>{ const k=feedKids.find(x=>x.key===el.dataset.ck); el.onclick=()=>openConsent(el.dataset.ck,k?k.name:""); }); }
@@ -798,6 +801,7 @@ function renderMe(){
   else { h+='<div class="me-row"><span class="me-nm" style="color:var(--g400);font-weight:500">불러오는 중…</span></div>'; }
   h+='</div><button class="me-add" id="meAddKid">＋ 함께 다니는 아이 추가</button></div>';
   h+='<div class="me-sec"><button class="me-out" id="meLogout">로그아웃</button></div>';
+  h+='<div class="me-ver">생각공작소 · '+APP_VERSION+'</div>';
   b.innerHTML=h;
   $("meAddKid").onclick=openAddKid;
   let logoutArmed=false, logoutT=null;
