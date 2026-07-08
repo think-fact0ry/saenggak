@@ -250,6 +250,7 @@
   .nl-item-badge.assigned{background:#dcfce7;color:#16a34a}
   .nl-item-badge.waiting{background:#fef3c7;color:#d97706}
   .nl-item-badge.absent{background:#fff3cd;color:#856404}
+  .nl-item-badge.mark{background:#fee2e2;color:#dc2626}   /* 마크(shortlist) — 지도 빨강 북마크와 결 맞춤 */
   .nl-item-date{color:#bbb;font-size:10px;margin-left:auto;flex-shrink:0}
   .nl-item-row2{font-size:11px;color:#888;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
   .nl-item-dist{color:#3a6b4e;font-weight:600}
@@ -1757,13 +1758,32 @@ function toggleFilter(t) {
 var nlSort = 'latest';   // 'latest' | 'near'
 var nlMapMoveDebounce = null;
 
+// 신청폼 리스트 패널 — 열 때 history 1칸 push → 모바일 스와이프 뒤로 = 지도 이탈이 아니라 리스트만 닫힘
+// (staffModal §5.9와 동일 패턴. ✕·스와이프 모두 popstate 경유로 통일)
+var _nlPushed = false;
 function toggleNewList() {
   var panel = document.getElementById('nlPanel');
-  var fab = document.getElementById('nlFab');
-  var open = panel.classList.toggle('show');
-  fab.classList.toggle('hidden', open);
-  if (open) { renderNewList(); }
+  if (panel.classList.contains('show')) { closeNewList(); }
+  else { openNewList(); }
 }
+function openNewList() {
+  document.getElementById('nlPanel').classList.add('show');
+  document.getElementById('nlFab').classList.add('hidden');
+  renderNewList();
+  _nlPushed = true;
+  try { history.pushState({ nl: 1 }, ''); } catch (e) {}
+}
+function closeNewList() {
+  if (_nlPushed) { history.back(); }   // popstate가 실제 닫음(히스토리 정리)
+  else { _hideNewList(); }
+}
+function _hideNewList() {
+  document.getElementById('nlPanel').classList.remove('show');
+  document.getElementById('nlFab').classList.remove('hidden');
+}
+window.addEventListener('popstate', function() {   // 뒤로가기/스와이프 = 리스트만 닫기(페이지 유지)
+  if (_nlPushed) { _nlPushed = false; _hideNewList(); }
+});
 
 function setNlSort(mode) {
   nlSort = mode;
@@ -1777,10 +1797,10 @@ function populateNlFilters() {
   if (!currentData) return;
   var all = (currentData.assigned || []).concat(currentData.waiting || []);
 
-  // 거절·부재2는 항상 제외
+  // 거절만 제외 (부재1/2는 리스트에 노출되므로 필터 옵션에도 포함)
   all = all.filter(function(c) {
     var s = String(c.status || '').trim();
-    return s !== '거절' && s !== '부재2';
+    return s !== '거절';
   });
 
   var sgMap = {};  // sigungu → Set of bname
@@ -1814,7 +1834,7 @@ function populateNlBname() {
   var all = (currentData.assigned || []).concat(currentData.waiting || []);
   all = all.filter(function(c) {
     var s = String(c.status || '').trim();
-    return s !== '거절' && s !== '부재2';
+    return s !== '거절';
   });
   if (curSg) all = all.filter(function(c) { return String(c.sigungu || '').trim() === curSg; });
 
@@ -1869,19 +1889,18 @@ function renderNewList() {
       name: c.name, lat: c.lat, lng: c.lng, address: c.address,
       phone: c.phone, sigungu: c.sigungu || '', bname: c.bname || '',
       times: c.times, status: c.assignedTo ? (c.assignedTo + ' 배정') : '배정',
-      statusType: 'assigned', row: c.formRow, timestamp: c.timestamp, data: c
+      statusType: 'assigned', absent: '', marked: !!c.marked,
+      row: c.formRow, timestamp: c.timestamp, data: c
     });
   });
   (currentData.waiting || []).forEach(function(c) {
     var st = String(c.status || '').trim();
-    if (st === '거절' || st === '부재2') return;
-    var statusType = 'waiting';
-    var statusLabel = '대기';
-    if (st === '부재1') { statusType = 'absent'; statusLabel = '부재1'; }
+    if (st === '거절') return;   // 거절만 제외 — 부재1/2는 대기 기본뱃지 + 부재 서브뱃지로 노출(지도엔 이미 뜸)
     all.push({
       name: c.name, lat: c.lat, lng: c.lng, address: c.address,
       phone: c.phone, sigungu: c.sigungu || '', bname: c.bname || '',
-      times: c.times, status: statusLabel, statusType: statusType,
+      times: c.times, status: '대기', statusType: 'waiting',
+      absent: (st === '부재1' || st === '부재2') ? st : '', marked: !!c.marked,
       row: c.row, timestamp: c.timestamp, data: c
     });
   });
@@ -1933,6 +1952,8 @@ function renderNewList() {
       + '<div class="nl-item-row1">'
       +   '<div class="nl-item-name">' + esc(item.name) + '</div>'
       +   '<span class="nl-item-badge ' + item.statusType + '">' + esc(item.status) + '</span>'
+      +   (item.absent ? '<span class="nl-item-badge absent">' + esc(item.absent) + '</span>' : '')
+      +   (item.marked ? '<span class="nl-item-badge mark">마크</span>' : '')
       +   (dateStr ? '<span class="nl-item-date">' + dateStr + '</span>' : '')
       + '</div>'
       + '<div class="nl-item-row2">'
