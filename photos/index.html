@@ -218,9 +218,26 @@
   .exithint.show{opacity:1; transform:translateX(-50%) translateY(0);}
   .exithint .ck{width:28px; height:28px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .exithint .ck svg{width:15px; height:15px;}
+
+  /* ── squircle(§3.3 ⓐⓑⓒ): 반경 20px 이상만 — .sheet(24) + .cmodal(--r-lg, PC 넓은 창에선 clamp 상한 20 도달). 크로미움 외=일반 라운드 폴백. ── */
+  .sheet,.cmodal{corner-shape:superellipse(2.3);}
+
+  /* ── PC 폰 목업(docs/1 §3.8): 넓은 창+마우스=PC에서만, 폰·태블릿(coarse)에선 아무 변화 없음.
+     photos는 화면 섹션이 body 직속이라 #app 루트 신설(2026-07-25) — #app transform이 fixed 전부(푸트바·사진뷰어·
+     동의시트·전문·모달·토스트·종료힌트, 전원 #app 자식)의 containing block이 되어 폰 프레임 감금·라운드 클립.
+     스크롤=화면(.screen.on) 내부. 레퍼런스=attend §13-12·09 파일럿. ── */
+  @media (min-width:480px) and (hover:hover) and (pointer:fine){
+    html,body{ height:100%; }
+    body{ background:var(--g200) !important; padding-top:19px; }
+    #app{ max-width:min(460px,calc(100% - 38px)); margin:0 auto; height:100%; min-height:0; background:#fff;
+          border-radius:40px 40px 0 0; corner-shape:superellipse(2.3);
+          box-shadow:0 8px 20px rgba(25,31,40,.15); transform:translateZ(0); overflow:hidden; overflow:clip; position:relative; }
+    .screen.on{ height:100%; overflow-y:auto; overflow-x:hidden; }
+  }
 </style>
 </head>
 <body>
+<div id="app"><!-- §3.8 폰목업 앱 루트(2026-07-25) — fixed 오버레이 전원 이 안에 -->
 
 <!-- ═══ 신원: 아동 + 보호자 휴대폰 (학부모 첫·고관여 = 안심 정보 유지 §2.2) ═══ -->
 <div class="screen on" id="s-id">
@@ -336,6 +353,8 @@
 <div class="toast" id="toast"></div>
 <div class="exithint" id="exitHint"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>한 번 더 뒤로 가면 나가요.</div>
 
+</div><!-- /#app (§3.8) -->
+
 <script>
 const GAS_EXEC="https://script.google.com/macros/s/AKfycbw5K71HEBZKP9TQr84YxkGed_bG3mvbzWfAMwkhcDJcCLDNBiDql5TjeYHCEuiMuvGAbQ/exec";
 const $=id=>document.getElementById(id);
@@ -383,7 +402,7 @@ document.addEventListener("pointerdown",e=>{
 // ── 화면 전환 + 단계적 뒤로(§4.11) + 더블백 종료 ──
 let navStack=["s-id"], _exitArmed=false, _exitT=null;
 function showRaw(id){
-  ["s-id","s-otp","s-addkid","s-feed"].forEach(s=>$(s).classList.toggle("on",s===id));
+  ["s-id","s-otp","s-addkid","s-feed"].forEach(s=>{ const el=$(s); el.classList.toggle("on",s===id); el.scrollTop=0; });   // §3.8 폰목업(PC)=화면 내부 스크롤 리셋(폰 무해)
   $("s-view").classList.remove("on");
   $("csDoc").classList.remove("on");
   window.scrollTo(0,0);
