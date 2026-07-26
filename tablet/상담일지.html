@@ -528,7 +528,7 @@
     <div class="otp-done-text" id="otpDoneText">인증을 마쳤어요!</div>
     <div id="su2Note"></div>
   </div>
-  <div class="footbar" id="su2Foot"><div class="inner"><button type="button" class="lk-resend" id="otpResendLink">문자가 안 오나요?</button><button class="btn" id="su2Btn" disabled>확인</button></div></div>
+  <div class="footbar" id="su2Foot"><div class="inner"><button type="button" class="lk-resend" id="otpResendLink">문자가 안 오나요?</button></div></div><!-- '확인' 버튼=폐지(2026-07-27 유성 — 6자리=자동확인이라 중복, §4.2-10 갱신·근태와 동일) -->
 </div>
 
 <!-- ═══ 인증 시간 만료 센터 모달 ═══ -->
@@ -1003,9 +1003,9 @@ function doSendOtp(){
 let su2Busy=false, forgotPin=false;   // forgotPin = '비밀번호를 몰라요'로 들어온 재인증(통과 후 PIN 재설정)
 function doVerify(){
   if(su2Busy || $("su-code").value.length!==6) return;
-  su2Busy=true; btnLoad($("su2Btn"),"확인하고 있어요");   // 확인 중 로딩을 버튼 위에(§2.6-4) + 재탭 방지
+  su2Busy=true;   // 재탭 방지('확인' 버튼 폐지 07-27 — 검증 중 표시는 note 점(§5.2))
   $("otpBox").classList.add("done");   // ★ 즉시: 테두리 시계방향 그려짐 + 칸 박스 사라지고 숫자만(초록 채움은 *확정 후*). 서버 기다림 체감 제거
-  const note=$("su2Note");
+  const note=$("su2Note"); loadingNote(note,"확인하고 있어요");
   const device=getDevice();
   const bd=decodeBirth()||{};   // 생년월일·성별(주민번호 앞 7자리 디코드) — 등록 시 저장
   post({action:"staff_verify", name:$("su-name").value.trim(), phone:$("su-phone").value, code:$("su-code").value, device, dlabel:deviceLabel(), birth:bd.birth8||"", sex:bd.sex||""}).then(d=>{
@@ -1027,10 +1027,10 @@ function doVerify(){
     else {
       // 만료(클라 타이머 종료됨 || 서버가 만료 응답) → 일반 에러 대신 재전송 UI로(막다른 화면·되살릴 수 없는 코드 방지)
       const expired = !otpTimer || (d && d.error && d.error.indexOf("만료")>=0);
-      if(expired){ btnDone($("su2Btn")); $("otpBox").classList.remove("done"); otpExpired(); }
-      else { btnDone($("su2Btn")); $("otpBox").classList.remove("done"); note.className="err"; note.innerHTML='<span class="eic">!</span>인증번호가 틀렸어요'; $("otpBox").classList.add("err"); otpErr=true; renderOtp(); $("su2Btn").disabled=true; }  // 불일치 → 테두리 반대로 사라지며 6칸 박스 복구 + 빨강(숫자 유지) / 다시 탭하면 비우고 재입력
+      if(expired){ $("otpBox").classList.remove("done"); otpExpired(); }
+      else { $("otpBox").classList.remove("done"); note.className="err"; note.innerHTML='<span class="eic">!</span>인증번호가 틀렸어요'; $("otpBox").classList.add("err"); otpErr=true; renderOtp(); }  // 불일치 → 테두리 반대로 사라지며 6칸 박스 복구 + 빨강(숫자 유지) / 다시 탭하면 비우고 재입력
     }
-  }).catch(()=>{ su2Busy=false; btnDone($("su2Btn")); $("otpBox").classList.remove("done"); $("su2Btn").disabled=$("su-code").value.length!==6; note.className="note err"; note.textContent="연결이 안 됐어요"; });   // 네트워크 실패=테두리 복구+6자리 남아있으면 재시도
+  }).catch(()=>{ su2Busy=false; $("otpBox").classList.remove("done"); note.className="note err"; note.innerHTML='연결이 안 됐어요 <button class="lk" id="otpRetryLk">다시 시도</button>'; const rb=$("otpRetryLk"); if(rb) rb.onclick=doVerify; });   // 네트워크 실패=테두리 복구+재시도 링크(버튼 폐지 후의 재시도 길, 6자리는 남아 있음)
 }
 // OTP 6칸 — 투명 입력이 셀 위를 덮음(탭=키보드). 입력 글자를 셀에 렌더. 입력된 칸=흰색(정적), 안 친 칸=물결(CSS).
 let otpErr=false, prevOtpLen=0;
@@ -1046,16 +1046,14 @@ function renderOtp(){
   prevOtpLen=v.length;
 }
 function clearOtpErr(){ if(!otpErr) return; otpErr=false; $("otpBox").classList.remove("err"); $("su2Note").className=""; $("su2Note").textContent=""; renderOtp(); }
-function resetOtp(){ otpErr=false; $("otpBox").classList.remove("err"); $("su2Note").className=""; $("su2Note").textContent=""; $("su-code").value=""; $("su-code").disabled=false; renderOtp(); $("su2Btn").disabled=true; }
+function resetOtp(){ otpErr=false; $("otpBox").classList.remove("err"); $("su2Note").className=""; $("su2Note").textContent=""; $("su-code").value=""; $("su-code").disabled=false; renderOtp(); }
 $("su-code").oninput=()=>{
   let v=$("su-code").value.replace(/\D/g,"");
   if(otpErr){ clearOtpErr(); v=v.slice(-1); }                 // 오류 후 첫 입력 = 새로 시작(마지막 글자만)
   v=v.slice(0,6); $("su-code").value=v; renderOtp();
-  $("su2Btn").disabled = v.length!==6;                        // 6자리 = 확인 버튼 초록(활성)
-  if(v.length===6){ $("su-code").blur(); doVerify(); }        // + 자동 확인
+  if(v.length===6){ $("su-code").blur(); doVerify(); }        // 6자리 = 자동 확인('확인' 버튼 폐지 07-27)
 };
-$("su-code").addEventListener("focus",()=>{ if(otpErr){ clearOtpErr(); $("su-code").value=""; renderOtp(); $("su2Btn").disabled=true; } });   // 오류 후 다시 탭 = 비우고 새로
-$("su2Btn").onclick=doVerify;
+$("su-code").addEventListener("focus",()=>{ if(otpErr){ clearOtpErr(); $("su-code").value=""; renderOtp(); } });   // 오류 후 다시 탭 = 비우고 새로
 $("otpResendLink").onclick=resendOtp;
 $("su2Back").onclick=()=>show("s-signup1");
 
@@ -1084,7 +1082,7 @@ function tickOtp(){
 }
 function startOtpTimer(){ stopOtpTimer(); otpDeadline=Date.now()+OTP_TTL*1000; tickOtp(); otpTimer=setInterval(tickOtp,1000); }
 function otpExpired(){
-  clearOtpErr(); $("su-code").value=""; renderOtp(); $("su-code").disabled=true; $("su2Btn").disabled=true;
+  clearOtpErr(); $("su-code").value=""; renderOtp(); $("su-code").disabled=true;
   $("su2Note").textContent=""; $("su2Note").className="";   // 인라인 링크 대신 센터 모달(유성 2026-06-28)
   showOtpEx();
 }
