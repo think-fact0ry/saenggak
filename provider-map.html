@@ -130,6 +130,8 @@
   .iw-sep{margin:8px 0 6px;border:none;border-top:1px dashed #ddd}
   .iw-group-label{font-size:11px;color:#999;font-weight:600;margin-bottom:2px}
   .iw-times{margin-top:3px;font-size:11.5px;color:#3a6b4e;font-weight:600}
+  /* 체크박스 시간과 실제 시작이 다를 때만 뜨는 하한 배지 ([시간참고] 자유칸에서 추출) */
+  .iw-early{margin-left:5px;padding:1px 5px;border-radius:4px;background:#fff3e0;color:#c05621;font-size:10.5px;font-weight:700}
   .iw-phone{margin-top:2px;font-size:12px}
   .iw-phone a{color:#3a6b4e;text-decoration:none;font-weight:600}
   .iw-phone a:hover{text-decoration:underline}
@@ -1184,7 +1186,7 @@ function buildGroupedAssignedIW(items, hLat, hLng) {
     } else {
       h+='<div class="iw-sch"><div style="color:#bbb">스케줄 미정</div></div>';
     }
-    if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
+    if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+earlyBadge(c.notes)+'</div>';
     if (c.phone) h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
     if (c.voucher && c.voucher !== '네') h+='<div class="iw-row" style="color:#c0392b;font-weight:600">⚠️ 바우처: '+esc(c.voucher)+'</div>';
     if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
@@ -1211,7 +1213,7 @@ function buildGroupedWaitingIW(items, hLat, hLng) {
       +' <span style="color:#aaa;font-size:11px;font-weight:400">'+c.row+'행</span></div>'
       +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
     if (c.phone) h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
-    if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
+    if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+earlyBadge(c.notes)+'</div>';
     if (c.voucher && c.voucher !== '네') h+='<div class="iw-row" style="color:#c0392b;font-weight:600">⚠️ 바우처: '+esc(c.voucher)+'</div>';
     if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
     if (c.sigungu||c.bname) h+='<div class="iw-row" style="color:#aaa">'+esc(c.sigungu)+' '+esc(c.bname)+'</div>';
@@ -1292,6 +1294,26 @@ function getRecommendations(child) {
   return results.slice(0, 3);
 }
 
+// 신청폼 '[시간참고]' 자유칸에서 **시작 하한**만 뽑는다 ("4시40분부터 가능" → 16:40).
+// 체크박스(times)는 시(時) 단위라 분을 못 담아, 학부모가 분 단위 조건을 이 칸에 쓴다
+// (2026-08-08 실측: 시간참고 34건 중 68%가 "~부터/이후" 형식 — 폼 placeholder가 그 형식을 유도한다).
+// ⚠️ 하한은 **표시만** 한다 — 판정(calcTimeOverlap)은 건드리지 않는다. 사람이 보고 조정할 정보이지
+//    자동 탈락 사유가 아니다. 34건 전수 + 오전 방어 케이스로 32/32 정확, 초과추출 0.
+function noteEarliest(notes) {
+  var s = String(notes || '').replace(/\[시간참고\]|\[원본시간\]/g, '').replace(/\s+/g, '');
+  var m = s.match(/(오전|오후)?(\d{1,2})\s*(?::|시)\s*(반|\d{1,2})?\s*분?\s*(?:정도|쯤|경)?\s*(?:이후|부터|이상)/);
+  if (!m) return '';
+  var h = parseInt(m[2], 10);
+  var mi = m[3] === '반' ? 30 : (m[3] ? parseInt(m[3], 10) : 0);
+  if (isNaN(h) || h > 23 || mi > 59) return '';
+  if (h < 12 && m[1] !== '오전') h += 12;   // 방문 시간대가 14~20시라 12 미만은 오후로 읽는다('오전' 명시만 예외)
+  return (h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi;
+}
+function earlyBadge(notes) {
+  var e = noteEarliest(notes);
+  return e ? '<span class="iw-early">' + e + '부터</span>' : '';
+}
+
 function calcTimeOverlap(childTimes, provAvail) {
   if (!childTimes || !provAvail || !/[월화수목금토일]-\d/.test(childTimes)) {
     return { count: -1, label: '시간 비교 불가' };
@@ -1305,12 +1327,14 @@ function calcTimeOverlap(childTimes, provAvail) {
 
   var overlapping = [];
   var daySet = {};
+  var knownDays = 0;   // 아동이 원한 요일 중 교사 가용시간이 **실제로 읽힌** 요일 수
 
   childSlots.forEach(function(slot) {
     var availRange = provAvail[slot.day];
     if (!availRange) return;
     var m = availRange.match(/(\d{1,2}):?(\d{2})?\s*[-~]\s*(\d{1,2}):?(\d{2})?/);
     if (!m) return;
+    knownDays++;
     var start = parseInt(m[1]);
     var end = parseInt(m[3]);
     if (slot.hour >= start && slot.hour < end) {
@@ -1318,6 +1342,13 @@ function calcTimeOverlap(childTimes, provAvail) {
       daySet[slot.day] = 1;
     }
   });
+
+  // 읽힌 요일이 하나도 없으면 '안 맞는다'가 아니라 **'모른다'**이다.
+  // ⚠️ 06 제공인력 F~L 가용시간은 죽은 데이터다 (2026-08-07 실측: 21명 중 19명이 실제 수업시간과 불일치, 빈칸 다수).
+  //    옛 코드는 이 경우도 count=0을 냈고 getRecommendations가 count===0인 교사를 통째로 제외해서,
+  //    **가용시간이 비었거나 표기를 못 읽는 교사는 배정 추천에 영영 뜨지 않았다** (화면엔 '시간 불일치'라는 확신에 찬 오답).
+  //    -1로 빼면 추천에는 남고 score +5 페널티만 받는다 = 사람이 보고 판단할 기회가 생긴다.
+  if (knownDays === 0) return { count: -1, label: '가용시간 미기록' };
 
   if (overlapping.length === 0) return { count: 0, label: '시간 불일치' };
 
