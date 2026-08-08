@@ -163,6 +163,45 @@
         font-size:13.5px;font-weight:700;padding:12px;font-family:inherit;cursor:pointer;letter-spacing:-.2px}
   .pbtn:active{transform:scale(.99)}
   .pbtn.gray{background:#f2f4f6;color:#4e5968}
+  .pbtn.line{background:#fff;color:#4e5968;border:1.5px solid #d1d6db}
+  /* 세그먼트 — 안 / 전원 / 조율. 유성 #79: "아예 없는 집으로 만들면 담당자는 있는지 되는지 모른다" */
+  #planSeg{display:flex;gap:4px;padding:0 13px 9px;flex:none}
+  .psg{flex:1;border:0;border-radius:9px;background:#f2f4f6;color:#8b95a1;font-family:inherit;
+       font-size:12px;font-weight:700;padding:8px 4px;cursor:pointer;letter-spacing:-.2px}
+  .psg.on{background:#191f28;color:#fff}
+  .psg:active{transform:scale(.97)}
+  /* 전원 상태표 */
+  .prow{display:flex;align-items:center;gap:7px;font-size:12.5px;padding:9px 2px;border-bottom:1px solid #f2f4f6}
+  .prow:last-child{border-bottom:0}
+  .pst{flex:none;font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 7px}
+  .pst.ok{color:#2d6b4a;background:#eaf4ee}
+  .pst.hold{color:#8a5a00;background:#fff7e6}
+  .pst.out{color:#9a2d22;background:#fdeeec}
+  .pst.no{color:#4e5968;background:#f2f4f6}
+  .prow .why{color:#8b95a1;font-size:11px;margin-left:auto;text-align:right;max-width:52%}
+  .pnote{font-size:11.5px;color:#4e5968;background:#f2f4f6;border-radius:9px;padding:9px 11px;margin:9px 0;line-height:1.55}
+  .pnote.warn{color:#8a5a00;background:#fff7e6}
+  .pnote.bad{color:#9a2d22;background:#fdeeec}
+  /* 조율 한 건씩 (유성 #84 "한건씩 진행") */
+  .pqhd{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#8b95a1;margin-bottom:8px}
+  .pqhd b{color:#191f28}
+  .pqcard{border:1.5px solid #3a8a5f;box-shadow:0 0 0 3px #eaf4ee;border-radius:12px;padding:13px;background:#fff}
+  .pqcard h4{margin:0 0 3px;font-size:14px;letter-spacing:-.2px}
+  .pqcard h4 a{color:#3a8a5f;text-decoration:none;font-size:12.5px;font-weight:600;margin-left:5px}
+  .pqmeta{font-size:11.5px;color:#8b95a1;line-height:1.6;margin-bottom:9px}
+  .pqmeta .cost{color:#9a2d22}
+  .pqmeta .gain{color:#2d6b4a}
+  .pqs{font-size:12px;color:#191f28;background:#f2f4f6;border-radius:9px;padding:10px 11px;line-height:1.62;margin-bottom:9px}
+  .pqb{display:flex;gap:4px;flex-wrap:wrap}
+  .pqb button{flex:1 1 46%;border:1.5px solid #d1d6db;border-radius:10px;background:#fff;color:#4e5968;
+              font-family:inherit;font-size:12.5px;font-weight:700;padding:10px 4px;cursor:pointer}
+  .pqb button.go{border-color:#3a8a5f;background:#3a8a5f;color:#fff}
+  .pqb button:active{transform:scale(.97)}
+  .plog{font-size:11px;color:#4e5968;background:#f8f9fa;border-radius:8px;padding:7px 9px;margin-top:5px;line-height:1.5}
+  .pdone{display:flex;align-items:center;gap:6px;font-size:11.5px;padding:6px 2px;border-bottom:1px solid #f2f4f6}
+  .pdone .undo{margin-left:auto;color:#3a8a5f;font-size:11px;cursor:pointer;text-decoration:underline}
+  .pbrief{font-size:12px;color:#191f28;background:#f2f4f6;border-radius:9px;padding:11px;line-height:1.65;
+          white-space:pre-wrap;margin:7px 0}
   .legend{
     position:fixed;bottom:16px;left:14px;z-index:40;
     background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
@@ -511,6 +550,7 @@
 <div id="planSheet">
   <div class="grab" id="planGrab"><div class="bar"></div></div>
   <div class="shd"><h3 id="planTitle">배치안</h3><div class="sub" id="planSub"></div></div>
+  <div id="planSeg"></div>
   <div class="sbd" id="planBody"></div>
 </div>
 
@@ -1392,6 +1432,14 @@ function buildRecommendation(child) {
   if (!recs.length) {
     h += '<div class="iw-rec-item" style="color:#8b95a1">가까우면서 시간이 맞는 선생님이 없습니다</div>';
   }
+
+  // ── 다음 스텝 ── 유성 2026-08-08: *"마커 말풍선은 그냥 뭐 어쩌라는 느낌? 이게 끝?
+  //    이렇게 했으면 뭐 다음 스텝을 어떻게 해야하는 건지를 모르겠는 느낌?"*
+  //    추천은 직선거리+시간겹침만 본다. 실제 **동선 손해**로 줄 세우는 건 모드 B다.
+  h += '<div class="iw-rec-item" style="padding-top:6px">'
+    + '<button class="iw-rec-assign" style="width:100%;background:#191f28"'
+    + ' onclick="planForChild(' + child.row + ',\'' + escQ(child.name) + '\')">'
+    + '동선까지 따져 선생님 찾기</button></div>';
 
   // ── 마지막 줄 = 추천 밖 선생님을 **여기서 바로** 고른다 ──
   // ⚠️ 추천은 상위 3명뿐이라 원하는 선생님이 없을 수 있다(유성 지적). 예전엔 좌상단 드롭다운을 바꾸고
@@ -2472,6 +2520,41 @@ var planMarkers = [];   // 요일 마커
 var planLabels = [];    // 요일 마커 이름표
 var PLAN_DC = { '월':'#e11d48','화':'#f97316','수':'#16a34a','목':'#2563eb','금':'#7c3aed','토':'#0891b2','일':'#be185d' };
 
+// ── 시트 안 세 화면 ─────────────────────────────────────────────
+// 'plans' 후보안 / 'roster' 마크 전원 상태 / 'adj' 조율 한 건씩
+// 전원 화면이 따로 필요한 이유 = 유성 2026-08-08: *"추천을 안하라는 건 아니야. 아예 없으면 알리긴 해야해.
+// 아예 없는 집으로 만들어버리면 행정담당자는 있는지, 되는지 몰라."* 안에 안 들어간 아이가
+// 화면에서 사라지면 담당자는 그 아이가 **불가능한지 밀린 것뿐인지** 구분할 수 없다.
+var planTab = 'plans';
+var planQ = [];          // 조율 대기열(앞이 지금 차례)
+var planQDone = [];      // 처리 완료 — 되돌리기 대상
+var planQLog = [];       // 방금 무슨 일이 있었나(최신이 앞)
+var planQMiss = {};      // 통화 안 됨 횟수 — 2회면 이번 목록에서 뺀다(유성 확정)
+var planQPass = {};      // 건너뛴 횟수 — 기록은 안 하되 순환을 사람이 알아채게
+var planDirty = false;   // 조율로 시트를 건드렸나 → 나갈 때 지도 새로고침
+var planCalcAt = 0;      // 계산 시각(docs/5 §3-F "시간이 지나면 안이 썩는다")
+
+function _planQKey(a) { return a.ask + '|' + (a.askDob || '') + '|' + a.to; }
+
+/** 서버가 준 조율 제안으로 대기열을 다시 만든다. 세션 상태(통화안됨·건너뜀·처리완료)는 살린다 */
+function planQBuild() {
+  var list = (PLAN && PLAN.adjustments) || [];
+  // 이번 세션에서 이미 답한 건은 다시 묻지 않는다.
+  // ⚠️ 거절은 서버가 걸러주지만 **동의**는 안 걸러진다 — 희망시간이 늘어나 같은 제안이 또 나올 수 있다.
+  var answered = {};
+  planQDone.forEach(function(d) {
+    if (d.kind === 'agree' || d.kind === 'decline' || d.kind === 'miss') answered[_planQKey(d.a)] = 1;
+  });
+  planQ = list.filter(function(a) {
+    var k = _planQKey(a);
+    return !answered[k] && (planQMiss[k] || 0) < 2;
+  });
+  // 건너뛴 건 뒤로 — 아직 안 본 것부터 보여준다
+  planQ.sort(function(x, y) {
+    return (planQPass[_planQKey(x)] || 0) - (planQPass[_planQKey(y)] || 0);
+  });
+}
+
 /** 마크된 아동 수 → FAB 노출 (행정만) */
 function planSyncFab() {
   var fab = document.getElementById('planFab');
@@ -2504,6 +2587,9 @@ function planOpen() {
       showLoading(false);
       if (res.error) { showToast(res.error); return; }
       PLAN = res; planCur = 0; planDayF = 'all';
+      planTab = 'plans'; planCalcAt = new Date().getTime();
+      planQDone = []; planQLog = []; planQMiss = {}; planQPass = {}; planDirty = false;
+      planQBuild();
       planRenderSheet();
       document.getElementById('planSheet').classList.add('on');
       document.getElementById('planFab').style.display = 'none';
@@ -2513,14 +2599,43 @@ function planOpen() {
 
 function planRenderSheet() {
   if (!PLAN) return;
-  var plans = PLAN.plans || [];
   document.getElementById('planTitle').textContent = '배치안';
   document.getElementById('planSub').textContent =
     (PLAN.provider ? PLAN.provider.name : '') + ' · 마크 ' + (PLAN.diagnostics ? PLAN.diagnostics.totalChildren : 0) + '명'
     + (PLAN.exact ? ' · 최적 보장' : ' · 추정')
-    + (PLAN.reconUsed ? ' · 기존 수업 ' + PLAN.reconUsed + '건 반영' : ' · 기존 수업 확인 안 됨');
+    + (PLAN.reconUsed ? ' · 기존 수업 ' + PLAN.reconUsed + '건 반영' : ' · 기존 수업 확인 안 됨')
+    + ' · ' + _planAgeLabel();
 
+  // 세그먼트 — 세 화면 어디에도 "숨겨진 아이"가 없다는 걸 숫자로 보인다
+  var sm = PLAN.summary || {};
+  document.getElementById('planSeg').innerHTML =
+      '<button class="psg' + (planTab === 'plans'  ? ' on' : '') + '" onclick="planTabTo(\'plans\')">안 ' + (PLAN.plans || []).length + '</button>'
+    + '<button class="psg' + (planTab === 'roster' ? ' on' : '') + '" onclick="planTabTo(\'roster\')">전원 ' + (sm.marked || (PLAN.roster || []).length) + '</button>'
+    + '<button class="psg' + (planTab === 'adj'    ? ' on' : '') + '" onclick="planTabTo(\'adj\')">조율 ' + planQ.length + '</button>';
+
+  var body = planTab === 'roster' ? _planViewRoster()
+           : planTab === 'adj'    ? _planViewAdj()
+           :                        _planViewPlans();
+  document.getElementById('planBody').innerHTML = body;
+}
+
+/** 계산 시각 — 뽑아두고 며칠 뒤 확정하면 그 사이 신청·배정이 들어온다(docs/5 §3-F) */
+function _planAgeLabel() {
+  if (!planCalcAt) return '';
+  var mins = Math.floor((new Date().getTime() - planCalcAt) / 60000);
+  if (mins < 1) return '방금 계산';
+  if (mins < 60) return mins + '분 전 계산';
+  return Math.floor(mins / 60) + '시간 전 계산 · 다시 뽑기 권장';
+}
+
+function planTabTo(t) { planTab = t; planRenderSheet(); }
+
+function _planViewPlans() {
+  var plans = PLAN.plans || [];
   var h = '';
+  if (_planAgeLabel().indexOf('권장') > 0) {
+    h += '<div class="pnote warn">이 안을 뽑은 지 한 시간이 넘었습니다. 그 사이 다른 신청·배정이 들어왔을 수 있으니 <b>확정 전에 다시 뽑아</b> 주세요.</div>';
+  }
   plans.forEach(function(p, i) {
     var seq = p.days.map(function(d) {
       return d.day + ' ' + d.visits.map(function(v){ return _pm(v.start) + ' ' + v.name; }).join(' → ');
@@ -2543,29 +2658,513 @@ function planRenderSheet() {
       + '</div>';
   });
 
-  // 조율 제안 — 대가를 숨기지 않는다
-  if (PLAN.adjustments && PLAN.adjustments.length) {
-    h += '<div class="padj"><b>💬 조율하면 더 받아요</b>'
-      + PLAN.adjustments.slice(0,3).map(function(a) {
-          return '<div style="margin-top:6px">' + esc(a.ask) + '님께 <b>' + esc(a.from) + ' → ' + esc(a.to) + '</b>'
-            + (a.needsAsk ? ' <span style="color:#9a2d22">(체크 안 한 시간 — 부탁 필요)</span>' : '')
-            + (a.enables ? '<br>⇒ ' + esc(a.enables) + ' 배정 가능' : '')
-            + '<br><span style="color:#9a2d22">이동 ' + (a.gainMoveMin >= 0 ? '−' : '+') + Math.abs(a.gainMoveMin) + '분'
-            + ' · 주차 ' + (a.gainParks >= 0 ? '−' : '+') + Math.abs(a.gainParks) + '회</span></div>';
-        }).join('')
-      + '</div>';
-  }
-  if (PLAN.holdAdvice && PLAN.holdAdvice.length) {
-    h += '<div class="pdrop"><b>보류를 권합니다</b>'
-      + PLAN.holdAdvice.slice(0,3).map(function(x) {
-          return '<div style="margin-top:5px">' + esc(x.name) + ' — ' + esc(x.reasons.join(' / ')) + '</div>'; }).join('')
-      + '</div>';
+  if (planQ.length) {
+    h += '<div class="padj"><b>💬 조율하면 ' + planQ.length + '건 더 받을 수 있습니다</b>'
+      + '<div style="margin-top:4px">전화로 한 건씩 여쭤보고 그 자리에서 반영합니다.</div>'
+      + '<button class="pbtn" style="margin-top:8px" onclick="planTabTo(\'adj\')">조율 시작</button></div>';
   }
   h += '<button class="pbtn gray" onclick="planExit()">닫기</button>';
-  document.getElementById('planBody').innerHTML = h;
+  return h;
+}
+
+// ══ 전원 상태표 — 마크한 아이는 한 명도 화면에서 사라지지 않는다 ══
+
+var _PLAN_ST = {
+  placed:                { c: 'ok',   t: '배정' },
+  'placed-hold-advised': { c: 'hold', t: '배정(보류권고)' },
+  'crowded-out':         { c: 'out',  t: '밀림' },
+  impossible:            { c: 'no',   t: '불가' }
+};
+
+function _planViewRoster() {
+  var roster = PLAN.roster || [], sm = PLAN.summary || {};
+  var h = '';
+
+  h += '<div class="pnote">이 선생님 · 마크 <b>' + (sm.marked || roster.length) + '명</b> 중 '
+    + '<b>' + (sm.placed || 0) + '명 배정</b>'
+    + ((sm.crowdedOut || 0) ? ' · 밀림 ' + sm.crowdedOut + '명' : '')
+    + ((sm.impossible || 0) ? ' · 불가 ' + sm.impossible + '명' : '')
+    + '<br><span style="color:#8b95a1">「밀림」은 <b>넣을 수 있는데</b> 이 안에서 빠진 것입니다 — 조율하거나 다른 안을 보세요.</span></div>';
+
+  if (!roster.length) h += '<div class="pnote">표시할 아동이 없습니다.</div>';
+
+  roster.forEach(function(r) {
+    var st = _PLAN_ST[r.status] || { c: 'no', t: r.status };
+    var why = r.status.indexOf('placed') === 0
+      ? (r.day || '') + ' ' + (r.time || '')
+      : (r.reason || '');
+    h += '<div class="prow"><span class="pst ' + st.c + '">' + st.t + '</span>'
+      + '<b>' + esc(r.name) + '</b>'
+      + (r.anchorCount > 1 ? '<span style="color:#8b95a1;font-size:11px">단지 ' + r.anchorCount + '건</span>' : '')
+      + '<span class="why">' + esc(why) + '</span></div>';
+    if (r.holdReasons && r.holdReasons.length) {
+      h += '<div class="plog">보류 권고 — ' + esc(r.holdReasons.join(' / '))
+        + (r.costHint ? '<br>' + esc(r.costHint) : '')
+        + (r.parentMessage ? '<br>학부모께: <b>' + esc(r.parentMessage) + '</b>' : '') + '</div>';
+    }
+    if (r.hint) h += '<div class="plog">' + esc(r.hint) + '</div>';
+    if (r.status === 'impossible' || r.status === 'crowded-out') {
+      h += '<div class="plog"><a href="javascript:void(0)" style="color:#3a8a5f" onclick="planForChild(' + r.row + ',\'' + escQ(r.name) + '\')">이 아이를 맡을 다른 선생님 찾기 →</a></div>';
+    }
+  });
+
+  // 사람이 모르면 오해하는 사실들 — 숫자만 주면 안 된다
+  (PLAN.anchorWarnings || []).forEach(function(w) { h += '<div class="pnote warn">' + esc(w) + '</div>'; });
+  if (PLAN.duplicatesDropped && PLAN.duplicatesDropped.length) {
+    h += '<div class="pnote warn"><b>중복 신청 ' + PLAN.duplicatesDropped.length + '건을 하나로 묶었습니다</b><br>'
+      + esc(PLAN.duplicatesDropped.map(function(d){ return d.name + '(' + d.row + '행)'; }).join(' · ')) + '</div>';
+  }
+  if (PLAN.availWidened) {
+    h += '<div class="pnote warn">선생님 가용시간이 시트에 없거나 좁아 <b>기본값으로 넓혀</b> 계산했습니다 — 실제와 다를 수 있습니다.</div>';
+  }
+  h += '<button class="pbtn gray" onclick="planTabTo(\'plans\')">안으로 돌아가기</button>';
+  return h;
+}
+
+// ══ 조율 — 한 건씩 진행 (유성 2026-08-08 확정: "한건씩 진행") ══
+//
+// 전화를 한 통 걸고, 답을 듣고, 그 자리에서 반영한다. 목록을 통째로 보여주고
+// "알아서 처리하세요"로 두면 어디까지 했는지 사람이 기억해야 한다.
+//
+// 네 답이 각각 **다른 곳으로 간다** — 이걸 섞으면 다음에 또 전화하게 된다:
+//   동의     → 희망시간(C열)에 그 칸을 **추가**(기존 값 안 지움) → 배치안 재계산
+//   거절     → 조율거절 열에 기록 → **다시 안 뜬다**
+//   통화안됨 → 기록 없음, 맨 뒤로. 2회면 이번 목록에서 뺀다(무한 순환 방지, 유성 확정)
+//   건너뛰기 → 기록 없음, 맨 뒤로. 다음에 다시 뽑으면 또 나온다
+
+function _planViewAdj() {
+  var h = '';
+  var hidden = PLAN.adjustmentsHidden || 0;
+
+  if (!planQ.length) return h + _planAdjDone(hidden);
+
+  var a = planQ[0];
+  var allSeen = planQ.every(function(x) { return (planQPass[_planQKey(x)] || 0) > 0 || (planQMiss[_planQKey(x)] || 0) > 0; });
+
+  h += '<div class="pqhd"><b>처리 ' + planQDone.length + '건</b><span>· 남음 ' + planQ.length + '건</span>'
+    + '<span style="margin-left:auto">동의할 때마다 다시 계산됩니다</span></div>';
+
+  if (allSeen) {
+    h += '<div class="pnote warn">남은 ' + planQ.length + '건은 <b>모두 한 번씩 미룬 항목</b>입니다. 지금 끝내도 되고, 다시 뽑으면 또 나옵니다.</div>';
+  }
+
+  // ⚠️ 이 한 수에 **두 집의 동의**가 필요한 경우가 35%다(2026-08-09 40시나리오 실측).
+  //    한 집만 보여주면 나머지 한 집은 전화를 못 받고, 거절도 엉뚱한 집에 기록된다.
+  var asks = a.asks && a.asks.length ? a.asks
+           : [{ name: a.ask, row: a.askRow, phone: a.askPhone, from: a.from, to: a.to, negotiable: a.negotiable }];
+  var multi = asks.length > 1;
+
+  h += '<div class="pqcard">';
+  h += multi ? '<h4>📞 두 집의 동의가 필요합니다</h4>' : '';
+
+  asks.forEach(function(k, ki) {
+    h += (multi ? '<div style="margin:9px 0 0;padding-top:9px;border-top:1px solid #f2f4f6">' : '')
+      + (multi ? '<h4>' + (ki + 1) + '. ' : '<h4>📞 ') + esc(k.name) + ' 보호자'
+      + (k.phone ? '<a href="tel:' + esc(k.phone) + '">' + esc(fmtPhone(k.phone)) + '</a>' : '')
+      + (multi ? '<span class="undo" style="float:right" onclick="planAdjAnswer(\'decline\',' + ki + ')">이 집 거절</span>' : '')
+      + '</h4>'
+      + '<div class="pqmeta">' + esc(k.from) + ' → <b style="color:#191f28">' + esc(k.to) + '</b>'
+      + (k.negotiable ? ' <span class="gain">「협의 가능」이라고 적어주신 집</span>' : '')
+      + '</div>'
+      + '<div class="pqs">' + _planSayScript(k, a) + '</div>'
+      + (multi ? '</div>' : '');
+  });
+
+  var saidPlaced = a.gainPlaced > 0 && !!a.enables;
+  h += '<div class="pqmeta" style="margin-top:9px">'
+    + (!saidPlaced ? ''
+       : a.enables !== asks[0].name ? '성공하면 <b>' + esc(a.enables) + '</b>가 들어갑니다<br>'
+       : '성공하면 이 아이가 <b>들어갑니다</b><br>')
+    + _planGainLabel(a, saidPlaced) + '</div>'
+    + '<div class="pqb">'
+    + '<button class="go" onclick="planAdjAnswer(\'agree\')">' + (multi ? '둘 다 동의 → 반영' : '동의 → 반영') + '</button>'
+    + (multi ? '' : '<button onclick="planAdjAnswer(\'decline\',0)">거절</button>')
+    + '<button onclick="planAdjAnswer(\'miss\')">통화 안 됨</button>'
+    + '<button onclick="planAdjAnswer(\'pass\')">건너뛰기</button>'
+    + '</div></div>';
+
+  if (hidden) h += '<div class="plog">이전에 거절하신 제안 ' + hidden + '건은 빼고 보여드립니다.</div>';
+  planQLog.slice(0, 3).forEach(function(t) { h += '<div class="plog">' + t + '</div>'; });
+  h += _planDoneList();
+  h += '<button class="pbtn gray" onclick="planTabTo(\'plans\')">나중에 하기</button>';
+  return h;
+}
+
+/**
+ * 대가·이득을 숨기지 않는다 — 받는 게 이득인지 그 자리에서 판단해야 한다.
+ * @param {boolean} skipPlaced 위에서 "성공하면 ○○가 들어갑니다"를 이미 말했으면 인원은 빼고 낸다(§2.1 문구중복금지)
+ */
+function _planGainLabel(a, skipPlaced) {
+  var bits = [];
+  if (a.gainPlaced > 0 && !skipPlaced) bits.push('<span class="gain">배정 +' + a.gainPlaced + '명</span>');
+  if (a.gainMoveMin > 0) bits.push('<span class="gain">이동 −' + a.gainMoveMin + '분</span>');
+  else if (a.gainMoveMin < 0) bits.push('<span class="cost">이동 +' + Math.abs(a.gainMoveMin) + '분</span>');
+  if (a.gainParks > 0) bits.push('<span class="gain">주차 −' + a.gainParks + '회</span>');
+  else if (a.gainParks < 0) bits.push('<span class="cost">주차 +' + Math.abs(a.gainParks) + '회</span>');
+  if (a.worstSlackAfter != null && a.worstSlackAfter < 3) bits.push('<span class="cost">여유 ' + a.worstSlackAfter + '분(빠듯)</span>');
+  return bits.length ? bits.join(' · ') : '이동·주차는 그대로';
+}
+
+/**
+ * 전화 문구 — 유성 보이스([[copy-voice-yuseong]]: 짧은 줄·해요체·번역투 금지).
+ * ⚠️ 문장을 새로 짓지 않는다. "왜 바꾸는지"는 말하지 않는다 —
+ *    동선 사정을 설명하면 학부모는 우리 편의를 위해 양보하는 기분이 든다.
+ */
+function _planSayScript(k, a) {
+  var t = esc(k.name) + ' 어머님, 안녕하세요. 생각공작소입니다.<br>';
+  if (k.from === '미배정') t += '수업을 <b>' + esc(k.to) + '</b>에 시작해도 괜찮으실까요?<br>그 시간이면 바로 시작할 수 있어요.';
+  else                     t += '수업 시간을 <b>' + esc(k.to) + '</b>로 옮겨도 괜찮으실까요?';
+  t += '<br><span style="color:#8b95a1">※ 처음 적어주신 시간 밖이라 여쭤보는 것입니다</span>';
+  return t;
+}
+
+function _planDoneList() {
+  if (!planQDone.length) return '';
+  var h = '<div style="margin-top:11px;font-size:11px;color:#8b95a1">처리 내역</div>';
+  planQDone.forEach(function(d, i) {
+    var cls = d.kind === 'agree' ? 'ok' : (d.kind === 'decline' ? 'out' : 'no');
+    h += '<div class="pdone"><span class="pst ' + cls + '">' + esc(d.label) + '</span>'
+      + '<b>' + esc(d.by || d.a.ask) + '</b> <span style="color:#8b95a1">' + esc(d.a.from) + ' → ' + esc(d.a.to) + '</span>'
+      + (d.kind === 'agree' || d.kind === 'decline'
+          ? '<span class="undo" onclick="planAdjUndo(' + i + ')">되돌리기</span>' : '')
+      + '</div>';
+  });
+  return h;
+}
+
+function _planAsksOf(a) {
+  return (a.asks && a.asks.length) ? a.asks
+    : [{ name: a.ask, dob: a.askDob, row: a.askRow, phone: a.askPhone, from: a.from, to: a.to }];
+}
+
+/** @param {number} who 거절일 때만 — asks 안에서 실제로 거절한 집의 index */
+function planAdjAnswer(kind, who) {
+  var a = planQ[0];
+  if (!a) return;
+  var key = _planQKey(a);
+  var asks = _planAsksOf(a);
+
+  // ── 기록이 남지 않는 두 답: 서버를 부르지 않는다 ──
+  if (kind === 'miss') {
+    planQMiss[key] = (planQMiss[key] || 0) + 1;
+    if (planQMiss[key] >= 2) {
+      planQ.shift();
+      planQDone.push({ a: a, kind: 'miss', label: '통화 안 됨' });
+      planQLog.unshift('📵 <b>' + esc(a.ask) + '</b> 통화 안 됨 2회 — 이번 목록에서 뺐습니다. 다시 뽑으면 또 나옵니다');
+    } else {
+      planQ.push(planQ.shift());
+      planQLog.unshift('📵 <b>' + esc(a.ask) + '</b> 통화 안 됨 — 기록 없이 맨 뒤로 보냈습니다');
+    }
+    planRenderSheet(); return;
+  }
+  if (kind === 'pass') {
+    planQPass[key] = (planQPass[key] || 0) + 1;
+    planQ.push(planQ.shift());
+    planQLog.unshift('⏭ <b>' + esc(a.ask) + '</b> 건너뜀 — 아무것도 기록하지 않았습니다');
+    planRenderSheet(); return;
+  }
+
+  // ── 시트에 쓰는 두 답 ──
+  // 동의 = asks 전원의 희망시간에 그 칸을 더한다(두 집이면 두 번 쓴다 — 한 집만 쓰면 안이 안 바뀐다)
+  // 거절 = **실제로 거절한 집 하나만** 기록한다(다 기록하면 멀쩡한 집의 칸까지 영구히 막는다)
+  var targets = kind === 'agree' ? asks : [asks[who || 0]];
+  _planAdjWrite(kind === 'agree' ? 'adjust' : 'decline', a, targets, false, function(res) {
+    planQ.shift();
+    if (kind === 'agree') {
+      planQDone.push({ a: a, kind: 'agree', label: '동의' });
+      planQLog.unshift('✅ ' + targets.map(function(t){ return '<b>' + esc(t.name) + '</b> ' + esc(t.to); }).join(' · ')
+        + ' 희망시간에 추가했습니다 → 배치안 다시 계산');
+    } else {
+      planQDone.push({ a: a, kind: 'decline', label: '거절', by: targets[0].name });
+      planQLog.unshift('🚫 <b>' + esc(targets[0].name) + '</b> ' + esc(targets[0].to) + ' 거절을 기록했습니다 → 다시 뜨지 않습니다');
+    }
+    _planApplyRefresh(res, a);
+  });
+}
+
+function planAdjUndo(i) {
+  var d = planQDone[i];
+  if (!d || (d.kind !== 'agree' && d.kind !== 'decline')) return;
+  // 되돌리기는 **그때 쓴 것만** 되돌린다 — 동의는 전원, 거절은 거절한 한 집
+  var targets = d.kind === 'agree' ? _planAsksOf(d.a)
+              : _planAsksOf(d.a).filter(function(k){ return !d.by || k.name === d.by; });
+  _planAdjWrite(d.kind === 'agree' ? 'adjust' : 'decline', d.a, targets, true, function(res) {
+    planQDone.splice(i, 1);
+    planQLog.unshift('↩️ <b>' + esc(targets.map(function(t){return t.name;}).join(' · ')) + '</b> 기록을 되돌렸습니다');
+    _planApplyRefresh(res, null);
+  });
+}
+
+/**
+ * 조율 기록. `targets`가 여럿이면 **순차로** 쓴다.
+ * ⚠️ 병렬로 던지면 같은 시트에 동시 쓰기가 되고, GAS 락에서 하나가 튕긴다.
+ *    마지막 응답의 `refreshed`만 쓴다 — 중간 응답은 아직 다 안 쓴 상태를 담고 있다.
+ */
+function _planAdjWrite(action, a, targets, undo, ok) {
+  var jobs = (targets || []).filter(function(t) { return t && t.row; });
+  if (!jobs.length) { showToast('이 제안은 대상 행을 알 수 없습니다 — 다시 뽑아 주세요'); return; }
+  for (var i = 0; i < jobs.length; i++) {
+    if (String(jobs[i].to).split(' ').length < 2) { showToast('시간을 읽을 수 없습니다: ' + jobs[i].to); return; }
+  }
+
+  showLoading(true);
+  var last = null;
+  var chain = Promise.resolve();
+  jobs.forEach(function(t) {
+    chain = chain.then(function() {
+      var p = String(t.to).split(' ');
+      var params = {
+        row: t.row, day: p[0], time: p[1],
+        service: currentService, ctx: _ctxKeyName(),
+        provider: PLAN.provider.name, rows: _planMarkedRows().join(','), k: 6
+      };
+      if (undo) params.undo = '1';
+      return fetchGAS(action, params).then(function(res) {
+        if (!res || res.error) throw new Error((res && res.error) || '기록에 실패했습니다');
+        last = res;
+      });
+    });
+  });
+
+  chain.then(function() {
+      showLoading(false);
+      planDirty = true;
+      _invalidateServiceCache();
+      ok(last);
+    })
+    .catch(function(e) { showLoading(false); showToast('실패: ' + e.message); });
+}
+
+/**
+ * 수락·거절 응답에 실려 온 **새 배치안**을 반영한다.
+ * 유성 2026-08-08: *"제안 OK > OK > OK 더 최적으로 계속 제안해서 그걸 다 성공시켰을 때
+ * 세 번째 OK가 첫 번째·두 번째를 반영하고 최적화시킬 수는 있는 건가?"* → 그렇다.
+ * 매번 서버가 **바뀐 시트를 다시 읽어** 안과 제안을 통째로 다시 만든다(값을 화면에서 누산하지 않는다).
+ */
+function _planApplyRefresh(res, answered) {
+  if (res.refreshed && !res.refreshed.error) {
+    var before = planQ.length;               // 방금 처리한 건은 이미 shift된 뒤다
+    PLAN = res.refreshed;
+    planCalcAt = new Date().getTime();
+    if (planCur >= (PLAN.plans || []).length) planCur = 0;
+    planQBuild();
+    var gone = Math.max(0, before - planQ.length);
+    if (gone > 0) planQLog.unshift('↻ 같은 칸을 노리던 제안 ' + gone + '건이 <b>무효가 되어 사라졌습니다</b>');
+    planDraw();
+  } else if (res.refreshError) {
+    // 기록은 됐고 재계산만 실패 — 나빠지지 않는다. 화면이 거짓말하지 않게 알린다
+    planQLog.unshift('⚠️ 기록은 됐지만 재계산이 실패했습니다 — 닫았다 다시 뽑아 주세요');
+  }
+  planRenderSheet();
+}
+
+/** 대기열이 비었을 때 — 결과 요약 · 한계 명시 · 교사 안내문 */
+function _planAdjDone(hidden) {
+  var agreed = planQDone.filter(function(d){ return d.kind === 'agree'; }).length;
+  var declined = planQDone.filter(function(d){ return d.kind === 'decline'; }).length;
+  var h = '';
+
+  if (!planQDone.length) {
+    h += '<div class="pnote">지금은 조율로 더 얻을 게 없습니다.'
+      + (hidden ? ' 이전에 거절하신 ' + hidden + '건은 빼고 봤습니다.' : '')
+      + '<br><span style="color:#8b95a1">사람을 더 넣으려면 다른 선생님을 봐야 합니다.</span></div>';
+    h += '<button class="pbtn gray" onclick="planTabTo(\'roster\')">전원 상태 보기</button>';
+    return h;
+  }
+
+  h += '<div class="pnote' + (agreed ? '' : ' bad') + '"><b>조율 끝 — 처리 ' + planQDone.length + '건</b><br>'
+    + '동의 ' + agreed + '건 · 거절 ' + declined + '건'
+    + (agreed ? '<br>배치안을 다시 계산했습니다. 「안」에서 확인하고 확정해 주세요.' : '') + '</div>';
+
+  // 유성 2026-08-08: 전부 거절이면 **한계를 명시**해야 한다 — 아니면 담당자는 계속 방법을 찾는다
+  if (!agreed) {
+    var top = (PLAN.plans || [])[0];
+    var sm = PLAN.summary || {};
+    h += '<div class="pnote bad"><b>조율이 모두 어렵습니다.</b><br>'
+      + '이 명단·이 선생님으로는 <b>' + (top ? top.placed : (sm.placed || 0)) + '명이 최대</b>이고, 지금 안이 최선입니다.'
+      + '<br><br><b>남은 아동은 이렇게 하세요</b><br>'
+      + '· 「전원」에서 <b>다른 선생님 찾기</b>를 눌러 후보를 봅니다<br>'
+      + '· 그래도 없으면 대기 — 학부모께는 <b>"스케줄 조정이 필요하여 대기해주셔야 할 것 같습니다"</b></div>';
+  }
+
+  if (agreed) {
+    h += '<div style="font-size:11.5px;font-weight:700;color:#4e5968;margin-top:11px">'
+      + esc(PLAN.provider ? PLAN.provider.name : '') + ' 선생님께 보낼 안내문</div>'
+      + '<div class="pbrief" id="planBrief">' + esc(_planBriefText()) + '</div>'
+      + '<div style="display:flex;gap:5px">'
+      + '<button class="pbtn" style="margin-top:0" onclick="planBriefCopy()">📋 문자 복사</button>'
+      + '<button class="pbtn line" style="margin-top:0" onclick="planBriefShot()">📷 시간표 이미지</button>'
+      + '</div>';
+  }
+
+  h += _planDoneList();
+  h += '<button class="pbtn gray" onclick="planTabTo(\'plans\')">안으로 돌아가기</button>';
+  return h;
 }
 
 function _pm(min) { var hh = Math.floor(min/60), mm = min%60; return (hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm; }
+
+// ══ 교사 전달 (유성 2026-08-08: "제공인력에게 어떻게 알려야 할지도 캡쳐로 보여줘야되고") ══
+
+/** 문자로 그대로 보낼 수 있는 시간표. 지금 고른 안 기준 */
+function _planBriefText() {
+  var p = (PLAN.plans || [])[planCur];
+  if (!p) return '';
+  var lines = ['선생님, 이번 스케줄입니다.', ''];
+  p.days.forEach(function(d) {
+    lines.push('[' + d.day + '요일]');
+    d.visits.forEach(function(v) { lines.push('  ' + _pm(v.start) + '  ' + v.name); });
+  });
+  lines.push('');
+  lines.push('확인 부탁드립니다.');
+  return lines.join('\n');
+}
+
+function planBriefCopy() {
+  var t = _planBriefText();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(function(){ showToast('복사했습니다', true); },
+                                          function(){ _planCopyFallback(t); });
+  } else _planCopyFallback(t);
+}
+function _planCopyFallback(t) {
+  var ta = document.createElement('textarea');
+  ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); showToast('복사했습니다', true); }
+  catch (e) { showToast('복사에 실패했습니다'); }
+  document.body.removeChild(ta);
+}
+
+/**
+ * 시간표를 **이미지**로 만든다 — 카톡에 붙일 수 있게.
+ * ⚠️ html2canvas 같은 외부 라이브러리를 안 쓴다: 표가 단순한 텍스트 격자라 canvas에 직접 그리면
+ *    의존성 0 · 폰트·색을 우리가 정확히 통제 · 오프라인에서도 된다(3-F 경량화 우선).
+ * 클립보드 이미지는 https+사용자 제스처에서만 되므로 실패하면 **다운로드**로 떨어진다.
+ */
+function planBriefShot() {
+  var p = (PLAN.plans || [])[planCur];
+  if (!p) return;
+  var name = (PLAN.provider ? PLAN.provider.name : '') + ' 선생님';
+
+  var rows = [];
+  p.days.forEach(function(d) {
+    rows.push({ head: true, text: d.day + '요일' });
+    d.visits.forEach(function(v) { rows.push({ head: false, time: _pm(v.start), text: v.name }); });
+  });
+
+  var S = 2;                                   // 레티나 배율 — 카톡에서 흐려지지 않게
+  var W = 420, PAD = 26, LH = 34, HEAD = 96;
+  var H = HEAD + rows.length * LH + PAD;
+  var cv = document.createElement('canvas');
+  cv.width = W * S; cv.height = H * S;
+  var g = cv.getContext('2d');
+  g.scale(S, S);
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#3a8a5f'; g.fillRect(0, 0, W, 6);
+
+  var FF = '"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+  g.fillStyle = '#191f28'; g.font = '700 21px ' + FF;
+  g.fillText(name, PAD, 46);
+  g.fillStyle = '#8b95a1'; g.font = '400 13px ' + FF;
+  g.fillText('주간 스케줄 · 총 ' + p.placed + '명', PAD, 70);
+
+  var y = HEAD;
+  rows.forEach(function(r) {
+    if (r.head) {
+      g.fillStyle = '#8b95a1'; g.font = '700 13px ' + FF;
+      g.fillText(r.text, PAD, y);
+    } else {
+      g.fillStyle = '#4e5968'; g.font = '600 15px ' + FF;
+      g.fillText(r.time, PAD + 10, y);
+      g.fillStyle = '#191f28'; g.font = '600 15px ' + FF;
+      g.fillText(r.text, PAD + 78, y);
+    }
+    y += LH;
+  });
+
+  cv.toBlob(function(blob) {
+    if (!blob) { showToast('이미지 생성에 실패했습니다'); return; }
+    var fname = (PLAN.provider ? PLAN.provider.name : '스케줄') + '_주간.png';
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      var item = {}; item[blob.type] = blob;
+      navigator.clipboard.write([new ClipboardItem(item)]).then(
+        function(){ showToast('이미지를 복사했습니다 — 카톡에 붙여넣으세요', true); },
+        function(){ _planDownload(blob, fname); });
+    } else _planDownload(blob, fname);
+  }, 'image/png');
+}
+function _planDownload(blob, fname) {
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = fname;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+  showToast('이미지를 내려받았습니다', true);
+}
+
+// ══ 모드 B — 아동 1명 → 이 아이를 맡을 선생님 후보 ══
+//
+// 유성 2026-08-07(러시): *"실제는 아동 1명 + 많은 교사야."* 신청은 3~4주에 걸쳐 하나씩 들어오고
+// **다음주 월요일까지 연락드릴게요는 뺏긴다**(내일까지는 괜찮다). 그때 필요한 건
+// "이 아이를 누구에게"이지 "이 선생님에게 누굴 몰아줄까"가 아니다.
+function planForChild(row, name) {
+  infoWindow.close();
+  showLoading(true);
+  fetchGAS('planfor', { row: row, service: currentService, k: 3 })
+    .then(function(res) {
+      showLoading(false);
+      if (!res || res.error) { showToast((res && res.error) || '실패했습니다'); return; }
+      PLANB = res;
+      document.getElementById('planTitle').textContent = esc(name || (res.child && res.child.name) || '') + ' 담당 후보';
+      document.getElementById('planSub').textContent =
+        '선생님 ' + (res.totalProviders || 0) + '명 중 가까운 ' + (res.looked || 0) + '명을 봤습니다';
+      document.getElementById('planSeg').innerHTML = '';
+      document.getElementById('planBody').innerHTML = _planViewForChild();
+      document.getElementById('planSheet').classList.add('on');
+      document.getElementById('planFab').style.display = 'none';
+    })
+    .catch(function(e) { showLoading(false); showToast('실패: ' + e.message); });
+}
+var PLANB = null;
+
+function _planViewForChild() {
+  var r = PLANB, h = '';
+  var c = r.child || {};
+  h += '<div class="pnote"><b>' + esc(c.name || '') + '</b>'
+    + (c.times ? '<br>희망 ' + esc(fmtTimes(c.times)) : '')
+    + (c.earliest ? '<br>' + esc(c.earliest) + ' 이후 가능' : '') + '</div>';
+
+  (r.candidates || []).forEach(function(k, i) {
+    h += '<div class="pcand' + (i === 0 ? ' best' : '') + '">'
+      + '<h4>' + (i + 1) + '. ' + esc(k.provider) + '</h4>'
+      + (i === 0 ? '<span class="tg">가장 손해가 적음</span>' : '')
+      + '<div class="pm"><span>넣을 자리</span><b>' + esc((k.day || '') + ' ' + (k.time || '')) + '</b></div>'
+      + '<div class="pm"><span>왕복(집↔이 아이)</span><b>' + (k.roundTripMin != null ? k.roundTripMin + '분' : '—') + '</b></div>'
+      + '<div class="pm"><span>그날 이미 가는 집</span><b>' + (k.sameDayVisits || 0) + '곳</b></div>'
+      + '<div class="pm"><span>선생님 집까지</span><b>' + (k.km != null ? k.km + 'km' : '—') + '</b></div>'
+      + '<div class="pm"><span>맡고 있는 아동</span><b>' + (k.load || 0) + '명</b></div>'
+      + '<div class="pseq">' + (k.sameDayVisits
+          ? '그날 이미 나가는 날이라 왕복이 이미 발생합니다 — 그만큼 쌉니다'
+          : '이 아이 때문에 <b>새로 나가는 날</b>이 됩니다') + '</div>'
+      + '<button class="pbtn" onclick="doAssignTo(' + c.row + ',\'' + escQ(k.provider) + '\')">이 선생님에게 배정</button>'
+      + '</div>';
+  });
+
+  if (!(r.candidates || []).length) {
+    h += '<div class="pnote bad"><b>지금 넣을 수 있는 선생님이 없습니다.</b><br>'
+      + '학부모께는 <b>"스케줄 조정이 필요하여 대기해주셔야 할 것 같습니다"</b>라고 안내해 주세요.</div>';
+  }
+  if ((r.rejected || []).length) {
+    h += '<div class="pnote">넣을 수 없던 선생님<br><span style="color:#8b95a1">'
+      + esc(r.rejected.map(function(x){ return x.provider + '(' + (x.reason || '') + ')'; }).join(' · '))
+      + '</span></div>';
+  }
+  // 이 모드는 기존 아동 좌표를 안 읽는다 = 왕복비용이 하한이다. 단정하지 않는다
+  // (후보가 0명이면 비용 얘기 자체가 의미 없다 — 띄우면 소음)
+  if (r.caveat && (r.candidates || []).length) h += '<div class="pnote warn">' + esc(r.caveat) + '</div>';
+  h += '<button class="pbtn gray" onclick="planExit()">닫기</button>';
+  return h;
+}
 
 function planPick(i) {
   planCur = i; planDayF = 'all';
@@ -2573,6 +3172,7 @@ function planPick(i) {
   document.getElementById('planDays').classList.add('on');
   Array.prototype.forEach.call(document.querySelectorAll('.pd'), function(b){
     if (b.dataset.d) b.classList.toggle('on', b.dataset.d === 'all'); });
+  planDim(true);          // 무지개 5색이 기존 마커색과 5/5 충돌 → 검토 중엔 기존 마커를 내린다
   planDraw();
 }
 
@@ -2728,9 +3328,14 @@ function planClear() {
 
 function planExit() {
   planClear();
+  planDim(false);
   document.getElementById('planSheet').classList.remove('on');
   document.getElementById('planDays').classList.remove('on');
-  PLAN = null;
+  document.getElementById('planSeg').innerHTML = '';
+  PLAN = null; PLANB = null;
+  // 조율로 희망시간·거절을 시트에 썼으면 지도의 아동 정보가 낡았다 → 여기서 한 번만 새로고침
+  // (조율 도중에 매번 재렌더하면 검토 중인 마커가 깜빡인다)
+  if (planDirty) { planDirty = false; reloadCurrent(true); }
   planSyncFab();
 }
 
