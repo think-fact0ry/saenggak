@@ -333,6 +333,11 @@
             cursor:pointer;padding:10px 2px;margin-top:4px}
   .asg-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
   .asg-grid .asg-slot{padding:9px 0;text-align:center;font-size:13px}
+  .asg-prov{width:100%;box-sizing:border-box;font-family:inherit;font-size:15px;color:#191f28;
+             padding:13px 14px;border-radius:14px;border:1.5px solid #e5e8eb;background:#fff;outline:none;
+             appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b95a1' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+             background-repeat:no-repeat;background-position:right 14px center}
+  .asg-prov:focus{border-color:#3a8a5f}
   .asg-note{font-size:12.5px;color:#8a5a00;background:#fff7e6;border-radius:10px;padding:9px 11px;margin-top:12px;
             line-height:1.5;word-break:keep-all}
 </style>
@@ -340,6 +345,8 @@
   <div class="sm-card">
     <div class="sm-title" id="asgTitle">배정</div>
     <div class="asg-sub" id="asgSub"></div>
+    <div class="asg-lbl">어느 선생님인가요?</div>
+    <select class="asg-prov" id="asgProvSelect" onchange="asgProvChanged()"></select>
     <div class="asg-lbl">언제 수업하나요?</div>
     <div class="asg-slots" id="asgSlots"></div>
     <button class="asg-more" id="asgMoreBtn" onclick="asgToggleMore()">그 외 시간 고르기 ▾</button>
@@ -1406,10 +1413,13 @@ var ASG_DAYS = ['월','화','수','목','금','토'];
 var ASG_HOURS = [14,15,16,17,18,19,20];
 
 function askAssignSchedule(row, provName, childName, times) {
-  _asgCtx = { row: row, prov: provName };
+  _asgCtx = { row: row, prov: provName, child: childName, times: times };
   _asgPick = null; _asgDay = null; _asgHour = null;
 
-  document.getElementById('asgTitle').textContent = provName + ' 선생님에게 배정';
+  document.getElementById('asgTitle').textContent = '배정하기';
+  // ⚠️ 추천은 상위 3명뿐이라 원하는 선생님이 없을 수 있다. 예전엔 좌상단 드롭다운을 바꾸고
+  //    지도가 통째로 갈아엎어진 뒤 아동을 다시 찾아야 했다(유성 지적) ⇒ 여기서 바로 고른다.
+  _asgFillProviders(row, provName, childName);
   document.getElementById('asgSub').textContent = (childName || (row + '행 아동')) + ' · ' + currentService;
 
   // 아동이 체크한 칸을 버튼으로. 누르기만 하면 되니 오타·형식 사고가 없다.
@@ -1438,6 +1448,42 @@ function askAssignSchedule(row, provName, childName, times) {
   document.getElementById('asgOk').disabled = true;
   document.getElementById('asgModal').style.display = 'flex';
 }
+/**
+ * 다이얼로그의 선생님 드롭다운을 채운다.
+ * 정렬 = 배정 추천과 **같은 기준**(거리 + 시간 안 맞으면 페널티) → 위 3명이 곧 추천 3명이라 둘이 따로 놀지 않는다.
+ * 각 항목에 거리·시간겹침을 붙여 30명 중에서도 근거를 보고 고를 수 있게 한다.
+ * ⚠️ 가용시간이 비어 판정 불가면 '가용시간 미기록'으로 뜬다 — 그 선생님이 안 되는 게 아니라 **모르는 것**이다.
+ */
+function _asgFillProviders(row, preferName, childName) {
+  var sel = document.getElementById('asgProvSelect');
+  var child = _findChildByRow(row);
+  var list = (providerList || []).slice();
+
+  var scored = list.map(function(p) {
+    var d = (child && child.lat && p.lat) ? haversine(child.lat, child.lng, p.lat, p.lng) : null;
+    var t = (child && child.times) ? calcTimeOverlap(child.times, p.avail) : { count: -1, label: '' };
+    return { name: p.name, dist: d, tLabel: t.label, tCount: t.count,
+             score: (d == null ? 99 : d) + (t.count > 0 ? 0 : 5) };
+  });
+  scored.sort(function(a, b) { return a.score - b.score; });
+
+  sel.innerHTML = scored.map(function(x) {
+    var bits = [];
+    if (x.dist != null) bits.push(fmtDist(x.dist));
+    if (x.tLabel) bits.push(x.tLabel);
+    return '<option value="' + escQ(x.name) + '">' + esc(x.name) + (bits.length ? ' · ' + bits.join(' · ') : '') + '</option>';
+  }).join('');
+
+  if (preferName) sel.value = preferName;
+  if (!sel.value && scored.length) sel.value = scored[0].name;
+  _asgCtx.prov = sel.value;
+}
+
+function asgProvChanged() {
+  var sel = document.getElementById('asgProvSelect');
+  if (_asgCtx) _asgCtx.prov = sel.value;
+}
+
 function asgClose(){ document.getElementById('asgModal').style.display='none'; _asgCtx=null; }
 function asgToggleMore(force){
   var m = document.getElementById('asgMore'), b = document.getElementById('asgMoreBtn');
@@ -1471,7 +1517,9 @@ function asgConfirm(){
   if (!_asgCtx) return;
   var d = _asgPick ? _asgPick.day : _asgDay, h = _asgPick ? _asgPick.hour : _asgHour;
   if (!d || h == null) return;
-  var row = _asgCtx.row, prov = _asgCtx.prov;
+  var row = _asgCtx.row;
+  var prov = document.getElementById('asgProvSelect').value || _asgCtx.prov;
+  if (!prov) { showToast('선생님을 고르세요'); return; }
   var time = (h < 10 ? '0' : '') + h + ':00';
   asgClose();
   showLoading(true); infoWindow.close();
@@ -1492,10 +1540,11 @@ function doAssignTo(row, provName) {
 
 // ══ 배정 처리 ══ (제공인력을 고른 상태에서 아동 인포윈도우의 배정 버튼)
 function doAssign(row) {
+  // ⚠️ 예전엔 좌상단에서 선생님을 안 고르면 막았다. 이제 다이얼로그 안에서 고를 수 있으므로 그대로 연다
+  //    — '전체' 보기 상태에서도 아동을 눌러 바로 배정할 수 있다(지도를 갈아엎고 아동을 다시 찾을 필요 없음).
   var prov = document.getElementById('providerSelect').value;
-  if (!prov) { showToast('선생님을 먼저 선택하세요'); return; }
   var c = _findChildByRow(row);
-  askAssignSchedule(row, prov, c && c.name, c && c.times);
+  askAssignSchedule(row, prov || '', c && c.name, c && c.times);
 }
 
 /** 행번호로 현재 화면 데이터에서 아동을 찾는다 (희망시간을 버튼으로 띄우려고) */
