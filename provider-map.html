@@ -192,6 +192,10 @@
   .iw-rec-dist{color:#3a6b4e;font-size:10px}
   .iw-rec-time{color:#888;font-size:10px;flex:1}
   .iw-rec-count{color:#bbb;font-size:10px}
+  /* 4번 줄 = 추천 밖 선생님 직접 선택 (2026-08-08). 목록 안에서 끝내 지도 갈아엎기를 없앤다 */
+  .iw-rec-sel{flex:1;min-width:0;font-family:inherit;font-size:10.5px;color:#333;padding:3px 5px;
+              border:1px solid #d1d6db;border-radius:4px;background:#fff;outline:none}
+  .iw-rec-sel:focus{border-color:#3a6b4e}
   .iw-rec-assign{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #3a6b4e;color:#3a6b4e;background:#fff;font-family:inherit;transition:all .15s}
   .iw-rec-assign:hover{background:#eef5e9}
 
@@ -1294,9 +1298,10 @@ function buildRecommendation(child) {
   if (!providerList || !providerList.length || !child.lat || !child.lng) return '';
 
   var recs = getRecommendations(child);
-  if (!recs.length) return '';
-
+  // ⚠️ 추천이 0명이어도 통째로 숨기지 않는다 — 아래 '다른 선생님' 줄에서 고를 수 있어야 하고,
+  //    담당자가 "추천이 안 나온다"는 사실 자체를 알아야 한다(빈 화면은 고장인지 결과인지 구분이 안 된다).
   var h = '<div class="iw-rec"><div class="iw-rec-title">📋 배정 추천</div>';
+
   recs.forEach(function(r, idx) {
     h += '<div class="iw-rec-item">'
       + '<div class="iw-rec-rank">' + (idx+1) + '</div>'
@@ -1307,7 +1312,54 @@ function buildRecommendation(child) {
       + '<button class="iw-rec-assign" onclick="doAssignTo(' + child.row + ',\'' + escQ(r.name) + '\')">배정</button>'
       + '</div>';
   });
+  if (!recs.length) {
+    h += '<div class="iw-rec-item" style="color:#8b95a1">가까우면서 시간이 맞는 선생님이 없습니다</div>';
+  }
+
+  // ── 마지막 줄 = 추천 밖 선생님을 **여기서 바로** 고른다 ──
+  // ⚠️ 추천은 상위 3명뿐이라 원하는 선생님이 없을 수 있다(유성 지적). 예전엔 좌상단 드롭다운을 바꾸고
+  //    지도가 통째로 갈아엎어진 뒤 아동을 다시 검색해야 했다. 목록 안에서 끝내면 그 왕복이 사라진다.
+  var shown = {};
+  recs.forEach(function(r){ shown[r.name] = 1; });
+  var others = _recOtherProviders(child, shown);
+  if (others.length) {
+    h += '<div class="iw-rec-item">'
+      + '<div class="iw-rec-rank">' + (recs.length + 1) + '</div>'
+      + '<select class="iw-rec-sel" id="recOther' + child.row + '">'
+      + '<option value="">다른 선생님 고르기…</option>'
+      + others.map(function(o){
+          return '<option value="' + escQ(o.name) + '">' + esc(o.label) + '</option>'; }).join('')
+      + '</select>'
+      + '<button class="iw-rec-assign" onclick="doAssignOther(' + child.row + ')">배정</button>'
+      + '</div>';
+  }
   return h + '</div>';
+}
+
+/**
+ * 추천에 안 뜬 나머지 선생님 — **추천과 같은 기준**으로 정렬하고 거리·시간겹침을 라벨에 붙인다.
+ * ⚠️ 가용시간이 비어 판정 못 하면 '가용시간 미기록'으로 뜬다 — 그 선생님이 **안 되는 게 아니라 모르는 것**이라
+ *    추천 3위 밖으로 밀렸을 뿐이다(2026-08-08 고친 거짓 부정의 잔여 영향).
+ */
+function _recOtherProviders(child, exclude) {
+  var out = [];
+  (providerList || []).forEach(function(p) {
+    if (exclude[p.name] || !p.lat || !p.lng) return;
+    var d = haversine(child.lat, child.lng, p.lat, p.lng);
+    var t = calcTimeOverlap(child.times, p.avail);
+    out.push({ name: p.name, score: d + (t.count > 0 ? 0 : 5),
+               label: p.name + ' · ' + fmtDist(d) + (t.label ? ' · ' + t.label : '') });
+  });
+  out.sort(function(a, b) { return a.score - b.score; });
+  return out;
+}
+
+/** 4번 줄 드롭다운으로 배정 — 고른 선생님을 그대로 배정 다이얼로그로 넘긴다 */
+function doAssignOther(row) {
+  var sel = document.getElementById('recOther' + row);
+  var name = sel && sel.value;
+  if (!name) { showToast('선생님을 고르세요'); return; }
+  doAssignTo(row, name);
 }
 
 function getRecommendations(child) {
