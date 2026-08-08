@@ -104,6 +104,65 @@
   #map{position:fixed;top:76px;left:0;right:0;bottom:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
   /* ══ 범례 ══ */
+  /* ══ 배치안 (2026-08-08) ══ */
+  #planFab{position:absolute;right:14px;bottom:14px;z-index:6;display:none;background:#3a8a5f;color:#fff;
+           border:0;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;font-family:inherit;
+           cursor:pointer;box-shadow:0 4px 14px rgba(58,138,95,.42)}
+  #planFab:active{transform:scale(.97)}
+  /* 요일 원 버튼 = 지도 좌상단 플로팅 (유성 확정 4-A ②) */
+  #planDays{position:absolute;left:12px;top:12px;z-index:7;display:none;gap:6px;
+            background:rgba(255,255,255,.96);border-radius:12px;padding:7px;box-shadow:0 3px 12px rgba(0,0,0,.16)}
+  #planDays.on{display:flex}
+  .pd{width:30px;height:30px;border-radius:50%;border:2px solid #e5e8eb;background:#fff;color:#8b95a1;
+      font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .12s}
+  .pd:active{transform:scale(.94)}
+  .pd.on{color:#fff}
+  .pd[data-d="all"].on{background:#191f28;border-color:#191f28}
+  .pd[data-d="월"].on{background:#e11d48;border-color:#e11d48}
+  .pd[data-d="화"].on{background:#f97316;border-color:#f97316}
+  .pd[data-d="수"].on{background:#16a34a;border-color:#16a34a}
+  .pd[data-d="목"].on{background:#2563eb;border-color:#2563eb}
+  .pd[data-d="금"].on{background:#7c3aed;border-color:#7c3aed}
+  .pd.exit{width:auto;padding:0 11px;border-radius:15px;font-size:11.5px;color:#4e5968}
+  /* 논모달 바텀시트 — 아래 여백 없이 이어 붙임(유성). 핸들·드래그·순차등장은 docs/1 §4.3 */
+  #planSheet{position:absolute;right:12px;bottom:0;width:min(340px,72%);max-height:78%;z-index:8;
+             display:none;flex-direction:column;background:#fff;border-radius:20px 20px 0 0;
+             box-shadow:0 -3px 26px rgba(0,0,0,.2);transform:translateY(100%);
+             transition:transform .32s cubic-bezier(.22,.7,.25,1)}
+  #planSheet.on{display:flex;transform:translateY(0)}
+  #planSheet .grab{padding:10px 0 6px;cursor:grab;flex:none;touch-action:none}
+  #planSheet .grab:active{cursor:grabbing}
+  #planSheet .bar{width:40px;height:4px;border-radius:2px;background:#e5e8eb;margin:0 auto}
+  #planSheet .shd{padding:2px 16px 9px;flex:none}
+  #planSheet .shd h3{font-size:15px;font-weight:700;letter-spacing:-.2px;margin:0}
+  #planSheet .shd .sub{font-size:11.5px;color:#8b95a1;margin-top:2px}
+  #planSheet .sbd{padding:0 13px 14px;overflow:auto;flex:1}
+  #planSheet.on .sbd > *{animation:pUp .6s cubic-bezier(.22,.7,.25,1) backwards}
+  #planSheet.on .sbd > *:nth-child(1){animation-delay:.06s}
+  #planSheet.on .sbd > *:nth-child(2){animation-delay:.16s}
+  #planSheet.on .sbd > *:nth-child(3){animation-delay:.26s}
+  #planSheet.on .sbd > *:nth-child(4){animation-delay:.36s}
+  #planSheet.on .sbd > *:nth-child(5){animation-delay:.46s}
+  #planSheet.on .sbd > *:nth-child(6){animation-delay:.56s}
+  @keyframes pUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .pcand{background:#fff;border:1.5px solid #d1d6db;border-radius:12px;padding:14px;margin-bottom:9px;cursor:pointer}
+  .pcand.best{border-color:#3a8a5f;box-shadow:0 0 0 3px #eaf4ee}
+  .pcand h4{margin:0 0 3px;font-size:14px;letter-spacing:-.2px}
+  .pcand .tg{display:inline-block;font-size:11px;font-weight:700;color:#2d6b4a;background:#eaf4ee;
+             border-radius:999px;padding:2px 8px;margin-bottom:9px}
+  .pcand .tg.w{color:#8a5a00;background:#fff7e6}
+  .pm{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;border-bottom:1px solid #f2f4f6}
+  .pm:last-of-type{border-bottom:0}
+  .pm b{font-variant-numeric:tabular-nums}
+  .pm .bad{color:#c0392b}
+  .pseq{font-size:11.5px;color:#8b95a1;margin-top:9px;line-height:1.5}
+  .pwhy{font-size:11.5px;color:#4e5968;background:#f2f4f6;border-radius:9px;padding:9px 11px;margin-top:9px;line-height:1.55}
+  .pdrop{margin-top:9px;font-size:11.5px;color:#9a2d22;background:#fdeeec;border-radius:9px;padding:9px 11px}
+  .padj{margin-top:9px;font-size:11.5px;color:#7a5200;background:#fff7e6;border-radius:9px;padding:9px 11px;line-height:1.55}
+  .pbtn{width:100%;margin-top:11px;border:0;border-radius:11px;background:#3a8a5f;color:#fff;
+        font-size:13.5px;font-weight:700;padding:12px;font-family:inherit;cursor:pointer;letter-spacing:-.2px}
+  .pbtn:active{transform:scale(.99)}
+  .pbtn.gray{background:#f2f4f6;color:#4e5968}
   .legend{
     position:fixed;bottom:16px;left:14px;z-index:40;
     background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
@@ -439,6 +498,22 @@
 
 <div id="map"></div>
 
+<button id="planFab" onclick="planOpen()">후보안 뽑기</button>
+<div id="planDays">
+  <button class="pd on" data-d="all" onclick="planDay('all')">전</button>
+  <button class="pd" data-d="월" onclick="planDay('월')">월</button>
+  <button class="pd" data-d="화" onclick="planDay('화')">화</button>
+  <button class="pd" data-d="수" onclick="planDay('수')">수</button>
+  <button class="pd" data-d="목" onclick="planDay('목')">목</button>
+  <button class="pd" data-d="금" onclick="planDay('금')">금</button>
+  <button class="pd exit" onclick="planExit()">나가기</button>
+</div>
+<div id="planSheet">
+  <div class="grab" id="planGrab"><div class="bar"></div></div>
+  <div class="shd"><h3 id="planTitle">배치안</h3><div class="sub" id="planSub"></div></div>
+  <div class="sbd" id="planBody"></div>
+</div>
+
 <div class="legend">
   <div class="legend-item"><div class="ldot home"></div>선생님</div>
   <div class="legend-item"><div class="ldot assigned"></div>배정</div>
@@ -770,7 +845,7 @@ var _writesInFlight = 0;
 function fetchGAS(action, params) {
   // 쓰기 액션은 재시도 금지: mutation은 echo 리다이렉트 실패 전에 이미 커밋됨.
   // assign엔 "이미 배정됨" 가드가 있어 재시도 시 성공을 오류로 오인, status/unassign은 감사로그 중복. → 단발.
-  var WRITE = { assign:1, status:1, unassign:1, saveschedule:1, mark:1 };
+  var WRITE = { assign:1, status:1, unassign:1, saveschedule:1, mark:1, commit:1, adjust:1, decline:1 };
   var isWrite = !!WRITE[action];
   var tries = WRITE[action] ? 1 : 3;
   var asked = 0;                                    // 토큰 재입력 횟수 (무한루프 차단: 최대 2)
@@ -2380,6 +2455,267 @@ function showToast(m,ok){var e=document.getElementById('toast');e.textContent=m;
 
 <script>
 (function(){var s=document.createElement('script');s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+CONFIG.KAKAO_JS_KEY+'&libraries=services&autoload=false';s.onload=function(){kakao.maps.load(initMap)};s.onerror=function(){showToast('카카오맵 SDK 로드 실패')};document.head.appendChild(s)})();
+
+// ══════════════════════════════════════════════════════════════
+//  배치안 (2026-08-08) — 마크한 아동을 그 교사의 한 주에 어떻게 배치할지
+//  서버: scripts/06_신청배정/배치안.js (plans/commit) · 설계: docs/5_탐색_2026-08-07_…엣지케이스
+//  ⚠️ 계산은 '후보안 뽑기' **한 번**뿐이다. 카드 전환·요일 필터는 이미 받은 결과를 다시 그리기만 한다
+//     (마커 누를 때마다 계산하면 토큰·왕복이 폭발한다 — 유성 지적).
+// ══════════════════════════════════════════════════════════════
+var PLAN = null;        // 서버 응답
+var planCur = 0;        // 고른 안
+var planDayF = 'all';   // 요일 필터
+var planLines = [];     // 동선 폴리라인
+var planMarkers = [];   // 요일 마커
+var planLabels = [];    // 요일 마커 이름표
+var PLAN_DC = { '월':'#e11d48','화':'#f97316','수':'#16a34a','목':'#2563eb','금':'#7c3aed','토':'#0891b2','일':'#be185d' };
+
+/** 마크된 아동 수 → FAB 노출 (행정만) */
+function planSyncFab() {
+  var fab = document.getElementById('planFab');
+  if (!fab) return;
+  var n = _planMarkedRows().length;
+  var prov = document.getElementById('providerSelect').value;
+  var show = isAdmin() && n > 0 && prov && prov !== '__ALL__' && !document.getElementById('planSheet').classList.contains('on');
+  fab.style.display = show ? '' : 'none';
+  fab.textContent = '후보안 뽑기 (마크 ' + n + '명)';
+}
+
+function _planMarkedRows() {
+  if (!currentData) return [];
+  var out = [];
+  ['waiting','assigned'].forEach(function(k){
+    (currentData[k] || []).forEach(function(c){ if (c.marked && c.row) out.push(c.row); });
+  });
+  return out;
+}
+
+function planOpen() {
+  var prov = document.getElementById('providerSelect').value;
+  if (!prov || prov === '__ALL__') { showToast('선생님을 먼저 선택하세요'); return; }
+  var rows = _planMarkedRows();
+  if (!rows.length) { showToast('마크한 아동이 없습니다'); return; }
+
+  showLoading(true);
+  fetchGAS('plans', { provider: prov, rows: rows.join(','), service: currentService, k: 6 })
+    .then(function(res) {
+      showLoading(false);
+      if (res.error) { showToast(res.error); return; }
+      PLAN = res; planCur = 0; planDayF = 'all';
+      planRenderSheet();
+      document.getElementById('planSheet').classList.add('on');
+      document.getElementById('planFab').style.display = 'none';
+    })
+    .catch(function(e) { showLoading(false); showToast('후보안 실패: ' + e.message); });
+}
+
+function planRenderSheet() {
+  if (!PLAN) return;
+  var plans = PLAN.plans || [];
+  document.getElementById('planTitle').textContent = '배치안';
+  document.getElementById('planSub').textContent =
+    (PLAN.provider ? PLAN.provider.name : '') + ' · 마크 ' + (PLAN.diagnostics ? PLAN.diagnostics.totalChildren : 0) + '명'
+    + (PLAN.exact ? ' · 최적 보장' : ' · 추정')
+    + (PLAN.reconUsed ? ' · 기존 수업 ' + PLAN.reconUsed + '건 반영' : ' · 기존 수업 확인 안 됨');
+
+  var h = '';
+  plans.forEach(function(p, i) {
+    var seq = p.days.map(function(d) {
+      return d.day + ' ' + d.visits.map(function(v){ return _pm(v.start) + ' ' + v.name; }).join(' → ');
+    }).join('  /  ');
+    h += '<div class="pcand' + (i === planCur ? ' best' : '') + '" onclick="planPick(' + i + ')">'
+      + '<h4>' + esc(i === 0 ? '최적안' : (p.objectiveLabel || ('안 ' + (i+1)))) + '</h4>'
+      + '<span class="tg' + (p.placed < (PLAN.maxPlaced||p.placed) ? ' w' : '') + '">'
+      + (i === 0 ? '추천' : p.placed + '명') + '</span>'
+      + '<div class="pm"><span>배정 인원</span><b>' + p.placed + '명</b></div>'
+      + '<div class="pm"><span>총 이동(귀가 포함)</span><b>' + p.totalMoveMin + '분</b></div>'
+      + '<div class="pm"><span>주차 횟수</span><b>' + p.totalParks + '회</b></div>'
+      + '<div class="pm"><span>출근일</span><b>' + p.workDays + '일</b></div>'
+      + '<div class="pm"><span>최소 여유</span><b class="' + (p.worstSlackMin != null && p.worstSlackMin < 3 ? 'bad' : '') + '">'
+        + (p.worstSlackMin == null ? '—' : p.worstSlackMin + '분') + '</b></div>'
+      + '<div class="pm"><span>빈 시간</span><b class="' + (p.totalIdleMin > 0 ? 'bad' : '') + '">' + p.totalIdleMin + '분</b></div>'
+      + '<div class="pseq">' + esc(seq) + '</div>'
+      + (p.unplaced && p.unplaced.length
+          ? '<div class="pdrop">' + esc(p.unplaced.map(function(u){ return u.name + '(' + u.reason + ')'; }).join(' · ')) + '</div>' : '')
+      + (i === planCur ? '<button class="pbtn" onclick="event.stopPropagation();planCommit()">이 안으로 확정</button>' : '')
+      + '</div>';
+  });
+
+  // 조율 제안 — 대가를 숨기지 않는다
+  if (PLAN.adjustments && PLAN.adjustments.length) {
+    h += '<div class="padj"><b>💬 조율하면 더 받아요</b>'
+      + PLAN.adjustments.slice(0,3).map(function(a) {
+          return '<div style="margin-top:6px">' + esc(a.ask) + '님께 <b>' + esc(a.from) + ' → ' + esc(a.to) + '</b>'
+            + (a.needsAsk ? ' <span style="color:#9a2d22">(체크 안 한 시간 — 부탁 필요)</span>' : '')
+            + (a.enables ? '<br>⇒ ' + esc(a.enables) + ' 배정 가능' : '')
+            + '<br><span style="color:#9a2d22">이동 ' + (a.gainMoveMin >= 0 ? '−' : '+') + Math.abs(a.gainMoveMin) + '분'
+            + ' · 주차 ' + (a.gainParks >= 0 ? '−' : '+') + Math.abs(a.gainParks) + '회</span></div>';
+        }).join('')
+      + '</div>';
+  }
+  if (PLAN.holdAdvice && PLAN.holdAdvice.length) {
+    h += '<div class="pdrop"><b>보류를 권합니다</b>'
+      + PLAN.holdAdvice.slice(0,3).map(function(x) {
+          return '<div style="margin-top:5px">' + esc(x.name) + ' — ' + esc(x.reasons.join(' / ')) + '</div>'; }).join('')
+      + '</div>';
+  }
+  h += '<button class="pbtn gray" onclick="planExit()">닫기</button>';
+  document.getElementById('planBody').innerHTML = h;
+}
+
+function _pm(min) { var hh = Math.floor(min/60), mm = min%60; return (hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm; }
+
+function planPick(i) {
+  planCur = i; planDayF = 'all';
+  planRenderSheet();
+  document.getElementById('planDays').classList.add('on');
+  Array.prototype.forEach.call(document.querySelectorAll('.pd'), function(b){
+    if (b.dataset.d) b.classList.toggle('on', b.dataset.d === 'all'); });
+  planDraw();
+}
+
+function planDay(d) {
+  planDayF = d;
+  Array.prototype.forEach.call(document.querySelectorAll('.pd'), function(b){
+    if (b.dataset.d) b.classList.toggle('on', b.dataset.d === d); });
+  planDraw();
+}
+
+/** 지도에 요일 마커 + 동선을 그린다. 기존 마커는 그대로 두되 요일 마커가 위에 얹힌다(z=20) */
+function planDraw() {
+  planClear();
+  if (!PLAN || !PLAN.plans || !PLAN.plans[planCur]) return;
+  var p = PLAN.plans[planCur];
+  var home = PLAN.provider;
+
+  p.days.forEach(function(d) {
+    if (planDayF !== 'all' && d.day !== planDayF) return;
+    var col = PLAN_DC[d.day] || '#666';
+
+    // 좌표별로 묶어 겹침 방지 — 같은 자리 여러 명이면 가로로 벌리고 이름은 한 번만
+    var byXY = {};
+    d.visits.forEach(function(v, i) {
+      var c = _findChildByRow(v.row) || _planFindByName(v.name, v.dob);
+      if (!c || !c.lat) return;
+      var k = c.lat.toFixed(6) + ',' + c.lng.toFixed(6);
+      byXY[k] = byXY[k] || { lat: c.lat, lng: c.lng, items: [], names: [] };
+      byXY[k].items.push({ d: d.day, i: i + 1, col: col });
+      if (byXY[k].names.indexOf(v.name) < 0) byXY[k].names.push(v.name);
+    });
+
+    var path = [];
+    if (home && home.lat) path.push(new kakao.maps.LatLng(home.lat, home.lng));
+    Object.keys(byXY).forEach(function(k) {
+      var g = byXY[k];
+      path.push(new kakao.maps.LatLng(g.lat, g.lng));
+      g.items.forEach(function(t, j) {
+        var m = new kakao.maps.Marker({
+          position: new kakao.maps.LatLng(g.lat, g.lng),
+          image: _planDayIcon(t.col, t.d + t.i),
+          map: map, zIndex: 20
+        });
+        planMarkers.push(m);
+      });
+      var ov = new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(g.lat, g.lng),
+        content: '<div class="mlbl assigned">' + esc(g.names.join(', ')) + '</div>',
+        zIndex: 21, xAnchor: 0, yAnchor: 0
+      });
+      ov.setMap(map); planLabels.push(ov);
+    });
+    if (home && home.lat) path.push(new kakao.maps.LatLng(home.lat, home.lng));   // 귀가 포함
+
+    if (path.length > 1) {
+      var line = new kakao.maps.Polyline({
+        path: path, strokeWeight: 4, strokeColor: col,
+        strokeOpacity: planDayF === 'all' ? 0.45 : 0.9, strokeStyle: 'solid'
+      });
+      line.setMap(map); planLines.push(line);
+    }
+  });
+}
+
+function _planDayIcon(color, text) {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">'
+    + '<circle cx="15" cy="15" r="12" fill="' + color + '" stroke="#fff" stroke-width="2.5"/>'
+    + '<text x="15" y="19" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="sans-serif">'
+    + text + '</text></svg>';
+  return new kakao.maps.MarkerImage(svgUri(svg), new kakao.maps.Size(30,30), { offset: new kakao.maps.Point(15,15) });
+}
+
+function _planFindByName(name, dob) {
+  if (!currentData) return null;
+  var pools = [currentData.waiting || [], currentData.assigned || []];
+  for (var i = 0; i < pools.length; i++)
+    for (var j = 0; j < pools[i].length; j++) {
+      var c = pools[i][j];
+      if (c.name === name && (!dob || !c.dob || String(c.dob).replace(/\D/g,'') === String(dob).replace(/\D/g,''))) return c;
+    }
+  return null;
+}
+
+function planClear() {
+  planLines.forEach(function(l){ l.setMap(null); }); planLines = [];
+  planMarkers.forEach(function(m){ m.setMap(null); }); planMarkers = [];
+  planLabels.forEach(function(o){ o.setMap(null); }); planLabels = [];
+}
+
+function planExit() {
+  planClear();
+  document.getElementById('planSheet').classList.remove('on');
+  document.getElementById('planDays').classList.remove('on');
+  PLAN = null;
+  planSyncFab();
+}
+
+/** 확정 — 배정(Q·R) + 확정 요일·시각(S·T)을 한 번에. 하나라도 이미 배정돼 있으면 서버가 전부 거부한다 */
+function planCommit() {
+  if (!PLAN || !PLAN.plans[planCur]) return;
+  var p = PLAN.plans[planCur];
+  var picks = [];
+  p.days.forEach(function(d) {
+    d.visits.forEach(function(v) {
+      var c = _planFindByName(v.name, v.dob);
+      if (c && c.row) picks.push({ row: c.row, day: d.day, time: _pm(v.start) });
+    });
+  });
+  if (!picks.length) { showToast('확정할 배치가 없습니다'); return; }
+  if (!confirm(picks.length + '명을 ' + PLAN.provider.name + ' 선생님에게 배정합니다.\n\n' +
+      picks.map(function(x){ return '· ' + x.day + ' ' + x.time; }).join('\n') + '\n\n진행할까요?')) return;
+
+  showLoading(true);
+  fetchGAS('commit', { provider: PLAN.provider.name, picks: JSON.stringify(picks),
+                       service: currentService, ctx: _ctxKeyName() })
+    .then(function(res) {
+      showLoading(false);
+      if (res.error) { showToast(res.error); return; }
+      showToast((res.committed ? res.committed.length : picks.length) + '명 배정 완료!', true);
+      planExit();
+      _afterWrite(res);
+    })
+    .catch(function(e) { showLoading(false); showToast('확정 실패: ' + e.message); });
+}
+
+/* 시트 핸들 드래그로 닫기 (docs/1 §4.3-5 — 아래로만, 임계 80px, 누름 축소) */
+(function(){
+  var sh = document.getElementById('planSheet'), gb = document.getElementById('planGrab');
+  if (!sh || !gb) return;
+  var y0 = null, dy = 0;
+  function down(e){ y0 = (e.touches ? e.touches[0].clientY : e.clientY); dy = 0;
+    sh.style.transition = 'none'; sh.style.transform = 'translateY(0) scale(.97)'; }
+  function move(e){ if (y0 === null) return;
+    var y = (e.touches ? e.touches[0].clientY : e.clientY);
+    dy = Math.max(0, y - y0);
+    sh.style.transform = 'translateY(' + dy + 'px) scale(.97)';
+    if (e.cancelable) e.preventDefault(); }
+  function up(){ if (y0 === null) return;
+    sh.style.transition = ''; sh.style.transform = '';
+    if (dy > 80) planExit();
+    y0 = null; }
+  gb.addEventListener('mousedown', down); window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+  gb.addEventListener('touchstart', down, {passive:true}); gb.addEventListener('touchmove', move, {passive:false}); gb.addEventListener('touchend', up);
+})();
+
 </script>
 </body>
 </html>
