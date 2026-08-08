@@ -316,6 +316,45 @@
   .sm-echo{font-size:13.5px;color:#8b95a1;font-weight:500;margin:2px 0 14px}
   .sm-err{color:#f04452;font-size:13px;font-weight:500;min-height:18px;margin-top:12px;word-break:keep-all}
 </style>
+<!-- ════ 배정 확인 다이얼로그 — 요일·시각을 같이 정한다 (2026-08-08) ════
+     ⚠️ 옛 confirm()은 "진행할까요?"만 물어 **확정 시각이 어디에도 안 남았다**.
+        S/T가 비면 확정~첫 수업 최대 4주간 그 시간이 시스템에 없어 다음 계산에서 빈 시간으로 보인다(이중배정).
+        아동이 체크한 칸을 버튼으로 띄워 **누르기만 하면 되게** 한다(입력 아님 = 오타·형식 사고 없음). -->
+<style>
+  #asgModal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px}
+  .asg-sub{font-size:13.5px;color:#8b95a1;font-weight:500;margin:-10px 0 16px}
+  .asg-lbl{font-size:12.5px;font-weight:700;color:#4e5968;margin:14px 0 7px}
+  .asg-slots{display:flex;flex-wrap:wrap;gap:6px}
+  .asg-slot{font-family:inherit;font-size:14px;font-weight:600;padding:10px 14px;border-radius:12px;
+            border:1.5px solid #e5e8eb;background:#fff;color:#4e5968;cursor:pointer;transition:all .12s}
+  .asg-slot:active{transform:scale(.97)}
+  .asg-slot.on{border-color:#3a8a5f;background:#eef7f1;color:#2f6f4d}
+  .asg-more{font-family:inherit;font-size:13px;font-weight:600;color:#8b95a1;background:none;border:none;
+            cursor:pointer;padding:10px 2px;margin-top:4px}
+  .asg-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
+  .asg-grid .asg-slot{padding:9px 0;text-align:center;font-size:13px}
+  .asg-note{font-size:12.5px;color:#8a5a00;background:#fff7e6;border-radius:10px;padding:9px 11px;margin-top:12px;
+            line-height:1.5;word-break:keep-all}
+</style>
+<div id="asgModal">
+  <div class="sm-card">
+    <div class="sm-title" id="asgTitle">배정</div>
+    <div class="asg-sub" id="asgSub"></div>
+    <div class="asg-lbl">언제 수업하나요?</div>
+    <div class="asg-slots" id="asgSlots"></div>
+    <button class="asg-more" id="asgMoreBtn" onclick="asgToggleMore()">그 외 시간 고르기 ▾</button>
+    <div id="asgMore" style="display:none">
+      <div class="asg-lbl">요일</div>
+      <div class="asg-grid" id="asgDays"></div>
+      <div class="asg-lbl">시각</div>
+      <div class="asg-grid" id="asgHours"></div>
+    </div>
+    <div id="asgNote"></div>
+    <button class="sm-btn" id="asgOk" onclick="asgConfirm()" disabled>이 시간으로 배정</button>
+    <button class="sm-close" onclick="asgClose()">취소</button>
+  </div>
+</div>
+
 <div id="staffModal">
   <div class="sm-card">
     <div class="sm-title">제공인력 로그인</div>
@@ -1359,29 +1398,114 @@ function calcTimeOverlap(childTimes, provAvail) {
   };
 }
 
-function doAssignTo(row, provName) {
-  if (!confirm(row + '행 아동을 ' + provName + ' 선생님에게 배정합니다.\n\n진행할까요?')) return;
+// ══ 배정 확인 다이얼로그 (요일·시각 같이) ══
+// ⚠️ 배정 추천(doAssignTo)과 제공인력 선택 배정(doAssign)이 **같은 다이얼로그**를 쓴다 —
+//    한쪽만 고치면 다른 쪽에 확정 시각이 안 남아 이중배정 구멍이 그대로 남는다.
+var _asgCtx = null, _asgPick = null, _asgDay = null, _asgHour = null;
+var ASG_DAYS = ['월','화','수','목','금','토'];
+var ASG_HOURS = [14,15,16,17,18,19,20];
+
+function askAssignSchedule(row, provName, childName, times) {
+  _asgCtx = { row: row, prov: provName };
+  _asgPick = null; _asgDay = null; _asgHour = null;
+
+  document.getElementById('asgTitle').textContent = provName + ' 선생님에게 배정';
+  document.getElementById('asgSub').textContent = (childName || (row + '행 아동')) + ' · ' + currentService;
+
+  // 아동이 체크한 칸을 버튼으로. 누르기만 하면 되니 오타·형식 사고가 없다.
+  var wrap = document.getElementById('asgSlots');
+  var list = String(times || '').split(',').map(function(x){return x.trim()}).filter(Boolean);
+  if (!list.length) {
+    wrap.innerHTML = '<span style="font-size:13px;color:#8b95a1">희망시간이 비어 있습니다 — 아래에서 직접 고르세요</span>';
+    asgToggleMore(true);
+  } else {
+    wrap.innerHTML = list.map(function(t){
+      var p = t.split('-'), h = parseInt(p[1],10);
+      if (!p[0] || isNaN(h)) return '';
+      var lab = p[0] + ' ' + h + ':00';
+      return '<button class="asg-slot" data-d="'+p[0]+'" data-h="'+h+'" onclick="asgPick(this)">'+lab+'</button>';
+    }).join('');
+    document.getElementById('asgMore').style.display = 'none';
+    document.getElementById('asgMoreBtn').textContent = '그 외 시간 고르기 ▾';
+  }
+
+  document.getElementById('asgDays').innerHTML = ASG_DAYS.map(function(d){
+    return '<button class="asg-slot" data-d="'+d+'" onclick="asgPickDay(this)">'+d+'</button>'; }).join('');
+  document.getElementById('asgHours').innerHTML = ASG_HOURS.map(function(h){
+    return '<button class="asg-slot" data-h="'+h+'" onclick="asgPickHour(this)">'+h+'시</button>'; }).join('');
+
+  document.getElementById('asgNote').innerHTML = '';
+  document.getElementById('asgOk').disabled = true;
+  document.getElementById('asgModal').style.display = 'flex';
+}
+function asgClose(){ document.getElementById('asgModal').style.display='none'; _asgCtx=null; }
+function asgToggleMore(force){
+  var m = document.getElementById('asgMore'), b = document.getElementById('asgMoreBtn');
+  var open = force === true ? true : (m.style.display === 'none');
+  m.style.display = open ? '' : 'none';
+  b.textContent = open ? '접기 ▴' : '그 외 시간 고르기 ▾';
+}
+function _asgClear(sel){ Array.prototype.forEach.call(document.querySelectorAll(sel), function(b){ b.classList.remove('on'); }); }
+function asgPick(btn){
+  _asgClear('#asgSlots .asg-slot'); _asgClear('#asgDays .asg-slot'); _asgClear('#asgHours .asg-slot');
+  btn.classList.add('on');
+  _asgPick = { day: btn.dataset.d, hour: Number(btn.dataset.h) };
+  _asgDay = null; _asgHour = null;
+  _asgSync();
+}
+function asgPickDay(btn){ _asgClear('#asgDays .asg-slot'); _asgClear('#asgSlots .asg-slot');
+  btn.classList.add('on'); _asgDay = btn.dataset.d; _asgPick = null; _asgSync(); }
+function asgPickHour(btn){ _asgClear('#asgHours .asg-slot'); _asgClear('#asgSlots .asg-slot');
+  btn.classList.add('on'); _asgHour = Number(btn.dataset.h); _asgPick = null; _asgSync(); }
+function _asgSync(){
+  var d = _asgPick ? _asgPick.day : _asgDay, h = _asgPick ? _asgPick.hour : _asgHour;
+  var ok = !!(d && h != null);
+  document.getElementById('asgOk').disabled = !ok;
+  // 아동이 체크하지 않은 칸을 고르면 알린다 — 막지는 않는다(조율해서 정한 시간일 수 있다)
+  var note = document.getElementById('asgNote');
+  if (ok && !_asgPick) {
+    note.innerHTML = '<div class="asg-note">학부모가 체크하지 않은 시간입니다. 조율해서 정하신 시간이면 그대로 진행하세요.</div>';
+  } else note.innerHTML = '';
+}
+function asgConfirm(){
+  if (!_asgCtx) return;
+  var d = _asgPick ? _asgPick.day : _asgDay, h = _asgPick ? _asgPick.hour : _asgHour;
+  if (!d || h == null) return;
+  var row = _asgCtx.row, prov = _asgCtx.prov;
+  var time = (h < 10 ? '0' : '') + h + ':00';
+  asgClose();
   showLoading(true); infoWindow.close();
-  fetchGAS('assign', { row: row, provider: provName, service: currentService, ctx: _ctxKeyName() }).then(function(res) {
-    showLoading(false);
-    if (res.error) { showToast(res.error); return; }
-    showToast(provName + ' 배정 완료!', true);
-    _afterWrite(res);
-  }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
+  fetchGAS('assign', { row: row, provider: prov, service: currentService, ctx: _ctxKeyName(), day: d, time: time })
+    .then(function(res) {
+      showLoading(false);
+      if (res.error) { showToast(res.error); return; }
+      showToast(prov + ' · ' + d + ' ' + time + ' 배정 완료!', true);
+      _afterWrite(res);
+    }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
 }
 
-// ══ 배정 처리 ══
+// 배정 추천에서 (아동 인포윈도우 → 추천 목록 → 배정)
+function doAssignTo(row, provName) {
+  var c = _findChildByRow(row);
+  askAssignSchedule(row, provName, c && c.name, c && c.times);
+}
+
+// ══ 배정 처리 ══ (제공인력을 고른 상태에서 아동 인포윈도우의 배정 버튼)
 function doAssign(row) {
   var prov = document.getElementById('providerSelect').value;
   if (!prov) { showToast('선생님을 먼저 선택하세요'); return; }
-  if (!confirm(row + '행 아동을 ' + prov + ' 선생님에게 배정합니다.\n\n진행할까요?')) return;
-  showLoading(true); infoWindow.close();
-  fetchGAS('assign', { row: row, provider: prov, service: currentService, ctx: _ctxKeyName() }).then(function(res) {
-    showLoading(false);
-    if (res.error) { showToast(res.error); return; }
-    showToast(prov + ' 배정 완료!', true);
-    _afterWrite(res);
-  }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
+  var c = _findChildByRow(row);
+  askAssignSchedule(row, prov, c && c.name, c && c.times);
+}
+
+/** 행번호로 현재 화면 데이터에서 아동을 찾는다 (희망시간을 버튼으로 띄우려고) */
+function _findChildByRow(row) {
+  if (!currentData) return null;
+  var pools = [currentData.waiting || [], currentData.assigned || []];
+  for (var i = 0; i < pools.length; i++)
+    for (var j = 0; j < pools[i].length; j++)
+      if (Number(pools[i][j].row) === Number(row)) return pools[i][j];
+  return null;
 }
 
 function doStatus(row, status) {
