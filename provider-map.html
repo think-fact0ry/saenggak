@@ -107,13 +107,17 @@
   /* ══ 배치안 (2026-08-08) ══ */
   /* ⚠️ display 토글은 **클래스**로 한다. 인라인 `style.display=''`는 선언을 지우는 것이라
      `#planFab{display:none}`이 다시 이겨 버튼이 영영 안 뜬다(2026-08-09 검증에서 잡힘). */
-  #planFab{position:absolute;right:14px;bottom:74px;z-index:45;display:none;background:#3a8a5f;color:#fff;
+  /* ⚠️ 좌표 기준: 이 요소들은 **body 직계**인데 `#map`은 `position:fixed;top:76px`이다.
+     `absolute`면 지도가 아니라 **문서** 기준이라 ①FAB이 바닥에서 74px 떠 있고(유성: "우하단에 안 붙어")
+     ②요일 버튼이 `top:12px` = **상단바 뒤**로 들어가 영영 안 보였다(유성: "애초에 있긴 한건가?").
+     ⇒ 화면 고정(`fixed`)으로 통일하고 상단바(76px, 모바일 70px) 아래로 내린다. .legend·.nl-fab과 같은 방식. */
+  #planFab{position:fixed;right:14px;bottom:16px;z-index:45;display:none;background:#3a8a5f;color:#fff;
            border:0;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;font-family:inherit;
            cursor:pointer;box-shadow:0 4px 14px rgba(58,138,95,.42)}
   #planFab.on{display:block}
   #planFab:active{transform:scale(.97)}
   /* 요일 원 버튼 = 지도 좌상단 플로팅 (유성 확정 4-A ②) */
-  #planDays{position:absolute;left:12px;top:12px;z-index:7;display:none;gap:6px;
+  #planDays{position:fixed;left:14px;top:88px;z-index:41;display:none;gap:6px;
             background:rgba(255,255,255,.96);border-radius:12px;padding:7px;box-shadow:0 3px 12px rgba(0,0,0,.16)}
   #planDays.on{display:flex}
   .pd{width:30px;height:30px;border-radius:50%;border:2px solid #e5e8eb;background:#fff;color:#8b95a1;
@@ -188,6 +192,19 @@
   .pst.lock{color:#3d4a5c;background:#e8edf3}
   .pst.clash{color:#fff;background:#9a2d22}
   .pst.other{color:#5b4a8a;background:#efeaf7}
+  .pst.time{color:#1d5f8a;background:#e7f1f9}
+  /* 🗓️ 주간 표 — 이 화면의 1차 질문("이 선생님 주간이 어떻게 되나")에 한 줄 요약으로 답할 수 없다 */
+  .pweek{margin:8px 0 2px;border-top:1px solid #f2f4f6}
+  .pwd{display:flex;align-items:center;gap:6px;padding:8px 0 4px}
+  .pwdn{color:#fff;font-size:11px;font-weight:800;border-radius:6px;padding:2px 7px}
+  .pwdm{color:#8b95a1;font-size:10.5px}
+  .pwv{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 0 4px 4px;border-left:2px solid #f2f4f6}
+  .pwv.hot{border-left-color:#3a8a5f;background:#f6fbf8}
+  .pwh{font-variant-numeric:tabular-nums;color:#4e5968;font-weight:700;min-width:42px}
+  .pwt{font-size:11px;font-style:normal}
+  .pwn{font-weight:600;color:#191f28}
+  .pwx{font-size:10px;color:#8a5a00;background:#fff7e6;border-radius:999px;padding:1px 6px}
+  .pwd2{margin-left:auto;color:#8b95a1;font-size:10.5px}
   /* 로딩 뼈대 — 전체화면 오버레이 대신 시트 안에서 기다린다(유성: "로딩 화면 자체를 잠수함") */
   .pskel{height:74px;border-radius:12px;margin:9px 0;background:linear-gradient(100deg,#f2f4f6 30%,#e9ecef 45%,#f2f4f6 60%);background-size:280% 100%;animation:pskel 1.1s ease-in-out infinite}
   .pskel.sm{height:38px}
@@ -228,7 +245,7 @@
   body.plan-review .mlbl:not(.plan){opacity:.3}
   body.plan-review .legend{opacity:.35}
   /* 검토 범례 — 무지개 5색이 뭔지, 회색이 뭔지 말해준다 (유성 2026-08-07 "저 범례 어디에 담을 건데") */
-  #planLg{position:absolute;left:12px;top:56px;z-index:7;display:none;gap:9px;flex-wrap:wrap;max-width:210px;
+  #planLg{position:fixed;left:14px;top:136px;z-index:41;display:none;gap:9px;flex-wrap:wrap;max-width:210px;
           background:rgba(255,255,255,.96);border-radius:10px;padding:7px 9px;box-shadow:0 3px 12px rgba(0,0,0,.14);
           font-size:10.5px;color:#4e5968;word-break:keep-all}
   #planLg.on{display:flex}
@@ -2641,9 +2658,12 @@ function planSyncFab() {
   if (!fab) return;
   var n = _planMarkedRows().length;
   var prov = document.getElementById('providerSelect').value;
-  var show = isAdmin() && n > 0 && prov && prov !== '__ALL__' && !document.getElementById('planSheet').classList.contains('on');
+  // 🔴 **마크가 0명이어도 뜬다** (2026-08-09 유성: *"지금 이 선생님이 어떤 스케줄을 가지고 있는지도
+  //    확인이 안되고"*). 배치안의 대상은 Q열이 정하므로 마크 없이도 그 교사의 주간 전체를 볼 수 있다.
+  //    마크는 "여기에 더 넣어볼 후보"일 뿐이라 라벨에서도 그렇게 말한다.
+  var show = isAdmin() && prov && prov !== '__ALL__' && !document.getElementById('planSheet').classList.contains('on');
   fab.classList.toggle('on', show);
-  fab.textContent = '후보안 뽑기 (마크 ' + n + '명)';
+  fab.textContent = n ? '주간 배치안 (후보 ' + n + '명)' : '주간 배치안 보기';
 }
 
 function _planMarkedRows() {
@@ -2712,10 +2732,10 @@ function planOpen(extraRows) {
   if (extraRows) for (var x = 0; x < extraRows.length; x++) {
     if (rows.indexOf(extraRows[x]) < 0) rows.push(extraRows[x]);
   }
-  if (!rows.length) { showToast('마크한 아동이 없어요'); return; }
+  // 마크 0명도 정상 — 서버가 Q열로 그 교사의 주간을 만든다(마크는 "더 넣어볼 후보"일 뿐)
 
   var my = ++planReqId;
-  _planSkeleton('배치안', prov + ' · 마크 ' + rows.length + '명 · 계산 중…');
+  _planSkeleton(prov + ' 주간 배치안', rows.length ? '후보 ' + rows.length + '명과 함께 계산 중…' : '주간을 불러오는 중…');
   fetchGAS('plans', { provider: prov, rows: rows.join(','), service: currentService, k: 6 })
     .then(function(res) {
       if (my !== planReqId) return;                       // 더 최신 요청이 있다 → 이 응답은 버린다
@@ -2786,13 +2806,49 @@ function _planAgeLabel() {
 
 function planTabTo(t) { planTab = t; planRenderSheet(); }
 
-/** 이 안이 **이번에 새로 만드는** 배치 수. 확정(locked)은 원래 있던 것이라 뺀다. */
+/**
+ * 이 안이 **이번에 정하는** 방문 수 = 확정(🔒)이 아닌 것 전부.
+ * 두 종류가 섞여 있다 — 처음 오는 아이(`isNew`)와 이미 우리 아이인데 시간만 정하는 아이(`needsTime`).
+ * 둘 다 "지금 결정해서 시트에 쓰는 것"이라 확정 버튼의 대상은 같다.
+ */
 function _planNewCount(p) {
   var n = 0;
   (p.days || []).forEach(function(d) {
     (d.visits || []).forEach(function(v) { if (!v.locked) n++; });
   });
   return n;
+}
+/** 그중 **처음 이 선생님에게 오는** 아이 수 (기존 아이의 시간 정하기와 구분) */
+function _planTrulyNew(p) {
+  var n = 0;
+  (p.days || []).forEach(function(d) {
+    (d.visits || []).forEach(function(v) { if (!v.locked && v.isNew) n++; });
+  });
+  return n;
+}
+
+/**
+ * 고른 안의 **주간 전체**를 요일별로 펼친다. 이 화면의 1차 질문이 *"이 선생님 주간이 어떻게 되나"*이므로
+ * 한 줄 요약이 아니라 표로 낸다. 방문마다 상태를 앞에 붙여 **뭐가 새로 생기는지**가 눈에 들어오게 한다.
+ *   (없음) 이미 확정 · ⏱ 배정은 됐는데 시간을 지금 정함 · 🆕 이번에 처음 오는 아이
+ */
+function _planWeekHtml(p) {
+  var h = '<div class="pweek">';
+  (p.days || []).forEach(function(d) {
+    h += '<div class="pwd"><span class="pwdn" style="background:' + (PLAN_DC[d.day] || '#666') + '">' + esc(d.day) + '</span>'
+       + '<span class="pwdm">이동 ' + d.moveMin + '분 · 주차 ' + d.parks + '회'
+       + (d.idleMin > 0 ? ' · 빈 시간 ' + d.idleMin + '분' : '') + '</span></div>';
+    (d.visits || []).forEach(function(v) {
+      var tag = v.locked ? '' : (v.isNew ? '<b class="pwt new">🆕</b>' : '<b class="pwt time">⏱</b>');
+      h += '<div class="pwv' + (v.locked ? '' : ' hot') + '">'
+         + '<span class="pwh">' + _pm(v.start) + '</span>'
+         + tag + '<span class="pwn">' + esc(v.name) + '</span>'
+         + (v.household ? '<span class="pwx">형제</span>' : '')
+         + '<span class="pwd2">' + v.durMin + '분</span></div>';
+    });
+  });
+  if (!(p.days || []).length) h += '<div class="pwv"><span class="pwn" style="color:#8b95a1">이 주에 방문이 없어요</span></div>';
+  return h + '</div>';
 }
 
 function _planViewPlans() {
@@ -2811,33 +2867,31 @@ function _planViewPlans() {
     h += '<div class="pnote">안이 <b>하나뿐</b>입니다 — 인원·이동·주차·빈 시간 어느 쪽으로 봐도 이 안을 이기는 배치가 없었어요.'
       + (planQ.length ? '<br>더 좋게 하려면 아래 <b>조율</b>이 유일한 길이에요.' : '') + '</div>';
   }
-  if (PLAN.summary && PLAN.summary.fixed) {
-    h += '<div class="pnote">🔒 는 <b>이미 확정된 수업</b>이에요 — 이 안이 만든 게 아니라 원래 있던 것이라 '
-      + '그대로 두고, 그 사이 빈 자리에만 새로 넣었어요.</div>';
-  }
   plans.forEach(function(p, i) {
-    var seq = p.days.map(function(d) {
-      return d.day + ' ' + d.visits.map(function(v){
-        return _pm(v.start) + ' ' + (v.locked ? '🔒' : '') + v.name; }).join(' → ');
-    }).join('  /  ');
     var nNew = _planNewCount(p);
-    h += '<div class="pcand' + (i === planCur ? ' best' : '') + '" onclick="planPick(' + i + ')">'
+    var sel = (i === planCur);
+    h += '<div class="pcand' + (sel ? ' best' : '') + '" onclick="planPick(' + i + ')">'
       + '<h4>' + esc(i === 0 ? '최적안' : (p.objectiveLabel || ('안 ' + (i+1)))) + '</h4>'
-      // 배지는 **제목이 말하지 않는 것만** 말한다(§2.1-7). 최적안은 제목이 이미 추천이고,
-      // 인원은 아래 메트릭 행에 있다 → 덜 받는 안일 때 그 차이만 배지로.
+      // 배지는 **제목이 말하지 않는 것만** 말한다(§2.1-7).
       + (p.placed < (PLAN.maxPlaced || p.placed)
           ? '<span class="tg w">' + (PLAN.maxPlaced - p.placed) + '명 적게</span>' : '')
-      // 「배정 인원」이 확정분을 포함하면 담당자는 이번에 전화할 집이 몇인지 못 센다 → 새 배정을 앞에 둔다
-      + '<div class="pm"><span>새로 배정</span><b>' + nNew + '명</b></div>'
-      + (p.placed > nNew ? '<div class="pm"><span>이미 확정</span><b>' + (p.placed - nNew) + '명</b></div>' : '')
-      + '<div class="pm"><span>주간 전체</span><b>' + p.placed + '명</b></div>'
+      // 🔴 옛 화면은 「새로 배정 / 이미 확정 / 주간 전체」 세 줄을 나란히 뒀는데 유성이
+      //    *"새로배정 / 주간 전체의 차이는 뭐지?"*라 물었다 = 셋 다 읽히지 않았다.
+      //    ⇒ **한 줄**로 줄이고 차이는 괄호로 말한다.
+      + '<div class="pm"><span>주간 인원</span><b>' + p.placed + '명'
+        + (nNew ? ' <span style="color:#3a8a5f">(이번에 ' + nNew + '명)</span>' : ' <span style="color:#8b95a1">(변동 없음)</span>')
+        + '</b></div>'
       + '<div class="pm"><span>총 이동(귀가 포함)</span><b>' + p.totalMoveMin + '분</b></div>'
       + '<div class="pm"><span>주차 횟수</span><b>' + p.totalParks + '회</b></div>'
       + '<div class="pm"><span>출근일</span><b>' + p.workDays + '일</b></div>'
       + '<div class="pm"><span>최소 여유</span><b class="' + (p.worstSlackMin != null && p.worstSlackMin < 3 ? 'bad' : '') + '">'
         + (p.worstSlackMin == null ? '—' : p.worstSlackMin + '분') + '</b></div>'
       + '<div class="pm"><span>빈 시간</span><b class="' + (p.totalIdleMin > 0 ? 'bad' : '') + '">' + p.totalIdleMin + '분</b></div>'
-      + '<div class="pseq">' + esc(seq) + '</div>'
+      // 🗓️ **고른 안은 주간을 통째로 펼친다** (유성 2026-08-09: *"지금 이 선생님이 어떤 스케줄을
+      //    가지고 있는지도 확인이 안되고, 새로 추가할 아동이 누구인지도 시각적으로 명확하지 않다"*).
+      //    한 줄 요약(`pseq`)은 7명만 돼도 읽을 수 없다.
+      + (sel ? _planWeekHtml(p) : '<div class="pseq">' + esc(p.days.map(function(d) {
+            return d.day + ' ' + d.visits.length + '명'; }).join(' · ')) + '</div>')
       // 주행시간은 추정치다 — 서버가 estimated로 알려주는 사실을 화면이 삼키면 담당자는 실측으로 읽는다
       + (PLAN.estimated ? '<div class="pseq">이동·여유는 추정치예요</div>' : '')
       + (p.unplaced && p.unplaced.length
@@ -2845,10 +2899,10 @@ function _planViewPlans() {
       + (p.infeasibleDays > 0
           ? '<div class="pdrop"><b>이 안은 이동시간이 부족해요</b> — 다음 수업에 제때 못 갑니다</div>' : '')
       // 새로 쓸 게 없으면 확정 버튼을 내지 않는다 — 눌러도 시트에 아무 일이 없어 "먹통"으로 읽힌다
-      + (i === planCur && !p.infeasibleDays && nNew > 0
-          ? '<button class="pbtn" onclick="event.stopPropagation();planCommit()">이 안으로 확정 (새 배정 ' + nNew + '명)</button>' : '')
-      + (i === planCur && !p.infeasibleDays && nNew === 0
-          ? '<div class="pnote">새로 배정할 아이가 없어요 — 이 주는 <b>이미 다 확정</b>돼 있어요.</div>' : '')
+      + (sel && !p.infeasibleDays && nNew > 0
+          ? '<button class="pbtn" onclick="event.stopPropagation();planCommit()">이 ' + nNew + '명 확정하기</button>' : '')
+      + (sel && !p.infeasibleDays && nNew === 0
+          ? '<div class="pnote">이 주는 <b>이미 다 정해져</b> 있어요 — 새로 정할 게 없어요.</div>' : '')
       + '</div>';
   });
 
@@ -2878,7 +2932,10 @@ var _PLAN_ST = {
   //    담당자가 이번에 전화해야 할 집이 몇인지 셀 수 없다(유성: *"이미 자리도 넣은 아동인데 왜 배치안이…"*).
   fixed:                 { c: 'lock',  t: '이미 확정' },
   'fixed-conflict':      { c: 'clash', t: '확정 겹침' },
-  'other-provider':      { c: 'other', t: '다른 선생님' }
+  'other-provider':      { c: 'other', t: '다른 선생님' },
+  // ⏱ 이 선생님 아이인데 **시간만 안 정해진** 것. "새 배정"이라 부르면 유성이 본 그 오해가 난다
+  //    (지도에서 배정하면 Q·R만 차고 S·T는 빈다 → 그 시간을 정해주는 게 이 화면의 일).
+  'needs-time':          { c: 'time',  t: '시간 정하기' }
 };
 
 function _planViewRoster() {
@@ -2888,26 +2945,33 @@ function _planViewRoster() {
   // 🔴 마크 수와 여기 목록 수가 어긋나면 **누가 빠졌는지 담당자가 알 수 없다**(유성 "전원7 이거 좀 이상한데").
   //    조용히 줄어드는 길이 셋 있다 — 중복 신청 병합 · 시트 범위 밖 행 · 다른 선생님 배정.
   //    그래서 보낸 수(requested)와 목록 수를 같이 보이고, 차이가 나면 사유를 바로 밑에 적는다.
-  h += '<div class="pnote">마크 <b>' + (sm.requested != null ? sm.requested : roster.length) + '명</b>'
-    + ' · 이번에 <b>새로 ' + (sm.newlyPlaced || 0) + '명 배정</b>'
-    + ((sm.fixed || 0)         ? ' · 이미 확정 ' + sm.fixed + '명' : '')
+  // 🔴 머릿줄의 기준은 **마크가 아니라 이 선생님의 주간**이다(2026-08-09 유성 정정 —
+  //    마크는 "더 넣어볼 후보"일 뿐이고 계산 대상은 Q열이 정한다).
+  h += '<div class="pnote">' + esc(PLAN.provider ? PLAN.provider.name : '') + ' 선생님 주간 <b>'
+    + (sm.weekly != null ? sm.weekly : roster.length) + '명</b>'
+    + ((sm.fixed || 0)         ? ' · 🔒 확정 ' + sm.fixed + '명' : '')
+    + ((sm.needsTime || 0)     ? ' · ⏱ 시간 정하기 ' + sm.needsTime + '명' : '')
+    + ((sm.newlyPlaced || 0)   ? ' · 🆕 새로 ' + sm.newlyPlaced + '명' : '')
     + ((sm.crowdedOut || 0)    ? ' · 밀림 ' + sm.crowdedOut + '명' : '')
     + ((sm.impossible || 0)    ? ' · 불가 ' + sm.impossible + '명' : '')
     + ((sm.otherProvider || 0) ? ' · 다른 선생님 ' + sm.otherProvider + '명' : '')
-    + '<br><span style="color:#8b95a1">「밀림」은 <b>넣을 수 있는데</b> 이 안에서 빠진 거예요 — 조율하거나 다른 안을 보세요.'
-    + ((sm.fixed || 0) ? '<br>「이미 확정」은 <b>그대로 둡니다</b> — 다시 배치하지도, 조율 전화를 걸지도 않아요.' : '')
+    + '<br><span style="color:#8b95a1">마크 ' + (sm.requested || 0) + '명은 <b>후보</b>예요 — 이 선생님 아이는 마크와 상관없이 다 들어옵니다.'
+    + ((sm.needsTime || 0) ? '<br>「시간 정하기」는 <b>배정은 됐는데 요일·시각이 시트에 없는</b> 아이예요. 확정하면 채워집니다.' : '')
+    + ((sm.crowdedOut || 0) ? '<br>「밀림」은 <b>넣을 수 있는데</b> 이 안에서 빠진 거예요 — 조율하거나 다른 안을 보세요.' : '')
     + '</span></div>';
+
+  if ((sm.timeFromRecon || 0)) {
+    h += '<div class="pnote warn"><b>' + sm.timeFromRecon + '명은 시트가 아니라 결제 이력에서 시각을 역산</b>했어요 — '
+      + '시트의 확정요일(S)·확정시간(T)이 비어 있어요. 확정하면 채워집니다.</div>';
+  }
 
   if ((sm.fixedConflict || 0)) {
     h += '<div class="pnote bad"><b>확정 시간이 서로 겹쳐요 ' + sm.fixedConflict + '건</b><br>'
       + '시트의 확정요일(S)·확정시간(T)을 확인해 주세요. 이건 조율이 아니라 시트 수정으로 풀어요.</div>';
   }
-  if ((sm.timeUnknown || 0)) {
-    h += '<div class="pnote warn"><b>배정은 됐는데 시간이 비어 있어요 ' + sm.timeUnknown + '명</b><br>'
-      + '그 시간을 <b>빈 자리로 보고</b> 계산했어요 — 실제로 수업 중이면 이 안은 겹칩니다.</div>';
-  }
-  if (sm.requested != null && sm.rostered != null && sm.requested !== sm.rostered) {
-    h += '<div class="pnote warn">마크 ' + sm.requested + '명 중 <b>' + sm.rostered + '명</b>만 여기 있어요 — '
+  // 조용히 줄어드는 길(중복 병합·시트 범위 밖 행)은 **일어났을 때만** 말한다
+  if ((sm.droppedDuplicates || 0) || (sm.skippedRows && sm.skippedRows.length)) {
+    h += '<div class="pnote warn">목록에서 빠진 것 — '
       + ((sm.droppedDuplicates || 0) ? '중복 신청 ' + sm.droppedDuplicates + '건 병합' : '')
       + ((sm.skippedRows && sm.skippedRows.length)
           ? ((sm.droppedDuplicates ? ' · ' : '') + '시트에 없는 행 ' + sm.skippedRows.join(',')) : '')
@@ -2918,9 +2982,8 @@ function _planViewRoster() {
 
   roster.forEach(function(r) {
     var st = _PLAN_ST[r.status] || { c: 'no', t: r.status };
-    var why = (r.status.indexOf('placed') === 0 || r.status === 'fixed')
-      ? (r.day || '') + ' ' + (r.time || '')
-      : (r.reason || '');
+    var hasWhen = (r.status.indexOf('placed') === 0 || r.status === 'fixed' || r.status === 'needs-time');
+    var why = hasWhen ? ((r.day || '') + ' ' + (r.time || '')) : (r.reason || '');
     h += '<div class="prow"><span class="pst ' + st.c + '">' + st.t + '</span>'
       + '<b>' + esc(r.name) + '</b>'
       + (r.anchorCount > 1 ? '<span style="color:#8b95a1;font-size:11px">단지 ' + r.anchorCount + '건</span>' : '')
@@ -3516,11 +3579,16 @@ function planPick(i) {
 function planLegend() {
   var el = document.getElementById('planLg');
   if (!el || !PLAN || !PLAN.plans[planCur]) return;
-  var days = PLAN.plans[planCur].days.map(function(d){ return d.day; });
+  var p = PLAN.plans[planCur];
+  var days = p.days.map(function(d){ return d.day; });
+  // ⛔ "흐린 마커 = 이 안에 없는 아동" 줄은 뺐다 — 유성 2026-08-09: *"이 범례는 필요 없어보이는데"*.
+  //    회색은 보면 아는 것이고, 정작 알아야 할 건 **이번에 새로 넣는 아이가 누구인가**다.
+  var nNew = 0;
+  p.days.forEach(function(d){ d.visits.forEach(function(v){ if (!v.locked) nNew++; }); });
   el.innerHTML = days.map(function(d) {
       return '<span><i style="background:' + (PLAN_DC[d] || '#666') + '"></i>' + d + '</span>';
     }).join('')
-    + '<span style="width:100%;color:#8b95a1">흐린 마커 = 이 안에 없는 아동</span>';
+    + (nNew ? '<span style="width:100%;color:#3a8a5f;font-weight:700">🆕 = 이번에 정하는 ' + nNew + '명</span>' : '');
   el.classList.add('on');
 }
 
@@ -3710,12 +3778,19 @@ function planCommit() {
   });
   if (noRow.length) { showToast(noRow.join('·') + ' 의 행을 못 찾았어요 — 다시 뽑아 주세요'); return; }
   if (!picks.length) { showToast('확정할 배치가 없어요'); return; }
-  // 누구를 배정하는지 이름까지 보여준다 — 요일·시각만 보면 동명이인·오선택을 못 잡는다
-  var nameOf = {};
-  p.days.forEach(function(d){ d.visits.forEach(function(v){ nameOf[(v.row || '') + '|' + d.day + '|' + _pm(v.start)] = v.name; }); });
-  if (!confirm(picks.length + '명을 ' + PLAN.provider.name + ' 선생님에게 배정할게요.\n\n' +
-      picks.map(function(x){ return '· ' + x.day + ' ' + x.time + '  ' + (nameOf[x.row + '|' + x.day + '|' + x.time] || ''); }).join('\n') +
-      '\n\n진행할까요?')) return;
+  // 누구를 배정하는지 이름까지 보여준다 — 요일·시각만 보면 동명이인·오선택을 못 잡는다.
+  // ⚠️ 두 종류가 섞인다: **처음 오는 아이**(배정+시간)와 **이미 우리 아이인데 시간만 정하는 아이**.
+  //    한 덩어리로 "N명 배정"이라 하면 후자를 새 아이로 오해한다(유성 2026-08-09의 그 오해).
+  var infoOf = {};
+  p.days.forEach(function(d){ d.visits.forEach(function(v){
+    infoOf[(v.row || '') + '|' + d.day + '|' + _pm(v.start)] = { name: v.name, isNew: v.isNew }; }); });
+  var lines = picks.map(function(x){
+    var it = infoOf[x.row + '|' + x.day + '|' + x.time] || {};
+    return '· ' + x.day + ' ' + x.time + '  ' + (it.name || '') + (it.isNew ? '  (새로 배정)' : '  (시간 정하기)');
+  });
+  var nNewC = picks.filter(function(x){ var it = infoOf[x.row + '|' + x.day + '|' + x.time] || {}; return it.isNew; }).length;
+  if (!confirm(PLAN.provider.name + ' 선생님 — 새로 배정 ' + nNewC + '명 · 시간 정하기 ' + (picks.length - nNewC) + '명\n\n'
+      + lines.join('\n') + '\n\n진행할까요?')) return;
 
   showLoading(true);
   fetchGAS('commit', { provider: PLAN.provider.name, picks: JSON.stringify(picks),
@@ -3723,7 +3798,8 @@ function planCommit() {
     .then(function(res) {
       showLoading(false);
       if (res.error) { showToast(res.error); return; }
-      showToast((res.committed ? res.committed.length : picks.length) + '명 배정 완료!', true);
+      var nC = (res.committed || []).length, nT = (res.timed || []).length;
+      showToast((nC ? nC + '명 배정' : '') + (nC && nT ? ' · ' : '') + (nT ? nT + '명 시간 확정' : '') + ' 완료!', true);
       planExit();
       _afterWrite(res);
     })
