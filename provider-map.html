@@ -1783,7 +1783,13 @@ function asgConfirm(){
   fetchGAS('assign', { row: row, provider: prov, service: currentService, ctx: _ctxKeyName(), day: d, time: time })
     .then(function(res) {
       showLoading(false);
-      if (res.error) { showToast(res.error); return; }
+      if (res.error) {
+        // 서버가 스택을 같이 보낸다(인증된 액션 한정). 안 보여주면 또 "서버 오류"만 남고
+        // 어느 줄에서 죽었는지 모른 채 추측하게 된다(2026-08-09).
+        showToast(res.error + (res.stack ? '  ⟨' + res.stack + '⟩' : ''));
+        if (window.console) console.log('[assign 오류]', JSON.stringify(res));
+        return;
+      }
       // 🔴 **서버가 "썼다"고 말할 때만 완료라고 말한다** (2026-08-09 유성:
       //    *"이 시간으로 배정을 눌렀는데 왜 계속 스케줄 미정이냐"*).
       //    옛 코드는 `res.stamped`를 **한 번도 안 보고** 무조건 *"화 17:00 시간 기록 완료!"*를 띄웠다.
