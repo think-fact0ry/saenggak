@@ -282,7 +282,11 @@
   /* max-height는 CSS가 아니라 open 래퍼가 정한다(유성 2026-08-10): 단인 = 카드 전부 보임(스크롤 0) /
      다인 = 첫 아동 + 회색 띠(border-bottom 라인)까지만, 아래는 페이드 스크롤. position:relative =
      래퍼가 sep 띠의 offsetTop을 .iw 기준으로 재기 위함. */
-  .iw{width:265px;position:relative;padding:13px 13px 12px;font-family:inherit;font-size:12px;line-height:1.5;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
+  .iw{width:265px;position:relative;padding:13px 13px 12px;background:#fff;font-family:inherit;font-size:12px;line-height:1.5;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
+  /* 값·이름은 마우스 드래그 복사 허용(유성 2026-08-10) — #map의 user-select:none 상속을 여기서만 해제.
+     단 조작 요소(정하기/고치기 링크·하한 배지·뱃지·행번호)는 기존대로 드래그 불가. */
+  .iw-nm,.iw-tbl .v{-webkit-user-select:text;user-select:text}
+  .iw-nm .iw-bdg,.iw-nm .iw-rowno,.iw-tbl .v .iw-fix,.iw-tbl .v .iw-hint{-webkit-user-select:none;user-select:none}
   /* 스크롤바 숨김 + 넘칠 때만 아래 32px 투명 페이드(docs/1 "넘치는 목록은 아래쪽 페이드로 끝을 알린다",
      08 반출납 .body와 같은 처방 — 유성 2026-08-09 지도 적용, 깊이 32px = 유성 2026-08-10 실기기 확정).
      스크롤바는 말풍선 테두리 위에 그려져 경계를 침범하던 것이기도 하다.
@@ -298,6 +302,7 @@
      출발/도착=취소칩 결(§4.17, 색은 원이 담당해 거절·배정취소의 빨강과 층 분리) · 마크됨=흰+초록 보더 ·
      아동 사이=회색 띠 여백블록 · 요일+시간 세트 nowrap · 하한 배지=희망 옆 · 242행 유지 · 선생님 파랑 뱃지 유지 */
   .iw-nm{font-size:15px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px;color:var(--g900);word-break:keep-all}
+  .iw>.iw-nm:last-child{margin-bottom:0}   /* 센터 IW(이름 단독)는 마진이 세로 중앙을 깨뜨림(위 13/아래 20) — 유성 2026-08-10 */
   .iw-nm.iw-addr{font-size:13px}
   .iw-rowno{font-size:11px;color:var(--g400);font-weight:500}
   .iw-bdg{display:inline-flex;align-items:center;font-size:11px;font-weight:700;line-height:1;padding:4px 9px;border-radius:999px}
@@ -836,7 +841,10 @@ function initMap() {
       probe.innerHTML = html;
       document.body.appendChild(probe);
       var pv = probe.querySelector('.iw'), ps = probe.querySelector('.iw-sep16');
-      if (pv && ps) html = html.replace('<div class="iw">', '<div class="iw" style="max-height:' + (ps.offsetTop + ps.offsetHeight) + 'px">');
+      // 캡 = min(첫 아동+띠, 340). 전체 보기 대기 카드는 첫 아동 블록만 ~530px(추천 3줄+배정하기+
+      // 출발/도착+부재·거절·복사·마크 스택)라 "첫 아동까지"만으로도 말풍선이 화면 위를 뚫고 오토팬이
+      // 크게 발동한다(2026-08-10 실측: 캡 564 → 말풍선 566, top -197). 340 = 유성 확정 스크롤 캡.
+      if (pv && ps) html = html.replace('<div class="iw">', '<div class="iw" style="max-height:' + Math.min(ps.offsetTop + ps.offsetHeight, 340) + 'px">');
       probe.remove();
     }
     _iwRawSetContent(html);
@@ -862,6 +870,10 @@ function initMap() {
       bub.style.borderRadius = '8px';
       bub.style.boxShadow = '0 4px 10px rgba(25,31,40,.08)';
       bub.style.overflow = 'hidden';
+      // 페이드 아래끝에 green700(#166841) 빛 — 순수 투명 페이드는 "스크롤 더 있음"이 안 읽힌다(유성 2026-08-10).
+      // 원리: .iw(흰 배경)를 mask가 투명화하면 이 말풍선 배경 그라데이션이 비친다. 끝(.iw-end)이나
+      // 짧은 IW에선 mask가 없어 .iw 흰 배경이 도로 덮으므로 토글 코드가 따로 필요 없다.
+      bub.style.background = 'linear-gradient(180deg,#fff calc(100% - 32px),rgba(22,104,65,.16))';
     }
     var more = el.scrollHeight > el.clientHeight + 1;
     el.classList.toggle('iw-more', more);
