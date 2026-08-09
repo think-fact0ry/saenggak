@@ -2998,7 +2998,9 @@ function _planViewRoster() {
   }
   if ((sm.timeFromRecon || 0) + (sm.timeFromReconLow || 0)) {
     h += '<div class="pnote"><b>' + ((sm.timeFromRecon || 0) + (sm.timeFromReconLow || 0)) + '명은 결제 이력에서 시각을 역산</b>했어요 — 실제로 하고 있는 시간이에요.'
-      + ((sm.timeFromReconLow || 0) ? '<br>그중 <b>' + sm.timeFromReconLow + '명</b>은 요일·시각이 흔들려 신뢰도가 낮아요.' : '')
+      + ((sm.timeFromReconLow || 0)
+          ? '<br>그중 <b>' + sm.timeFromReconLow + '명</b>은 <b>확실하지 않아요</b> — 회기가 적거나(한 달 미만) 최근에 시간이 바뀌는 중이에요. 이 아이들은 <b>고정하지 않고</b> 계산했어요.'
+          : '')
       + '</div>';
   }
 
@@ -3031,6 +3033,17 @@ function _planViewRoster() {
         + (r.parentMessage ? '<br>학부모께: <b>' + esc(r.parentMessage) + '</b>' : '') + '</div>';
     }
     if (r.hint) h += '<div class="plog">' + esc(r.hint) + '</div>';
+    // 🔴 **근거를 숨기지 않는다** — "화 15:30"만 보여주면 그게 6회치인지 2회치인지 알 수 없다
+    //    (유성 2026-08-09: *"고신뢰 역산 역시 단기간의 경우 확실하지 않다는 거 알고있지?"*).
+    if (r.reconWhy) {
+      var w = r.reconWhy;
+      h += '<div class="plog">' + (r.timeSource === 'recon' ? '결제 이력 기준' : '⚠️ 확실하지 않아요')
+        + ' — ' + w.sessions + '회 / ' + w.spanDays + '일'
+        + (w.shift ? ' · <b>최근에 시간이 바뀌는 중</b>' : '')
+        + (r.timeSource === 'recon-low'
+            ? (w.sessions < 4 ? ' · 회기가 적어요' : (w.spanDays < 21 ? ' · 기간이 짧아요' : '')) : '')
+        + '</div>';
+    }
     // ⏱ 시간 기록이 없는 아이 = **실제 수업 시각을 아는 사람은 유성뿐**이다. 엔진 제안을 그대로
     //    확정하면 틀린 시각이 박히므로, 그 자리에서 직접 지정할 길을 준다(기존 배정 다이얼로그 재사용).
     if (r.status === 'needs-time') {
