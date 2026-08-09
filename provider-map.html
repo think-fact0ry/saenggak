@@ -394,6 +394,21 @@
   .iw-txtu{font-family:inherit;border:none;background:none;cursor:pointer;color:var(--g600);font-weight:600;font-size:12px;text-decoration:underline;text-underline-offset:3px;transition:transform .12s}
   .iw-txtu:active{transform:scale(.93)}
 
+  /* ── 중앙 확인 다이얼로그(§4.4) — 크롬 confirm() 대체(유성 2026-08-10). 텍스트 좌정렬·왼쪽=닫기(§2.1-6) ── */
+  #cmDim{position:fixed;inset:0;z-index:120;background:rgba(25,31,40,.45);display:none;align-items:center;justify-content:center}
+  #cmDim.show{display:flex}
+  .cmodal{width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:20px;padding:22px 20px 16px}
+  .cm-t{font-size:16px;font-weight:800;color:#191f28;letter-spacing:-.3px;word-break:keep-all}
+  .cm-s{font-size:13px;color:#6b7684;margin-top:8px;line-height:1.55;word-break:keep-all}
+  .cm-s:empty{display:none}
+  .cm-btns{display:flex;gap:8px;margin-top:16px}
+  .cm-btn{flex:1;font-family:inherit;border:none;cursor:pointer;border-radius:12px;padding:13px 0;font-size:14px;font-weight:700;background:#f2f4f6;color:#4e5968;transition:transform .12s,background .15s}
+  .cm-btn:active{transform:scale(.97);background:#e5e8eb}
+  .cm-btn.primary{background:#166841;color:#fff}
+  .cm-btn.primary:active{background:#01492a}
+  .cm-btn.primary.danger{background:#D25357}
+  .cm-btn.primary.danger:active{background:#b8434a}
+
   /* ══ 유틸 ══ */
   .loading-overlay{position:fixed;inset:0;z-index:100;background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center}
   .loading-overlay.show{display:flex}
@@ -810,6 +825,22 @@ function initMap() {
   // ⚠️ 판정은 rAF가 아니라 **동기**로 — 카카오 open()이 DOM을 동기 삽입하므로 바로 잴 수 있고,
   //    rAF는 가려진 탭에서 아예 안 돌아 판정이 영영 미뤄진다(2026-08-09 자동화 탭 실측 rafRan:false).
   //    클래스가 바꾸는 건 mask·안쪽 padding뿐이라(바깥 높이는 max-height 300 고정) 말풍선 크기 계산과 안 얽힌다.
+  // 다인 카드 캡은 **열기 전에** 계산해 인라인으로 박는다(유성 2026-08-10 "카드가 완전히 위에서 나온다" —
+  // 카카오는 setContent된 콘텐츠의 전체 높이로 위치·오토팬을 잡으므로, 연 뒤에 줄이면 이미 벗어난 채 열린다).
+  // 프로브(숨김 절대배치)에 같은 HTML을 넣어 첫 회색 띠(border-bottom 라인)까지의 높이를 재고 max-height로 주입.
+  var _iwRawSetContent = infoWindow.setContent.bind(infoWindow);
+  infoWindow.setContent = function(html){
+    if (typeof html === 'string' && html.indexOf('iw-sep16') !== -1) {
+      var probe = document.createElement('div');
+      probe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;';
+      probe.innerHTML = html;
+      document.body.appendChild(probe);
+      var pv = probe.querySelector('.iw'), ps = probe.querySelector('.iw-sep16');
+      if (pv && ps) html = html.replace('<div class="iw">', '<div class="iw" style="max-height:' + (ps.offsetTop + ps.offsetHeight) + 'px">');
+      probe.remove();
+    }
+    _iwRawSetContent(html);
+  };
   var _iwRawOpen = infoWindow.open.bind(infoWindow);
   infoWindow.open = function(m2, mk){
     _iwRawOpen(m2, mk);
@@ -818,15 +849,12 @@ function initMap() {
     // 말풍선(카카오 DOM, 클래스 없음 = CSS 불가)을 프리뷰 카드 모양으로 동기화(유성 2026-08-10):
     // 폭·높이를 콘텐츠에 정확히 맞추고(±2px 어긋남·sep 띠가 테두리 밖으로 비어져 나오던 것 해소)
     // 라운딩 8·그림자 + overflow:hidden(라운딩이 안쪽 콘텐츠·회색 띠까지 깎게).
-    // 높이 규칙(유성 2026-08-10): 단인 = 카드 전부(스크롤 0) / 다인 = 첫 아동 + 회색 띠 border-bottom
-    // 라인까지만 기본 표시, 아래는 페이드 스크롤. 카카오는 전체 높이 기준으로 top을 잡았으므로
-    // 줄인 만큼 top을 내려 말풍선 바닥(꼬리·마커 앵커)을 제자리에 유지한다.
+    // 높이 규칙(유성 2026-08-10): 단인 = 카드 전부(스크롤 0) / 다인 = 첫 아동 + 회색 띠까지(캡은
+    // 위 setContent 래퍼가 열기 전에 인라인 주입 — 여기선 ±2px 테두리 보정만). top 보정 = 바닥(꼬리) 유지.
     var bub = el.parentElement && el.parentElement.parentElement;
     if (bub && bub.style && bub.style.position === 'absolute') {
       var oldH = parseFloat(bub.style.height) || bub.offsetHeight;
       var oldT = parseFloat(bub.style.top) || 0;
-      var sep = el.querySelector('.iw-sep16');
-      el.style.maxHeight = sep ? (sep.offsetTop + sep.offsetHeight) + 'px' : '';
       var newH = el.offsetHeight + 2;
       bub.style.width = (el.offsetWidth + 2) + 'px';
       bub.style.height = newH + 'px';
@@ -1958,45 +1986,99 @@ function _findChildByRow(row) {
   return null;
 }
 
+// ── 중앙 확인 다이얼로그(§4.4) — 크롬 confirm() 대체(유성 2026-08-10). 파괴적 액션이면 danger=true(우측 버튼 빨강) ──
+var _cmEl = null, _cmOk = null;
+function iwConfirm(title, sub, okLabel, danger, onOk) {
+  if (!_cmEl) {
+    _cmEl = document.createElement('div');
+    _cmEl.id = 'cmDim';
+    _cmEl.innerHTML = '<div class="cmodal"><div class="cm-t"></div><div class="cm-s"></div>'
+      + '<div class="cm-btns"><button class="cm-btn" id="cmClose">닫기</button>'
+      + '<button class="cm-btn primary" id="cmGo"></button></div></div>';
+    document.body.appendChild(_cmEl);
+    document.getElementById('cmClose').addEventListener('click', function(){ _cmEl.classList.remove('show'); _cmOk = null; });
+    document.getElementById('cmGo').addEventListener('click', function(){ _cmEl.classList.remove('show'); var f = _cmOk; _cmOk = null; if (f) f(); });
+  }
+  _cmEl.querySelector('.cm-t').textContent = title;
+  _cmEl.querySelector('.cm-s').textContent = sub || '';
+  var go = document.getElementById('cmGo');
+  go.textContent = okLabel || '확인';
+  go.classList.toggle('danger', !!danger);
+  _cmOk = onOk;
+  _cmEl.classList.add('show');
+}
+
+// 대기 아동 이름·행 표기(모달 부제용)
+function _cmWho_(row) {
+  var c = _findChildByRow(row);
+  return (c && c.name ? c.name + ' · ' : '') + row + '행';
+}
+
+// 상태 변경 낙관 반영 — 거절·부재2는 지도에서 빠지고, 부재1은 뱃지만 바뀐다. 반환 = 되돌리기.
+function _optimisticStatus(row, status) {
+  if (!currentData || !currentData.waiting) return null;
+  var idx = -1;
+  for (var i = 0; i < currentData.waiting.length; i++)
+    if (Number(currentData.waiting[i].row) === Number(row)) { idx = i; break; }
+  if (idx < 0) return null;
+  var prevList = currentData.waiting;
+  var c = prevList[idx], prevStatus = c.status;
+  if (status === '거절' || status === '부재2') {
+    currentData.waiting = prevList.slice(0, idx).concat(prevList.slice(idx + 1));
+  } else {
+    c.status = status;
+  }
+  _renderCurrent();
+  return function undo() { c.status = prevStatus; currentData.waiting = prevList; _renderCurrent(); };
+}
+
 function doStatus(row, status) {
-  var label = status === '거절' ? '거절 처리' : status + ' 처리';
-  if (!confirm(row + '행 아동: ' + label + '\n\n진행할까요?')) return;
-  showLoading(true); infoWindow.close();
-  fetchGAS('status', { row: row, status: status, service: currentService, ctx: _ctxKeyName() }).then(function(res) {
-    showLoading(false);
-    if (res.error) { showToast(res.error); return; }
-    showToast(label + ' 완료', true);
-    _afterWrite(res);
-  }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
+  var isRej = status === '거절';
+  iwConfirm(isRej ? '거절로 처리할까요?' : status + '로 처리할까요?',
+    _cmWho_(row) + (isRej ? ' — 지도에서 빠져요' : ''),
+    isRej ? '거절하기' : '처리하기', true, function(){
+    infoWindow.close();
+    var undo = _optimisticStatus(row, status);   // 화면 먼저(대기 0초), 서버는 뒤에서(유성 2026-08-10 로딩 최적화)
+    if (!undo) showLoading(true);
+    fetchGAS('status', { row: row, status: status, service: currentService, ctx: _ctxKeyName() }).then(function(res) {
+      showLoading(false);
+      if (res.error) { if (undo) undo(); showToast(res.error); return; }
+      showToast((isRej ? '거절' : status) + ' 처리 완료', true);
+      _afterWrite(res);
+    }).catch(function(e) { showLoading(false); if (undo) undo(); showToast('처리 실패: '+e.message); });
+  });
 }
 
 function doAbsent(row, currentStatus) {
   var next = (currentStatus === '부재1') ? '부재2' : '부재1';
-  var msg = next === '부재2'
-    ? row + '행 아동: 부재2 처리 (이후 검색에서 제외됩니다)\n\n진행할까요?'
-    : row + '행 아동: 부재 처리\n\n진행할까요?';
-  if (!confirm(msg)) return;
-  showLoading(true); infoWindow.close();
-  fetchGAS('status', { row: row, status: next, service: currentService, ctx: _ctxKeyName() }).then(function(res) {
-    showLoading(false);
-    if (res.error) { showToast(res.error); return; }
-    showToast(next + ' 처리 완료', true);
-    _afterWrite(res);
-  }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
+  iwConfirm(next === '부재2' ? '부재2로 기록할까요?' : '부재로 기록할까요?',
+    _cmWho_(row) + (next === '부재2' ? ' — 이후 검색에서 빠져요' : ''),
+    '기록하기', false, function(){
+    infoWindow.close();
+    var undo = _optimisticStatus(row, next);
+    if (!undo) showLoading(true);
+    fetchGAS('status', { row: row, status: next, service: currentService, ctx: _ctxKeyName() }).then(function(res) {
+      showLoading(false);
+      if (res.error) { if (undo) undo(); showToast(res.error); return; }
+      showToast(next + ' 기록 완료', true);
+      _afterWrite(res);
+    }).catch(function(e) { showLoading(false); if (undo) undo(); showToast('처리 실패: '+e.message); });
+  });
 }
 
 function doUnassign(row) {
-  if (!confirm(row + '행 아동의 배정을 취소합니다.\n\n진행할까요?')) return;
-  infoWindow.close();
-  // 먼저 화면에 반영하고(대기 0초) 서버 왕복은 뒤에서 확정한다. undo가 null이면 낙관 반영 불가 → 옛 로딩바 경로.
-  var undo = _optimisticUnassign(row);
-  if (!undo) showLoading(true);
-  fetchGAS('unassign', { row: row, service: currentService, ctx: _ctxKeyName() }).then(function(res) {
-    showLoading(false);
-    if (res.error) { if (undo) undo(); showToast(res.error); return; }
-    showToast('배정 취소됨', true);
-    _afterWrite(res);
-  }).catch(function(e) { showLoading(false); if (undo) undo(); showToast('처리 실패: '+e.message); });
+  iwConfirm('배정을 취소할까요?', _cmWho_(row) + ' — 대기로 돌아가요', '배정 취소하기', true, function(){
+    infoWindow.close();
+    // 먼저 화면에 반영하고(대기 0초) 서버 왕복은 뒤에서 확정한다. undo가 null이면 낙관 반영 불가 → 옛 로딩바 경로.
+    var undo = _optimisticUnassign(row);
+    if (!undo) showLoading(true);
+    fetchGAS('unassign', { row: row, service: currentService, ctx: _ctxKeyName() }).then(function(res) {
+      showLoading(false);
+      if (res.error) { if (undo) undo(); showToast(res.error); return; }
+      showToast('배정 취소됨', true);
+      _afterWrite(res);
+    }).catch(function(e) { showLoading(false); if (undo) undo(); showToast('처리 실패: '+e.message); });
+  });
 }
 
 // 마크 토글 (북마크 버튼) — 확인창 없음(가벼운 개인 뷰 토글).
