@@ -26,6 +26,14 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    /* §3.1 정본 토큰(필요 칸만 복사). 2026-08-10 IW 병합부터 신규 CSS는 var() — 기존 raw hex는 손댈 때 점진 정렬 */
+    --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g400:#b0b8c1; --g500:#8b95a1;
+    --g600:#6b7684; --g700:#4e5968; --g800:#333d4b; --g900:#191f28;
+    --green100:#e9f8ee; --green600:#3a8a5f; --green700:#166841;
+    --red:#f04452; --warn-weak-bg:#fef4e2; --warn-weak-fg:#c07f00;
+    --danger:#D25357; --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;
+  }
   html,body{height:100%;overflow:hidden}
   body{font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;color:#1a1a1a;background:#f0ebe4}
 
@@ -272,52 +280,70 @@
      (2026-08-09 실측: 측정 267.375×200.23 → 말풍선 267×200, 내용폭 265 → 219.4px로 재래핑).
      max-content면 렌더폭이 말풍선 폭과 무관해져 래핑이 측정 때와 항상 같다. 가로 초과 ~2px는
      overflow-x:hidden이 오른쪽 패딩만 잘라낸다. 20명+ 밀집 위치는 max-height:300 내부 스크롤이 캡. */
-  .iw{width:max-content;padding:10px 12px 10px;font-family:inherit;font-size:12.5px;line-height:1.6;min-width:200px;max-width:300px;max-height:300px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
-  /* 스크롤바 숨김 + 넘칠 때만 아래 24px 투명 페이드(docs/1 "넘치는 목록은 아래쪽 페이드로 끝을 알린다",
-     08 반출납 .body와 같은 처방 — 유성 2026-08-09 지도 적용). 스크롤바는 말풍선 테두리 위에 그려져
-     경계를 침범하던 것이기도 하다. .iw-more는 infoWindow.open 래퍼가 넘침 실측 후 단다(CSS로는 감지 불가).
-     padding-bottom 34px = 스크롤 끝에서 마지막 줄(출발/도착)이 페이드 위로 온전히 올라오는 여유. */
+  .iw{width:max-content;padding:13px 13px 12px;font-family:inherit;font-size:12px;line-height:1.5;min-width:200px;max-width:300px;max-height:300px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
+  /* 스크롤바 숨김 + 넘칠 때만 아래 38px 투명 페이드(docs/1 "넘치는 목록은 아래쪽 페이드로 끝을 알린다",
+     08 반출납 .body와 같은 처방 — 유성 2026-08-09 지도 적용, 깊이 38px = 유성 2026-08-10 확정).
+     스크롤바는 말풍선 테두리 위에 그려져 경계를 침범하던 것이기도 하다.
+     .iw-more는 infoWindow.open 래퍼가 넘침 실측 후 단다(CSS로는 감지 불가).
+     ⚠️ 페이드는 "아래 더 있을 때만" — 끝에 닿으면 스크롤 리스너가 .iw-end를 달아 해제한다.
+     옛 방식(여분 padding-bottom 34px로 마지막 줄을 페이드 위로 올림)은 스크롤 끝에 흰 여백을
+     남겨 유성이 반려(2026-08-10) — 여분 패딩 없이 끝에선 페이드 자체를 끈다. */
   .iw::-webkit-scrollbar{width:0}
-  .iw.iw-more{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent);padding-bottom:34px}
-  .iw-title{font-weight:700;font-size:14px;margin-bottom:4px;color:#1a1a1a;word-break:keep-all}
-  .iw-title.iw-addr{font-size:13px;line-height:1.45}
-  .iw-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:4px;vertical-align:middle}
-  .iw-badge.home{background:#dbeafe;color:#2563eb}
-  .iw-badge.assigned{background:#dcfce7;color:#16a34a}
-  .iw-badge.waiting{background:#fef3c7;color:#d97706}
-  .iw-badge.absent{background:#fff3cd;color:#856404}
-  .iw-badge.dist{background:#e9f8ee;color:#166841;font-size:11px}
-  .iw-row{color:#666;font-size:12px}
-  .iw-sch{margin-top:4px;padding-top:4px;border-top:1px solid #eee;font-size:11.5px;color:#555}
-  .iw-sch div{padding:1px 0}
-  /* 「스케줄 미정」을 보여주기만 하고 고칠 길이 없던 것을 고친다 — 그 자리에서 바로 지정 */
-  .iw-sch-set{margin-left:6px;padding:1px 7px;border-radius:999px;border:1px solid #3a8a5f;
-              background:#fff;color:#166841;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer}
-  .iw-sch-set:hover{background:#3a8a5f;color:#fff}
-  .iw-sep{margin:8px 0 6px;border:none;border-top:1px dashed #ddd}
-  .iw-group-label{font-size:11px;color:#999;font-weight:600;margin-bottom:2px}
-  .iw-times{margin-top:3px;font-size:11.5px;color:#166841;font-weight:600}
-  /* 체크박스 시간과 실제 시작이 다를 때만 뜨는 하한 배지 ([시간참고] 자유칸에서 추출) */
-  .iw-early{margin-left:5px;padding:1px 5px;border-radius:4px;background:#fff3e0;color:#c05621;font-size:10.5px;font-weight:700}
-  .iw-phone{margin-top:2px;font-size:12px}
-  .iw-phone a{color:#166841;text-decoration:none;font-weight:600}
-  .iw-phone a:hover{text-decoration:underline}
-  .iw-notes{margin-top:3px;font-size:11px;color:#333;background:#f9fafb;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap;border-left:2px solid #3a8a5f}
-  .iw-actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;max-width:100%}
-  .iw-act{
-    padding:4px 8px;border-radius:5px;font-size:11px;font-weight:500;font-family:inherit;
-    cursor:pointer;border:1px solid #ccc;color:#555;background:#fff;transition:all .15s;white-space:nowrap;
-  }
-  .iw-act:hover{background:#f5f5f5}
-  .iw-act.from{border-color:#22c55e;color:#16a34a}.iw-act.from:hover{background:#dcfce7}
-  .iw-act.to{border-color:#ef4444;color:#dc2626}.iw-act.to:hover{background:#fee2e2}
-  .iw-act.assign{border-color:#3a8a5f;color:#166841;font-weight:600}.iw-act.assign:hover{background:#e9f8ee}
-  .iw-act.absent{border-color:#e67e22;color:#e67e22}.iw-act.absent:hover{background:#fef5ec}
-  .iw-act.reject{border-color:#c0392b;color:#c0392b}.iw-act.reject:hover{background:#fdeaea}
-  .iw-act.copy{border-color:#888;color:#555}.iw-act.copy:hover{background:#f0f0f0}
-  .iw-act.unassign{border-color:#c0392b;color:#c0392b}.iw-act.unassign:hover{background:#fdeaea}
-  .iw-act.mark{border-color:#ef4444;color:#dc2626}.iw-act.mark:hover{background:#fee2e2}
-  .iw-act.mark.on{background:#ef4444;color:#fff}.iw-act.mark.on:hover{background:#dc2626}
+  .iw.iw-more:not(.iw-end){-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 38px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 38px),transparent)}
+  /* ── IW 박스 안 (2026-08-10 C안 정식 병합 — prototype 4라운드 유성 확정) ──
+     라벨·값 표형(§4.8)+여백블록(§4.7)+라인 SVG 아이콘(§3.5)+fill/weak 버튼(§4.14)+누름 피드백(§5.3).
+     확정: 행 순서 주소>확정>희망>참고>전화 · 1차 액션=배정 취소(fill 레드, 미정이어도 — 수정은 정하기/고치기 링크) ·
+     출발/도착=취소칩 결(§4.17, 색은 원이 담당해 거절·배정취소의 빨강과 층 분리) · 마크됨=흰+초록 보더 ·
+     아동 사이=회색 띠 여백블록 · 요일+시간 세트 nowrap · 하한 배지=희망 옆 · 242행 유지 · 선생님 파랑 뱃지 유지 */
+  .iw-nm{font-size:15px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px;color:var(--g900);word-break:keep-all}
+  .iw-nm.iw-addr{font-size:13px}
+  .iw-rowno{font-size:11px;color:var(--g400);font-weight:500}
+  .iw-bdg{display:inline-flex;align-items:center;font-size:11px;font-weight:700;line-height:1;padding:4px 9px;border-radius:999px}
+  .iw-bdg.as{background:var(--green100);color:var(--green700)}
+  .iw-bdg.wt{background:var(--warn-weak-bg);color:var(--warn-weak-fg)}
+  .iw-bdg.ab{background:var(--warn-weak-bg);color:var(--warn-weak-fg)}
+  .iw-bdg.dst{background:var(--g100);color:var(--g700)}
+  .iw-bdg.tc{background:#dbeafe;color:#2563eb}   /* 선생님 파랑 = 파랑 집 마커와 한 벌(유성 유지 확정 2026-08-09) */
+  .iw-bdg.ctr{background:var(--danger-weak-bg);color:var(--danger-weak-fg)}
+  .iw-grp{font-size:11px;color:var(--g500);font-weight:600;margin-bottom:6px}
+  .iw-sep16{height:16px;background:var(--g50);border-top:1px solid var(--g100);border-bottom:1px solid var(--g100);margin:12px -13px}  /* §4.7 여백블록 — 유성 확정 CSS 그대로 */
+  .iw-tbl{display:grid;grid-template-columns:62px 1fr;font-size:12px;line-height:1.5}
+  .iw-tbl>div{padding:4px 0;border-bottom:1px solid var(--g100)}
+  .iw-tbl>div:nth-last-child(-n+2){border-bottom:none}
+  .iw-tbl .k{color:var(--g500);font-weight:600;display:flex;align-items:center;gap:5px}
+  .iw-kic{width:13px;height:13px;stroke:var(--g400);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .iw-tbl .v{color:var(--g800);font-weight:500;word-break:keep-all}
+  .iw-tbl .v b{font-weight:800}
+  .iw-tbl .v a{color:var(--green700);font-weight:700;text-decoration:none}
+  .iw-tbl .v.miss{color:var(--danger-weak-fg);font-weight:600}
+  .iw-tbl .v.dim{color:var(--g600);white-space:pre-wrap}
+  .iw-tbl .v.vwarn{color:var(--red);font-weight:700}
+  .iw-tbl .v .sub{display:block;font-size:11px;color:var(--g400);font-weight:500}
+  .iw-fix{background:none;border:none;font-family:inherit;font-size:11.5px;color:var(--green700);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px;padding:0;margin-left:7px;display:inline-block;transition:transform .12s}
+  .iw-fix:active{transform:scale(.93)}
+  .iw-seg{white-space:nowrap}   /* 요일+시간 = 한 세트, 줄바꿈은 세트 사이에서만(유성 2026-08-09) */
+  /* 체크박스 시간과 실제 시작이 다를 때만 뜨는 하한 배지([시간참고] 추출) — 희망을 교정하는 정보라 희망 옆(유성 확정) */
+  .iw-hint{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;line-height:1;padding:3px 6px;border-radius:5px;background:var(--warn-weak-bg);color:var(--warn-weak-fg);margin-left:5px;vertical-align:1px}
+  .iw-chip{font-family:inherit;border:none;cursor:pointer;border-radius:8px;font-weight:700;font-size:11.5px;padding:7px 0;text-align:center;transition:transform .12s,background .15s;display:flex;align-items:center;justify-content:center;gap:4px}
+  .iw-chip:active{transform:scale(.95)}
+  .iw-ci{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .iw-chip.gw{background:var(--g100);color:var(--g700)}
+  .iw-chip.gw:active{background:var(--g200)}
+  .iw-chip.dw{background:var(--danger-weak-bg);color:var(--danger-weak-fg)}
+  .iw-chip.ww{background:var(--warn-weak-bg);color:var(--warn-weak-fg)}
+  .iw-chip.wb{background:#fff;border:1px solid var(--g200);box-shadow:0 1px 3px rgba(25,31,40,.08);color:var(--g700)}   /* 출발/도착 = §4.17 취소칩 결(라운딩만 기존 8) */
+  .iw-chip.mk-on{background:#fff;border:1px solid var(--green600);box-shadow:0 1px 3px rgba(25,31,40,.08);color:var(--green700)}  /* 마크됨 = 흰+초록 보더(유성 — fill 레드 반려) */
+  .iw-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .iw-dot.g{background:var(--green600)}
+  .iw-dot.r{background:var(--danger)}
+  .iw-r2{display:flex;gap:5px;margin-top:9px}
+  .iw-r2 .iw-chip{flex:1}
+  .iw-r3{display:flex;gap:4px;margin-top:5px}
+  .iw-r3 .iw-chip{flex:1}
+  .iw-fillbtn{font-family:inherit;border:none;cursor:pointer;width:100%;font-weight:700;border-radius:9px;margin-top:10px;padding:10px 0;font-size:13px;transition:transform .12s,filter .15s}
+  .iw-fillbtn:active{transform:scale(.97);filter:brightness(.92)}
+  .iw-fillbtn.go{background:var(--green600);color:#fff}   /* ⛔ 검정 채움+초록 글자(2.68:1 미달)로 되돌리지 말 것(유성 2026-08-09) */
+  .iw-fillbtn.del{background:var(--danger);color:#fff}
 
   /* ══ 길찾기 패널 ══ */
   .route-panel{
@@ -349,26 +375,22 @@
   .mlbl.assigned{margin:-46px 0 0 0}
   .mlbl.mark{color:#dc2626;margin:4px 0 0 0}   /* 마크 아동 이름 = 빨강, 마커 바로 아래 (북마크는 바닥앵커라 home 링과 같은 근접감 내려면 margin 작게) */
 
-  /* ══ 추천 ══ */
-  .iw-rec{margin-top:6px;padding-top:6px;border-top:1.5px solid #e9f8ee}
-  .iw-rec-title{font-size:11px;font-weight:700;color:#166841;margin-bottom:4px}
-  .iw-rec-item{display:flex;align-items:center;gap:5px;padding:3px 0;font-size:11px;color:#333;border-bottom:1px solid #f5f5f5}
-  .iw-rec-item:last-child{border-bottom:none}
-  .iw-rec-rank{width:16px;height:16px;border-radius:50%;background:#e9f8ee;color:#166841;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .iw-rec-name{font-weight:600;min-width:40px}
-  .iw-rec-dist{color:#166841;font-size:10px}
-  .iw-rec-time{color:#888;font-size:10px;flex:1}
-  .iw-rec-count{color:#bbb;font-size:10px}
-  /* ⛔ `.iw-rec-sel`(다른 선생님 고르기)은 2026-08-09에 제거 — 배정 다이얼로그의 교사 select와 중복 */
-  .iw-rec-assign{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #3a8a5f;color:#166841;background:#fff;font-family:inherit;transition:all .15s}
-  .iw-rec-assign:hover{background:#e9f8ee}
-  /* 보조 행동(배치안으로 넘어가기) — 주 행동인 「배정하기」와 무게를 갈라 놓는다 */
-  .iw-rec-assign.line{padding:5px;font-size:10.5px;color:#4e5968;border-color:#d1d6db;word-break:keep-all}
-  .iw-rec-assign.line:hover{background:#f2f4f6;border-color:#8b95a1}
-  /* 다음 스텝 = 이 말풍선의 주된 행동 → 채움. 흰 글자 대비 6.19:1(실측 2026-08-09).
-     ⛔ 검정(#191f28) 채움 + 초록 글자는 2.68:1로 미달 — 되돌리지 말 것(유성 지적). */
-  .iw-rec-assign.fill{background:#3a8a5f;color:#fff;padding:6px;font-size:11px;word-break:keep-all}
-  .iw-rec-assign.fill:hover{background:#166841}
+  /* ══ 추천 ══
+     ⛔ `.iw-rec-sel`(다른 선생님 고르기)·추천 줄의 배정 버튼은 2026-08-09에 제거 — 배정 다이얼로그와 중복.
+     행동은 「배정하기」 하나 + 다음 스텝 밑줄 링크(전체 보기=선생님 찾기 / 교사 선택=주간 보기). */
+  .iw-rec{margin-top:11px}
+  .iw-rec-t{font-size:11px;font-weight:700;color:var(--g500);margin-bottom:3px}
+  .iw-ri{display:flex;align-items:baseline;gap:6px;padding:3px 0;font-size:12px;border-bottom:1px solid var(--g100)}
+  .iw-ri:last-of-type{border-bottom:none}
+  .iw-ri .no{color:var(--g500);font-weight:600;min-width:13px;font-variant-numeric:tabular-nums;text-align:right}  /* 숫자 폭 고정 — "1."이 좁아 이름 시작점이 밀리던 것(유성 2026-08-09) */
+  .iw-ri b{font-weight:700}
+  .iw-ri .d{color:var(--green700);font-weight:700}
+  .iw-ri .t{color:var(--g600);flex:1}
+  .iw-ri .c{color:var(--g500)}
+  .iw-ri.none{color:var(--g600);border-bottom:none}
+  .iw-next{margin-top:7px;text-align:center}
+  .iw-txtu{font-family:inherit;border:none;background:none;cursor:pointer;color:var(--g600);font-weight:600;font-size:12px;text-decoration:underline;text-underline-offset:3px;transition:transform .12s}
+  .iw-txtu:active{transform:scale(.93)}
 
   /* ══ 유틸 ══ */
   .loading-overlay{position:fixed;inset:0;z-index:100;background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center}
@@ -790,7 +812,16 @@ function initMap() {
   infoWindow.open = function(m2, mk){
     _iwRawOpen(m2, mk);
     var el = document.querySelector('.iw');
-    if (el) el.classList.toggle('iw-more', el.scrollHeight > el.clientHeight + 1);
+    if (!el) return;
+    var more = el.scrollHeight > el.clientHeight + 1;
+    el.classList.toggle('iw-more', more);
+    if (more){
+      // 끝에 닿으면 페이드 해제(.iw-end) — 여분 패딩 없이 깔끔한 마감(유성 2026-08-10).
+      // 리스너는 setContent가 이 DOM을 갈아끼울 때 함께 사라진다(누수 없음).
+      var upd = function(){ el.classList.toggle('iw-end', el.scrollTop + el.clientHeight >= el.scrollHeight - 4); };
+      el.addEventListener('scroll', upd, {passive:true});
+      upd();
+    }
   };
   kakao.maps.event.addListener(map, 'click', function() { infoWindow.close(); });
   placesService = new kakao.maps.services.Places();
@@ -1386,7 +1417,7 @@ function getCenterImage(){
 }
 function addCenterMarker(pos, name, z){
   var m = new kakao.maps.Marker({position:pos, image:getCenterImage(), map:map, zIndex:z});
-  var iw = '<div class="iw"><div class="iw-title">'+esc(name)+'<span class="iw-badge" style="background:#fee2e2;color:#dc2626">센터</span></div></div>';
+  var iw = '<div class="iw"><div class="iw-nm">'+esc(name)+'<span class="iw-bdg ctr">센터</span></div></div>';
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iw);infoWindow.open(map,m)});
   markers.push(m);
 }
@@ -1418,12 +1449,41 @@ function escQ(s){
     .replace(/[\r\n]/g, ' ');         // ③ 줄바꿈은 JS 문자열을 깨뜨린다
 }
 
+// ── IW 라인 SVG 아이콘 (§3.5 이모지 금지 — 라벨 아이콘=g400 스트로크 상속, 버튼 아이콘=글자색 상속) ──
+var IW_IC = {
+  pin:  '<svg class="iw-kic" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  clock:'<svg class="iw-kic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  cal:  '<svg class="iw-kic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  note: '<svg class="iw-kic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  phone:'<svg class="iw-kic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.5 2.9.6a2 2 0 0 1 1.7 2z"/></svg>',
+  chart:'<svg class="iw-kic" viewBox="0 0 24 24"><path d="M12 20v-6"/><path d="M6 20V10"/><path d="M18 20V4"/></svg>',
+  warn: '<svg class="iw-kic" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+  copy: '<svg class="iw-ci" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  mark: '<svg class="iw-ci" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'
+};
+
+// 라벨·값 행(§4.8) — 라벨 아이콘+텍스트 / 값 HTML(호출부가 esc 책임)
+function iwRow(ic, label, valHtml, valCls) {
+  return '<div class="k">'+IW_IC[ic]+label+'</div><div class="v'+(valCls?' '+valCls:'')+'">'+valHtml+'</div>';
+}
+
+// 희망 시간 = "요일+시간 한 세트" nowrap(유성 2026-08-09 — 요일과 시간이 갈라져 줄바꿈되면 안 읽힘).
+// 구분점 ·는 앞 세트에 붙여 줄 끝에 남긴다.
+function iwSegs(timesStr) {
+  var t = fmtTimes(timesStr);
+  if (!t) return '';
+  var parts = t.split(' | ');
+  return parts.map(function(p, i) {
+    return '<span class="iw-seg">'+esc(p)+(i < parts.length-1 ? ' ·' : '')+'</span>';
+  }).join(' ');
+}
+
 function routeBtns(name,lat,lng) {
   if (!lat||!lng) return '';
   var n=escQ(name);
-  return '<div class="iw-actions">'
-    +'<button class="iw-act from" onclick="setRoute(\'from\',\''+n+'\','+lat+','+lng+')">🟢 출발</button>'
-    +'<button class="iw-act to" onclick="setRoute(\'to\',\''+n+'\','+lat+','+lng+')">🔴 도착</button>'
+  return '<div class="iw-r2">'
+    +'<button class="iw-chip wb" onclick="setRoute(\'from\',\''+n+'\','+lat+','+lng+')"><span class="iw-dot g"></span>출발</button>'
+    +'<button class="iw-chip wb" onclick="setRoute(\'to\',\''+n+'\','+lat+','+lng+')"><span class="iw-dot r"></span>도착</button>'
     +'</div>';
 }
 
@@ -1432,91 +1492,91 @@ function routeBtns(name,lat,lng) {
       같은 라운드에 `doAssignOther`·`_recOtherProviders`도 제거 — 「다른 선생님 고르기」 select는
       배정 다이얼로그의 교사 select(`_asgFillProviders`, 같은 점수·같은 라벨)와 완전히 중복이었다. */
 
-// 북마크(마크 토글) 버튼 — 대기·배정 IW 공용, 행정만. 마크됨이면 '해제', 아니면 '마크'
+// 북마크(마크 토글) 버튼 — 대기·배정 IW 공용, 행정만. 켬=흰+초록 보더 '마크됨' / 끔=회색 '마크'
 function markActBtn(row, marked) {
-  return '<button class="iw-act mark'+(marked?' on':'')+'" onclick="doMark('+row+','+(marked?'false':'true')+')" title="'+(marked?'마크 해제':'마크')+'">🔖</button>';
+  return '<button class="iw-chip '+(marked?'mk-on':'gw')+'" onclick="doMark('+row+','+(marked?'false':'true')+')">'+IW_IC.mark+(marked?'마크됨':'마크')+'</button>';
 }
 
 function buildHomeIW(p) {
-  return '<div class="iw"><div class="iw-title">'+esc(p.name)+'<span class="iw-badge home">선생님</span></div><div class="iw-row">📍 집 위치</div>'+routeBtns(p.name+' 집',p.lat,p.lng)+'</div>';
+  return '<div class="iw"><div class="iw-nm">'+esc(p.name)+'<span class="iw-bdg tc">선생님</span></div>'
+    +'<div class="iw-tbl">'+iwRow('pin','위치','집')+'</div>'
+    +routeBtns(p.name+' 집',p.lat,p.lng)+'</div>';
 }
 
 function buildGroupedAssignedIW(items, hLat, hLng) {
   var h='<div class="iw">';
-  if (items.length>1) h+='<div class="iw-group-label">같은 위치 '+items.length+'명</div>';
+  if (items.length>1) h+='<div class="iw-grp">같은 위치 '+items.length+'명</div>';
   items.forEach(function(c,i) {
-    if (i>0) h+='<hr class="iw-sep">';
+    if (i>0) h+='<div class="iw-sep16"></div>';
     var dist='';
-    if (hLat&&hLng&&c.lat&&c.lng) dist='<span class="iw-badge dist">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
-    h+='<div class="iw-title">'+esc(c.name)+'<span class="iw-badge assigned">'+(c.assignedTo?esc(c.assignedTo)+' 배정':'배정')+'</span>'+dist+'</div>'
-      +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
-    // 🔴 **「스케줄 미정」을 띄우기만 하고 고칠 길이 없었다** (2026-08-09 유성 신고의 절반).
-    //    S·T를 채우는 경로가 '신규 배정' 하나뿐이라 이미 배정된 아이는 요일·시각을 영영 기록 못 했다.
-    //    ⇒ 여기서 바로 같은 배정 다이얼로그를 연다(서버가 같은 선생님이면 S·T만 쓴다).
-    // ⚠️ 문구를 대기 말풍선의 「배정하기」와 **같은 계열**로 맞춘다 — 사용자에겐 하나의 행동
-    //    ("이 아이 담당·시간 정하기")이고, 서버가 어느 열을 쓰느냐는 구현 사정이다(유성 지적).
-    var _schBtn = (isAdmin() && c.formRow)
-      ? '<button class="iw-sch-set" onclick="setChildTime(' + c.formRow + ')">배정·시간 수정</button>' : '';
+    if (hLat&&hLng&&c.lat&&c.lng) dist='<span class="iw-bdg dst">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
+    h+='<div class="iw-nm">'+esc(c.name)+'<span class="iw-bdg as">'+(c.assignedTo?esc(c.assignedTo)+' 배정':'배정')+'</span>'+dist+'</div>';
+    // 🔴 「스케줄 미정」을 띄우기만 하고 고칠 길이 없던 것(2026-08-09) → 확정 행의 정하기/고치기 링크가
+    //    같은 배정 다이얼로그를 연다(서버가 같은 선생님이면 S·T만 쓴다). 링크는 행정만.
+    var _fix = (isAdmin() && c.formRow)
+      ? '<button class="iw-fix" onclick="setChildTime('+c.formRow+')">'+((c.confirmedDay||c.confirmedTime)?'고치기':'정하기')+'</button>' : '';
+    h+='<div class="iw-tbl">';
+    h+=iwRow('pin','주소',esc(c.address));
     if (c.confirmedDay || c.confirmedTime) {
-      h+='<div class="iw-sch"><div>✅ '+esc(c.confirmedDay||'')+' '+esc(c.confirmedTime||'')+' (확정)'+_schBtn+'</div></div>';
-    } else if (c.schedule && c.schedule.length) {
-      h+='<div class="iw-sch">';
-      c.schedule.forEach(function(s){h+='<div>'+esc(s.day)+' '+esc(s.time)+' · '+esc(s.service)+'</div>';});
-      h+='<div style="color:#c0392b">확정 요일·시각 미기록'+_schBtn+'</div></div>';
+      h+=iwRow('clock','확정','<b>'+esc(c.confirmedDay||'')+' '+esc(c.confirmedTime||'')+'</b>'+_fix);
     } else {
-      h+='<div class="iw-sch"><div style="color:#c0392b">스케줄 미정'+_schBtn+'</div></div>';
+      h+=iwRow('clock','확정','아직 없어요'+_fix,'miss');
     }
-    if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+earlyBadge(c.notes)+'</div>';
-    if (c.phone) h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
-    if (c.voucher && c.voucher !== '네') h+='<div class="iw-row" style="color:#c0392b;font-weight:600">⚠️ 바우처: '+esc(c.voucher)+'</div>';
-    if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
-    var ci = registerCopyData(c);
-    h+='<div class="iw-actions">';
-    if (isAdmin() && c.formRow) h+='<button class="iw-act unassign" onclick="doUnassign('+c.formRow+')">배정취소</button>';  // 배정취소는 행정만
-    h+='<button class="iw-act copy" onclick="doCopy('+ci+')" title="복사">📋</button>';
-    if (isAdmin() && c.formRow) h+=markActBtn(c.formRow, c.marked);   // 복사 오른쪽 북마크(배정 아동도 마크 가능)
+    if (c.times) h+=iwRow('cal','희망',iwSegs(c.times)+earlyBadge(c.notes));
+    // 확정은 없는데 대장 수업 기록이 있는 제3상태 — '기록' 행(라벨명 유성 확정 2026-08-10)
+    if (!(c.confirmedDay||c.confirmedTime) && c.schedule && c.schedule.length) {
+      var schHtml = c.schedule.map(function(s,si){
+        return '<span class="iw-seg">'+esc(s.day)+' '+esc(s.time)+' '+esc(s.service)+(si<c.schedule.length-1?' ·':'')+'</span>';
+      }).join(' ');
+      h+=iwRow('chart','기록',schHtml);
+    }
+    if (c.notes) h+=iwRow('note','참고',esc(c.notes),'dim');
+    if (c.phone) h+=iwRow('phone','전화','<a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a>');
+    if (c.voucher && c.voucher !== '네') h+=iwRow('warn','바우처',esc(c.voucher),'vwarn');
     h+='</div>';
+    // 1차 액션 = 배정 취소(fill 레드, 미정이어도 — 유성 확정. 출발/도착 위 = 대기 IW의 배정하기와 같은 자리)
+    if (isAdmin() && c.formRow) h+='<button class="iw-fillbtn del" onclick="doUnassign('+c.formRow+')">배정 취소</button>';
     h+=routeBtns(c.name,c.lat,c.lng);
+    var ci = registerCopyData(c);
+    h+='<div class="iw-r3">'
+      +'<button class="iw-chip gw" onclick="doCopy('+ci+')">'+IW_IC.copy+'복사</button>'
+      +(isAdmin() && c.formRow ? markActBtn(c.formRow, c.marked) : '')
+      +'</div>';
   });
   return h+'</div>';
 }
 
 function buildGroupedWaitingIW(items, hLat, hLng) {
   var h='<div class="iw">';
-  if (items.length>1) h+='<div class="iw-group-label">같은 위치 '+items.length+'명</div>';
+  if (items.length>1) h+='<div class="iw-grp">같은 위치 '+items.length+'명</div>';
   items.forEach(function(c,i) {
-    if (i>0) h+='<hr class="iw-sep">';
-    var sb=c.status==='부재1'?'<span class="iw-badge absent">부재1</span>':'';
+    if (i>0) h+='<div class="iw-sep16"></div>';
+    var sb=c.status==='부재1'?'<span class="iw-bdg ab">부재1</span>':'';
     var dist='';
-    if (hLat&&hLng&&c.lat&&c.lng) dist='<span class="iw-badge dist">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
-    h+='<div class="iw-title">'+esc(c.name)+'<span class="iw-badge waiting">대기</span>'+sb+dist
-      +' <span style="color:#aaa;font-size:11px;font-weight:400">'+c.row+'행</span></div>'
-      +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
-    if (c.phone) h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
-    if (c.times) h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+earlyBadge(c.notes)+'</div>';
-    if (c.voucher && c.voucher !== '네') h+='<div class="iw-row" style="color:#c0392b;font-weight:600">⚠️ 바우처: '+esc(c.voucher)+'</div>';
-    if (c.notes) h+='<div class="iw-notes">📋 '+esc(c.notes)+'</div>';
-    if (c.sigungu||c.bname) h+='<div class="iw-row" style="color:#aaa">'+esc(c.sigungu)+' '+esc(c.bname)+'</div>';
+    if (hLat&&hLng&&c.lat&&c.lng) dist='<span class="iw-bdg dst">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
+    h+='<div class="iw-nm">'+esc(c.name)+'<span class="iw-bdg wt">대기</span>'+sb+dist
+      +'<span class="iw-rowno">'+c.row+'행</span></div>';
+    var region=(c.sigungu||c.bname)?'<span class="sub">'+esc(c.sigungu)+' '+esc(c.bname)+'</span>':'';
+    h+='<div class="iw-tbl">';
+    h+=iwRow('pin','주소',esc(c.address)+region);
+    if (c.times) h+=iwRow('cal','희망',iwSegs(c.times)+earlyBadge(c.notes));
+    if (c.notes) h+=iwRow('note','참고',esc(c.notes),'dim');
+    if (c.phone) h+=iwRow('phone','전화','<a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a>');
+    if (c.voucher && c.voucher !== '네') h+=iwRow('warn','바우처',esc(c.voucher),'vwarn');
+    h+='</div>';
 
-    // 배정추천·배정/거절/복사 = 행정만 (제공인력·기본은 숨김)
-    if (isAdmin()) {
-      h += buildRecommendation(c);
-      var ci = registerCopyData(c);
-      var absentLabel = c.status === '부재1' ? '📵2' : '📵';
-      // ⚠️ 여기 있던 `assignBtn`은 뺐다 — 바로 위 추천 블록의 「배정하기」와 **같은 `doAssign`**이라
-      //    한 말풍선에 같은 행동이 두 번 있었다(유성 "버튼이 너무 많아지는 거 아니야?").
-      h+='<div class="iw-actions">'
-        +'<button class="iw-act absent" onclick="doAbsent('+c.row+',\''+esc(c.status||'')+'\')">'+absentLabel+'</button>'
-        +'<button class="iw-act reject" onclick="doStatus('+c.row+',\'거절\')">✕</button>'
-        +'<button class="iw-act copy" onclick="doCopy('+ci+')" title="복사">📋</button>'
-        +markActBtn(c.row, c.marked)   // 복사 오른쪽 북마크 → 마크 아동으로
-        +'</div>';
-    }
+    // 배정추천(배정하기+다음 스텝 링크 포함)·부재/거절/복사/마크 = 행정만 (제공인력·기본은 숨김)
+    if (isAdmin()) h += buildRecommendation(c);
     // 출발/도착(길찾기) = 제공인력·행정 (기본지도는 좌표가 뭉개져 있어 숨김)
-    if (MODE !== 'basic') {
-      h+='<div class="iw-actions">'
-        +'<button class="iw-act from" onclick="setRoute(\'from\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🟢 출발</button>'
-        +'<button class="iw-act to" onclick="setRoute(\'to\',\''+escQ(c.name)+'\','+c.lat+','+c.lng+')">🔴 도착</button>'
+    if (MODE !== 'basic') h+=routeBtns(c.name,c.lat,c.lng);
+    if (isAdmin()) {
+      var ci = registerCopyData(c);
+      // ⚠️ 여기 있던 `assignBtn`은 뺐다 — 추천 블록의 「배정하기」와 같은 `doAssign`이라 중복(유성 2026-08-09)
+      h+='<div class="iw-r3">'
+        +'<button class="iw-chip ww" onclick="doAbsent('+c.row+',\''+esc(c.status||'')+'\')">'+(c.status==='부재1'?'부재2':'부재')+'</button>'
+        +'<button class="iw-chip dw" onclick="doStatus('+c.row+',\'거절\')">거절</button>'
+        +'<button class="iw-chip gw" onclick="doCopy('+ci+')">'+IW_IC.copy+'복사</button>'
+        +markActBtn(c.row, c.marked)
         +'</div>';
     }
   });
@@ -1530,59 +1590,38 @@ function buildRecommendation(child) {
   if (!providerList || !providerList.length || !child.lat || !child.lng) return '';
 
   var recs = getRecommendations(child);
-  // ⚠️ 추천이 0명이어도 통째로 숨기지 않는다 — 아래 '다른 선생님' 줄에서 고를 수 있어야 하고,
-  //    담당자가 "추천이 안 나온다"는 사실 자체를 알아야 한다(빈 화면은 고장인지 결과인지 구분이 안 된다).
-  var h = '<div class="iw-rec"><div class="iw-rec-title">📋 배정 추천</div>';
-
-  // 🔴 **추천 줄의 배정 버튼을 뺐다** (유성 2026-08-09: *"버튼이 너무 많아지는 거 아니야?"*).
-  //    실물을 열어보니 배정 다이얼로그의 교사 select가 **같은 점수로 정렬**되고 거리·시간겹침
-  //    라벨까지 같이 붙는다(`_asgFillProviders`) → 추천 3줄 + 「다른 선생님 고르기」는
-  //    다이얼로그와 **정보·순서·행동이 전부 중복**이었다. 여기선 **읽기 전용**으로만 두고
-  //    행동은 아래 「배정하기」 하나로 모은다(1순위는 다이얼로그가 자동 선택하므로 클릭 수 동일).
+  // ⚠️ 추천이 0명이어도 통째로 숨기지 않는다 — 담당자가 "추천이 안 나온다"는 사실 자체를 알아야 한다
+  //    (빈 화면은 고장인지 결과인지 구분이 안 된다).
+  // 🔴 추천 줄의 배정 버튼·「다른 선생님 고르기」 select는 2026-08-09에 뺐다 — 배정 다이얼로그의
+  //    교사 select가 같은 점수·순서·라벨(`_asgFillProviders`)이라 정보·행동이 전부 중복.
+  //    여긴 읽기 전용 + 행동은 「배정하기」 하나(1순위는 다이얼로그가 자동 선택하므로 클릭 수 동일).
+  var h = '<div class="iw-rec"><div class="iw-rec-t">배정 추천</div>';
   recs.forEach(function(r, idx) {
-    h += '<div class="iw-rec-item">'
-      + '<div class="iw-rec-rank">' + (idx+1) + '</div>'
-      + '<div class="iw-rec-name">' + esc(r.name) + '</div>'
-      + '<div class="iw-rec-dist">' + fmtDist(r.dist) + '</div>'
-      + '<div class="iw-rec-time">' + esc(r.timeLabel) + '</div>'
-      + '<div class="iw-rec-count">(' + r.assignedCount + '명)</div>'
+    h += '<div class="iw-ri">'
+      + '<span class="no">' + (idx+1) + '.</span>'
+      + '<b>' + esc(r.name) + '</b>'
+      + '<span class="d">' + fmtDist(r.dist) + '</span>'
+      + '<span class="t">' + esc(r.timeLabel) + '</span>'
+      + '<span class="c">' + r.assignedCount + '명</span>'
       + '</div>';
   });
   if (!recs.length) {
-    h += '<div class="iw-rec-item" style="color:#8b95a1">가까우면서 시간이 맞는 선생님이 없습니다</div>';
+    h += '<div class="iw-ri none">가까우면서 시간이 맞는 선생님이 없어요</div>';
   }
 
-  // ── 다음 스텝 ── 유성 2026-08-08: *"마커 말풍선은 그냥 뭐 어쩌라는 느낌? 이게 끝?
-  //    이렇게 했으면 뭐 다음 스텝을 어떻게 해야하는 건지를 모르겠는 느낌?"*
-  //
-  // ⚠️ 2026-08-09 유성: *"동선까지 따져 선생님 찾기는 뭔지? 이미 김주희를 선택한 상태에서 그건 왜 나오는 건지?"*
-  //    맞는 지적 — 교사를 **이미 고른 상태**에서 "선생님을 찾자"는 건 앞뒤가 안 맞는 다음 스텝이다.
-  //    ⇒ 지금 상태에 따라 다음 스텝이 갈린다:
-  //       · 전체 보기(__ALL__)  → 이 아이를 **누가** 맡을지가 남은 질문 → 모드 B(교사 후보)
-  //       · 특정 교사 선택      → 그 교사의 **주간 어디에** 넣을지가 남은 질문 → 모드 A(배치안)
-  // ⚠️ 색: 옛 인라인 `background:#191f28`(검정) + 초록 글자는 대비 **2.68:1**로 AA 4.5 미달이었고
-  //    이 페이지 팔레트에도 없는 조합이었다(유성 지적). 채움 초록 + 흰 글자 = **6.19:1** 로 교체.
-  // ── 행동은 **여기 하나** ──
-  // ⚠️ 「다른 선생님 고르기」 select도 뺐다 — 다이얼로그의 교사 select가 **전원**을 같은 순서로
-  //    담고 있어서(추천 3명 + 나머지) 여기서 또 고를 이유가 없었다.
-  h += '<div class="iw-rec-item" style="padding-top:6px">'
-    + '<button class="iw-rec-assign fill" style="width:100%"'
-    + ' onclick="doAssign(' + child.row + ')">배정하기</button></div>';
+  h += '<button class="iw-fillbtn go" onclick="doAssign(' + child.row + ')">배정하기</button>';
 
-  // ── 다음 스텝(선택) ── 유성 2026-08-08: *"마커 말풍선은 그냥 뭐 어쩌라는 느낌? 이게 끝?"*
-  //    지금 상태에 따라 갈린다:
-  //      · 전체 보기(__ALL__)  → 이 아이를 **누가** 맡을지가 남은 질문 → 모드 B(교사 후보)
-  //      · 특정 교사 선택      → 그 교사의 **주간 어디에** 넣을지가 남은 질문 → 모드 A(배치안)
+  // ── 다음 스텝(밑줄 링크) ── 상태에 따라 갈린다(유성 2026-08-09):
+  //    · 전체 보기(__ALL__) → 이 아이를 **누가** 맡을지가 남은 질문 → 모드 B(교사 후보)
+  //    · 특정 교사 선택     → 그 교사의 **주간 어디에** 넣을지가 남은 질문 → 모드 A(배치안)
   var _psel = document.getElementById('providerSelect');
   var _pnow = _psel ? _psel.value : '';
   var _hasProv = isAdmin() && _pnow && _pnow !== '__ALL__';
-  h += '<div class="iw-rec-item" style="padding-top:2px">'
+  h += '<div class="iw-next">'
     + (_hasProv
-        ? '<button class="iw-rec-assign line" style="width:100%"'
-          + ' onclick="planFromChild(' + child.row + ',' + (child.marked ? 'true' : 'false') + ')">'
+        ? '<button class="iw-txtu" onclick="planFromChild(' + child.row + ',' + (child.marked ? 'true' : 'false') + ')">'
           + esc(_pnow) + '님 주간에서 보기</button>'
-        : '<button class="iw-rec-assign line" style="width:100%"'
-          + ' onclick="planForChild(' + child.row + ',\'' + escQ(child.name) + '\')">'
+        : '<button class="iw-txtu" onclick="planForChild(' + child.row + ',\'' + escQ(child.name) + '\')">'
           + '동선까지 따져 선생님 찾기</button>')
     + '</div>';
   return h + '</div>';
@@ -1639,7 +1678,7 @@ function noteEarliest(notes) {
 }
 function earlyBadge(notes) {
   var e = noteEarliest(notes);
-  return e ? '<span class="iw-early">' + e + '부터</span>' : '';
+  return e ? '<span class="iw-hint">' + e + '부터</span>' : '';
 }
 
 function calcTimeOverlap(childTimes, provAvail) {
@@ -2136,7 +2175,7 @@ function handleMapPointPick(latlng) {
     }
     addr = shortAddr(addr);  // '인천광역시/인천시' → '인천' 통일(#1)
     // 좌표 줄은 제거. 주소는 word-break:keep-all로 단어 단위 줄바꿈(번지만 떨어지는 것 방지)
-    var iw = '<div class="iw"><div class="iw-title iw-addr">📍 ' + esc(addr) + '</div>'
+    var iw = '<div class="iw"><div class="iw-nm iw-addr">' + esc(addr) + '</div>'
       + routeBtns(addr, lat, lng) + '</div>';
     var sm = placeSearchMarker(lat, lng, iw);  // 검색 핀과 동일(임의 지점 = 빨강)
     infoWindow.setContent(iw);
@@ -2361,7 +2400,7 @@ function setupLongPress(el) {
         if (!lat || !lng) return;
         map.setCenter(new kakao.maps.LatLng(lat, lng));
         map.setLevel(3);
-        var iwContent = '<div class="iw"><div class="iw-title">📍 '+esc(name)+'</div>'
+        var iwContent = '<div class="iw"><div class="iw-nm iw-addr">'+esc(name)+'</div>'
           + routeBtns(name, lat, lng)
           + '</div>';
 
