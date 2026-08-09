@@ -64,7 +64,7 @@
     padding:5px 10px;border-radius:6px;font-size:11px;font-family:inherit;
     cursor:pointer;border:1.5px solid #e5e8eb;background:#fff;color:#666;transition:all .15s;
   }
-  .fbtn.active{background:#3a8a5f;color:#fff;border-color:#3a8a5f}
+  .fbtn.active{background:#166841;color:#fff;border-color:#166841}
   #filterMark.active{background:#ef4444;border-color:#ef4444}  /* 마크 필터 = 빨강 */
 
   /* ══ 대시보드 바 ══ */
@@ -119,7 +119,7 @@
      `absolute`면 지도가 아니라 **문서** 기준이라 ①FAB이 바닥에서 74px 떠 있고(유성: "우하단에 안 붙어")
      ②요일 버튼이 `top:12px` = **상단바 뒤**로 들어가 영영 안 보였다(유성: "애초에 있긴 한건가?").
      ⇒ 화면 고정(`fixed`)으로 통일하고 상단바(76px, 모바일 70px) 아래로 내린다. .legend·.nl-fab과 같은 방식. */
-  #planFab{position:fixed;right:14px;bottom:16px;z-index:45;display:none;background:#3a8a5f;color:#fff;
+  #planFab{position:fixed;right:14px;bottom:16px;z-index:45;display:none;background:#166841;color:#fff;
            border:0;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;font-family:inherit;
            cursor:pointer;box-shadow:0 4px 14px rgba(58,138,95,.42)}
   #planFab.on{display:block}
@@ -178,7 +178,7 @@
   .pwhy{font-size:11.5px;color:#4e5968;background:#f2f4f6;border-radius:9px;padding:9px 11px;margin-top:9px;line-height:1.55}
   .pdrop{margin-top:9px;font-size:11.5px;color:#9a2d22;background:#fdeeec;border-radius:9px;padding:9px 11px}
   .padj{margin-top:9px;font-size:11.5px;color:#7a5200;background:#fff7e6;border-radius:9px;padding:9px 11px;line-height:1.55}
-  .pbtn{width:100%;margin-top:11px;border:0;border-radius:11px;background:#3a8a5f;color:#fff;
+  .pbtn{width:100%;margin-top:11px;border:0;border-radius:11px;background:#166841;color:#fff;
         font-size:13.5px;font-weight:700;padding:12px;font-family:inherit;cursor:pointer;letter-spacing:-.2px}
   .pbtn:active{transform:scale(.97)}
   .pbtn.gray{background:#f2f4f6;color:#4e5968}
@@ -214,7 +214,7 @@
   .pwg{font-size:10px;font-weight:700;border-radius:999px;padding:1px 6px;white-space:nowrap}
   .pwg.lock{color:#3d4a5c;background:#e8edf3}
   .pwg.time{color:#1d5f8a;background:#e7f1f9}
-  .pwg.new{color:#fff;background:#3a8a5f}
+  .pwg.new{color:#fff;background:#166841}
   .pwn{font-weight:600;color:#191f28}
   .pwx{font-size:10px;color:#8a5a00;background:#fff7e6;border-radius:999px;padding:1px 6px}
   .pwd2{margin-left:auto;color:#8b95a1;font-size:10.5px}
@@ -243,7 +243,7 @@
   .pqb button{flex:1 1 46%;border:1.5px solid #d1d6db;border-radius:10px;background:#fff;color:#4e5968;
               font-family:inherit;font-size:12.5px;font-weight:700;padding:10px 4px;cursor:pointer;
               word-break:keep-all}
-  .pqb button.go{flex:1 1 100%;border-color:#3a8a5f;background:#3a8a5f;color:#fff}
+  .pqb button.go{flex:1 1 100%;border-color:#166841;background:#166841;color:#fff}
   .pqb button:active{transform:scale(.97)}
   .plog{font-size:11px;color:#4e5968;background:#f8f9fa;border-radius:8px;padding:7px 9px;margin-top:5px;line-height:1.5}
   .pdone{display:flex;align-items:center;gap:6px;font-size:11.5px;padding:6px 2px;border-bottom:1px solid #f2f4f6}
@@ -279,7 +279,10 @@
      주소가 한 줄 더 래핑, 마지막 줄이 말풍선 밖)는 폭 고정으로 원천 소멸: 측정 때와 렌더 때 폭이
      항상 같다. 말풍선 지오메트리·라운딩·그림자는 infoWindow.open 래퍼가 동기화(카카오 DOM은
      클래스가 없어 CSS로 못 잡는다). 밀집 위치는 max-height:340 내부 스크롤이 캡(유성 340 확정). */
-  .iw{width:265px;padding:13px 13px 12px;font-family:inherit;font-size:12px;line-height:1.5;max-height:340px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
+  /* max-height는 CSS가 아니라 open 래퍼가 정한다(유성 2026-08-10): 단인 = 카드 전부 보임(스크롤 0) /
+     다인 = 첫 아동 + 회색 띠(border-bottom 라인)까지만, 아래는 페이드 스크롤. position:relative =
+     래퍼가 sep 띠의 offsetTop을 .iw 기준으로 재기 위함. */
+  .iw{width:265px;position:relative;padding:13px 13px 12px;font-family:inherit;font-size:12px;line-height:1.5;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
   /* 스크롤바 숨김 + 넘칠 때만 아래 32px 투명 페이드(docs/1 "넘치는 목록은 아래쪽 페이드로 끝을 알린다",
      08 반출납 .body와 같은 처방 — 유성 2026-08-09 지도 적용, 깊이 32px = 유성 2026-08-10 실기기 확정).
      스크롤바는 말풍선 테두리 위에 그려져 경계를 침범하던 것이기도 하다.
@@ -331,7 +334,7 @@
   .iw-chip.dw{background:var(--danger-weak-bg);color:var(--danger-weak-fg)}
   .iw-chip.ww{background:var(--warn-weak-bg);color:var(--warn-weak-fg)}
   .iw-chip.wb{background:#fff;border:1px solid var(--g200);box-shadow:0 1px 3px rgba(25,31,40,.08);color:var(--g700)}   /* 출발/도착 = §4.17 취소칩 결(라운딩만 기존 8) */
-  .iw-chip.mk-on{background:#fff;border:1px solid var(--green600);box-shadow:0 1px 3px rgba(25,31,40,.08);color:var(--green700)}  /* 마크됨 = 흰+초록 보더(유성 — fill 레드 반려) */
+  .iw-chip.mk-on{background:#fff;border:1px solid var(--green700);box-shadow:0 1px 3px rgba(25,31,40,.08);color:var(--green700)}  /* 마크됨 = 흰+초록 보더(유성 — fill 레드 반려). 보더=글자와 동색 green700 */
   .iw-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
   .iw-dot.g{background:var(--green600)}
   .iw-dot.r{background:var(--danger)}
@@ -341,7 +344,7 @@
   .iw-r3 .iw-chip{flex:1}
   .iw-fillbtn{font-family:inherit;border:none;cursor:pointer;width:100%;font-weight:700;border-radius:9px;margin-top:10px;padding:10px 0;font-size:13px;transition:transform .12s,filter .15s}
   .iw-fillbtn:active{transform:scale(.97);filter:brightness(.92)}
-  .iw-fillbtn.go{background:var(--green600);color:#fff}   /* ⛔ 검정 채움+초록 글자(2.68:1 미달)로 되돌리지 말 것(유성 2026-08-09) */
+  .iw-fillbtn.go{background:var(--green700);color:#fff}   /* 채움=green700 통일(유성 2026-08-10 — 로고·링크·홈페이지와 한 벌, 흰 글자 6.79:1). ⛔ 검정 채움+초록 글자(2.68:1)로 되돌리지 말 것 */
   .iw-fillbtn.del{background:var(--danger);color:#fff}
 
   /* ══ 길찾기 패널 ══ */
@@ -365,13 +368,13 @@
     font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;
     text-decoration:none;color:#fff;transition:all .15s;
   }
-  .route-go.ready{background:#3a8a5f}.route-go.ready:hover{background:#166841}
+  .route-go.ready{background:#166841}.route-go.ready:hover{background:#01492a}
   .route-go.disabled{background:#ddd;color:#aaa;pointer-events:none}
 
   /* ══ 마커 라벨 ══ */
   .mlbl{padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;transform:translateX(-50%)}
   .mlbl.home{color:#1d4ed8;margin:14px 0 0 0}
-  .mlbl.assigned{margin:-46px 0 0 0}
+  .mlbl.assigned{margin:-44px 0 0 0}   /* 폴백 — 실제 margin은 addLabel이 마커 높이별 인라인(앵커점 함정) */
   .mlbl.mark{color:#dc2626;margin:4px 0 0 0}   /* 마크 아동 이름 = 빨강, 마커 바로 아래 (북마크는 바닥앵커라 home 링과 같은 근접감 내려면 margin 작게) */
 
   /* ══ 추천 ══
@@ -405,7 +408,7 @@
   .nl-fab{
     position:fixed;right:14px;top:92px;z-index:44;
     width:44px;height:44px;border-radius:50%;
-    background:#3a8a5f;color:#fff;border:none;cursor:pointer;
+    background:#166841;color:#fff;border:none;cursor:pointer;
     box-shadow:0 4px 14px rgba(0,0,0,.18);
     font-size:18px;display:flex;align-items:center;justify-content:center;
     transition:all .2s;
@@ -436,7 +439,7 @@
   .nl-controls{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #eee;background:#fafaf7}
   .nl-sort{display:flex;gap:4px}
   .nl-sort-btn{flex:1;padding:6px;border:1.5px solid #e0dcd5;background:#fff;color:#888;border-radius:7px;font-size:11.5px;font-family:inherit;cursor:pointer;transition:all .15s}
-  .nl-sort-btn.active{background:#3a8a5f;color:#fff;border-color:#3a8a5f;font-weight:600}
+  .nl-sort-btn.active{background:#166841;color:#fff;border-color:#166841;font-weight:600}
   .nl-filters{display:flex;gap:6px}
   .nl-filters select{flex:1;font-size:11.5px;padding:5px 22px 5px 8px;border-radius:6px}
   .nl-list{flex:1;overflow-y:auto;padding:6px 8px}
@@ -502,10 +505,10 @@
   .sm-input:focus{background:#fff;border-color:#3a8a5f}
   .sm-input + .sm-input{margin-top:10px}
   .sm-code{letter-spacing:8px;text-align:center;font-size:21px;font-weight:600}
-  .sm-btn{width:100%;font-family:inherit;font-size:16px;font-weight:700;padding:16px;border-radius:14px;border:none;background:#3a8a5f;color:#fff;cursor:pointer;margin-top:16px;transition:background .12s,transform .08s}
-  .sm-btn:active{background:#2f6f4d;transform:scale(.99)}
+  .sm-btn{width:100%;font-family:inherit;font-size:16px;font-weight:700;padding:16px;border-radius:14px;border:none;background:#166841;color:#fff;cursor:pointer;margin-top:16px;transition:background .12s,transform .08s}
+  .sm-btn:active{background:#01492a;transform:scale(.99)}
   .sm-btn:disabled{background:#e5e8eb;color:#8b95a1;cursor:default;transform:none}
-  .sm-ghost{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;font-weight:600;padding:15px;border-radius:14px;border:1.5px solid #cfe6d8;background:#fff;color:#2f6f4d;cursor:pointer;margin-top:10px}
+  .sm-ghost{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;font-weight:600;padding:15px;border-radius:14px;border:1.5px solid #e5e8eb;background:#fff;color:#166841;cursor:pointer;margin-top:10px}
   .sm-ghost:active{background:#f0f7f3}
   .sm-link{width:100%;font-family:inherit;font-size:13.5px;font-weight:500;padding:12px;border:none;background:none;color:#8b95a1;cursor:pointer;margin-top:4px}
   .sm-close{width:100%;font-family:inherit;font-size:14px;font-weight:600;padding:13px;border:none;background:none;color:#8b95a1;cursor:pointer;margin-top:6px}
@@ -524,7 +527,7 @@
   .asg-slot{font-family:inherit;font-size:14px;font-weight:600;padding:10px 14px;border-radius:12px;
             border:1.5px solid #e5e8eb;background:#fff;color:#4e5968;cursor:pointer;transition:all .12s}
   .asg-slot:active{transform:scale(.97)}
-  .asg-slot.on{border-color:#3a8a5f;background:#eef7f1;color:#2f6f4d}
+  .asg-slot.on{border-color:#3a8a5f;background:#e9f8ee;color:#166841}
   .asg-more{font-family:inherit;font-size:13px;font-weight:600;color:#8b95a1;background:none;border:none;
             cursor:pointer;padding:10px 2px;margin-top:4px}
   .asg-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
@@ -582,9 +585,9 @@
 <div class="controls">
   <div class="logo">오감쑥쑥 <span>지도</span></div>
   <a id="dashLink" href="dashboard.html" style="font-size:10px;color:#999;text-decoration:none;border:1px solid #ddd;padding:3px 8px;border-radius:4px">📊</a>
-  <button id="staffLoginBtn" onclick="staffLogin()" style="display:none;font-size:11px;color:#3a8a5f;background:#fff;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">👤 제공인력 로그인</button>
+  <button id="staffLoginBtn" onclick="staffLogin()" style="display:none;font-size:11px;color:#166841;background:#fff;border:1px solid #e5e8eb;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">👤 제공인력 로그인</button>
   <button id="adminKeyBtn" onclick="adminKeyLogin()" style="display:none;font-size:11px;color:#166841;background:#fff;border:1px solid #e5e8eb;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">🔑 행정</button>
-  <span id="staffWhoami" style="display:none;font-size:11px;color:#3a8a5f;background:#eef7f1;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px">👤 <b>제공인력</b></span>
+  <span id="staffWhoami" style="display:none;font-size:11px;color:#166841;background:#e9f8ee;border:1px solid #e5e8eb;padding:3px 10px;border-radius:4px">👤 <b>제공인력</b></span>
   <div class="divider"></div>
   <select id="providerSelect"></select>
   <div class="filter-group">
@@ -815,10 +818,19 @@ function initMap() {
     // 말풍선(카카오 DOM, 클래스 없음 = CSS 불가)을 프리뷰 카드 모양으로 동기화(유성 2026-08-10):
     // 폭·높이를 콘텐츠에 정확히 맞추고(±2px 어긋남·sep 띠가 테두리 밖으로 비어져 나오던 것 해소)
     // 라운딩 8·그림자 + overflow:hidden(라운딩이 안쪽 콘텐츠·회색 띠까지 깎게).
+    // 높이 규칙(유성 2026-08-10): 단인 = 카드 전부(스크롤 0) / 다인 = 첫 아동 + 회색 띠 border-bottom
+    // 라인까지만 기본 표시, 아래는 페이드 스크롤. 카카오는 전체 높이 기준으로 top을 잡았으므로
+    // 줄인 만큼 top을 내려 말풍선 바닥(꼬리·마커 앵커)을 제자리에 유지한다.
     var bub = el.parentElement && el.parentElement.parentElement;
     if (bub && bub.style && bub.style.position === 'absolute') {
+      var oldH = parseFloat(bub.style.height) || bub.offsetHeight;
+      var oldT = parseFloat(bub.style.top) || 0;
+      var sep = el.querySelector('.iw-sep16');
+      el.style.maxHeight = sep ? (sep.offsetTop + sep.offsetHeight) + 'px' : '';
+      var newH = el.offsetHeight + 2;
       bub.style.width = (el.offsetWidth + 2) + 'px';
-      bub.style.height = (el.offsetHeight + 2) + 'px';
+      bub.style.height = newH + 'px';
+      bub.style.top = (oldT + (oldH - newH)) + 'px';
       bub.style.borderRadius = '8px';
       bub.style.boxShadow = '0 4px 10px rgba(25,31,40,.08)';
       bub.style.overflow = 'hidden';
@@ -1274,7 +1286,7 @@ function renderMarkers() {
     } else if (uq.length >= 2 && uq.length <= 3) {
       label = uq.map(function(n){ return n.charAt(0); }).join('·');
     }
-    if (label && !hideAssignedLabels()) addLabel(g.lat, g.lng, label, 'assigned'); // 완전 축소 시 숨김
+    if (label && !hideAssignedLabels()) addLabel(g.lat, g.lng, label, 'assigned', g.items.length > 1 ? 32 : 26); // 완전 축소 시 숨김. 마커높이=단일 26·숫자 32
   });
 
   if (showWaiting) {
@@ -1306,7 +1318,12 @@ function renderMarkers() {
 // markerH = 마커가 점(latlng) 위로 솟은 픽셀 높이. 이걸로 라벨을 마커 위에 '바짝' 붙인다(#5).
 // home(테두리 링)은 가운데 정렬이라 이름을 원 '아래'에 둔다(#2).
 function addLabel(lat, lng, text, type, markerH) {
-  var content = '<div class="mlbl '+type+'">'+text+'</div>';
+  // 배정 라벨(교사 성)은 마커 위에 앉는다 — margin은 앵커점(좌표) 기준이라 마커 높이별로 계산해야
+  // 시각 간격이 같다(map-marker-label-anchor-gap 메모리. 옛 고정 -46px은 단일 마커(높이 26)에서
+  // 라벨이 6px 떠 보이고 숫자 마커(32)에선 붙어 보였다 — 유성 2026-08-10 "마커마다 다르다" 적발).
+  // 식 = -(마커높이 + 라벨높이 14 + 간격 2)
+  var style = (type === 'assigned' && markerH) ? ' style="margin-top:-' + (markerH + 16) + 'px"' : '';
+  var content = '<div class="mlbl '+type+'"'+style+'>'+text+'</div>';
   var opts = {
     position: new kakao.maps.LatLng(lat, lng),
     content: content,
@@ -1982,15 +1999,29 @@ function doUnassign(row) {
   }).catch(function(e) { showLoading(false); if (undo) undo(); showToast('처리 실패: '+e.message); });
 }
 
-// 마크 토글 (북마크 버튼) — 확인창 없음(가벼운 개인 뷰 토글). 성공 시 응답 동봉 데이터로 반영
+// 마크 토글 (북마크 버튼) — 확인창 없음(가벼운 개인 뷰 토글).
+// 낙관 반영(유성 2026-08-10 "해제 로딩이 너무 오래"): 결과가 결정적(marked 뒤집기)이라 화면 먼저(대기 0초),
+// 서버는 뒤에서 확정. doUnassign과 같은 패턴 — undo 실패 시에만 옛 로딩바 경로.
 function doMark(row, on) {
-  showLoading(true); infoWindow.close();
+  infoWindow.close();
+  var undo = _optimisticMark(row, on);
+  if (!undo) showLoading(true);
   fetchGAS('mark', { row: row, on: on ? '1' : '0', service: currentService, ctx: _ctxKeyName() }).then(function(res) {
     showLoading(false);
-    if (res.error) { showToast(res.error); return; }
+    if (res.error) { if (undo) undo(); showToast(res.error); return; }
     showToast(on ? '마크됨' : '마크 해제', true);
     _afterWrite(res);
-  }).catch(function(e) { showLoading(false); showToast('처리 실패: '+e.message); });
+  }).catch(function(e) { showLoading(false); if (undo) undo(); showToast('처리 실패: '+e.message); });
+}
+
+// 마크 낙관 반영 — 대상 아동의 marked만 뒤집고 즉시 재렌더. 반환 = 되돌리기 함수.
+function _optimisticMark(row, on) {
+  var c = _findChildByRow(row);
+  if (!c) return null;
+  var prev = !!c.marked;
+  c.marked = !!on;
+  _renderCurrent();
+  return function undo() { c.marked = prev; _renderCurrent(); };
 }
 
 var _copyData = [];
@@ -3104,7 +3135,7 @@ function _planViewRoster() {
       + sm.mismatches.map(function(m) {
           return esc(m.name) + ' — 시트 <b>' + esc(m.mismatch.sheetDay + ' ' + m.mismatch.sheetTime) + '</b>'
             + ' · 실제(최근 8주) <b>' + esc(m.mismatch.realDay + ' ' + m.mismatch.realTime) + '</b>'
-            + ' <a href="javascript:void(0)" style="color:#3a8a5f;font-weight:700" onclick="planSetTime(' + m.row + ')">시트 맞추기 →</a>';
+            + ' <a href="javascript:void(0)" style="color:#166841;font-weight:700" onclick="planSetTime(' + m.row + ')">시트 맞추기 →</a>';
         }).join('<br>')
       + '<br><span style="color:#8b95a1">배치안은 <b>실제</b>를 씁니다 — 선생님이 시간을 옮긴 것이 시트에 안 반영된 거예요.</span></div>';
   }
@@ -3160,10 +3191,10 @@ function _planViewRoster() {
     //    확정하면 틀린 시각이 박히므로, 그 자리에서 직접 지정할 길을 준다(기존 배정 다이얼로그 재사용).
     if (r.status === 'needs-time') {
       h += '<div class="plog">시트에 요일·시각이 없어 <b>' + esc((r.day || '') + ' ' + (r.time || '')) + '</b>로 제안했어요.'
-        + ' 실제와 다르면 <a href="javascript:void(0)" style="color:#3a8a5f;font-weight:700" onclick="planSetTime(' + r.row + ')">직접 지정 →</a></div>';
+        + ' 실제와 다르면 <a href="javascript:void(0)" style="color:#166841;font-weight:700" onclick="planSetTime(' + r.row + ')">직접 지정 →</a></div>';
     }
     if (r.status === 'impossible' || r.status === 'crowded-out') {
-      h += '<div class="plog"><a href="javascript:void(0)" style="color:#3a8a5f" onclick="planForChild(' + r.row + ',\'' + escQ(r.name) + '\')">이 아이를 맡을 다른 선생님 찾기 →</a></div>';
+      h += '<div class="plog"><a href="javascript:void(0)" style="color:#166841" onclick="planForChild(' + r.row + ',\'' + escQ(r.name) + '\')">이 아이를 맡을 다른 선생님 찾기 →</a></div>';
     }
   });
 
@@ -3611,7 +3642,7 @@ function planBriefShot() {
   var g = cv.getContext('2d');
   g.scale(S, S);
   g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
-  g.fillStyle = '#3a8a5f'; g.fillRect(0, 0, W, 6);
+  g.fillStyle = '#166841'; g.fillRect(0, 0, W, 6);
 
   var FF = '"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
   g.fillStyle = '#191f28'; g.font = '700 21px ' + FF;
@@ -3770,7 +3801,7 @@ function planLegend() {
   el.innerHTML = days.map(function(d) {
       return '<span><i style="background:' + (PLAN_DC[d] || '#666') + '"></i>' + d + '</span>';
     }).join('')
-    + (nNew ? '<span style="width:100%;color:#3a8a5f;font-weight:700">🆕 = 이번에 정하는 ' + nNew + '명</span>' : '');
+    + (nNew ? '<span style="width:100%;color:#166841;font-weight:700">🆕 = 이번에 정하는 ' + nNew + '명</span>' : '');
   el.classList.add('on');
 }
 
