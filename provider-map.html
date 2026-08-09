@@ -347,12 +347,12 @@
   .iw-rec-dist{color:#3a6b4e;font-size:10px}
   .iw-rec-time{color:#888;font-size:10px;flex:1}
   .iw-rec-count{color:#bbb;font-size:10px}
-  /* 4번 줄 = 추천 밖 선생님 직접 선택 (2026-08-08). 목록 안에서 끝내 지도 갈아엎기를 없앤다 */
-  .iw-rec-sel{flex:1;min-width:0;font-family:inherit;font-size:10.5px;color:#333;padding:3px 5px;
-              border:1px solid #d1d6db;border-radius:4px;background:#fff;outline:none}
-  .iw-rec-sel:focus{border-color:#3a6b4e}
+  /* ⛔ `.iw-rec-sel`(다른 선생님 고르기)은 2026-08-09에 제거 — 배정 다이얼로그의 교사 select와 중복 */
   .iw-rec-assign{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #3a6b4e;color:#3a6b4e;background:#fff;font-family:inherit;transition:all .15s}
   .iw-rec-assign:hover{background:#eef5e9}
+  /* 보조 행동(배치안으로 넘어가기) — 주 행동인 「배정하기」와 무게를 갈라 놓는다 */
+  .iw-rec-assign.line{padding:5px;font-size:10.5px;color:#4e5968;border-color:#d1d6db;word-break:keep-all}
+  .iw-rec-assign.line:hover{background:#f2f4f6;border-color:#8b95a1}
   /* 다음 스텝 = 이 말풍선의 주된 행동 → 채움. 흰 글자 대비 6.19:1(실측 2026-08-09).
      ⛔ 검정(#191f28) 채움 + 초록 글자는 2.68:1로 미달 — 되돌리지 말 것(유성 지적). */
   .iw-rec-assign.fill{background:#3a6b4e;color:#fff;padding:6px;font-size:11px;word-break:keep-all}
@@ -1402,11 +1402,10 @@ function routeBtns(name,lat,lng) {
     +'</div>';
 }
 
-function assignBtn(row) {
-  var prov = document.getElementById('providerSelect').value;
-  if (!prov || prov === '__ALL__') return '';
-  return '<button class="iw-act assign" onclick="doAssign('+row+')">✓ '+esc(prov)+' 배정</button>';
-}
+/* ⛔ `assignBtn`은 2026-08-09에 제거했다 — 추천 블록의 「배정하기」와 같은 `doAssign`이라
+      한 말풍선에 같은 행동이 두 벌이었다(유성: "버튼이 너무 많아지는 거 아니야?").
+      같은 라운드에 `doAssignOther`·`_recOtherProviders`도 제거 — 「다른 선생님 고르기」 select는
+      배정 다이얼로그의 교사 select(`_asgFillProviders`, 같은 점수·같은 라벨)와 완전히 중복이었다. */
 
 // 북마크(마크 토글) 버튼 — 대기·배정 IW 공용, 행정만. 마크됨이면 '해제', 아니면 '마크'
 function markActBtn(row, marked) {
@@ -1429,9 +1428,10 @@ function buildGroupedAssignedIW(items, hLat, hLng) {
     // 🔴 **「스케줄 미정」을 띄우기만 하고 고칠 길이 없었다** (2026-08-09 유성 신고의 절반).
     //    S·T를 채우는 경로가 '신규 배정' 하나뿐이라 이미 배정된 아이는 요일·시각을 영영 기록 못 했다.
     //    ⇒ 여기서 바로 같은 배정 다이얼로그를 연다(서버가 같은 선생님이면 S·T만 쓴다).
+    // ⚠️ 문구를 대기 말풍선의 「배정하기」와 **같은 계열**로 맞춘다 — 사용자에겐 하나의 행동
+    //    ("이 아이 담당·시간 정하기")이고, 서버가 어느 열을 쓰느냐는 구현 사정이다(유성 지적).
     var _schBtn = (isAdmin() && c.formRow)
-      ? '<button class="iw-sch-set" onclick="setChildTime(' + c.formRow + ')">'
-        + ((c.confirmedDay || c.confirmedTime) ? '시간 바꾸기' : '시간 지정') + '</button>' : '';
+      ? '<button class="iw-sch-set" onclick="setChildTime(' + c.formRow + ')">배정·시간 수정</button>' : '';
     if (c.confirmedDay || c.confirmedTime) {
       h+='<div class="iw-sch"><div>✅ '+esc(c.confirmedDay||'')+' '+esc(c.confirmedTime||'')+' (확정)'+_schBtn+'</div></div>';
     } else if (c.schedule && c.schedule.length) {
@@ -1478,7 +1478,9 @@ function buildGroupedWaitingIW(items, hLat, hLng) {
       h += buildRecommendation(c);
       var ci = registerCopyData(c);
       var absentLabel = c.status === '부재1' ? '📵2' : '📵';
-      h+='<div class="iw-actions">'+assignBtn(c.row)
+      // ⚠️ 여기 있던 `assignBtn`은 뺐다 — 바로 위 추천 블록의 「배정하기」와 **같은 `doAssign`**이라
+      //    한 말풍선에 같은 행동이 두 번 있었다(유성 "버튼이 너무 많아지는 거 아니야?").
+      h+='<div class="iw-actions">'
         +'<button class="iw-act absent" onclick="doAbsent('+c.row+',\''+esc(c.status||'')+'\')">'+absentLabel+'</button>'
         +'<button class="iw-act reject" onclick="doStatus('+c.row+',\'거절\')">✕</button>'
         +'<button class="iw-act copy" onclick="doCopy('+ci+')" title="복사">📋</button>'
@@ -1507,6 +1509,11 @@ function buildRecommendation(child) {
   //    담당자가 "추천이 안 나온다"는 사실 자체를 알아야 한다(빈 화면은 고장인지 결과인지 구분이 안 된다).
   var h = '<div class="iw-rec"><div class="iw-rec-title">📋 배정 추천</div>';
 
+  // 🔴 **추천 줄의 배정 버튼을 뺐다** (유성 2026-08-09: *"버튼이 너무 많아지는 거 아니야?"*).
+  //    실물을 열어보니 배정 다이얼로그의 교사 select가 **같은 점수로 정렬**되고 거리·시간겹침
+  //    라벨까지 같이 붙는다(`_asgFillProviders`) → 추천 3줄 + 「다른 선생님 고르기」는
+  //    다이얼로그와 **정보·순서·행동이 전부 중복**이었다. 여기선 **읽기 전용**으로만 두고
+  //    행동은 아래 「배정하기」 하나로 모은다(1순위는 다이얼로그가 자동 선택하므로 클릭 수 동일).
   recs.forEach(function(r, idx) {
     h += '<div class="iw-rec-item">'
       + '<div class="iw-rec-rank">' + (idx+1) + '</div>'
@@ -1514,7 +1521,6 @@ function buildRecommendation(child) {
       + '<div class="iw-rec-dist">' + fmtDist(r.dist) + '</div>'
       + '<div class="iw-rec-time">' + esc(r.timeLabel) + '</div>'
       + '<div class="iw-rec-count">(' + r.assignedCount + '명)</div>'
-      + '<button class="iw-rec-assign" onclick="doAssignTo(' + child.row + ',\'' + escQ(r.name) + '\')">배정</button>'
       + '</div>';
   });
   if (!recs.length) {
@@ -1531,64 +1537,35 @@ function buildRecommendation(child) {
   //       · 특정 교사 선택      → 그 교사의 **주간 어디에** 넣을지가 남은 질문 → 모드 A(배치안)
   // ⚠️ 색: 옛 인라인 `background:#191f28`(검정) + 초록 글자는 대비 **2.68:1**로 AA 4.5 미달이었고
   //    이 페이지 팔레트에도 없는 조합이었다(유성 지적). 채움 초록 + 흰 글자 = **6.19:1** 로 교체.
+  // ── 행동은 **여기 하나** ──
+  // ⚠️ 「다른 선생님 고르기」 select도 뺐다 — 다이얼로그의 교사 select가 **전원**을 같은 순서로
+  //    담고 있어서(추천 3명 + 나머지) 여기서 또 고를 이유가 없었다.
+  h += '<div class="iw-rec-item" style="padding-top:6px">'
+    + '<button class="iw-rec-assign fill" style="width:100%"'
+    + ' onclick="doAssign(' + child.row + ')">배정하기</button></div>';
+
+  // ── 다음 스텝(선택) ── 유성 2026-08-08: *"마커 말풍선은 그냥 뭐 어쩌라는 느낌? 이게 끝?"*
+  //    지금 상태에 따라 갈린다:
+  //      · 전체 보기(__ALL__)  → 이 아이를 **누가** 맡을지가 남은 질문 → 모드 B(교사 후보)
+  //      · 특정 교사 선택      → 그 교사의 **주간 어디에** 넣을지가 남은 질문 → 모드 A(배치안)
   var _psel = document.getElementById('providerSelect');
   var _pnow = _psel ? _psel.value : '';
   var _hasProv = isAdmin() && _pnow && _pnow !== '__ALL__';
-  h += '<div class="iw-rec-item" style="padding-top:6px">'
+  h += '<div class="iw-rec-item" style="padding-top:2px">'
     + (_hasProv
-        ? '<button class="iw-rec-assign fill" style="width:100%"'
+        ? '<button class="iw-rec-assign line" style="width:100%"'
           + ' onclick="planFromChild(' + child.row + ',' + (child.marked ? 'true' : 'false') + ')">'
-          + esc(_pnow) + '님 주간 배치안에서 보기</button>'
-        : '<button class="iw-rec-assign fill" style="width:100%"'
+          + esc(_pnow) + '님 주간에서 보기</button>'
+        : '<button class="iw-rec-assign line" style="width:100%"'
           + ' onclick="planForChild(' + child.row + ',\'' + escQ(child.name) + '\')">'
-          + '이 아이를 맡을 선생님 후보 보기</button>')
+          + '동선까지 따져 선생님 찾기</button>')
     + '</div>';
-
-  // ── 마지막 줄 = 추천 밖 선생님을 **여기서 바로** 고른다 ──
-  // ⚠️ 추천은 상위 3명뿐이라 원하는 선생님이 없을 수 있다(유성 지적). 예전엔 좌상단 드롭다운을 바꾸고
-  //    지도가 통째로 갈아엎어진 뒤 아동을 다시 검색해야 했다. 목록 안에서 끝내면 그 왕복이 사라진다.
-  var shown = {};
-  recs.forEach(function(r){ shown[r.name] = 1; });
-  var others = _recOtherProviders(child, shown);
-  if (others.length) {
-    h += '<div class="iw-rec-item">'
-      + '<div class="iw-rec-rank">' + (recs.length + 1) + '</div>'
-      + '<select class="iw-rec-sel" id="recOther' + child.row + '">'
-      + '<option value="">다른 선생님 고르기…</option>'
-      + others.map(function(o){
-          return '<option value="' + escQ(o.name) + '">' + esc(o.label) + '</option>'; }).join('')
-      + '</select>'
-      + '<button class="iw-rec-assign" onclick="doAssignOther(' + child.row + ')">배정</button>'
-      + '</div>';
-  }
   return h + '</div>';
 }
 
-/**
- * 추천에 안 뜬 나머지 선생님 — **추천과 같은 기준**으로 정렬하고 거리·시간겹침을 라벨에 붙인다.
- * ⚠️ 가용시간이 비어 판정 못 하면 '가용시간 미기록'으로 뜬다 — 그 선생님이 **안 되는 게 아니라 모르는 것**이라
- *    추천 3위 밖으로 밀렸을 뿐이다(2026-08-08 고친 거짓 부정의 잔여 영향).
- */
-function _recOtherProviders(child, exclude) {
-  var out = [];
-  (providerList || []).forEach(function(p) {
-    if (exclude[p.name] || !p.lat || !p.lng) return;
-    var d = haversine(child.lat, child.lng, p.lat, p.lng);
-    var t = calcTimeOverlap(child.times, p.avail);
-    out.push({ name: p.name, score: d + (t.count > 0 ? 0 : 5),
-               label: p.name + ' · ' + fmtDist(d) + (t.label ? ' · ' + t.label : '') });
-  });
-  out.sort(function(a, b) { return a.score - b.score; });
-  return out;
-}
+
 
 /** 4번 줄 드롭다운으로 배정 — 고른 선생님을 그대로 배정 다이얼로그로 넘긴다 */
-function doAssignOther(row) {
-  var sel = document.getElementById('recOther' + row);
-  var name = sel && sel.value;
-  if (!name) { showToast('선생님을 고르세요'); return; }
-  doAssignTo(row, name);
-}
 
 function getRecommendations(child) {
   var assignCounts = {};
@@ -3008,9 +2985,21 @@ function _planViewRoster() {
     + ((sm.crowdedOut || 0) ? '<br>「밀림」은 <b>넣을 수 있는데</b> 이 안에서 빠진 거예요 — 조율하거나 다른 안을 보세요.' : '')
     + '</span></div>';
 
-  if ((sm.timeFromRecon || 0)) {
-    h += '<div class="pnote warn"><b>' + sm.timeFromRecon + '명은 시트가 아니라 결제 이력에서 시각을 역산</b>했어요 — '
-      + '시트의 확정요일(S)·확정시간(T)이 비어 있어요. 확정하면 채워집니다.</div>';
+  // 🔴 **시트와 실제가 다르면 조용히 덮지 않는다.** 역산(실제 결제 이력)이 1차 진실이지만,
+  //    시트를 계속 믿고 있는 사람에게는 그 차이 자체가 정보다(유성 확정 2026-08-09).
+  if (sm.mismatches && sm.mismatches.length) {
+    h += '<div class="pnote warn"><b>시트에 적힌 시각과 실제가 달라요 ' + sm.mismatches.length + '명</b><br>'
+      + sm.mismatches.map(function(m) {
+          return esc(m.name) + ' — 시트 <b>' + esc(m.mismatch.sheetDay + ' ' + m.mismatch.sheetTime) + '</b>'
+            + ' · 실제(최근 8주) <b>' + esc(m.mismatch.realDay + ' ' + m.mismatch.realTime) + '</b>'
+            + ' <a href="javascript:void(0)" style="color:#3a8a5f;font-weight:700" onclick="planSetTime(' + m.row + ')">시트 맞추기 →</a>';
+        }).join('<br>')
+      + '<br><span style="color:#8b95a1">배치안은 <b>실제</b>를 씁니다 — 선생님이 시간을 옮긴 것이 시트에 안 반영된 거예요.</span></div>';
+  }
+  if ((sm.timeFromRecon || 0) + (sm.timeFromReconLow || 0)) {
+    h += '<div class="pnote"><b>' + ((sm.timeFromRecon || 0) + (sm.timeFromReconLow || 0)) + '명은 결제 이력에서 시각을 역산</b>했어요 — 실제로 하고 있는 시간이에요.'
+      + ((sm.timeFromReconLow || 0) ? '<br>그중 <b>' + sm.timeFromReconLow + '명</b>은 요일·시각이 흔들려 신뢰도가 낮아요.' : '')
+      + '</div>';
   }
 
   if ((sm.fixedConflict || 0)) {
