@@ -36,16 +36,16 @@
     border-bottom:1px solid rgba(0,0,0,.06);
     padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   }
-  .logo{font-size:13px;font-weight:700;color:#3a6b4e;white-space:nowrap;letter-spacing:-.3px}
+  .logo{font-size:13px;font-weight:700;color:#166841;white-space:nowrap;letter-spacing:-.3px}
   .logo span{font-weight:400;color:#999;margin-left:2px;font-size:11px}
   .divider{width:1px;height:22px;background:#e0dcd5;flex-shrink:0}
   select{
-    padding:7px 28px 7px 10px;border:1.5px solid #d4cfc6;border-radius:7px;
+    padding:7px 28px 7px 10px;border:1.5px solid #e5e8eb;border-radius:7px;
     font-size:12.5px;font-family:inherit;
     background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 10px center;
     -webkit-appearance:none;appearance:none;outline:none;cursor:pointer;
   }
-  select:focus{border-color:#3a6b4e}
+  select:focus{border-color:#3a8a5f}
   #providerSelect{flex:1;max-width:200px}
   .filter-group{display:flex;gap:3px}
   .svc-filter{display:flex;gap:4px}
@@ -54,9 +54,9 @@
   .sbtn i{width:8px;height:8px;border-radius:50%;display:block}
   .fbtn{
     padding:5px 10px;border-radius:6px;font-size:11px;font-family:inherit;
-    cursor:pointer;border:1.5px solid #d4cfc6;background:#fff;color:#666;transition:all .15s;
+    cursor:pointer;border:1.5px solid #e5e8eb;background:#fff;color:#666;transition:all .15s;
   }
-  .fbtn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e}
+  .fbtn.active{background:#3a8a5f;color:#fff;border-color:#3a8a5f}
   #filterMark.active{background:#ef4444;border-color:#ef4444}  /* 마크 필터 = 빨강 */
 
   /* ══ 대시보드 바 ══ */
@@ -69,18 +69,18 @@
   }
   .dashboard.show{display:flex}
   .dash-stat{color:#888}
-  .dash-stat b{color:#3a6b4e;font-weight:700}
+  .dash-stat b{color:#166841;font-weight:700}
   .dash-filters{display:flex;gap:6px;margin-left:auto}
-  .prov-link-btn{padding:3px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid #d4cfc6;background:#fff;color:#666;transition:all .15s;white-space:nowrap}
-  .prov-link-btn:hover{background:#f5f3ef;border-color:#3a6b4e;color:#3a6b4e}
+  .prov-link-btn{padding:3px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid #e5e8eb;background:#fff;color:#666;transition:all .15s;white-space:nowrap}
+  .prov-link-btn:hover{background:#f8fbf9;border-color:#3a8a5f;color:#166841}
 
   /* ══ 검색 ══ */
   .search-wrap{position:relative;flex:1;max-width:200px}
   .search-input{
-    width:100%;padding:6px 10px;border:1.5px solid #d4cfc6;border-radius:7px;
+    width:100%;padding:6px 10px;border:1.5px solid #e5e8eb;border-radius:7px;
     font-size:12px;font-family:inherit;outline:none;background:#fff;
   }
-  .search-input:focus{border-color:#3a6b4e}
+  .search-input:focus{border-color:#3a8a5f}
   .search-results{
     display:none;position:absolute;top:100%;left:0;right:0;z-index:60;
     background:#fff;border:1px solid #e0dcd5;border-radius:0 0 8px 8px;
@@ -91,7 +91,7 @@
     display:flex;align-items:center;gap:8px;padding:8px 10px;
     cursor:pointer;border-bottom:1px solid #f5f5f5;transition:background .1s;
   }
-  .sr-item:hover{background:#f5f3ef}
+  .sr-item:hover{background:#f9fafb}
   .sr-item:last-child{border-bottom:none}
   .sr-name{font-weight:600;font-size:12.5px;color:#1a1a1a;min-width:50px}
   .sr-phone{font-size:11px;color:#888;flex:1}
@@ -286,23 +286,23 @@
   .iw-badge.assigned{background:#dcfce7;color:#16a34a}
   .iw-badge.waiting{background:#fef3c7;color:#d97706}
   .iw-badge.absent{background:#fff3cd;color:#856404}
-  .iw-badge.dist{background:#e8f0e5;color:#3a6b4e;font-size:11px}
+  .iw-badge.dist{background:#e9f8ee;color:#166841;font-size:11px}
   .iw-row{color:#666;font-size:12px}
   .iw-sch{margin-top:4px;padding-top:4px;border-top:1px solid #eee;font-size:11.5px;color:#555}
   .iw-sch div{padding:1px 0}
   /* 「스케줄 미정」을 보여주기만 하고 고칠 길이 없던 것을 고친다 — 그 자리에서 바로 지정 */
-  .iw-sch-set{margin-left:6px;padding:1px 7px;border-radius:999px;border:1px solid #3a6b4e;
-              background:#fff;color:#3a6b4e;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer}
-  .iw-sch-set:hover{background:#3a6b4e;color:#fff}
+  .iw-sch-set{margin-left:6px;padding:1px 7px;border-radius:999px;border:1px solid #3a8a5f;
+              background:#fff;color:#166841;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer}
+  .iw-sch-set:hover{background:#3a8a5f;color:#fff}
   .iw-sep{margin:8px 0 6px;border:none;border-top:1px dashed #ddd}
   .iw-group-label{font-size:11px;color:#999;font-weight:600;margin-bottom:2px}
-  .iw-times{margin-top:3px;font-size:11.5px;color:#3a6b4e;font-weight:600}
+  .iw-times{margin-top:3px;font-size:11.5px;color:#166841;font-weight:600}
   /* 체크박스 시간과 실제 시작이 다를 때만 뜨는 하한 배지 ([시간참고] 자유칸에서 추출) */
   .iw-early{margin-left:5px;padding:1px 5px;border-radius:4px;background:#fff3e0;color:#c05621;font-size:10.5px;font-weight:700}
   .iw-phone{margin-top:2px;font-size:12px}
-  .iw-phone a{color:#3a6b4e;text-decoration:none;font-weight:600}
+  .iw-phone a{color:#166841;text-decoration:none;font-weight:600}
   .iw-phone a:hover{text-decoration:underline}
-  .iw-notes{margin-top:3px;font-size:11px;color:#333;background:#f5f3ef;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap;border-left:2px solid #3a6b4e}
+  .iw-notes{margin-top:3px;font-size:11px;color:#333;background:#f9fafb;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap;border-left:2px solid #3a8a5f}
   .iw-actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;max-width:100%}
   .iw-act{
     padding:4px 8px;border-radius:5px;font-size:11px;font-weight:500;font-family:inherit;
@@ -311,7 +311,7 @@
   .iw-act:hover{background:#f5f5f5}
   .iw-act.from{border-color:#22c55e;color:#16a34a}.iw-act.from:hover{background:#dcfce7}
   .iw-act.to{border-color:#ef4444;color:#dc2626}.iw-act.to:hover{background:#fee2e2}
-  .iw-act.assign{border-color:#3a6b4e;color:#3a6b4e;font-weight:600}.iw-act.assign:hover{background:#eef5e9}
+  .iw-act.assign{border-color:#3a8a5f;color:#166841;font-weight:600}.iw-act.assign:hover{background:#e9f8ee}
   .iw-act.absent{border-color:#e67e22;color:#e67e22}.iw-act.absent:hover{background:#fef5ec}
   .iw-act.reject{border-color:#c0392b;color:#c0392b}.iw-act.reject:hover{background:#fdeaea}
   .iw-act.copy{border-color:#888;color:#555}.iw-act.copy:hover{background:#f0f0f0}
@@ -340,7 +340,7 @@
     font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;
     text-decoration:none;color:#fff;transition:all .15s;
   }
-  .route-go.ready{background:#3a6b4e}.route-go.ready:hover{background:#2e5540}
+  .route-go.ready{background:#3a8a5f}.route-go.ready:hover{background:#166841}
   .route-go.disabled{background:#ddd;color:#aaa;pointer-events:none}
 
   /* ══ 마커 라벨 ══ */
@@ -350,30 +350,30 @@
   .mlbl.mark{color:#dc2626;margin:4px 0 0 0}   /* 마크 아동 이름 = 빨강, 마커 바로 아래 (북마크는 바닥앵커라 home 링과 같은 근접감 내려면 margin 작게) */
 
   /* ══ 추천 ══ */
-  .iw-rec{margin-top:6px;padding-top:6px;border-top:1.5px solid #e8f0e5}
-  .iw-rec-title{font-size:11px;font-weight:700;color:#3a6b4e;margin-bottom:4px}
+  .iw-rec{margin-top:6px;padding-top:6px;border-top:1.5px solid #e9f8ee}
+  .iw-rec-title{font-size:11px;font-weight:700;color:#166841;margin-bottom:4px}
   .iw-rec-item{display:flex;align-items:center;gap:5px;padding:3px 0;font-size:11px;color:#333;border-bottom:1px solid #f5f5f5}
   .iw-rec-item:last-child{border-bottom:none}
-  .iw-rec-rank{width:16px;height:16px;border-radius:50%;background:#e8f0e5;color:#3a6b4e;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .iw-rec-rank{width:16px;height:16px;border-radius:50%;background:#e9f8ee;color:#166841;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .iw-rec-name{font-weight:600;min-width:40px}
-  .iw-rec-dist{color:#3a6b4e;font-size:10px}
+  .iw-rec-dist{color:#166841;font-size:10px}
   .iw-rec-time{color:#888;font-size:10px;flex:1}
   .iw-rec-count{color:#bbb;font-size:10px}
   /* ⛔ `.iw-rec-sel`(다른 선생님 고르기)은 2026-08-09에 제거 — 배정 다이얼로그의 교사 select와 중복 */
-  .iw-rec-assign{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #3a6b4e;color:#3a6b4e;background:#fff;font-family:inherit;transition:all .15s}
-  .iw-rec-assign:hover{background:#eef5e9}
+  .iw-rec-assign{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #3a8a5f;color:#166841;background:#fff;font-family:inherit;transition:all .15s}
+  .iw-rec-assign:hover{background:#e9f8ee}
   /* 보조 행동(배치안으로 넘어가기) — 주 행동인 「배정하기」와 무게를 갈라 놓는다 */
   .iw-rec-assign.line{padding:5px;font-size:10.5px;color:#4e5968;border-color:#d1d6db;word-break:keep-all}
   .iw-rec-assign.line:hover{background:#f2f4f6;border-color:#8b95a1}
   /* 다음 스텝 = 이 말풍선의 주된 행동 → 채움. 흰 글자 대비 6.19:1(실측 2026-08-09).
      ⛔ 검정(#191f28) 채움 + 초록 글자는 2.68:1로 미달 — 되돌리지 말 것(유성 지적). */
-  .iw-rec-assign.fill{background:#3a6b4e;color:#fff;padding:6px;font-size:11px;word-break:keep-all}
-  .iw-rec-assign.fill:hover{background:#2f5840}
+  .iw-rec-assign.fill{background:#3a8a5f;color:#fff;padding:6px;font-size:11px;word-break:keep-all}
+  .iw-rec-assign.fill:hover{background:#166841}
 
   /* ══ 유틸 ══ */
   .loading-overlay{position:fixed;inset:0;z-index:100;background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center}
   .loading-overlay.show{display:flex}
-  .ld-spinner{width:32px;height:32px;border:3px solid #d4cfc6;border-top-color:#3a6b4e;border-radius:50%;animation:spin .7s linear infinite}
+  .ld-spinner{width:32px;height:32px;border:3px solid #e5e8eb;border-top-color:#3a8a5f;border-radius:50%;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .toast{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:60;background:#842029;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none}
   .toast.show{display:block;animation:fadeIn .3s}
@@ -384,7 +384,7 @@
   .nl-fab{
     position:fixed;right:14px;top:92px;z-index:44;
     width:44px;height:44px;border-radius:50%;
-    background:#3a6b4e;color:#fff;border:none;cursor:pointer;
+    background:#3a8a5f;color:#fff;border:none;cursor:pointer;
     box-shadow:0 4px 14px rgba(0,0,0,.18);
     font-size:18px;display:flex;align-items:center;justify-content:center;
     transition:all .2s;
@@ -409,18 +409,18 @@
   .nl-panel.show{transform:translateX(0)}
   .nl-head{padding:12px 14px 8px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px}
   .nl-title{font-size:13px;font-weight:700;color:#1a1a1a;flex:1}
-  .nl-title b{color:#3a6b4e}
+  .nl-title b{color:#166841}
   .nl-close{background:none;border:none;font-size:18px;color:#999;cursor:pointer;padding:2px 6px;border-radius:4px}
-  .nl-close:hover{background:#f5f3ef;color:#333}
+  .nl-close:hover{background:#f9fafb;color:#333}
   .nl-controls{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #eee;background:#fafaf7}
   .nl-sort{display:flex;gap:4px}
   .nl-sort-btn{flex:1;padding:6px;border:1.5px solid #e0dcd5;background:#fff;color:#888;border-radius:7px;font-size:11.5px;font-family:inherit;cursor:pointer;transition:all .15s}
-  .nl-sort-btn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e;font-weight:600}
+  .nl-sort-btn.active{background:#3a8a5f;color:#fff;border-color:#3a8a5f;font-weight:600}
   .nl-filters{display:flex;gap:6px}
   .nl-filters select{flex:1;font-size:11.5px;padding:5px 22px 5px 8px;border-radius:6px}
   .nl-list{flex:1;overflow-y:auto;padding:6px 8px}
   .nl-item{padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:background .1s;border:1px solid transparent;-webkit-tap-highlight-color:transparent}
-  .nl-item:hover{background:#f5f3ef;border-color:#e0dcd5}
+  .nl-item:hover{background:#f9fafb;border-color:#e0dcd5}
   .nl-item-row1{display:flex;align-items:center;gap:6px;margin-bottom:2px}
   .nl-item-name{font-weight:700;font-size:13px;color:#1a1a1a}
   .nl-item-badge{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600;flex-shrink:0}
@@ -430,7 +430,7 @@
   .nl-item-badge.mark{background:#fee2e2;color:#dc2626}   /* 마크(shortlist) — 지도 빨강 북마크와 결 맞춤 */
   .nl-item-date{color:#bbb;font-size:10px;margin-left:auto;flex-shrink:0}
   .nl-item-row2{font-size:11px;color:#888;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-  .nl-item-dist{color:#3a6b4e;font-weight:600}
+  .nl-item-dist{color:#166841;font-weight:600}
   .nl-empty{padding:40px 16px;text-align:center;color:#bbb;font-size:12px}
   .nl-count{font-size:10.5px;color:#999;padding:6px 14px;background:#fafaf7;border-bottom:1px solid #eee}
 
@@ -562,7 +562,7 @@
   <div class="logo">오감쑥쑥 <span>지도</span></div>
   <a id="dashLink" href="dashboard.html" style="font-size:10px;color:#999;text-decoration:none;border:1px solid #ddd;padding:3px 8px;border-radius:4px">📊</a>
   <button id="staffLoginBtn" onclick="staffLogin()" style="display:none;font-size:11px;color:#3a8a5f;background:#fff;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">👤 제공인력 로그인</button>
-  <button id="adminKeyBtn" onclick="adminKeyLogin()" style="display:none;font-size:11px;color:#3a6b4e;background:#fff;border:1px solid #cdd9d1;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">🔑 행정</button>
+  <button id="adminKeyBtn" onclick="adminKeyLogin()" style="display:none;font-size:11px;color:#166841;background:#fff;border:1px solid #e5e8eb;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">🔑 행정</button>
   <span id="staffWhoami" style="display:none;font-size:11px;color:#3a8a5f;background:#eef7f1;border:1px solid #cfe6d8;padding:3px 10px;border-radius:4px">👤 <b>제공인력</b></span>
   <div class="divider"></div>
   <select id="providerSelect"></select>
@@ -2253,7 +2253,7 @@ function setupLongPress(el) {
             }
             if (startIdx >= 0 && endIdx > startIdx) {
               phoneDisplay = esc(formattedDisplay.substring(0, startIdx))
-                + '<b style="color:#3a6b4e">' + esc(formattedDisplay.substring(startIdx, endIdx)) + '</b>'
+                + '<b style="color:#166841">' + esc(formattedDisplay.substring(startIdx, endIdx)) + '</b>'
                 + esc(formattedDisplay.substring(endIdx));
             }
           }
