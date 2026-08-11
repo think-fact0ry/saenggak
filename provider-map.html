@@ -278,10 +278,11 @@
      "카카오 측정폭−렌더폭 2.4px 재래핑" 문제(2026-08-09 실측: 측정 267.375 → 내용폭 265로 좁아져
      주소가 한 줄 더 래핑, 마지막 줄이 말풍선 밖)는 폭 고정으로 원천 소멸: 측정 때와 렌더 때 폭이
      항상 같다. 말풍선 지오메트리·라운딩·그림자는 infoWindow.open 래퍼가 동기화(카카오 DOM은
-     클래스가 없어 CSS로 못 잡는다). 밀집 위치는 max-height:340 내부 스크롤이 캡(유성 340 확정). */
-  /* max-height는 CSS가 아니라 open 래퍼가 정한다(유성 2026-08-10): 단인 = 카드 전부 보임(스크롤 0) /
-     다인 = 첫 아동 + 회색 띠(border-bottom 라인)까지만, 아래는 페이드 스크롤. position:relative =
-     래퍼가 sep 띠의 offsetTop을 .iw 기준으로 재기 위함. */
+     클래스가 없어 CSS로 못 잡는다). */
+  /* max-height는 CSS가 아니라 setContent 래퍼가 정한다(유성 2026-08-10·08-11): 단인 = 카드 전부
+     보임(스크롤 0) / 다인 = 첫 아동 + 회색 띠(border-bottom 라인)까지, 아래는 페이드 스크롤 —
+     배정·대기 공통(08-11 통일). 340은 첫 카드가 화면 예산을 넘을 때의 강등값으로만 남음(래퍼 주석).
+     position:relative = 래퍼가 sep 띠의 offsetTop을 .iw 기준으로 재기 위함. */
   .iw{width:265px;position:relative;padding:13px 13px 12px;background:#fff;font-family:inherit;font-size:12px;line-height:1.5;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
   /* 값·이름은 마우스 드래그 복사 허용(유성 2026-08-10) — #map의 user-select:none 상속을 여기서만 해제.
      단 조작 요소(정하기/고치기 링크·하한 배지·뱃지·행번호)는 기존대로 드래그 불가. */
@@ -843,22 +844,15 @@ function initMap() {
       var pv = probe.querySelector('.iw'), ps = probe.querySelector('.iw-sep16');
       if (pv && ps) {
         var sepB = ps.offsetTop + ps.offsetHeight;   // 첫 아동 + 회색 띠 border-bottom까지
-        // 캡 분기(유성 2026-08-11 "배정 다인도 첫 카드+띠에 맞춰야" — 340 일괄이 배정 카드를 끝만 잘랐다):
-        // · 배정 다인(iw-asg) = 첫 아동 전부+띠(전형 실측 318~471). 화면 예산(지도높이-96: 테두리2+
-        //   꼬리·마커·여유)을 넘으면 340 강등 — min(sepB,예산)으로 자르면 "거의 다 나온 카드가
-        //   끝만 잘림"(오늘 증상)을 재생산하므로 넘치면 표준 캡으로 완전 강등하는 분기여야 한다.
-        // · 대기 다인 = min(첫 아동+띠, 340) 유지. 전체 보기 대기는 첫 블록만 ~530px(추천 3줄+
-        //   배정하기+출발/도착+부재·거절·복사·마크 스택)라 말풍선이 화면 위를 뚫는다
-        //   (2026-08-10 실측: 캡 564 → 말풍선 566, top -197). 340 = 유성 확정 스크롤 캡.
-        var cap;
-        if (html.indexOf('iw-asg') !== -1) {
-          var mapH = (document.getElementById('map') || {}).clientHeight || 0;
-          cap = sepB <= Math.max(340, mapH - 96) ? sepB : 340;
-        } else {
-          cap = Math.min(sepB, 340);
-        }
-        var root = html.indexOf('iw-asg') !== -1 ? '<div class="iw iw-asg">' : '<div class="iw">';
-        html = html.replace(root, root.slice(0, -1) + ' style="max-height:' + cap + 'px">');
+        // 다인 캡 = 첫 아동 전부+띠(배정·대기 공통 — 유성 2026-08-11, 배정 1차 지시 후 같은 날
+        // "대기 전체보기도 첫 카드에 맞춰" 2차 지시로 통일. 08-10의 min(첫 아동+띠, 340)을 대체).
+        // 340은 이제 첫 카드가 화면 예산(지도높이-96: 테두리2+꼬리·마커·여유)을 넘을 때의
+        // 강등값으로만 남는다 — 전체 보기 대기 첫 블록 ~530px가 말풍선을 화면 위로 뚫던
+        // 2026-08-10 실측(캡 564 → 말풍선 566, top -197)의 보호선. min(sepB,예산)으로 자르면
+        // "거의 다 나온 카드가 끝만 잘림"(08-11 증상)을 재생산하므로 넘치면 완전 강등한다.
+        var mapH = (document.getElementById('map') || {}).clientHeight || 0;
+        var cap = sepB <= Math.max(340, mapH - 96) ? sepB : 340;
+        html = html.replace('<div class="iw">', '<div class="iw" style="max-height:' + cap + 'px">');
       }
       probe.remove();
     }
@@ -1589,7 +1583,7 @@ function buildHomeIW(p) {
 }
 
 function buildGroupedAssignedIW(items, hLat, hLng) {
-  var h='<div class="iw iw-asg">';   // iw-asg = setContent 래퍼의 캡 분기 마커(배정 카드 판별용, CSS 없음)
+  var h='<div class="iw">';
   if (items.length>1) h+='<div class="iw-grp">같은 위치 '+items.length+'명</div>';
   items.forEach(function(c,i) {
     if (i>0) h+='<div class="iw-sep16"></div>';
