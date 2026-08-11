@@ -26,21 +26,29 @@
 <link rel="manifest" href="/saenggak/manifest.json">
 <meta name="msapplication-TileColor" content="#ffffff">
 <meta name="msapplication-TileImage" content="/saenggak/ms-icon-144x144.png">
-<meta name="theme-color" content="#3a6b4e">
+<meta name="theme-color" content="#ffffff">
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    /* §3.1 정본 토큰(필요 칸만 — provider-map과 동일 사본, 2026-08-11 C안 이식) */
+    --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g400:#b0b8c1; --g500:#8b95a1;
+    --g600:#6b7684; --g700:#4e5968; --g800:#333d4b; --g900:#191f28;
+    --green100:#e9f8ee; --green600:#3a8a5f; --green700:#166841;
+    --red:#f04452; --warn-weak-bg:#fef4e2; --warn-weak-fg:#c07f00;
+    --danger:#D25357; --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;
+  }
   html,body{height:100%;overflow:hidden}
   body{font-family:'Pretendard','Noto Sans KR',sans-serif;color:#1a1a1a;background:#f0ebe4}
   .controls{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,.06);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .hdr-icon{width:28px;height:28px;background:#3a6b4e;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0}
+  .hdr-icon{width:28px;height:28px;background:#166841;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0}
   .hdr-name{font-size:14px;font-weight:700;color:#1a1a1a;white-space:nowrap}
-  .hdr-count{padding:3px 10px;border-radius:16px;background:#e8f0e5;font-size:11px;font-weight:700;color:#3a6b4e;white-space:nowrap}
+  .hdr-count{padding:3px 10px;border-radius:16px;background:#e9f8ee;font-size:11px;font-weight:700;color:#166841;white-space:nowrap}
   .divider{width:1px;height:22px;background:#e0dcd5;flex-shrink:0}
   .search-wrap{position:relative;flex:1;max-width:180px}
   .search-input{width:100%;padding:6px 10px;border:1.5px solid #d4cfc6;border-radius:7px;font-size:12px;font-family:inherit;outline:none;background:#fff}
-  .search-input:focus{border-color:#3a6b4e}
+  .search-input:focus{border-color:#3a8a5f}
   .search-results{display:none;position:absolute;top:100%;left:0;right:0;z-index:60;background:#fff;border:1px solid #e0dcd5;border-radius:0 0 8px 8px;box-shadow:0 4px 16px rgba(0,0,0,.1);max-height:240px;overflow-y:auto}
   .search-results.show{display:block}
   .sr-item{display:flex;align-items:center;gap:6px;padding:8px 10px;cursor:pointer;border-bottom:1px solid #f5f5f5;font-size:12px;transition:background .1s}
@@ -49,24 +57,61 @@
   .sr-none{padding:12px;text-align:center;font-size:12px;color:#bbb}
   .sr-hdr{padding:5px 10px;font-size:10px;color:#999;font-weight:600;border-bottom:1px solid #eee}
   #map{position:fixed;top:76px;left:0;right:0;bottom:0}
-  .iw{padding:10px 14px;font-family:inherit;font-size:12.5px;line-height:1.55;min-width:180px;max-width:280px;max-height:340px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;box-sizing:border-box}
-  .iw-title{font-weight:700;font-size:14px;margin-bottom:3px}
-  .iw-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
-  .iw-badge.home{background:#dbeafe;color:#2563eb}.iw-badge.child{background:#dcfce7;color:#16a34a}
-  .iw-row{color:#666;font-size:12px}
-  .iw-times{margin-top:3px;font-size:11.5px;color:#3a6b4e;font-weight:600}
-  .iw-phone{margin-top:2px;font-size:12px}.iw-phone a{color:#3a6b4e;text-decoration:none;font-weight:600}
-  .iw-notes{margin-top:4px;font-size:11px;color:#333;background:#f5f3ef;padding:4px 8px;border-radius:5px;line-height:1.5;white-space:pre-wrap;border-left:2px solid #3a6b4e}
-  .iw-edit{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:5px;padding:5px 6px;background:#f5f3ef;border-radius:6px}
-  .iw-edit-label{font-size:11px;color:#3a6b4e;font-weight:700}
-  .iw-edit-sel{padding:3px 5px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:inherit;background:#fff}
-  .iw-edit-btn{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #3a6b4e;color:#3a6b4e;background:#fff}
-  .iw-edit-btn.clear{border-color:#ccc;color:#999;font-weight:400}
-  .iw-actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
-  .iw-act{padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid #ccc;color:#555;background:#fff;transition:all .15s;white-space:nowrap;font-family:inherit}
-  .iw-act:hover{background:#f5f5f5}
-  .iw-act.from{border-color:#22c55e;color:#16a34a}.iw-act.from:hover{background:#dcfce7}
-  .iw-act.to{border-color:#ef4444;color:#dc2626}.iw-act.to:hover{background:#fee2e2}
+  /* ══ 인포윈도우 = provider-map C안 이식(유성 2026-08-11 "선생님 화면에 모두 이식") ══
+     폭 265 고정(측정-렌더 재래핑 원천 소멸) + overflow-x:hidden 동반(이식 경고 반영).
+     max-height는 CSS가 아니라 setContent 래퍼가 정함: 단인=카드 전부 / 다인=첫 아동+회색 띠까지
+     (340은 화면 예산 초과 시 강등값). 말풍선 지오메트리·페이드는 open 래퍼가 동기화.
+     경위·함정 주석 전문 = provider-map.html(정본). ⛔옛 클래스(iw-title/badge/row/times/notes/actions/act)는 전폐기 */
+  .iw{width:265px;position:relative;padding:13px 13px 12px;background:#fff;font-family:inherit;font-size:12px;line-height:1.5;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
+  .iw::-webkit-scrollbar{width:0}
+  .iw.iw-more:not(.iw-end){-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 32px),transparent)}
+  .iw-nm{font-size:15px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px;color:var(--g900);word-break:keep-all}
+  .iw>.iw-nm:last-child{margin-bottom:0}
+  .iw-nm.iw-addr{font-size:13px}
+  .iw-bdg{display:inline-flex;align-items:center;font-size:11px;font-weight:700;line-height:1;padding:4px 9px;border-radius:999px}
+  .iw-bdg.as{background:var(--green100);color:var(--green700)}
+  .iw-bdg.tc{background:#dbeafe;color:#2563eb}
+  .iw-bdg.dst{background:var(--g100);color:var(--g700)}
+  .iw-grp{font-size:11px;color:var(--g500);font-weight:600;margin-bottom:6px}
+  .iw-sep16{height:16px;background:var(--g50);border-top:1px solid var(--g100);border-bottom:1px solid var(--g100);margin:12px -13px}
+  .iw-tbl{display:grid;grid-template-columns:62px 1fr;font-size:12px;line-height:1.5}
+  .iw-tbl>div{padding:4px 0;border-bottom:1px solid var(--g100)}
+  .iw-tbl>div:nth-last-child(-n+2){border-bottom:none}
+  .iw-tbl .k{color:var(--g500);font-weight:600;display:flex;align-items:center;gap:5px}
+  .iw-kic{width:13px;height:13px;stroke:var(--g400);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .iw-tbl .v{color:var(--g800);font-weight:500;word-break:keep-all}
+  .iw-tbl .v b{font-weight:800}
+  .iw-tbl .v a{color:var(--green700);font-weight:700;text-decoration:none}
+  .iw-tbl .v.dim{color:var(--g600);white-space:pre-wrap}
+  .iw-seg{white-space:nowrap}   /* 요일+시간 한 세트 nowrap */
+  .iw-hint{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;line-height:1;padding:3px 6px;border-radius:5px;background:var(--warn-weak-bg);color:var(--warn-weak-fg);margin-left:5px;vertical-align:1px}
+  .iw-chip{font-family:inherit;border:none;cursor:pointer;border-radius:8px;font-weight:700;font-size:11.5px;padding:7px 0;text-align:center;transition:transform .12s,background .15s;display:flex;align-items:center;justify-content:center;gap:4px}
+  .iw-chip:active{transform:scale(.95)}
+  .iw-chip.wb{background:#fff;border:1px solid var(--g200);box-shadow:0 1px 3px rgba(25,31,40,.08);color:var(--g700)}
+  .iw-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .iw-dot.g{background:var(--green600)}
+  .iw-dot.r{background:var(--danger)}
+  .iw-r2{display:flex;gap:5px;margin-top:9px}
+  .iw-r2 .iw-chip{flex:1}
+  /* 요일 확정 편집 = saveschedule 경로 — ⚠️백로그 L373 폐기 라운드에서 서버 차단과 함께 제거될 자리 */
+  .iw-edit{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:7px 8px;background:var(--g100);border-radius:8px}
+  .iw-edit-sel{padding:5px 6px;border:1px solid var(--g200);border-radius:6px;font-size:11.5px;font-family:inherit;background:#fff;color:var(--g800)}
+  .iw-edit-btn{padding:5px 10px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid var(--green700);color:var(--green700);background:#fff}
+  .iw-edit-btn.clear{border-color:var(--g200);color:var(--g500);font-weight:500}
+  /* ── 중앙 확인 다이얼로그(§4.4) — provider-map 이식, confirm() 대체 ── */
+  #cmDim{position:fixed;inset:0;z-index:120;background:rgba(25,31,40,.45);display:none;align-items:center;justify-content:center}
+  #cmDim.show{display:flex}
+  .cmodal{width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:20px;padding:22px 20px 16px}
+  .cm-t{font-size:16px;font-weight:800;color:#191f28;letter-spacing:-.3px;word-break:keep-all}
+  .cm-s{font-size:13px;color:#6b7684;margin-top:8px;line-height:1.55;word-break:keep-all}
+  .cm-s:empty{display:none}
+  .cm-btns{display:flex;gap:8px;margin-top:16px}
+  .cm-btn{flex:1;font-family:inherit;border:none;cursor:pointer;border-radius:12px;padding:13px 0;font-size:14px;font-weight:700;background:#f2f4f6;color:#4e5968;transition:transform .12s,background .15s}
+  .cm-btn:active{transform:scale(.97);background:#e5e8eb}
+  .cm-btn.primary{background:#166841;color:#fff}
+  .cm-btn.primary:active{background:#01492a}
+  .cm-btn.primary.danger{background:#D25357}
+  .cm-btn.primary.danger:active{background:#b8434a}
   .route-panel{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:45;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-radius:12px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,.12);display:none;min-width:240px;max-width:340px}
   .route-panel.show{display:block}
   .route-row{display:flex;align-items:center;gap:8px;font-size:13px}
@@ -75,14 +120,14 @@
   .rclear{cursor:pointer;color:#ccc;font-size:16px;padding:0 4px}.rclear:hover{color:#999}
   .rarrow{text-align:center;color:#ccc;font-size:11px;margin:2px 0}
   .route-go{display:block;margin-top:8px;padding:10px;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;color:#fff;transition:all .15s}
-  .route-go.ready{background:#3a6b4e}.route-go.ready:hover{background:#2e5540}
+  .route-go.ready{background:#166841}.route-go.ready:hover{background:#01492a}
   .route-go.disabled{background:#ddd;color:#aaa;pointer-events:none}
   .legend{position:fixed;bottom:16px;left:14px;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-radius:10px;padding:8px 12px;box-shadow:0 2px 12px rgba(0,0,0,.1);font-size:11px;display:flex;gap:12px;pointer-events:none}
   .legend-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
   .ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0}.ldot.home{background:#3b82f6}.ldot.child{background:#22c55e}
   .loading-overlay{position:fixed;inset:0;z-index:100;background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center}
   .loading-overlay.show{display:flex}
-  .ld-spinner{width:32px;height:32px;border:3px solid #d4cfc6;border-top-color:#3a6b4e;border-radius:50%;animation:spin .7s linear infinite}
+  .ld-spinner{width:32px;height:32px;border:3px solid #d4cfc6;border-top-color:#3a8a5f;border-radius:50%;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .toast{position:fixed;top:54px;left:50%;transform:translateX(-50%);z-index:60;background:#842029;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none}
   .toast.show{display:block}
@@ -90,26 +135,26 @@
   .day-filter{position:fixed;top:44px;left:0;right:0;z-index:49;background:rgba(250,250,247,.95);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,0,0,.04);padding:5px 14px;display:none;gap:4px}
   .day-filter.show{display:flex}
   .day-btn{padding:4px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;border:1.5px solid #d4cfc6;background:#fff;color:#666;transition:all .15s}
-  .day-btn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e}
+  .day-btn.active{background:#166841;color:#fff;border-color:#166841}
   /* ═ 동선 하단 바 (요일 필터 시 출현) ═ */
   .trip-bar{position:fixed;bottom:0;left:0;right:0;z-index:46;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid rgba(0,0,0,.08);padding:8px 12px 12px;display:none;flex-direction:column;gap:7px;box-shadow:0 -4px 16px rgba(0,0,0,.08)}
   .trip-bar.show{display:flex}
   .trip-mode{display:flex;gap:4px}
   .tm-btn{flex:1;padding:6px 6px;border:1.5px solid #e0dcd5;background:#fff;color:#888;border-radius:8px;font-size:11.5px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
-  .tm-btn.active{background:#3a6b4e;color:#fff;border-color:#3a6b4e;font-weight:600}
+  .tm-btn.active{background:#166841;color:#fff;border-color:#166841;font-weight:600}
   .trip-list{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 2px;scrollbar-width:none;min-height:42px}
   .trip-list::-webkit-scrollbar{display:none}
   .trip-item{flex-shrink:0;padding:6px 10px 6px 6px;background:#f5f3ef;border-radius:20px;font-size:11.5px;cursor:grab;display:flex;align-items:center;gap:6px;border:1.5px solid transparent;transition:border-color .12s,background .12s,transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:manipulation}
   .trip-item:active{cursor:grabbing}
-  .trip-item.sortable-chosen{transform:scale(1.08);box-shadow:0 4px 14px rgba(0,0,0,.18);border-color:#3a6b4e;background:#eef5e9;z-index:10}
+  .trip-item.sortable-chosen{transform:scale(1.08);box-shadow:0 4px 14px rgba(0,0,0,.18);border-color:#3a8a5f;background:#e9f8ee;z-index:10}
   .trip-item.sortable-ghost{opacity:.35}
-  .trip-rank{width:20px;height:20px;border-radius:50%;background:#3a6b4e;color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .trip-rank{width:20px;height:20px;border-radius:50%;background:#166841;color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .trip-rank.empty{background:#bbb}
   .trip-name{font-weight:600;color:#333;white-space:nowrap}
-  .trip-chip-nav{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#3a6b4e;color:#fff;font-size:12px;text-decoration:none;margin-left:2px;flex-shrink:0}
-  .trip-chip-nav:active{background:#2d5540}
-  .trip-start{display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 14px;background:#3a6b4e;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;text-decoration:none;cursor:pointer;transition:background .15s}
-  .trip-start:active{background:#2d5540}
+  .trip-chip-nav{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#166841;color:#fff;font-size:12px;text-decoration:none;margin-left:2px;flex-shrink:0}
+  .trip-chip-nav:active{background:#01492a}
+  .trip-start{display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 14px;background:#166841;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;text-decoration:none;cursor:pointer;transition:background .15s}
+  .trip-start:active{background:#01492a}
   .trip-start.disabled{background:#d4cfc6;pointer-events:none;cursor:not-allowed}
   .trip-start .count{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600;margin-left:4px}
   .trip-hint{font-size:10.5px;color:#999;text-align:center;margin-top:-2px}
@@ -177,15 +222,81 @@ var placesService=null;  // services.Places 인스턴스 (키워드 검색용)
 function initMap(){
   map=new kakao.maps.Map(document.getElementById('map'),{center:new kakao.maps.LatLng(37.46,126.70),level:6});
   infoWindow=new kakao.maps.InfoWindow({zIndex:10});
+  // ── IW 래퍼 2종 = provider-map 이식(2026-08-11). 경위·함정 주석 전문=provider-map.html initMap ──
+  // ① setContent: 다인 카드 캡을 **열기 전에** 프로브로 재서 인라인 주입(카카오는 전체 높이로 오토팬 계산).
+  //    캡 = 첫 아동+회색 띠 border-bottom(배정·대기 공통, 유성 08-11 통일) / 화면 예산 초과 시 340 강등.
+  var _iwRawSetContent=infoWindow.setContent.bind(infoWindow);
+  infoWindow.setContent=function(html){
+    if(typeof html==='string'&&html.indexOf('iw-sep16')!==-1){
+      var probe=document.createElement('div');
+      probe.style.cssText='position:absolute;left:-9999px;top:0;visibility:hidden;';
+      probe.innerHTML=html;
+      document.body.appendChild(probe);
+      var pv=probe.querySelector('.iw'),ps=probe.querySelector('.iw-sep16');
+      if(pv&&ps){
+        var sepB=ps.offsetTop+ps.offsetHeight;
+        var mapH=(document.getElementById('map')||{}).clientHeight||0;
+        var cap=sepB<=Math.max(340,mapH-96)?sepB:340;
+        html=html.replace('<div class="iw">','<div class="iw" style="max-height:'+cap+'px">');
+      }
+      probe.remove();
+    }
+    _iwRawSetContent(html);
+  };
+  // ② open: 말풍선(카카오 DOM, 클래스 없음)을 카드 모양으로 동기화(폭·높이 ±2px·라운딩 8·그림자·overflow:hidden)
+  //    + 넘칠 때만 아래 32px 페이드(.iw-more), 끝 도달 시 해제(.iw-end). 페이드 끝색은 **불투명**이어야
+  //    지도가 안 비친다(#dae7e1 = green700 16%를 흰색 위에 미리 섞은 값 — 유성 08-11).
+  var _iwRawOpen=infoWindow.open.bind(infoWindow);
+  infoWindow.open=function(m2,mk){
+    _iwRawOpen(m2,mk);
+    var el=document.querySelector('.iw');
+    if(!el)return;
+    var bub=el.parentElement&&el.parentElement.parentElement;
+    if(bub&&bub.style&&bub.style.position==='absolute'){
+      var oldH=parseFloat(bub.style.height)||bub.offsetHeight;
+      var oldT=parseFloat(bub.style.top)||0;
+      var newH=el.offsetHeight+2;
+      bub.style.width=(el.offsetWidth+2)+'px';
+      bub.style.height=newH+'px';
+      bub.style.top=(oldT+(oldH-newH))+'px';
+      bub.style.borderRadius='8px';
+      bub.style.boxShadow='0 4px 10px rgba(25,31,40,.08)';
+      bub.style.overflow='hidden';
+      bub.style.background='linear-gradient(180deg,#fff calc(100% - 32px),#dae7e1)';
+    }
+    var more=el.scrollHeight>el.clientHeight+1;
+    el.classList.toggle('iw-more',more);
+    if(more){
+      var upd=function(){el.classList.toggle('iw-end',el.scrollTop+el.clientHeight>=el.scrollHeight-4)};
+      el.addEventListener('scroll',upd,{passive:true});
+      upd();
+    }
+  };
   kakao.maps.event.addListener(map,'click',function(){infoWindow.close()});
   placesService=new kakao.maps.services.Places();
   if(!viewToken){document.getElementById('hdrName').textContent='링크가 유효하지 않습니다';return}
   loadData();
 }
 
+// GAS /exec → echo 리다이렉트가 콜드스타트·회사망 프록시에서 간헐 404/HTML을 냄 → 읽기만 소백오프
+// 재시도로 흡수(provider-map 이식 2026-08-11 — [[gas-webapp-echo-404-retry]]). 쓰기(saveschedule)는 단발 유지.
+function _getJson(url,tries){
+  tries=(tries==null)?3:tries;
+  return fetch(url,{redirect:'follow',cache:'no-store'}).then(function(r){
+    return r.text().then(function(txt){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      try{return JSON.parse(txt)}
+      catch(e){throw new Error('BAD_JSON')}
+    });
+  }).catch(function(e){
+    if(tries>1)return new Promise(function(res){setTimeout(res,500*(4-tries))}).then(function(){return _getJson(url,tries-1)});
+    throw e;
+  });
+}
+
 function loadData(){
   showLoading(true);
-  fetch(CONFIG.GAS_URL+'?action=provview&token='+encodeURIComponent(viewToken),{redirect:'follow'}).then(function(r){return r.json()}).then(function(data){
+  _getJson(CONFIG.GAS_URL+'?action=provview&token='+encodeURIComponent(viewToken)).then(function(data){
     showLoading(false);
     if(data.error){document.getElementById('hdrName').textContent=data.error;return}
     viewData=data;var p=data.provider;
@@ -232,34 +343,105 @@ function groupByCoord(items){var g={};items.forEach(function(c){if(!c.lat||!c.ln
 function fitBounds(){if(!markers.length)return;if(markers.length===1){map.setCenter(markers[0].getPosition());map.setLevel(4);return}var b=new kakao.maps.LatLngBounds();markers.forEach(function(m){b.extend(m.getPosition())});map.setBounds(b,50)}
 
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
-function escQ(s){return esc(s).replace(/'/g,"\\'")}
+/* onclick 큰따옴표 속성 안 JS 문자열용 — provider-map 08-09 XSS 수정판 이식(옛 escQ는 `"`를 못 막았다.
+   따옴표별 층이 다르다: '=JS 레벨 \' / "=HTML 레벨 &quot; / 백슬래시·줄바꿈 처리. 상세 주석=provider-map.html) */
+function escQ(s){
+  return esc(s)
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/"/g,'&quot;')
+    .replace(/[\r\n]/g,' ');
+}
 function fmtPhone(s){var d=String(s||'').replace(/\D/g,'');if(d.length===11&&/^01/.test(d))return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);return s}
 function haversine(a,b,c,d){var R=6371,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180,x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 function fmtDist(k){return k<1?Math.round(k*1000)+'m':k.toFixed(1)+'km'}
 function fmtTimes(t){if(!t||!/[월화수목금토일]-\d/.test(t))return t;var days={};t.split(',').forEach(function(s){s=s.trim();var p=s.split('-');if(p.length<2)return;if(!days[p[0]])days[p[0]]=[];days[p[0]].push(parseInt(p[1]))});var parts=[];['월','화','수','목','금','토','일'].forEach(function(d){if(!days[d])return;var hrs=days[d].sort(function(a,b){return a-b});var ranges=[],st=hrs[0],prev=hrs[0];for(var i=1;i<hrs.length;i++){if(hrs[i]===prev+1)prev=hrs[i];else{ranges.push(st===prev?st+'시':st+'~'+prev+'시');st=hrs[i];prev=hrs[i]}}ranges.push(st===prev?st+'시':st+'~'+prev+'시');parts.push(d+' '+ranges.join(', '))});return parts.join(' | ')}
 
-function routeBtns(name,lat,lng){if(!lat||!lng)return'';return'<div class="iw-actions"><button class="iw-act from" onclick="setRoute(\'from\',\''+escQ(name)+'\','+lat+','+lng+')">🟢 출발</button><button class="iw-act to" onclick="setRoute(\'to\',\''+escQ(name)+'\','+lat+','+lng+')">🔴 도착</button></div>'}
+// ── IW 라인 SVG 아이콘·표형 행·시간 세그 = provider-map C안 이식(원본 주석=provider-map.html) ──
+var IW_IC={
+  pin:  '<svg class="iw-kic" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  clock:'<svg class="iw-kic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  cal:  '<svg class="iw-kic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  note: '<svg class="iw-kic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  phone:'<svg class="iw-kic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.5 2.9.6a2 2 0 0 1 1.7 2z"/></svg>'
+};
+function iwRow(ic,label,valHtml,valCls){return '<div class="k">'+IW_IC[ic]+label+'</div><div class="v'+(valCls?' '+valCls:'')+'">'+valHtml+'</div>'}
+function iwSegs(timesStr){var t=fmtTimes(timesStr);if(!t)return'';var parts=t.split(' | ');return parts.map(function(p,i){return '<span class="iw-seg">'+esc(p)+(i<parts.length-1?' ·':'')+'</span>'}).join(' ')}
+// '[시간참고]' 자유칸에서 시작 하한만 추출해 희망 옆 배지(표시만, 판정 안 건드림 — provider-map 이식)
+function noteEarliest(notes){
+  var s=String(notes||'').replace(/\[시간참고\]|\[원본시간\]/g,'').replace(/\s+/g,'');
+  var m=s.match(/(오전|오후)?(\d{1,2})\s*(?::|시)\s*(반|\d{1,2})?\s*분?\s*(?:정도|쯤|경)?\s*(?:이후|부터|이상)/);
+  if(!m)return'';
+  var hh=parseInt(m[2],10);
+  var mi=m[3]==='반'?30:(m[3]?parseInt(m[3],10):0);
+  if(isNaN(hh)||hh>23||mi>59)return'';
+  if(hh<12&&m[1]!=='오전')hh+=12;
+  return (hh<10?'0':'')+hh+':'+(mi<10?'0':'')+mi;
+}
+function earlyBadge(notes){var e=noteEarliest(notes);return e?'<span class="iw-hint">'+e+'부터</span>':''}
 
-function buildHomeIW(p){return'<div class="iw"><div class="iw-title">'+esc(p.name)+'<span class="iw-badge home">내 집</span></div>'+routeBtns(p.name+' 집',p.lat,p.lng)+'</div>'}
+// ── 중앙 확인 다이얼로그(§4.4) — confirm() 대체, provider-map 이식 ──
+var _cmEl=null,_cmOk=null;
+function iwConfirm(title,sub,okLabel,danger,onOk){
+  if(!_cmEl){
+    _cmEl=document.createElement('div');
+    _cmEl.id='cmDim';
+    _cmEl.innerHTML='<div class="cmodal"><div class="cm-t"></div><div class="cm-s"></div>'
+      +'<div class="cm-btns"><button class="cm-btn" id="cmClose">닫기</button>'
+      +'<button class="cm-btn primary" id="cmGo"></button></div></div>';
+    document.body.appendChild(_cmEl);
+    document.getElementById('cmClose').addEventListener('click',function(){_cmEl.classList.remove('show');_cmOk=null});
+    document.getElementById('cmGo').addEventListener('click',function(){_cmEl.classList.remove('show');var f=_cmOk;_cmOk=null;if(f)f()});
+  }
+  _cmEl.querySelector('.cm-t').textContent=title;
+  _cmEl.querySelector('.cm-s').textContent=sub||'';
+  var go=document.getElementById('cmGo');
+  go.textContent=okLabel||'확인';
+  go.classList.toggle('danger',!!danger);
+  _cmOk=onOk;
+  _cmEl.classList.add('show');
+}
 
+// 출발/도착 = §4.17 취소칩 결(색은 원이 담당) — provider-map 이식
+function routeBtns(name,lat,lng){
+  if(!lat||!lng)return'';
+  var n=escQ(name);
+  return '<div class="iw-r2">'
+    +'<button class="iw-chip wb" onclick="setRoute(\'from\',\''+n+'\','+lat+','+lng+')"><span class="iw-dot g"></span>출발</button>'
+    +'<button class="iw-chip wb" onclick="setRoute(\'to\',\''+n+'\','+lat+','+lng+')"><span class="iw-dot r"></span>도착</button>'
+    +'</div>';
+}
+
+function buildHomeIW(p){
+  return '<div class="iw"><div class="iw-nm">'+esc(p.name)+'<span class="iw-bdg tc">내 집</span></div>'
+    +'<div class="iw-tbl">'+iwRow('pin','위치','집')+'</div>'
+    +routeBtns(p.name+' 집',p.lat,p.lng)+'</div>';
+}
+
+// 배정 아동 IW — C안 문법(표형 주소>확정>희망>참고>전화 · 아동 사이 회색 띠). 확정의 T열 값은
+// 이 화면에선 '동선 순서(N번째)'다(시각 아님 — 드래그 저장이 쓰는 값).
 function buildChildIW(items,hLat,hLng){
   var h='<div class="iw">';
-  if(items.length>1)h+='<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:4px">같은 위치 '+items.length+'명</div>';
+  if(items.length>1)h+='<div class="iw-grp">같은 위치 '+items.length+'명</div>';
   items.forEach(function(c,i){
-    if(i>0)h+='<hr style="border:none;border-top:1px solid #eee;margin:6px 0">';
-    var name = (c.name||'').replace(/\s+$/,'');
-    var dist='';if(hLat&&hLng&&c.lat&&c.lng)dist='<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;background:#e8f0e5;color:#3a6b4e;margin-left:4px;vertical-align:middle">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
-    h+='<div class="iw-title">'+esc(name)+'<span class="iw-badge child">배정</span>'+dist+'</div>'
-      +'<div class="iw-row">📍 '+esc(c.address)+'</div>';
-    if(c.phone)h+='<div class="iw-phone">📞 <a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a></div>';
-    if(c.times)h+='<div class="iw-times">🕐 '+esc(fmtTimes(c.times))+'</div>';
+    if(i>0)h+='<div class="iw-sep16"></div>';
+    var name=(c.name||'').replace(/\s+$/,'');
+    var dist='';
+    if(hLat&&hLng&&c.lat&&c.lng)dist='<span class="iw-bdg dst">'+fmtDist(haversine(hLat,hLng,c.lat,c.lng))+'</span>';
+    h+='<div class="iw-nm">'+esc(name)+'<span class="iw-bdg as">배정</span>'+dist+'</div>';
+    var curDay=c.confirmedDay||'',curOrder=c.confirmedTime||'';
+    h+='<div class="iw-tbl">';
+    h+=iwRow('pin','주소',esc(c.address));
+    if(curDay)h+=iwRow('clock','확정','<b>'+esc(curDay)+(curOrder?' · '+esc(curOrder)+'번째':'')+'</b>');
+    if(c.times)h+=iwRow('cal','희망',iwSegs(c.times)+earlyBadge(c.notes));
+    if(c.notes)h+=iwRow('note','참고',esc(c.notes),'dim');
+    if(c.phone)h+=iwRow('phone','전화','<a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a>');
+    h+='</div>';
 
+    // 요일 확정 편집(saveschedule) — ⚠️백로그 L373 폐기 라운드에서 서버 차단과 함께 제거될 자리
     if(c.formRow){
-      var schId = 'sch_'+c.formRow;
-      var curDay = c.confirmedDay||'';
-      var curOrder = c.confirmedTime||'';
+      var schId='sch_'+c.formRow;
       h+='<div class="iw-edit">';
-      if(curDay) h+='<span class="iw-edit-label">✅ '+esc(curDay)+(curOrder?' · '+esc(curOrder)+'번째':'')+'</span>';
       h+='<select id="'+schId+'_day" class="iw-edit-sel">'
         +'<option value="">요일</option>';
       ['월','화','수','목','금','토'].forEach(function(d){
@@ -267,12 +449,10 @@ function buildChildIW(items,hLat,hLng){
       });
       h+='</select>'
         +'<button class="iw-edit-btn" onclick="saveSchedule('+c.formRow+',\''+schId+'\')">저장</button>';
-      if(curDay) h+='<button class="iw-edit-btn clear" onclick="clearSchedule('+c.formRow+')">초기화</button>';
+      if(curDay)h+='<button class="iw-edit-btn clear" onclick="clearSchedule('+c.formRow+')">초기화</button>';
       h+='</div>';
     }
-
-    if(c.notes)h+='<div class="iw-notes">'+esc(c.notes)+'</div>';
-    // 출발/도착 버튼 제거 — 하단 동선 바로 이동이 기본 플로우
+    // 출발/도착 버튼 없음 — 하단 동선 바로 이동이 기본 플로우(기존 결정 유지)
   });
   return h+'</div>';
 }
@@ -351,7 +531,7 @@ function placeSearchMarker(lat,lng,iwContent){
     results.querySelectorAll('.sr-addr').forEach(function(el){el.addEventListener('click',function(){
       var lat=parseFloat(this.getAttribute('data-lat')),lng=parseFloat(this.getAttribute('data-lng')),name=this.getAttribute('data-name');if(!lat||!lng)return;
       map.setCenter(new kakao.maps.LatLng(lat,lng));map.setLevel(3);
-      var iw='<div class="iw"><div class="iw-title">📍 '+esc(name)+'</div>'+routeBtns(name,lat,lng)+'</div>';
+      var iw='<div class="iw"><div class="iw-nm iw-addr">'+esc(name)+'</div>'+routeBtns(name,lat,lng)+'</div>';
       var sm=placeSearchMarker(lat,lng,iw);infoWindow.setContent(iw);infoWindow.open(map,sm);
       results.classList.remove('show');input.value=name;
     })});
@@ -385,17 +565,19 @@ function saveSchedule(row, schId) {
 }
 
 function clearSchedule(row) {
-  if (!confirm('확정 요일을 취소합니다.')) return;
-  if (viewData && viewData.assigned) {
-    viewData.assigned.forEach(function(c) {
-      if (c.formRow === row) { c.confirmedDay = ''; c.confirmedTime = ''; }
-    });
-    renderFiltered();
-  }
-  showToast('확정 취소됨', true);
-  infoWindow.close();
-  fetch(CONFIG.GAS_URL + '?action=saveschedule&token=' + encodeURIComponent(viewToken)
-    + '&row=' + row + '&day=&time=', {redirect:'follow'}).catch(function(){});
+  // confirm() → §4.4 중앙 다이얼로그(provider-map 이식 — 좌 닫기·우 주액션, 파괴적=danger 빨강)
+  iwConfirm('확정 요일을 취소할까요?', '', '취소하기', true, function() {
+    if (viewData && viewData.assigned) {
+      viewData.assigned.forEach(function(c) {
+        if (c.formRow === row) { c.confirmedDay = ''; c.confirmedTime = ''; }
+      });
+      renderFiltered();
+    }
+    showToast('확정 취소됨', true);
+    infoWindow.close();
+    fetch(CONFIG.GAS_URL + '?action=saveschedule&token=' + encodeURIComponent(viewToken)
+      + '&row=' + row + '&day=&time=', {redirect:'follow'}).catch(function(){});
+  });
 }
 
 // ══ 요일 필터 ══
@@ -459,7 +641,7 @@ function renderFiltered() {
       var line = new kakao.maps.Polyline({
         path: path,
         strokeWeight: 3,
-        strokeColor: '#3a6b4e',
+        strokeColor: '#3a8a5f',
         strokeOpacity: 0.6,
         strokeStyle: 'shortdash'
       });
@@ -808,7 +990,7 @@ function rebuildMapOnly() {
     });
     if (path.length >= 2) {
       var line = new kakao.maps.Polyline({
-        path: path, strokeWeight: 3, strokeColor: '#3a6b4e',
+        path: path, strokeWeight: 3, strokeColor: '#3a8a5f',
         strokeOpacity: 0.6, strokeStyle: 'shortdash'
       });
       line.setMap(map);
