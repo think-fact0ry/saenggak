@@ -841,10 +841,25 @@ function initMap() {
       probe.innerHTML = html;
       document.body.appendChild(probe);
       var pv = probe.querySelector('.iw'), ps = probe.querySelector('.iw-sep16');
-      // 캡 = min(첫 아동+띠, 340). 전체 보기 대기 카드는 첫 아동 블록만 ~530px(추천 3줄+배정하기+
-      // 출발/도착+부재·거절·복사·마크 스택)라 "첫 아동까지"만으로도 말풍선이 화면 위를 뚫고 오토팬이
-      // 크게 발동한다(2026-08-10 실측: 캡 564 → 말풍선 566, top -197). 340 = 유성 확정 스크롤 캡.
-      if (pv && ps) html = html.replace('<div class="iw">', '<div class="iw" style="max-height:' + Math.min(ps.offsetTop + ps.offsetHeight, 340) + 'px">');
+      if (pv && ps) {
+        var sepB = ps.offsetTop + ps.offsetHeight;   // 첫 아동 + 회색 띠 border-bottom까지
+        // 캡 분기(유성 2026-08-11 "배정 다인도 첫 카드+띠에 맞춰야" — 340 일괄이 배정 카드를 끝만 잘랐다):
+        // · 배정 다인(iw-asg) = 첫 아동 전부+띠(전형 실측 318~471). 화면 예산(지도높이-96: 테두리2+
+        //   꼬리·마커·여유)을 넘으면 340 강등 — min(sepB,예산)으로 자르면 "거의 다 나온 카드가
+        //   끝만 잘림"(오늘 증상)을 재생산하므로 넘치면 표준 캡으로 완전 강등하는 분기여야 한다.
+        // · 대기 다인 = min(첫 아동+띠, 340) 유지. 전체 보기 대기는 첫 블록만 ~530px(추천 3줄+
+        //   배정하기+출발/도착+부재·거절·복사·마크 스택)라 말풍선이 화면 위를 뚫는다
+        //   (2026-08-10 실측: 캡 564 → 말풍선 566, top -197). 340 = 유성 확정 스크롤 캡.
+        var cap;
+        if (html.indexOf('iw-asg') !== -1) {
+          var mapH = (document.getElementById('map') || {}).clientHeight || 0;
+          cap = sepB <= Math.max(340, mapH - 96) ? sepB : 340;
+        } else {
+          cap = Math.min(sepB, 340);
+        }
+        var root = html.indexOf('iw-asg') !== -1 ? '<div class="iw iw-asg">' : '<div class="iw">';
+        html = html.replace(root, root.slice(0, -1) + ' style="max-height:' + cap + 'px">');
+      }
       probe.remove();
     }
     _iwRawSetContent(html);
@@ -873,7 +888,10 @@ function initMap() {
       // 페이드 아래끝에 green700(#166841) 빛 — 순수 투명 페이드는 "스크롤 더 있음"이 안 읽힌다(유성 2026-08-10).
       // 원리: .iw(흰 배경)를 mask가 투명화하면 이 말풍선 배경 그라데이션이 비친다. 끝(.iw-end)이나
       // 짧은 IW에선 mask가 없어 .iw 흰 배경이 도로 덮으므로 토글 코드가 따로 필요 없다.
-      bub.style.background = 'linear-gradient(180deg,#fff calc(100% - 32px),rgba(22,104,65,.16))';
+      // ⚠️ 끝색은 **불투명**이어야 한다 — 옛 rgba(22,104,65,.16)은 말풍선 배경을 통째로 갈아끼우는
+      //    자리라 흰색과 합성될 곳이 없어 지도가 그대로 비쳤다(유성 2026-08-11 "카드 자체는 투명이
+      //    되면 안돼"). #dae7e1 = green700 16%를 흰색 위에 미리 섞은 값(의도한 색 그대로, 불투명).
+      bub.style.background = 'linear-gradient(180deg,#fff calc(100% - 32px),#dae7e1)';
     }
     var more = el.scrollHeight > el.clientHeight + 1;
     el.classList.toggle('iw-more', more);
@@ -1571,7 +1589,7 @@ function buildHomeIW(p) {
 }
 
 function buildGroupedAssignedIW(items, hLat, hLng) {
-  var h='<div class="iw">';
+  var h='<div class="iw iw-asg">';   // iw-asg = setContent 래퍼의 캡 분기 마커(배정 카드 판별용, CSS 없음)
   if (items.length>1) h+='<div class="iw-grp">같은 위치 '+items.length+'명</div>';
   items.forEach(function(c,i) {
     if (i>0) h+='<div class="iw-sep16"></div>';
