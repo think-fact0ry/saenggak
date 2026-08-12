@@ -93,11 +93,7 @@
   .iw-dot.r{background:var(--danger)}
   .iw-r2{display:flex;gap:5px;margin-top:9px}
   .iw-r2 .iw-chip{flex:1}
-  /* 요일 확정 편집 = saveschedule 경로 — ⚠️백로그 L373 폐기 라운드에서 서버 차단과 함께 제거될 자리 */
-  .iw-edit{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:7px 8px;background:var(--g100);border-radius:8px}
-  .iw-edit-sel{padding:5px 6px;border:1px solid var(--g200);border-radius:6px;font-size:11.5px;font-family:inherit;background:#fff;color:var(--g800)}
-  .iw-edit-btn{padding:5px 10px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid var(--green700);color:var(--green700);background:#fff}
-  .iw-edit-btn.clear{border-color:var(--g200);color:var(--g500);font-weight:500}
+  /* ⛔ .iw-edit(요일 확정 편집) 삭제됨 2026-08-12 — saveschedule 폐기와 함께(감사 발견 A) */
   /* ── 중앙 확인 다이얼로그(§4.4) — provider-map 이식, confirm() 대체 ── */
   #cmDim{position:fixed;inset:0;z-index:120;background:rgba(25,31,40,.45);display:none;align-items:center;justify-content:center}
   #cmDim.show{display:flex}
@@ -443,20 +439,10 @@ function buildChildIW(items,hLat,hLng){
     if(c.phone)h+=iwRow('phone','전화','<a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a>');
     h+='</div>';
 
-    // 요일 확정 편집(saveschedule) — ⚠️백로그 L373 폐기 라운드에서 서버 차단과 함께 제거될 자리
-    if(c.formRow){
-      var schId='sch_'+c.formRow;
-      h+='<div class="iw-edit">';
-      h+='<select id="'+schId+'_day" class="iw-edit-sel">'
-        +'<option value="">요일</option>';
-      ['월','화','수','목','금','토'].forEach(function(d){
-        h+='<option'+(curDay===d?' selected':'')+'>'+d+'</option>';
-      });
-      h+='</select>'
-        +'<button class="iw-edit-btn" onclick="saveSchedule('+c.formRow+',\''+schId+'\')">저장</button>';
-      if(curDay)h+='<button class="iw-edit-btn clear" onclick="clearSchedule('+c.formRow+')">초기화</button>';
-      h+='</div>';
-    }
+    // ⛔ 요일 확정 편집(saveschedule) **제거됨** (2026-08-12 — 유성 확정 "안 씀", 서버도 같은 날 차단).
+    //    이 화면에서 저장하면 ①`_writeST_`를 안 거쳐 서식 없이 쓰이고 ②오감 탭 고정이라 다른 서비스 아동을
+    //    잘못 짚을 수 있었고 ③여기 확정 T열은 **동선 순서(N번째)**인데 그 값이 확정시각 칸에 들어갔고
+    //    ④겹침 가드를 안 거쳐 이중배정 검사가 통째로 빠졌다(감사 발견 A). 확정은 행정 배정 화면 한 곳에서만.
     // 출발/도착 버튼 없음 — 하단 동선 바로 이동이 기본 플로우(기존 결정 유지)
   });
   return h+'</div>';
@@ -546,44 +532,8 @@ function placeSearchMarker(lat,lng,iwContent){
 function showLoading(v){document.getElementById('loading').classList.toggle('show',v)}
 var _tt;function showToast(m,ok){var e=document.getElementById('toast');e.textContent=m;e.className='toast show'+(ok?' success':'');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show')},3000)}
 
-function saveSchedule(row, schId) {
-  var day = document.getElementById(schId+'_day').value;
-  if (!day) { showToast('요일을 선택해주세요'); return; }
-  // 순서 드롭다운 제거됨 — 기존 confirmedTime 유지 (드래그로만 순서 변경)
-  var order = '';
-  if (viewData && viewData.assigned) {
-    viewData.assigned.forEach(function(c) {
-      if (c.formRow === row) order = c.confirmedTime || '';
-    });
-  }
-  if (viewData && viewData.assigned) {
-    viewData.assigned.forEach(function(c) {
-      if (c.formRow === row) { c.confirmedDay = day; /* confirmedTime 유지 */ }
-    });
-    renderFiltered();
-  }
-  showToast(day + (order ? ' '+order+'번째' : '') + ' 저장됨', true);
-  infoWindow.close();
-  fetch(CONFIG.GAS_URL + '?action=saveschedule&token=' + encodeURIComponent(viewToken)
-    + '&row=' + row + '&day=' + encodeURIComponent(day) + '&time=' + encodeURIComponent(order),
-    {redirect:'follow'}).catch(function(){});
-}
-
-function clearSchedule(row) {
-  // confirm() → §4.4 중앙 다이얼로그(provider-map 이식 — 좌 닫기·우 주액션, 파괴적=danger 빨강)
-  iwConfirm('확정 요일을 취소할까요?', '', '취소하기', true, function() {
-    if (viewData && viewData.assigned) {
-      viewData.assigned.forEach(function(c) {
-        if (c.formRow === row) { c.confirmedDay = ''; c.confirmedTime = ''; }
-      });
-      renderFiltered();
-    }
-    showToast('확정 취소됨', true);
-    infoWindow.close();
-    fetch(CONFIG.GAS_URL + '?action=saveschedule&token=' + encodeURIComponent(viewToken)
-      + '&row=' + row + '&day=&time=', {redirect:'follow'}).catch(function(){});
-  });
-}
+// ⛔ saveSchedule·clearSchedule 삭제됨 (2026-08-12) — S·T 쓰기 경로는 행정 배정 화면의 `_writeST_` 하나뿐이다.
+//    서버 `saveschedule` 액션도 같은 날 명시적 거절로 바뀌었다(폰에 캐시된 옛 화면이 불러도 이유를 말해준다).
 
 // ══ 요일 필터 ══
 var activeDay = '';

@@ -553,6 +553,36 @@
             cursor:pointer;padding:10px 2px;margin-top:4px}
   .asg-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
   .asg-grid .asg-slot{padding:9px 0;text-align:center;font-size:13px}
+  /* ── F3(유성 2026-08-10): 요일별 **행 분리** + 행 좌측 요일색(PLAN_DC와 같은 무지개) ──
+        폭은 버튼이 가장 많은 요일이 정한다(기본 3열·최대 6열=14~19시) — --asg-cols를 JS가 세팅 */
+  .asg-rows{display:flex;flex-direction:column;gap:6px}
+  .asg-row{display:flex;align-items:center;gap:7px}
+  .asg-day{flex:0 0 30px;text-align:center;font-size:12.5px;font-weight:800;color:#fff;
+           border-radius:8px;padding:9px 0;line-height:1}
+  .asg-cells{flex:1;display:grid;grid-template-columns:repeat(var(--asg-cols,3),1fr);gap:5px}
+  .asg-cells .asg-slot{position:relative;padding:11px 0 9px;text-align:center;font-size:12.5px;overflow:visible}
+  /* F2: 찬 자리는 **막지 않고** 그 자리 아동 이름을 좌상단 배지로 보여준다(눌러도 됨 → 겹침 다이얼로그로) */
+  .asg-slot.taken{border-style:dashed;color:#8b95a1}
+  .asg-occ{position:absolute;top:-7px;left:4px;max-width:calc(100% - 8px);overflow:hidden;text-overflow:ellipsis;
+           white-space:nowrap;font-size:9.5px;font-weight:700;line-height:1;padding:3px 5px;border-radius:5px;
+           background:#f2f4f6;color:#6b7684;border:1px solid #e5e8eb}
+  .asg-slot.on .asg-occ{background:#fff;border-color:#3a8a5f;color:#166841}
+  .asg-unk{font-size:12px;color:#8a5a00;background:#fff7e6;border-radius:9px;padding:8px 10px;margin-top:10px;line-height:1.5}
+  /* ── 겹침 다이얼로그(§4.4 결) ── */
+  #cgModal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:20px}
+  #cgModal.show{display:flex}
+  .cg-card{width:100%;max-width:340px;background:#fff;border-radius:20px;padding:22px 20px 16px}
+  .cg-t{font-size:16.5px;font-weight:800;letter-spacing:-.3px;line-height:1.4;word-break:keep-all}
+  .cg-s{font-size:13px;color:#6b7684;margin-top:9px;line-height:1.6;word-break:keep-all}
+  .cg-warn{font-size:12.5px;color:#8a5a00;background:#fff7e6;border-radius:10px;padding:9px 11px;margin-top:11px;line-height:1.5}
+  .cg-btns{display:flex;gap:7px;margin-top:16px}
+  .cg-btns.col{flex-direction:column}
+  .cg-b{flex:1;font-family:inherit;border:none;cursor:pointer;border-radius:12px;padding:13px 0;font-size:14px;
+        font-weight:700;background:#f2f4f6;color:#4e5968;transition:transform .12s}
+  .cg-b:active{transform:scale(.97)}
+  .cg-b.pri{background:#166841;color:#fff}
+  .cg-b.outline{background:#fff;border:1.5px solid #3a8a5f;color:#166841;padding:11.5px 0}
+  .cg-b.dngr{background:#D25357;color:#fff}
   .asg-prov{width:100%;box-sizing:border-box;font-family:inherit;font-size:15px;color:#191f28;
              padding:13px 14px;border-radius:14px;border:1.5px solid #e5e8eb;background:#fff;outline:none;
              appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b95a1' stroke-width='2' fill='none'/%3E%3C/svg%3E");
@@ -568,19 +598,25 @@
     <div class="asg-lbl">어느 선생님인가요?</div>
     <select class="asg-prov" id="asgProvSelect" onchange="asgProvChanged()"></select>
     <div class="asg-lbl">언제 수업하나요?</div>
-    <div class="asg-slots" id="asgSlots"></div>
+    <div class="asg-rows" id="asgSlots"></div>
     <button class="asg-more" id="asgMoreBtn" onclick="asgToggleMore()">그 외 시간 고르기 ▾</button>
     <div id="asgMore" style="display:none">
-      <div class="asg-lbl">요일</div>
-      <div class="asg-grid" id="asgDays"></div>
-      <div class="asg-lbl">시각</div>
-      <div class="asg-grid" id="asgHours"></div>
+      <div class="asg-rows" id="asgAll"></div>
     </div>
+    <div id="asgUnknown"></div>
     <div id="asgNote"></div>
     <button class="sm-btn" id="asgOk" onclick="asgConfirm()" disabled>이 시간으로 배정</button>
     <button class="sm-close" onclick="asgClose()">취소</button>
   </div>
 </div>
+
+<!-- 겹침 다이얼로그 — 같은 교사·같은 시각에 이미 아이가 있을 때. 막지 않고 **어떻게 할지 묻는다**(유성 2026-08-10) -->
+<div id="cgModal"><div class="cg-card">
+  <div class="cg-t" id="cgTitle"></div>
+  <div class="cg-s" id="cgSub"></div>
+  <div id="cgWarn"></div>
+  <div class="cg-btns" id="cgBtns"></div>
+</div></div>
 
 <div id="staffModal">
   <div class="sm-card">
@@ -1197,14 +1233,14 @@ function boot(){
   if (getAdminToken()) MODE = 'admin';
   else { var s = getStaffSess(); MODE = (s && s.session) ? 'provider' : 'basic'; }
   applyModeUI();
-  if (MODE === 'admin') loadProviders();
+  if (MODE === 'admin') { loadProviders(); loadOccupancy(); }   // 병렬 — 겹침 배지용 점유표(추가 지연 0)
   else if (MODE === 'provider') loadStaffMap();
   else loadBasicMap();
 }
 // 🔑 행정 버튼: basic서 토큰 입력→행정 승격(토큰은 localStorage에 영구 저장, 다음 방문부터 자동 admin)
 function adminKeyLogin(){
   promptAdminToken('🔑 행정 인증 토큰을 입력하세요:').then(function(){
-    if (getAdminToken()){ MODE='admin'; applyModeUI(); _svcCache={}; loadProviders(); }
+    if (getAdminToken()){ MODE='admin'; applyModeUI(); _svcCache={}; loadProviders(); loadOccupancy(); }
   });
 }
 function applyModeUI(){
@@ -1814,13 +1850,60 @@ function calcTimeOverlap(childTimes, provAvail) {
 // ══ 배정 확인 다이얼로그 (요일·시각 같이) ══
 // ⚠️ 배정 추천(doAssignTo)과 제공인력 선택 배정(doAssign)이 **같은 다이얼로그**를 쓴다 —
 //    한쪽만 고치면 다른 쪽에 확정 시각이 안 남아 이중배정 구멍이 그대로 남는다.
-var _asgCtx = null, _asgPick = null, _asgDay = null, _asgHour = null;
+var _asgCtx = null, _asgPick = null;
 var ASG_DAYS = ['월','화','수','목','금','토'];
-var ASG_HOURS = [14,15,16,17,18,19,20];
+var ASG_HOURS = [14,15,16,17,18,19];   // F3 — 최대 6열이 이 범위다(유성 2026-08-10)
+
+// ══ 점유 시간표 (겹침 배지 F2) ══
+// 그 교사의 6개 서비스 탭 S·T + 대장 역산을 서버가 합쳐 준다. **부팅 때 한 번**(mapdata·providers와 병렬)
+// 받아 두면 다이얼로그를 열 때 왕복이 0이다([[gas-latency-is-roundtrip-count]]).
+// ⚠️ 이건 표시용 사본이라 낡을 수 있다 — **진짜 판정은 쓰기 직전 서버가 다시 한다**(사본을 믿고 막지 않는다).
+var OCC = { map: {}, unknown: {} };
+function loadOccupancy() {
+  return fetchGAS('occupancy').then(function(r) {
+    if (r && r.occupancy) { OCC.map = r.occupancy; OCC.unknown = r.unknown || {}; }
+  }).catch(function() { /* 실패해도 배정은 되어야 한다 — 배지만 안 뜬다 */ });
+}
+/** 그 교사의 (요일, 시각) 자리에 이미 있는 아동 이름들. 자기 자신은 뺀다(엣지 5). */
+function _occAt(prov, day, hour, durMin, selfName) {
+  var list = OCC.map[prov] || [], s = hour * 60, e = s + (durMin || 40), out = [];
+  for (var i = 0; i < list.length; i++) {
+    var o = list[i];
+    if (o.d !== day || !(o.s < e && s < o.e)) continue;
+    if (selfName && o.n === selfName) continue;
+    out.push(o.n);
+  }
+  return out;
+}
+function _asgDur() { return currentService === '아청심' ? 50 : 40; }
+
+/**
+ * F3 — 요일별 **행**으로 그린다(행 좌측에 PLAN_DC 요일색). F2 — 찬 자리엔 그 아동 이름 배지.
+ * 찬 자리도 **누를 수 있다**(유성 확정) — 누르면 서버가 겹침 다이얼로그를 띄운다.
+ * @return {number} 한 요일의 최대 버튼 수 — 다이얼로그 폭(열 수)을 이게 정한다
+ */
+function _asgRenderRows(el, pairs, prov, selfName) {
+  var byDay = {}, dur = _asgDur(), maxN = 0;
+  pairs.forEach(function(p) { (byDay[p.day] = byDay[p.day] || []).push(p.hour); });
+  var html = ASG_DAYS.map(function(d) {
+    var hrs = (byDay[d] || []).slice().sort(function(a, b){ return a - b; });
+    if (!hrs.length) return '';
+    if (hrs.length > maxN) maxN = hrs.length;
+    return '<div class="asg-row"><span class="asg-day" style="background:' + (PLAN_DC[d] || '#666') + '">' + d + '</span>'
+      + '<div class="asg-cells">' + hrs.map(function(h) {
+          var occ = _occAt(prov, d, h, dur, selfName);
+          var lab = occ.length ? '<span class="asg-occ">' + esc(occ[0]) + (occ.length > 1 ? ' +' + (occ.length - 1) : '') + '</span>' : '';
+          return '<button class="asg-slot' + (occ.length ? ' taken' : '') + '" data-d="' + d + '" data-h="' + h
+               + '" onclick="asgPick(this)">' + lab + h + ':00</button>';
+        }).join('') + '</div></div>';
+  }).join('');
+  el.innerHTML = html;
+  return maxN;
+}
 
 function askAssignSchedule(row, provName, childName, times) {
   _asgCtx = { row: row, prov: provName, child: childName, times: times };
-  _asgPick = null; _asgDay = null; _asgHour = null;
+  _asgPick = null;
 
   document.getElementById('asgTitle').textContent = '배정하기';
   // ⚠️ 추천은 상위 3명뿐이라 원하는 선생님이 없을 수 있다. 예전엔 좌상단 드롭다운을 바꾸고
@@ -1828,31 +1911,48 @@ function askAssignSchedule(row, provName, childName, times) {
   _asgFillProviders(row, provName, childName);
   document.getElementById('asgSub').textContent = (childName || (row + '행 아동')) + ' · ' + currentService;
 
-  // 아동이 체크한 칸을 버튼으로. 누르기만 하면 되니 오타·형식 사고가 없다.
+  _asgPaint();
+  document.getElementById('asgNote').innerHTML = '';
+  document.getElementById('asgOk').disabled = true;
+  document.getElementById('asgOk').textContent = '이 시간으로 배정';   // 밀린 아이 옮기기 모드에서 바뀌므로 되돌린다
+  document.getElementById('asgModal').style.display = 'flex';
+}
+
+/** 슬롯 두 벌(희망시간·그 외 전체)을 다시 그린다. 선생님을 바꾸면 배지가 달라지므로 다시 부른다. */
+function _asgPaint() {
+  if (!_asgCtx) return;
+  var prov = _asgCtx.prov, self = _asgCtx.child;
+  var list = String(_asgCtx.times || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean);
+  var pairs = list.map(function(t) {
+    var p = t.split('-'), h = parseInt(p[1], 10);
+    return (!p[0] || isNaN(h)) ? null : { day: p[0], hour: h };
+  }).filter(Boolean);
+
   var wrap = document.getElementById('asgSlots');
-  var list = String(times || '').split(',').map(function(x){return x.trim()}).filter(Boolean);
-  if (!list.length) {
+  var n1 = 0;
+  if (!pairs.length) {
     wrap.innerHTML = '<span style="font-size:13px;color:#8b95a1">희망시간이 비어 있습니다 — 아래에서 직접 고르세요</span>';
     asgToggleMore(true);
   } else {
-    wrap.innerHTML = list.map(function(t){
-      var p = t.split('-'), h = parseInt(p[1],10);
-      if (!p[0] || isNaN(h)) return '';
-      var lab = p[0] + ' ' + h + ':00';
-      return '<button class="asg-slot" data-d="'+p[0]+'" data-h="'+h+'" onclick="asgPick(this)">'+lab+'</button>';
-    }).join('');
-    document.getElementById('asgMore').style.display = 'none';
-    document.getElementById('asgMoreBtn').textContent = '그 외 시간 고르기 ▾';
+    n1 = _asgRenderRows(wrap, pairs, prov, self);
   }
 
-  document.getElementById('asgDays').innerHTML = ASG_DAYS.map(function(d){
-    return '<button class="asg-slot" data-d="'+d+'" onclick="asgPickDay(this)">'+d+'</button>'; }).join('');
-  document.getElementById('asgHours').innerHTML = ASG_HOURS.map(function(h){
-    return '<button class="asg-slot" data-h="'+h+'" onclick="asgPickHour(this)">'+h+'시</button>'; }).join('');
+  // '그 외' = 전 요일 × 14~19시. 같은 렌더러라 배지·요일색이 두 벌에서 어긋나지 않는다(0-9).
+  var all = [];
+  ASG_DAYS.forEach(function(d){ ASG_HOURS.forEach(function(h){ all.push({ day: d, hour: h }); }); });
+  var n2 = _asgRenderRows(document.getElementById('asgAll'), all, prov, self);
 
-  document.getElementById('asgNote').innerHTML = '';
-  document.getElementById('asgOk').disabled = true;
-  document.getElementById('asgModal').style.display = 'flex';
+  // F3 — 폭은 버튼이 가장 많은 요일이 정한다(기본 3열·최대 6열)
+  var open = document.getElementById('asgMore').style.display !== 'none';
+  var cols = Math.max(3, Math.min(6, open ? Math.max(n1, n2) : n1));
+  document.querySelector('#asgModal .sm-card').style.setProperty('--asg-cols', cols);
+
+  // 시간 미상 경고 — "겹치지 않는다"가 아니라 "모른다"를 숨기지 않는다(유성 확정)
+  var unk = (OCC.unknown && OCC.unknown[prov]) || [];
+  document.getElementById('asgUnknown').innerHTML = unk.length
+    ? '<div class="asg-unk">이 선생님에게 <b>시간을 모르는 아동이 ' + unk.length + '명</b> 있어요 ('
+      + esc(unk.slice(0, 3).join(', ')) + (unk.length > 3 ? ' 외' : '') + ') — 겹칠 수도 있어요.</div>'
+    : '';
 }
 /**
  * 다이얼로그의 선생님 드롭다운을 채운다.
@@ -1887,7 +1987,12 @@ function _asgFillProviders(row, preferName, childName) {
 
 function asgProvChanged() {
   var sel = document.getElementById('asgProvSelect');
-  if (_asgCtx) _asgCtx.prov = sel.value;
+  if (!_asgCtx) return;
+  _asgCtx.prov = sel.value;
+  _asgPick = null;                     // 선생님이 바뀌면 그 자리의 의미도 바뀐다 — 고른 것을 지운다
+  _asgPaint();                         // 배지(누가 이미 있는지)를 새 선생님 기준으로 다시 그린다
+  document.getElementById('asgOk').disabled = true;
+  document.getElementById('asgNote').innerHTML = '';
 }
 
 function asgClose(){ document.getElementById('asgModal').style.display='none'; _asgCtx=null; }
@@ -1896,42 +2001,62 @@ function asgToggleMore(force){
   var open = force === true ? true : (m.style.display === 'none');
   m.style.display = open ? '' : 'none';
   b.textContent = open ? '접기 ▴' : '그 외 시간 고르기 ▾';
+  if (_asgCtx) _asgPaint();            // 열리면 6열이 되므로 폭을 다시 잡는다
 }
 function _asgClear(sel){ Array.prototype.forEach.call(document.querySelectorAll(sel), function(b){ b.classList.remove('on'); }); }
 function asgPick(btn){
-  _asgClear('#asgSlots .asg-slot'); _asgClear('#asgDays .asg-slot'); _asgClear('#asgHours .asg-slot');
+  _asgClear('#asgSlots .asg-slot'); _asgClear('#asgAll .asg-slot');
   btn.classList.add('on');
-  _asgPick = { day: btn.dataset.d, hour: Number(btn.dataset.h) };
-  _asgDay = null; _asgHour = null;
+  _asgPick = { day: btn.dataset.d, hour: Number(btn.dataset.h),
+               wished: btn.parentNode.parentNode.parentNode.id === 'asgSlots' };
   _asgSync();
 }
-function asgPickDay(btn){ _asgClear('#asgDays .asg-slot'); _asgClear('#asgSlots .asg-slot');
-  btn.classList.add('on'); _asgDay = btn.dataset.d; _asgPick = null; _asgSync(); }
-function asgPickHour(btn){ _asgClear('#asgHours .asg-slot'); _asgClear('#asgSlots .asg-slot');
-  btn.classList.add('on'); _asgHour = Number(btn.dataset.h); _asgPick = null; _asgSync(); }
 function _asgSync(){
-  var d = _asgPick ? _asgPick.day : _asgDay, h = _asgPick ? _asgPick.hour : _asgHour;
-  var ok = !!(d && h != null);
+  var ok = !!(_asgPick && _asgPick.day && _asgPick.hour != null);
   document.getElementById('asgOk').disabled = !ok;
   // 아동이 체크하지 않은 칸을 고르면 알린다 — 막지는 않는다(조율해서 정한 시간일 수 있다)
   var note = document.getElementById('asgNote');
-  if (ok && !_asgPick) {
-    note.innerHTML = '<div class="asg-note">학부모가 체크하지 않은 시간입니다. 조율해서 정하신 시간이면 그대로 진행하세요.</div>';
-  } else note.innerHTML = '';
+  note.innerHTML = (ok && !_asgPick.wished)
+    ? '<div class="asg-note">학부모가 체크하지 않은 시간입니다. 조율해서 정하신 시간이면 그대로 진행하세요.</div>' : '';
 }
 function asgConfirm(){
   if (!_asgCtx) return;
-  var d = _asgPick ? _asgPick.day : _asgDay, h = _asgPick ? _asgPick.hour : _asgHour;
+  var d = _asgPick && _asgPick.day, h = _asgPick && _asgPick.hour;
   if (!d || h == null) return;
-  var row = _asgCtx.row;
+  var time = (h < 10 ? '0' : '') + h + ':00';
+
+  // 밀려난 아이의 **새 시간**을 고르는 중이면, 원래 배정 요청에 그 결정을 실어 한 번에 보낸다
+  // (엣지 8 — 두 번에 나눠 보내면 창을 닫았을 때 밀린 아이가 미아가 된다).
+  if (_asgCtx.victimFor) {
+    var vf = _asgCtx.victimFor;
+    asgClose();
+    _cgSend(vf.req, { mode: 'move', row: vf.victim.row, tab: vf.victim.tab, day: d, time: time }, false);
+    return;
+  }
+
   var prov = document.getElementById('asgProvSelect').value || _asgCtx.prov;
   if (!prov) { showToast('선생님을 고르세요'); return; }
-  var time = (h < 10 ? '0' : '') + h + ':00';
+  var req = { row: _asgCtx.row, provider: prov, service: currentService, ctx: _ctxKeyName(),
+              day: d, time: time, child: _asgCtx.child };
   asgClose();
+  _cgSend(req, null, false);
+}
+
+/**
+ * 배정 요청을 보낸다. 겹치면 서버가 **아무것도 안 쓰고** conflict를 돌려주고, 그때 다이얼로그를 띄운다.
+ * @param {Object} resolve  사람이 고른 처리(밀린 아이 옮김/대기/거절 · 형제 합반) — 서버가 같은 요청에서 함께 처리
+ */
+function _cgSend(req, resolve, force){
+  var row = req.row, prov = req.provider, d = req.day, time = req.time;
+  var p = { row: row, provider: prov, service: req.service, ctx: req.ctx, day: d, time: time };
+  if (resolve) p.resolve = JSON.stringify(resolve);
+  if (force) p.force = '1';
   showLoading(true); infoWindow.close();
-  fetchGAS('assign', { row: row, provider: prov, service: currentService, ctx: _ctxKeyName(), day: d, time: time })
+  fetchGAS('assign', p)
     .then(function(res) {
       showLoading(false);
+      // ── 겹침 — 아직 아무것도 안 써졌다. 사람에게 묻는다(취소/바꾸기/형제) ──
+      if (res.conflict) { _cgOpen(res.conflict, req); return; }
       if (res.error) {
         // 서버가 스택을 같이 보낸다(인증된 액션 한정). 안 보여주면 또 "서버 오류"만 남고
         // 어느 줄에서 죽었는지 모른 채 추측하게 된다(2026-08-09).
@@ -1945,8 +2070,14 @@ function asgConfirm(){
       //    S·T가 안 써진 경우에도 성공이라 말하니, 화면이 안 바뀌는 게 버그로 보이고
       //    새로고침해도 그대로였다(시트에 애초에 없으니까). **화면이 거짓말을 하면 진단이 불가능해진다.**
       if (res.stamped) {
+        // 밀린 아이를 함께 처리했으면 **그 결과도 같이 말한다** — 조용히 처리하면 사람이 확인할 길이 없다
+        var extra = (res.resolved || []).map(function(r) {
+          return r.name + ' → ' + (r.mode === 'move' ? r.day + ' ' + r.time : r.mode === 'wait' ? '대기' : '거절');
+        }).join(', ');
         showToast(prov + ' · ' + d + ' ' + time
-          + (res.mode === 'time' ? ' 시간 기록 완료!' : ' 배정 완료!'), true);
+          + (res.mode === 'time' ? ' 시간 기록 완료!' : ' 배정 완료!')
+          + (res.sibling ? ' (형제 합반)' : '') + (extra ? '  ·  ' + extra : ''), true);
+        if (res.logged === false) showToast('⚠️ 시트엔 기록됐지만 로그 남기기에 실패했어요: ' + (res.logError || ''));
       } else {
         // 🔴 서버가 **쓰고 나서 다시 읽은 결과**를 그대로 보여준다. 어디에 썼는지·무엇이 읽혔는지를
         //    사람이 볼 수 있어야 "성공이라는데 시트는 그대로"를 진단할 수 있다(2026-08-09).
@@ -1977,7 +2108,81 @@ function asgConfirm(){
         }
       }
       if (PLAN) { planDirty = false; _planRefetch(_planApplyRefresh); }
+      loadOccupancy();   // 방금 채운 자리를 배지에 반영(배경 — 화면을 막지 않는다)
     }).catch(function(e) { showLoading(false); showToast('배정 실패: '+e.message); });
+}
+
+// ══ 겹침 다이얼로그 ══ (유성 2026-08-10 설계: [취소][바꾸기][형제] → 밀린 아이 ①옮김 ②대기 ③거절)
+function _cgClose(){ document.getElementById('cgModal').classList.remove('show'); }
+function _cgBtn(label, cls, fn){
+  var b = document.createElement('button');
+  b.className = 'cg-b' + (cls ? ' ' + cls : '');
+  b.textContent = label;
+  b.addEventListener('click', fn);
+  return b;
+}
+function _cgOpen(cf, req){
+  var v = cf.victim || {};
+  document.getElementById('cgTitle').textContent =
+    cf.day + ' ' + cf.time + '에는 이미 ' + v.name + ' 아동이 있어요';
+
+  // 왜 그렇게 아는지를 같이 말한다 — 근거를 숨기면 담당자가 화면을 못 믿는다
+  var src = v.src === 'recon'
+    ? '결제 이력 기준 · 최근 8주 ' + (v.sessions || 0) + '회'
+      + (v.lastDaysAgo != null ? ' (마지막 ' + v.lastDaysAgo + '일 전)' : '')
+    : '시트에 확정된 시간';
+  var sub = v.time + '~' + v.endTime + ' · ' + src;
+  if (cf.forVictim) sub = '옮기려는 자리도 차 있어요. ' + sub;
+  if (cf.others && cf.others.length) sub += '\n같은 시간에 ' + cf.others.length + '명 더 있어요.';
+  document.getElementById('cgSub').textContent = sub;
+
+  var w = [];
+  if (v.inProgress) w.push('이 아동은 <b>실제로 수업이 진행 중</b>이에요 — 과거 회기는 지울 수 없어요.');
+  if (!v.movable) w.push('이 아동은 신청 시트에서 찾지 못해 <b>자동으로 옮길 수 없어요</b>(대장에만 있는 아동).');
+  if (cf.unknown && cf.unknown.length) w.push('이 선생님에게 <b>시간을 모르는 아동 ' + cf.unknown.length + '명</b>이 더 있어요.');
+  document.getElementById('cgWarn').innerHTML = w.length ? '<div class="cg-warn">' + w.join('<br>') + '</div>' : '';
+
+  var box = document.getElementById('cgBtns');
+  box.className = 'cg-btns';
+  box.innerHTML = '';
+  box.appendChild(_cgBtn('취소', '', _cgClose));
+  if (v.movable) {
+    box.appendChild(_cgBtn('바꾸기', 'pri', function(){ _cgStep2(cf, req); }));
+  } else {
+    box.appendChild(_cgBtn('그래도 배정', 'dngr', function(){ _cgClose(); _cgSend(req, null, true); }));
+  }
+  // [형제]는 **오감 + 같은 보호자 전화 + 다른 생년**일 때만 서버가 켜 준다(§1 규정) — 합반 60분
+  if (cf.siblingOk) {
+    box.appendChild(_cgBtn('형제', 'outline', function(){ _cgClose(); _cgSend(req, { mode: 'sibling' }, false); }));
+  }
+  document.getElementById('cgModal').classList.add('show');
+}
+function _cgStep2(cf, req){
+  var v = cf.victim || {};
+  document.getElementById('cgTitle').textContent = '그럼 ' + v.name + ' 아동은 어떻게 할까요?';
+  document.getElementById('cgSub').textContent =
+    '고르는 즉시 ' + (req.child || '이 아동') + ' 배정과 한 번에 처리돼요 — 중간에 창을 닫아도 미아가 생기지 않아요.';
+  var box = document.getElementById('cgBtns');
+  box.className = 'cg-btns col';
+  box.innerHTML = '';
+  box.appendChild(_cgBtn('다른 시간으로 옮김', 'pri', function(){
+    _cgClose();
+    // 밀린 아이의 새 시간을 같은 다이얼로그로 고른다(희망시간은 그 아이 것을 쓴다)
+    var vc = _findChildByRow(v.row);
+    askAssignSchedule(v.row, req.provider, v.name, vc && vc.times);
+    _asgCtx.victimFor = { req: req, victim: v };
+    document.getElementById('asgTitle').textContent = v.name + ' 아동을 옮길 시간';
+    document.getElementById('asgSub').textContent = req.provider + ' 선생님 · ' + (vc ? currentService : '');
+    document.getElementById('asgOk').textContent = '이 시간으로 옮기고 배정';
+    asgToggleMore(true);
+  }));
+  box.appendChild(_cgBtn('배정을 풀고 대기', '', function(){
+    _cgClose(); _cgSend(req, { mode: 'wait', row: v.row, tab: v.tab }, false);
+  }));
+  box.appendChild(_cgBtn('거절', 'dngr', function(){
+    _cgClose(); _cgSend(req, { mode: 'decline', row: v.row, tab: v.tab }, false);
+  }));
+  box.appendChild(_cgBtn('취소', '', _cgClose));
 }
 
 /**
@@ -2107,6 +2312,7 @@ function doUnassign(row) {
       if (res.error) { if (undo) undo(); showToast(res.error); return; }
       showToast('배정 취소됨', true);
       _afterWrite(res);
+      loadOccupancy();   // 비워진 자리를 배지에 반영
     }).catch(function(e) { showLoading(false); if (undo) undo(); showToast('처리 실패: '+e.message); });
   });
 }
@@ -4122,11 +4328,20 @@ function planCommit() {
                        service: PLAN.service || currentService, ctx: _ctxKeyName() })
     .then(function(res) {
       showLoading(false);
-      if (res.error) { showToast(res.error); return; }
+      if (res.error && !(res.failed || []).length) { showToast(res.error); return; }
       var nC = (res.committed || []).length, nT = (res.timed || []).length;
-      showToast((nC ? nC + '명 배정' : '') + (nC && nT ? ' · ' : '') + (nT ? nT + '명 시간 확정' : '') + ' 완료!', true);
+      // 🔴 부분 반영을 숨기지 않는다(감사 발견 B) — 서버가 행마다 되읽어 확인하고 실패분을 보낸다
+      if ((res.failed || []).length) {
+        showToast('⚠️ ' + res.failed.length + '건이 시트에 기록되지 않았어요 — '
+          + res.failed.map(function(f){ return f.row + '행(되읽음 ' + f.readback.join(',') + ')'; }).join(' / ')
+          + ' · 시트를 직접 확인해 주세요');
+        if (window.console) console.log('[commit 부분 실패]', JSON.stringify(res.failed));
+      } else {
+        showToast((nC ? nC + '명 배정' : '') + (nC && nT ? ' · ' : '') + (nT ? nT + '명 시간 확정' : '') + ' 완료!', true);
+      }
       planExit();
       _afterWrite(res);
+      loadOccupancy();
     })
     .catch(function(e) { showLoading(false); showToast('확정 실패: ' + e.message); });
 }
