@@ -280,23 +280,28 @@ function initMap(){
 
 // GAS /exec → echo 리다이렉트가 콜드스타트·회사망 프록시에서 간헐 404/HTML을 냄 → 읽기만 소백오프
 // 재시도로 흡수(provider-map 이식 2026-08-11 — [[gas-webapp-echo-404-retry]]). 쓰기(saveschedule)는 단발 유지.
-function _getJson(url,tries){
+// timeoutMs: 매달리는 콜드 요청(실측 39초, 08-12)을 끊고 재시도로 — 읽기에만(쓰기는 raw fetch라 무관).
+function _getJson(url,tries,timeoutMs){
   tries=(tries==null)?3:tries;
-  return fetch(url,{redirect:'follow',cache:'no-store'}).then(function(r){
+  var ctl=(timeoutMs&&window.AbortController)?new AbortController():null;
+  var timer=ctl?setTimeout(function(){ctl.abort()},timeoutMs):null;
+  return fetch(url,{redirect:'follow',cache:'no-store',signal:ctl?ctl.signal:undefined}).then(function(r){
     return r.text().then(function(txt){
       if(!r.ok)throw new Error('HTTP '+r.status);
       try{return JSON.parse(txt)}
       catch(e){throw new Error('BAD_JSON')}
     });
-  }).catch(function(e){
-    if(tries>1)return new Promise(function(res){setTimeout(res,500*(4-tries))}).then(function(){return _getJson(url,tries-1)});
+  }).then(function(v){if(timer)clearTimeout(timer);return v},
+          function(e){
+    if(timer)clearTimeout(timer);
+    if(tries>1)return new Promise(function(res){setTimeout(res,500*(4-tries))}).then(function(){return _getJson(url,tries-1,timeoutMs)});
     throw e;
   });
 }
 
 function loadData(){
   showLoading(true);
-  _getJson(CONFIG.GAS_URL+'?action=provview&token='+encodeURIComponent(viewToken)).then(function(data){
+  _getJson(CONFIG.GAS_URL+'?action=provview&token='+encodeURIComponent(viewToken),3,12000).then(function(data){
     showLoading(false);
     if(data.error){document.getElementById('hdrName').textContent=data.error;return}
     viewData=data;var p=data.provider;

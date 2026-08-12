@@ -136,12 +136,32 @@ function getAdminToken(){ try { return localStorage.getItem(ADMIN_TOKEN_KEY) || 
 function setAdminToken(t){ try { localStorage.setItem(ADMIN_TOKEN_KEY, (t||'').trim()); } catch(e){} }
 function dashUrl(){ var u = CONFIG.GAS_URL + '?action=dashboard'; var t = getAdminToken(); if (t) u += '&t=' + encodeURIComponent(t); return u; }
 
+// GAS /exec → echo 리다이렉트가 콜드스타트·회사망 프록시에서 간헐 404/HTML·39초 행을 냄 →
+// 읽기 전용 페이지라 전 요청 소백오프 재시도+12초 타임아웃(정본=provider-map.html _getJson, 08-12 전파).
+function _getJson(url, tries, timeoutMs){
+  tries = (tries == null) ? 3 : tries;
+  var ctl = (timeoutMs && window.AbortController) ? new AbortController() : null;
+  var timer = ctl ? setTimeout(function(){ ctl.abort(); }, timeoutMs) : null;
+  return fetch(url, { redirect:'follow', cache:'no-store', signal: ctl ? ctl.signal : undefined }).then(function(r){
+    return r.text().then(function(txt){
+      if (!r.ok) throw new Error('HTTP '+r.status);
+      try { return JSON.parse(txt); }
+      catch(e){ throw new Error('BAD_JSON'); }
+    });
+  }).then(function(v){ if (timer) clearTimeout(timer); return v; },
+          function(e){
+    if (timer) clearTimeout(timer);
+    if (tries > 1) return new Promise(function(res){ setTimeout(res, 500*(4-tries)); }).then(function(){ return _getJson(url, tries-1, timeoutMs); });
+    throw e;
+  });
+}
+
 (function(){
-  fetch(dashUrl(), {redirect:'follow'}).then(function(r){return r.json()}).then(function(data){
+  _getJson(dashUrl(), 3, 12000).then(function(data){
     if (data && data.error === 'Unauthorized') {
       var t = prompt('🔒 관리자 인증 토큰을 입력하세요', getAdminToken());
       if (t !== null) { setAdminToken(t); }
-      if (getAdminToken()) return fetch(dashUrl(), {redirect:'follow'}).then(function(r){return r.json()}).then(render);
+      if (getAdminToken()) return _getJson(dashUrl(), 3, 12000).then(render);
     }
     render(data);
   }).catch(function(e){

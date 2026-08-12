@@ -343,9 +343,28 @@ function logSearch(q){
   q=(q||'').trim(); if(q.length<2) return;
   try{ fetch(GAS_URL+'?action=logsearch&t='+encodeURIComponent(getToken())+'&q='+encodeURIComponent(q),{redirect:'follow'}); }catch(e){}
 }
+// GAS /exec → echo 리다이렉트가 콜드스타트·회사망 프록시에서 간헐 404/HTML·39초 행을 냄 →
+// 읽기(manual/topsearches)만 소백오프 재시도+12초 타임아웃(정본=provider-map.html _getJson, 08-12 전파).
+// logsearch는 로그 적재라 단발 유지(재시도=중복 적재).
+function _getJson(url, tries, timeoutMs){
+  tries = (tries == null) ? 3 : tries;
+  var ctl = (timeoutMs && window.AbortController) ? new AbortController() : null;
+  var timer = ctl ? setTimeout(function(){ ctl.abort(); }, timeoutMs) : null;
+  return fetch(url, { redirect:'follow', cache:'no-store', signal: ctl ? ctl.signal : undefined }).then(function(r){
+    return r.text().then(function(txt){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      try { return JSON.parse(txt); }
+      catch(e){ throw new Error('BAD_JSON'); }
+    });
+  }).then(function(v){ if (timer) clearTimeout(timer); return v; },
+          function(e){
+    if (timer) clearTimeout(timer);
+    if (tries > 1) return new Promise(function(res){ setTimeout(res, 500*(4-tries)); }).then(function(){ return _getJson(url, tries-1, timeoutMs); });
+    throw e;
+  });
+}
 function fetchTop(){
-  fetch(GAS_URL+'?action=topsearches&t='+encodeURIComponent(getToken()),{redirect:'follow'})
-    .then(function(r){ return r.json(); })
+  _getJson(GAS_URL+'?action=topsearches&t='+encodeURIComponent(getToken()), 3, 12000)
     .then(function(d){ if(d && d.terms){ lastTop=d.terms; buildChips(lastTop); } }).catch(function(){});
 }
 
@@ -354,8 +373,7 @@ function setToken(t){ try{ localStorage.setItem(TOKEN_KEY,(t||'').trim()); }catc
 function showLoad(on){ document.getElementById('load').classList.toggle('on',!!on); }
 
 function fetchManual(token){
-  return fetch(GAS_URL + '?action=manual&t=' + encodeURIComponent(token), { redirect:'follow' })
-    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+  return _getJson(GAS_URL + '?action=manual&t=' + encodeURIComponent(token), 3, 12000);
 }
 function loadManual(){
   // 암호 게이트 제거(유성 2026-06-24) — 허브 OTP+PIN + 매뉴얼 타일 data-tier=admin으로 접근 통제. #gate 키패드는 미사용(dormant)

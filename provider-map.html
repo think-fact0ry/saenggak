@@ -1043,16 +1043,22 @@ function _gasUrl(action, params) {
 // 간헐적으로 404/HTML(구글 "페이지를 찾을 수 없음")을 냄. 지도 액션은 멱등(셀 last-write)이라
 // 소백오프 재시도로 흡수 → 회사 컴퓨터에서 산발하던 "HTTP 404 로드 실패" 소멸.
 // (Unauthorized 등 정상 JSON은 예외가 아니므로 재시도 없이 즉시 반환 — 재시도는 전송·파싱 실패에만)
-function _getJson(url, tries){
+// timeoutMs: 응답 자체가 안 오고 매달리는 콜드 요청(실측 39초, 2026-08-12)을 끊고 재시도로 넘긴다.
+// 읽기에만 건다 — 쓰기는 미전달(무제한): 느린 커밋을 클라가 끊으면 성공을 실패로 오인해 재조작을 유발.
+function _getJson(url, tries, timeoutMs){
   tries = (tries == null) ? 3 : tries;
-  return fetch(url, { redirect:'follow', cache:'no-store' }).then(function(r){
+  var ctl = (timeoutMs && window.AbortController) ? new AbortController() : null;
+  var timer = ctl ? setTimeout(function(){ ctl.abort(); }, timeoutMs) : null;
+  return fetch(url, { redirect:'follow', cache:'no-store', signal: ctl ? ctl.signal : undefined }).then(function(r){
     return r.text().then(function(txt){
       if (!r.ok) throw new Error('HTTP '+r.status);
       try { return JSON.parse(txt); }               // 구글 404 HTML 페이지면 파싱 실패 → 재시도 대상
       catch(e){ throw new Error('BAD_JSON'); }
     });
-  }).catch(function(e){
-    if (tries > 1) return new Promise(function(res){ setTimeout(res, 500*(4-tries)); }).then(function(){ return _getJson(url, tries-1); });
+  }).then(function(v){ if (timer) clearTimeout(timer); return v; },
+          function(e){
+    if (timer) clearTimeout(timer);
+    if (tries > 1) return new Promise(function(res){ setTimeout(res, 500*(4-tries)); }).then(function(){ return _getJson(url, tries-1, timeoutMs); });
     throw e;
   });
 }
@@ -1082,7 +1088,7 @@ function fetchGAS(action, params) {
   var tries = WRITE[action] ? 1 : 3;
   var asked = 0;                                    // 토큰 재입력 횟수 (무한루프 차단: 최대 2)
   function attempt(){
-    return _getJson(_gasUrl(action, params), tries).then(function(data){
+    return _getJson(_gasUrl(action, params), tries, isWrite ? 0 : 12000).then(function(data){
       // 토큰 없음/틀림 → 입력 받아 재시도. 2회차부터 빈칸+명시 메시지로 "확인만 눌러 같은 틀린 값 재저장" 루프 차단
       if (data && data.error === 'Unauthorized' && asked < 2) {
         asked++;

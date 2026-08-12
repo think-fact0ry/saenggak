@@ -291,11 +291,28 @@ function gasUrl(action, params){
   if (params){ for (var k in params) u += '&' + k + '=' + encodeURIComponent(params[k]); }
   return u;
 }
-function gasGet(action, params){
-  return fetch(gasUrl(action, params), { redirect:'follow' }).then(function(r){
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
+// GAS /exec → echo 리다이렉트가 콜드스타트·회사망 프록시에서 간헐 404/HTML·39초 행을 냄 →
+// 이 페이지 액션은 전부 읽기(list/url/file)라 소백오프 재시도+12초 타임아웃(정본=provider-map.html _getJson, 08-12 전파).
+function _getJson(url, tries, timeoutMs){
+  tries = (tries == null) ? 3 : tries;
+  var ctl = (timeoutMs && window.AbortController) ? new AbortController() : null;
+  var timer = ctl ? setTimeout(function(){ ctl.abort(); }, timeoutMs) : null;
+  return fetch(url, { redirect:'follow', cache:'no-store', signal: ctl ? ctl.signal : undefined }).then(function(r){
+    return r.text().then(function(txt){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      try { return JSON.parse(txt); }
+      catch(e){ throw new Error('BAD_JSON'); }
+    });
+  }).then(function(v){ if (timer) clearTimeout(timer); return v; },
+          function(e){
+    if (timer) clearTimeout(timer);
+    if (tries > 1) return new Promise(function(res){ setTimeout(res, 500*(4-tries)); }).then(function(){ return _getJson(url, tries-1, timeoutMs); });
+    throw e;
   });
+}
+function gasGet(action, params){
+  // file은 서식 본문(수 MB 가능)이라 느린 와이파이에서 12초에 걸릴 수 있음 → 30초
+  return _getJson(gasUrl(action, params), 3, action === 'file' ? 30000 : 12000);
 }
 
 // ── 목차 ──
@@ -560,8 +577,7 @@ function gateFail(msg){
 function gateSubmit(){
   var pin = gateEntry;
   showLoad(true);
-  fetch(GAS_URL + '?action=list&t=' + encodeURIComponent(pin), { redirect:'follow' })
-    .then(function(r){ return r.json(); })
+  _getJson(GAS_URL + '?action=list&t=' + encodeURIComponent(pin), 3, 12000)
     .then(function(d){
       showLoad(false);
       if (d && d.error){ gateFail('암호가 맞지 않아요'); return; }
