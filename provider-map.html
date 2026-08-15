@@ -33,6 +33,11 @@
     --green100:#e9f8ee; --green600:#3a8a5f; --green700:#166841;
     --red:#f04452; --warn-weak-bg:#fef4e2; --warn-weak-fg:#c07f00;
     --danger:#D25357; --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;
+    /* §3.4 그림자 정본 — 그린틴트 2겹, 토스 램프(.05/.10/.15 @ blur 4/10/20)가 상한.
+       2026-08-15 신설(유성 "원칙대로 해"). 아직 #planSheet에만 적용 — 나머지 raw 그림자는 손댈 때 정렬 */
+    --sh1:0 1px 2px rgba(25,31,40,.06), 0 4px 10px rgba(25,31,40,.08);
+    --sh2:0 1px 3px rgba(25,31,40,.08), 0 8px 20px rgba(25,31,40,.10);
+    --sh-up:0 -1px 3px rgba(25,31,40,.08), 0 -8px 20px rgba(25,31,40,.10);
   }
   html,body{height:100%;overflow:hidden}
   body{font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;color:#1a1a1a;background:#f0ebe4}
@@ -142,7 +147,7 @@
   /* 논모달 바텀시트 — 아래 여백 없이 이어 붙임(유성). 핸들·드래그·순차등장은 docs/1 §4.3 */
   #planSheet{position:absolute;right:12px;bottom:0;width:min(340px,72%);max-height:78%;z-index:8;
              display:none;flex-direction:column;background:#fff;border-radius:20px 20px 0 0;
-             box-shadow:0 -3px 26px rgba(0,0,0,.2);transform:translateY(100%);
+             box-shadow:var(--sh-up);transform:translateY(100%);
              transition:transform .32s cubic-bezier(.22,.7,.25,1)}
   #planSheet.on{display:flex;transform:translateY(0)}
   #planSheet .grab{padding:10px 0 6px;cursor:grab;flex:none;touch-action:none}
