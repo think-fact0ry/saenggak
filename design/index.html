@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>생각공작소 디자인 원칙 — 프리뷰</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<!-- ⚠️ §번호 규율: 아래 §1.4·§2.1·§4.16 등은 docs/1_원칙_디자인UX.md 절 번호를 **그대로 미러**한 주소다.
+     rules·hook·폴더 CLAUDE.md·메모리·시스템 간 §참조가 같은 주소를 쓴다 → 프리뷰에서 독립 재번호·변경 금지.
+     docs/1 절이 재번호되면 그때 참조처와 함께 여기도 맞춘다(방향: docs=정본, 프리뷰=미러). = docs/1 헤드 §번호 규율. -->
+<style>
+/* ⚠️ 아래 :root 토큰은 docs/1_원칙_디자인UX.md §3.1 정본에서 토큰동기.js 가 주입 —
+   값을 여기서 손으로 고치지 말 것(md↔프리뷰 이중진실 방지). md 고치면 `node 디자인프리뷰/토큰동기.js` 재실행. */
+:root{
+/* TOKENS:START — 생성물, 직접 수정 금지 */
+
+  /* 회색 — §3.1 정본(중립 회색 스케일). 필요한 칸만 골라 써도 되나 이름·값은 이대로 */
+  --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db;
+  --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
+  --g800:#333d4b; --g900:#191f28;
+  /* 초록 — §3.1 OKLCH 스케일(회색 명도 사다리 고정, green600=브랜드 #3a8a5f 앵커).
+     밝은 50~400 = 토스 weak 실측 기반 재보정(2026-07-04 유성 #e9f8ee 확정 — ex43 실측 C.021·브랜드 H157,
+     100→500 수렴 가중 1/.85/.62/.40/.20으로 이음새 없음. 옛 A안 채도부스트 값 폐기) */
+  --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
+  --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
+  --green:var(--green600); --green-dark:var(--green700); --green-bg:var(--green100);  /* 별칭(기존 코드 호환) */
+  /* 시맨틱 */
+  --red:#f04452;           /* 에러·경고 상태(폼 오류·OTP 오류·알림) */
+  --warn:#f5a623;          /* 주의 신호(비오류) — 근태 지각 색 등(유성 확정 2026-07-14). red=오류/warn=주의 구분 */
+  --warn-weak-bg:#fef4e2; --warn-weak-fg:#c07f00;   /* warn weak(연주황 채움+진한주황 폰트 — danger-weak 결) */
+  --ink-on-dark:#F9FBFA;   /* 어두운 배경 흰 글씨(§3.5 line125) */
+  /* 버튼·뱃지 시맨틱 (§4.14 버튼 체계 — 유성 2026-07-02) */
+  --dark:#525966;          /* dark variant(중립 짙은 회색 버튼/뱃지) + 흰 폰트 */
+  --danger:#D25357;        /* danger variant(파괴적 액션 버튼/뱃지) + 흰 폰트. ※--red(#f04452)와 구분: red=상태알림, danger=버튼 */
+  --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;   /* danger weak(연빨강 채움+진한빨강 폰트) */
+  --p-disabled:#b7e0c8; --dark-disabled:#c8ccd0; --danger-disabled:#f2cdce;   /* disabled = variant 흐린 버전+흰폰트(회색 아님) */
+  /* 라운드 — §3.3 */
+  --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
+  /* 타입 스케일 — §3.2 (큰 제목 clamp 유동 / 본문 고정) */
+  --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
+  --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
+  /* TOKENS:END */
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:'Pretendard',system-ui,sans-serif;color:var(--g900);background:var(--g50,#f9fafb);
+  word-break:keep-all;line-height:1.6;font-size:var(--fs-body,15px)}
+.wrap{max-width:940px;margin:0 auto;padding:0 20px 140px}
+
+header{background:var(--green600);color:var(--ink-on-dark,#F9FBFA);padding:40px 20px 30px}
+header .in{max-width:940px;margin:0 auto}
+header h1{font-size:var(--fs-h1,clamp(23px,3.4vw,30px));margin:0 0 8px;font-weight:800;letter-spacing:-.5px}
+header p{margin:0;opacity:.92;font-size:var(--fs-sm,13.5px)}
+
+nav.toc{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.93);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--g200);display:flex;gap:6px;overflow-x:auto;padding:10px 20px}
+nav.toc a{flex:0 0 auto;font-size:var(--fs-sm,13.5px);font-weight:600;color:var(--g500);
+  text-decoration:none;padding:7px 13px;border-radius:var(--r-sm,10px)}
+nav.toc a:hover{color:var(--green600);background:var(--green-bg,#e0fcea)}
+
+section{padding-top:34px}
+h2.ch{font-size:var(--fs-h2,clamp(20px,2.6vw,26px));font-weight:800;margin:0 0 4px;letter-spacing:-.4px}
+.ch-sub{color:var(--g500);font-size:var(--fs-sm,13.5px);margin:0 0 18px}
+h3.sec{font-size:var(--fs-title,17px);font-weight:700;margin:28px 0 3px}
+.oldref{font-size:12px;color:var(--g500);font-weight:500}
+.desc{color:var(--g700,#4e5968);font-size:var(--fs-sm,13.5px);margin:2px 0 14px}
+.desc b{color:var(--green-dark)}
+
+/* 데모 카드 — 카드 중첩 금지(§3.6-2): 1px 테두리 하나만, 그림자 남발 X */
+.demo{border:1px solid var(--g200);border-radius:var(--r-md,14px);padding:22px;background:#fff;margin-bottom:14px}
+.demo.tight{padding:26px 22px}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.note{font-size:12px;color:var(--g500);margin-top:10px}
+code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
+
+/* ── 색 스와치 ── */
+.sw{display:flex;flex-wrap:wrap;gap:10px}
+.sw .chip{width:88px;text-align:center;font-size:11px;color:var(--g700)}
+.sw .box{height:50px;border-radius:var(--r-sm,10px);border:1px solid var(--g200);margin-bottom:5px}
+.sw .n{font-weight:600;color:var(--g900)}
+
+.type li{list-style:none;margin:0 0 8px}
+.type .lbl{font-size:11px;color:var(--g500);margin-right:10px;font-family:monospace}
+
+.tiles{display:flex;gap:14px;flex-wrap:wrap}
+.tiles .t{width:96px;height:66px;background:var(--green-bg,#e0fcea);border:1px solid var(--green,#3a8a5f);
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green-dark,#166841);font-weight:600}
+.sh{display:flex;gap:20px;flex-wrap:wrap}
+.sh .s{width:120px;height:74px;border-radius:var(--r-md);background:#fff;display:flex;align-items:center;
+  justify-content:center;font-size:11px;color:var(--g500)}
+.sh .s1{box-shadow:0 2px 8px rgba(0,0,0,.06)} .sh .s2{box-shadow:0 6px 20px rgba(0,0,0,.10)}
+.sh .s3{box-shadow:0 10px 30px rgba(58,138,95,.14)}
+
+/* 오프화이트 on dark (§3.5 line125) */
+.dk{background:var(--g900);border-radius:var(--r-md);padding:24px;display:flex;gap:36px;flex-wrap:wrap}
+.dk div{font-size:19px;font-weight:700}
+.dk .pure{color:#fff} .dk .off{color:var(--ink-on-dark,#F9FBFA)}
+.dk small{display:block;font-size:11px;font-weight:500;opacity:.7;margin-top:4px}
+
+/* do/don't */
+.dd{display:flex;gap:12px;flex-wrap:wrap}
+.dd .col{flex:1;min-width:230px;border-radius:var(--r-md,14px);padding:14px 16px;font-size:14px}
+.dd .ok{background:var(--green-bg,#e0fcea);color:#01492a}
+.dd .no{background:#fdecee;color:#842029}
+.dd b{display:block;margin-bottom:6px;font-size:12px;letter-spacing:.3px}
+
+/* ── 입력 필드 (§4.1 — 상담일지 .tfield/.tin-wrap 복제) ── */
+.tfield{margin-bottom:24px;max-width:360px}
+.tfield label{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin:0 0 6px;transition:color .15s}
+.tfield.focus label,.tfield:focus-within label{color:var(--green)}
+.tin-wrap{position:relative;border-bottom:2px solid var(--g200);transition:border-color .15s}
+.tfield.focus .tin-wrap{border-color:var(--green)}
+.tin-wrap input{width:100%;border:none;background:none;outline:none;font-family:inherit;font-size:22px;
+  font-weight:600;color:var(--g900);padding:2px 40px 5px 0;caret-color:var(--green)}
+.tin-wrap input::placeholder{color:var(--g300);font-weight:500}   /* ← 인풋(600·g900) vs placeholder(500·g300) 굵기·색 다름 */
+.tin-wrap .clr{position:absolute;right:0;top:11px;width:15px;height:15px;border-radius:50%;background:var(--g300);
+  border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.tfield.has-val .clr{display:flex}
+.tin-wrap .clr svg{width:7px;height:7px;color:#fff;display:block}
+/* 시각 입력 위젯 (§4.1-9 데모 — 근태 attend/index.html `twMount` 실코드 복제. 정본=그쪽) */
+.tw-ap{display:flex;gap:6px;background:var(--g100);border-radius:12px;padding:4px;margin-bottom:12px;max-width:320px}
+.tw-ap button{flex:1;border:0;border-radius:9px;padding:8px 0;font:inherit;font-size:14px;font-weight:600;background:transparent;color:var(--g500);cursor:pointer;transition:all .2s}
+.tw-ap button.on{background:#fff;color:var(--green-dark);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.tw-box{position:relative;display:flex;gap:6px;align-items:center;justify-content:flex-start;margin-bottom:4px;cursor:text;max-width:320px}
+.tw-cell{width:50px;height:58px;border-radius:12px;background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--green-dark);position:relative}
+.tw-cell.filled{background:#fff;box-shadow:0 0 0 1px var(--g200) inset}
+.tw-colon{font-size:22px;font-weight:800;color:var(--g400)}
+.tw-in{position:absolute;inset:0;opacity:0;border:0;font-size:16px;color:transparent;caret-color:transparent}
+.tfield.fhide{display:none}
+.tfield.fin{animation:ffin .28s ease}
+@keyframes ffin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* 주민번호 (§4.2-8) */
+.rrn-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;column-gap:8px;padding-top:4px;max-width:360px}
+.rrn-in{border:none;border-bottom:2px solid var(--g200);background:none;outline:none;font-family:inherit;font-size:22px;
+  font-weight:600;color:var(--g900);caret-color:var(--green);font-variant-numeric:tabular-nums;padding:2px 0 5px;transition:border-color .15s}
+.rrn-front{width:100%;text-align:left} .rrn-back{width:100%;text-align:center}
+.rrn-in:focus{border-color:var(--green)}
+.rrn-dash{color:var(--g400);font-size:20px;font-weight:600;padding-bottom:4px}
+.rrn-back-grp{display:flex;align-items:end;gap:8px;min-width:0}
+.rrn-mask{flex:1;display:flex;justify-content:space-evenly;align-items:center;padding-bottom:11px}
+.rrn-mask i{width:5px;height:5px;border-radius:50%;background:var(--g300);display:block;flex:0 0 auto}
+
+/* 버튼 (§5.3) */
+.btn{position:relative;overflow:hidden;border:none;border-radius:var(--r-md,14px);background:var(--green600);
+  color:#fff;font-family:inherit;font-weight:700;font-size:17px;padding:15px 22px;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(.97);background:var(--green-dark,#166841)}
+.btn:disabled{background:var(--p-disabled);color:#fff;cursor:default}   /* 게이팅 비활성=연초록+흰폰트(§4.14 F7 확정 — 옛 회색 폐기 2026-07-04) */
+.rip{position:absolute;z-index:0;border-radius:50%;background:rgba(0,0,0,.18);transform:translate(-50%,-50%) scale(0);pointer-events:none;width:30px;height:30px}  /* z-index:0 = 라벨(.bl) 아래 → 흰 텍스트는 안 어두워짐(§5.3, 유성 2026-07-03) */
+.rip.go{transition:transform .46s ease-out;transform:translate(-50%,-50%) scale(var(--rs,16))}
+.bl{position:relative;z-index:1}   /* 버튼 라벨 레이어 — ripple 위에 유지(배경만 어두워짐) */
+.lk{background:none;border:none;color:var(--g500);font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;transition:transform .12s}
+.lk:active{transform:scale(.93)}   /* 텍스트형 = 축소만, 색 변경 X */
+.shk{animation:none}
+/* §4.9+§5.5 데모용 토스트 — 하단 버튼 위 12px(gap)에 서고, 자리는 늘 잡아둬 뜰 때 레이아웃이 안 튄다 */
+.pvtoast{align-self:center;background:var(--g800);color:#fff;font-size:13.5px;font-weight:600;border-radius:12px;padding:12px 18px;white-space:pre-line;line-height:1.5;text-align:center;opacity:0;transition:opacity .25s;pointer-events:none}
+.pvtoast.on{opacity:1}
+.shk.go{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+/* 선택 컨트롤 (§4.9, 2026-07-03~04 확정) — 옵션카드=면 문법(테두리 0) / 탭·세그=흰-필 */
+.optc{display:flex;gap:10px}
+.optc button{flex:1;max-width:150px;padding:14px;border:1.5px solid transparent;border-radius:var(--r-md);background:var(--g100);color:var(--g600);font-weight:600;font-size:15px;font-family:inherit;cursor:pointer;transition:.12s}
+.optc button.on{background:var(--green500);color:#F9FBFA;font-weight:500}   /* 2026-07-05 유성: 선택=green500+흰 w500 */
+/* 선택 표시는 '미끄러지는 한 장'(§4.9, 2026-07-28 유성) — 버튼 배경을 켜고 끄면 순간이동한다 */
+.segd{display:inline-flex;background:var(--g100);border-radius:13px;padding:4px;gap:4px;position:relative;isolation:isolate}
+.segd::before{content:'';position:absolute;z-index:0;top:4px;bottom:4px;left:0;width:var(--sw,0);transform:translateX(var(--sx,0));
+  background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.1);opacity:0;
+  transition:transform .32s cubic-bezier(.22,.85,.25,1),width .32s cubic-bezier(.22,.85,.25,1),opacity .18s}
+.segd.slide::before{opacity:1}
+.segd button{position:relative;z-index:1;padding:10px 22px;border:none;background:none;border-radius:10px;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--g500);cursor:pointer;transition:color .22s;white-space:nowrap}
+.segd button.on{color:var(--green700)}
+.segd:not(.slide) button.on{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.1)}   /* 폭을 못 잰 순간의 폴백 */
+/* 액션 ≠ 모드 (§4.9, 2026-07-28 유성) — 모드 2개↑=세그(흰-필) / 액션=연초록 weak / 보조=중립회색 */
+.tbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tbar .gap{flex:1;min-width:12px}
+.segd.tool{padding:3px;gap:2px;border-radius:999px}
+.segd.tool button{padding:9px 16px;border-radius:999px;font-size:13.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.tbtn{display:inline-flex;align-items:center;gap:6px;border:0;background:var(--g100);color:var(--g700);font-family:inherit;font-size:13.5px;font-weight:700;padding:10px 14px;border-radius:11px;cursor:pointer;transition:transform .12s}
+.tbtn:active{transform:scale(.97)}
+.tbtn.act{background:var(--green100);color:var(--green700)}
+.tbtn.solo{background:var(--green600);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.13)}
+
+/* ── 버튼 variant 체계 (✅확정 — --dark/--danger/weak/disabled §3.1 편입 완료, 2026-07-04 F7·F8) ── */
+.bmatrix{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:440px}
+.bmatrix .lbl{grid-column:1/-1;font-size:11px;font-weight:700;color:var(--g500);margin-top:4px}
+.bt{border:none;border-radius:var(--r-md);padding:13px 10px;font-weight:700;font-size:15px;font-family:inherit;cursor:pointer;text-align:center;transition:transform .1s}
+.bt:not(.dis):active{transform:scale(.97)}
+/* fill (고채도 채움 + 흰 폰트) — 색은 §3.1 정본 토큰(토큰동기 주입) */
+.bt.p{background:var(--green600);color:#fff}
+.bt.d{background:var(--dark);color:#fff}
+.bt.g{background:var(--danger);color:#fff}
+/* weak (연한 틴트 + 동색조 진한 폰트, 테두리 없음) */
+.bt.pw{background:var(--green-bg);color:var(--green-dark)}
+.bt.dw{background:var(--g100);color:var(--dark)}
+.bt.gw{background:var(--danger-weak-bg);color:var(--danger-weak-fg)}
+/* disabled (회색 아님 — variant 색의 흐린 버전 + 흰 폰트) */
+.bt.dis{cursor:default}
+.bt.pd{background:var(--p-disabled);color:#fff}
+.bt.dd2{background:var(--dark-disabled);color:#fff}
+.bt.gd{background:var(--danger-disabled);color:#fff}
+
+/* ── 뱃지 (제안) ── */
+.bdgrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bdg{display:inline-block;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:700;line-height:1.3}
+.bdg.f-green{background:var(--green600);color:#fff} .bdg.f-gray{background:var(--dark);color:#fff} .bdg.f-red{background:var(--danger);color:#fff}
+.bdg.w-green{background:var(--green-bg);color:var(--green-dark)} .bdg.w-gray{background:var(--g100);color:var(--dark)} .bdg.w-red{background:var(--danger-weak-bg);color:var(--danger-weak-fg)}
+
+/* ── 구분선/보더 (제안 — §4.7 구체화) ── */
+.divcard{max-width:360px;border:1px solid var(--g200);border-radius:var(--r-md);overflow:hidden}
+.divrow{display:flex;justify-content:space-between;padding:14px 20px;font-size:14px}
+.divrow .k{color:var(--g500)} .divrow .v{color:var(--g900);font-weight:600}
+.div-inset{border-top:1px solid var(--g100);margin:0 20px}   /* 항목 간 = 인셋 헤어라인(padding24 결) */
+.div-sec{height:16px;background:var(--g50);border-top:1px solid var(--g100);border-bottom:1px solid var(--g100)}   /* 섹션 간 = 여백 블록(height16 결) */
+
+/* 로딩점 (§5.2) */
+.ld{display:inline-flex;align-items:center;color:var(--green600);font-weight:600}
+.ld-dots{display:inline-flex;gap:3px;margin-left:6px}
+.ld-dots i{width:5px;height:5px;border-radius:50%;background:var(--green600);display:inline-block;animation:ldb 1.1s infinite}
+.ld-dots i:nth-child(2){animation-delay:.16s}.ld-dots i:nth-child(3){animation-delay:.32s}
+@keyframes ldb{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-5px);opacity:1}}
+
+/* 전면 로더 (§5.2 3층 경계 — 최종 제출) */
+.ovl{position:fixed;inset:0;background:rgba(255,255,255,.75);z-index:400;display:none;flex-direction:column;gap:14px;align-items:center;justify-content:center}
+.ovl.show{display:flex}
+.ovl .spin{width:40px;height:40px;border:3px solid var(--g200);border-top-color:var(--green600);border-radius:50%;animation:pvspin .7s linear infinite}
+.ovl p{margin:0;font-size:14.5px;font-weight:600;color:var(--g600)}
+@keyframes pvspin{to{transform:rotate(360deg)}}
+
+/* 스켈레톤 (§5.4) — 중립 회색 shimmer */
+.skel{display:flex;flex-direction:column;gap:11px;max-width:340px}
+.skel .bar{height:14px;border-radius:7px;background:linear-gradient(90deg,var(--g100) 25%,var(--g50) 37%,var(--g100) 63%);background-size:400% 100%;animation:shim 1.4s ease infinite}
+.skel .bar.t{height:18px;width:55%}.skel .bar.s{width:88%}.skel .bar.s2{width:40%}
+@keyframes shim{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+/* TextField 보강 (§4.1-7): 접미사·helper·error */
+.tfield .suffix{position:absolute;right:2px;bottom:9px;color:var(--g500);font-size:16px;font-weight:500}
+.tin-wrap.has-suffix input{padding-right:34px}
+.tfield .help{font-size:12px;color:var(--g500);margin-top:7px}
+.tfield.err .tin-wrap{border-color:var(--red)}
+.tfield.err label{color:var(--red)}
+.tfield.err .help{color:var(--red)}
+
+/* ── OTP 6칸 (§4.2-10 — 상담일지 복제) ── */
+.otp-box{position:relative;display:flex;gap:7px;justify-content:center;width:fit-content;margin:10px auto 4px;transition:transform .45s cubic-bezier(.4,0,.2,1)}
+.otp-cell{width:clamp(40px,12.8vw,50px);height:60px;border-radius:var(--r-md);background:var(--g100);display:flex;
+  align-items:center;justify-content:center;font-size:27px;font-weight:700;color:var(--green);transition:background .25s ease, box-shadow .25s ease}
+.otp-cell.filled{background:#fff;box-shadow:inset 0 0 0 1px var(--g200)}
+.otp-cell:not(.filled){animation:otpWave 2.2s ease-in-out infinite}
+.otp-cell:not(.filled):nth-child(2){animation-delay:.13s}.otp-cell:not(.filled):nth-child(3){animation-delay:.26s}
+.otp-cell:not(.filled):nth-child(4){animation-delay:.39s}.otp-cell:not(.filled):nth-child(5){animation-delay:.52s}.otp-cell:not(.filled):nth-child(6){animation-delay:.65s}
+@keyframes otpWave{0%{background:var(--g100)}28%{background:#fff}55%,100%{background:var(--g100)}}
+.otp-cell.active::after{content:"";width:2px;height:30px;background:var(--green);border-radius:1px;animation:otpCaret 1.06s step-end infinite}
+@keyframes otpCaret{0%,49%{opacity:1}50%,100%{opacity:0}}
+.otp-cell.pop{animation:otpPop .2s ease-out}
+@keyframes otpPop{0%{transform:scale(.8)}100%{transform:scale(1)}}
+.otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);animation:none}
+.otp-box.done{transform:scale(.94)}
+.otp-box.done .otp-cell{background:transparent!important;box-shadow:none!important}
+.otp-box.filling .otp-cell{opacity:0;transition:opacity .28s ease}
+.otp-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.otp-frame rect{fill:none;stroke:var(--green);stroke-width:2.5;stroke-dasharray:100;stroke-dashoffset:100;rx:var(--r-sm);transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1)}
+.otp-box.done .otp-frame rect{stroke-dashoffset:0}
+.otp-box.filling .otp-frame{opacity:0;transition:opacity .3s ease}
+.otp-morph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;box-sizing:border-box;
+  border:none;background:transparent;border-radius:var(--r-sm);opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;
+  transition:width .45s cubic-bezier(.5,0,.2,1),height .45s cubic-bezier(.5,0,.2,1),border-radius .45s cubic-bezier(.5,0,.2,1),background-color .3s ease,opacity .22s ease}
+.otp-box.done .otp-morph{opacity:1}
+.otp-morph.fill{background:var(--green)}
+.otp-morph.circle{width:64px;height:64px;border-radius:50%}
+.om-check{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.otp-morph.checked .om-check{stroke-dashoffset:0;transition:stroke-dashoffset .4s cubic-bezier(.5,0,.3,1)}
+#su-code{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;background:none;font-size:16px;cursor:pointer;color:transparent;caret-color:transparent}
+.otp-stub{text-align:center;font-size:13px;color:var(--g500);font-weight:600;min-height:20px;margin-top:6px}
+.otp-note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;color:var(--g500);margin-top:10px;min-height:20px}
+.otp-note.err{color:var(--red)}
+.otp-note .eic{flex-shrink:0;width:17px;height:17px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.otp-foot{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:18px}
+.lk-resend{background:none;border:none;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--green);
+  text-decoration:underline;cursor:pointer;padding:10px;transition:transform .12s}   /* 초록·밑줄(§4.2-10) */
+.lk-resend:active{transform:scale(.93)}
+.done-text{text-align:center;font-size:19px;font-weight:700;color:var(--g900);margin-top:16px;opacity:0;transition:opacity .4s ease}
+.done-text.on{opacity:1}
+
+/* 바텀시트 (§4.3) */
+.sheet-scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}
+.sheet-scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:8px;right:8px;bottom:8px;max-width:924px;margin:0 auto;background:#fff;border-radius:24px;
+  padding:14px 22px 26px;transform:translateY(120%);transition:transform .3s cubic-bezier(.22,.7,.25,1);z-index:41;box-shadow:0 -8px 40px rgba(0,0,0,.18)}
+.sheet.on{transform:translateY(0)}
+.sheet.on>*{animation:supIn .6s cubic-bezier(.22,.7,.25,1) backwards}   /* 위→아래 순차 등장(fill-mode:backwards=누름 안 죽임) */
+.sheet.on>*:nth-child(1){animation-delay:.06s}.sheet.on>*:nth-child(2){animation-delay:.16s}
+.sheet.on>*:nth-child(3){animation-delay:.26s}.sheet.on>*:nth-child(4){animation-delay:.36s}
+@keyframes supIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.sheet .grip{width:40px;height:4px;border-radius:99px;background:var(--g200);margin:0 auto 16px}
+.sheet .gripzone{margin:-14px -22px 0;padding:14px 22px 4px;cursor:grab}
+.sheet h4{margin:6px 0 8px;font-size:19px;font-weight:700}
+.sheet p{margin:0 0 18px;color:var(--g700,#4e5968);font-size:15px}
+
+/* 센터 다이얼로그 (§4.4) */
+.cmodal-dim{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+.cmodal-dim.on{opacity:1;pointer-events:auto}
+.cmodal{position:fixed;left:50%;top:50%;z-index:51;width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:var(--r-lg);
+  padding:24px 22px 18px;text-align:left;opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.96);transition:opacity .2s,transform .2s}
+.cmodal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.cmodal h3{font-size:18px;font-weight:700;letter-spacing:-.4px;margin:0 0 8px;color:var(--g900)}
+.cmodal p{font-size:14.5px;color:var(--g500);font-weight:500;margin:0 0 20px}
+.cmodal-row{display:flex;gap:8px}
+.cm-btn{flex:1;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:var(--r-md);border:none;background:var(--g100);color:var(--g700);cursor:pointer;transition:transform .12s}
+.cm-btn:active{background:var(--g200)}
+.cm-btn.primary{background:var(--green);color:#fff;position:relative;overflow:hidden}
+.cm-btn.primary:active{background:var(--green-dark);transform:scale(.97)}
+
+/* 헤더 유형 / 역할 (§4.10·§4.12) */
+.hd-demo{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--g100);padding-bottom:12px}
+.back{width:24px;height:24px;color:var(--g700,#4e5968);flex:0 0 auto}
+.hd-demo .t{font-weight:700;font-size:16px}
+.who{display:inline-block;font-size:13px;font-weight:700;color:var(--green-dark);background:var(--green-bg);border-radius:var(--r-sm);padding:5px 11px}
+.lock{width:16px;height:16px;color:var(--g500)}
+
+/* 아이콘 규칙 */
+.ico{display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+.ico svg{width:24px;height:24px;color:var(--g700)}
+
+/* 실기기 검증 배지 (명시만, 라이브 데모 불가) */
+.rk{display:inline-block;font-size:11px;font-weight:700;color:var(--g700);background:var(--g100);border-radius:999px;padding:3px 9px;margin-left:6px}
+.demo.doc{background:var(--g50);border-style:dashed}
+/* 키보드 위 버튼 static mock */
+.kbmock{width:200px;border:1px solid var(--g200);border-radius:var(--r-md);overflow:hidden;background:#fff}
+.kbmock .body{padding:14px;min-height:64px;font-size:13px;color:var(--g500)}
+.kbmock .fbtn{background:var(--green);color:#fff;text-align:center;font-weight:700;padding:13px;font-size:14px}
+.kbmock .kb{background:var(--g200);height:54px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--g500)}
+/* 더블백 종료 힌트 (ex18) */
+.exithint{display:inline-flex;align-items:center;gap:8px;background:var(--g900);color:var(--ink-on-dark,#F9FBFA);border-radius:999px;padding:10px 16px;font-size:14px;font-weight:600}
+.exithint .ck{width:20px;height:20px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.exithint .ck svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.stages{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--g500);font-size:13px}
+.stages b{color:var(--g900)}
+
+/* ── 다크패턴 5금지 (§1.4) — 번호 목록 ── */
+.dp{display:flex;flex-direction:column;gap:0}
+.dp-row{display:flex;gap:12px;align-items:flex-start;padding:11px 2px;border-top:1px solid var(--g100)}
+.dp-row:first-child{border-top:none}
+.dp-no{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--danger-weak-bg);color:var(--danger-weak-fg);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.dp-row b{display:block;font-size:14.5px;color:var(--g900);margin-bottom:2px}
+.dp-row span{font-size:13px;color:var(--g600);line-height:1.5}
+
+/* ── 완료·결과 화면 골격 (§4.6): 그림→제목→설명. 버튼 없이 잠깐 뒤 왼쪽으로 사라짐 ── */
+.rslide{overflow:hidden}
+.result{max-width:320px;margin:0 auto;text-align:center;padding:6px 0}
+.result .ill{width:66px;height:66px;margin:0 auto 18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--green600)}   /* 기존 초록 채움 */
+.result .ill svg{width:33px;height:33px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}   /* 안 체크 = 흰색 */
+.result h4{font-size:20px;font-weight:700;margin:0 0 8px;letter-spacing:-.3px}
+.result p{color:var(--g600);font-size:14px;margin:0}
+/* 완료 인터랙션: 원이 중앙서 팝인 → 흰 체크 왼→오 → 텍스트 → hold → 화면 왼쪽 슬라이드 아웃 */
+.result.anim .ill{transform:scale(0)}
+.result.anim .ill .om-check{stroke-dasharray:1;stroke-dashoffset:1}
+.result.anim h4,.result.anim p{opacity:0}
+.result.play .ill{animation:illPop .42s cubic-bezier(.34,1.35,.5,1) forwards}
+.result.play .ill .om-check{animation:ckDraw .38s .34s cubic-bezier(.5,0,.3,1) forwards}
+.result.play h4{animation:rFade .4s .36s ease forwards}
+.result.play p{animation:rFade .4s .48s ease forwards}
+@keyframes illPop{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes ckDraw{to{stroke-dashoffset:0}}
+@keyframes rFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result.slideout{transform:translateX(-115%);opacity:0;transition:transform .45s cubic-bezier(.4,0,.2,1),opacity .4s}
+
+/* ── 전면 오류 화면 3종 (§4.5) — 버튼 1개(주액션만, 문의 없음) ── */
+.result.err .ill{background:var(--danger-weak-bg)} .result.err .ill svg{stroke:var(--danger)}
+.errgrid{display:flex;gap:14px;flex-wrap:wrap}
+.errgrid .result{flex:1;min-width:210px;border:1px solid var(--g200);border-radius:var(--r-md);padding:22px 16px;margin:0}
+.errgrid .result p{margin-bottom:16px}
+.errgrid .bt{width:100%;font-size:14px;padding:12px 8px}
+
+/* ── 동의 바텀시트 (§4.16) — 상담일지 consentSheet 복제 ── */
+.sheet.ag h4{margin:6px 0 16px;font-size:20px;line-height:1.35}
+/* 모두 동의 = 네모 체크박스(유성: 이건 유지) */
+.ag-all{display:flex;align-items:center;gap:11px;padding:2px 4px 14px;border-bottom:1px solid var(--g100);margin-bottom:4px;cursor:pointer;user-select:none}
+.ag-all input{position:absolute;opacity:0;width:0;height:0}
+.ag-all .cbx{flex:0 0 auto;width:24px;height:24px;border-radius:8px;border:2px solid var(--g300);background:#fff;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+.ag-all .cbx svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .15s}
+.ag-all.on .cbx{background:var(--green600);border-color:var(--green600)}
+.ag-all.on .cbx svg{opacity:1}
+.ag-all .t{font-weight:700;font-size:16px;color:var(--g900)}
+/* 개별 항목 = 박스 없이 ∨ 체크마크만(다 같은 박스로 안 보이게) */
+.ag-row{display:flex;align-items:center;gap:8px;padding:5px 4px}   /* 항목 간격 좁게(유성) */
+.ag-item[data-req="1"] .ag-check2{cursor:default}   /* 필수 = 체크 고정(못 끔) */
+.ag-check2{display:flex;align-items:center;gap:10px;flex:1;min-width:0;background:none;border:none;font-family:inherit;text-align:left;cursor:pointer;padding:0;border-radius:var(--r-sm)}
+.ag-ck{flex:0 0 auto;color:var(--g300);display:flex;transition:color .15s}   /* 미체크 = 회색 ∨ */
+.ag-ck svg{width:20px;height:20px;display:block}
+.ag-item.on .ag-ck{color:var(--green600)}                                    /* 체크 = 초록 ∨(박스 없음) */
+.ag-lab{flex:1;min-width:0;font-size:15px;color:var(--g700);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-req{color:var(--green600);font-weight:700;margin-right:5px}
+.ag-opt{color:var(--g400);font-weight:700;margin-right:5px}
+.ag-chev{flex-shrink:0;background:none;border:none;padding:6px;cursor:pointer;color:var(--g300);display:flex;transition:transform .2s}
+.ag-chev svg{width:18px;height:18px;display:block}
+.ag-item.open .ag-chev{transform:rotate(180deg)}
+.ag-sub2{max-height:0;overflow:hidden;transition:max-height .25s ease}
+.ag-item.open .ag-sub2{max-height:130px}
+.ag-sub2 ul{margin:0;padding:0 0 8px 42px;list-style:none}
+.ag-sub2 li{font-size:13px;color:var(--g500);padding:3px 0;position:relative}
+.ag-sub2 li::before{content:"·";position:absolute;left:-13px;color:var(--g400);font-weight:700}
+.sheet.ag .btn{width:100%;margin-top:14px}
+.sheet.ag .lk{display:block;margin:16px auto 0}   /* 동의 버튼과 간격 넉넉히(유성) */
+</style>
+</head>
+<body>
+<header><div class="in">
+  <h1>생각공작소 디자인 원칙 — 프리뷰</h1>
+  <p>docs/1_원칙_디자인UX.md 의 동작 데모. 토큰은 §3.1 정본에서 자동 주입(값 복붙 X). 컴포넌트 코드는 상담일지(태블릿 앱)에서 복제 — 새 화면은 이 코드를 복사해 시작.</p>
+</div></header>
+
+<nav class="toc">
+  <a href="#c1">1 정책·범위</a><a href="#c2">2 UX 라이팅</a><a href="#c3">3 파운데이션</a>
+  <a href="#c4">4 컴포넌트·패턴</a><a href="#c5">5 인터랙션·모션</a>
+</nav>
+
+<div class="wrap">
+
+<!-- 1 정책 -->
+<section id="c1">
+  <h2 class="ch">1. 정책·범위</h2>
+  <p class="ch-sub">대면 표면 전용 · 내부 행정도구 면제 · 토스 IP 차용 금지 · 다크패턴 5금지</p>
+  <h3 class="sec">다크패턴 5금지 <span class="oldref">§1.4</span></h3>
+  <p class="desc">UX 최소 기준 — 사용자의 <b>예측 가능성·자율성</b>을 지킨다. 이탈을 막으려는 인터럽트·재촉·애원은 당장 클릭을 얻어도 <b>신뢰를 잃는다</b>. 넘지 말아야 할 5가지 ↓</p>
+  <div class="demo dp">
+    <div class="dp-row"><span class="dp-no">1</span><div><b>진입 즉시 전면 바텀시트</b><span>들어오자마자 광고성·알림동의 시트로 목적 수행을 가로막지 않는다. 사용자는 진입 순간 자기 목적을 바로 하길 기대한다.</span></div></div>
+    <div class="dp-row"><span class="dp-no">2</span><div><b>뒤로가기 막는 바텀시트</b><span>이전 화면으로 나가려는 순간 알림동의 시트로 붙잡지 않는다. 자율성이 침해된다는 인상 → 신뢰 저하.</span></div></div>
+    <div class="dp-row"><span class="dp-no">3</span><div><b>나갈 선택지 없음</b><span>우리가 유도한 CTA 말고 다른 길이 없는 구조 금지. 닫기·다음에 하기 같은 나갈 길을 늘 함께 둔다(동의 시트가 버튼 2개인 이유).</span></div></div>
+    <div class="dp-row"><span class="dp-no">4</span><div><b>예상 못한 광고</b><span>사용 흐름 중 갑자기 튀어나오는 광고 금지 — 몰입을 깨고 불쾌를 남긴다. (우린 광고 없음 → 자동 준수.)</span></div></div>
+    <div class="dp-row"><span class="dp-no">5</span><div><b>결과를 알 수 없는 CTA</b><span>버튼 라벨은 누르면 무슨 일이 일어나는지 알 수 있어야 한다("신청하기"). 화면이 이미 한 설명을 버튼에 반복하거나, 버튼 위에 과장·중복 보조설명을 얹지 않는다.</span></div></div>
+  </div>
+
+  <h3 class="sec">디자인 검토·제안 = 프리뷰 html로 <span class="oldref">§1.8</span></h3>
+  <p class="desc">디자인·UI 선택지를 유성에게 물을 땐 <b>텍스트 설명·글 선지가 아니라 실제 렌더되는 프리뷰 html</b>로(여러 안 = 한 파일 토글/나란히). 탐색·비교=<code>prototype/</code>, 원칙 데모=이 파일. 실제 앱 화면의 안이면 그 화면 실코드(토큰·구조)를 복제해 만든다 — 목업이 실물과 다르면 검토 무효. (유성 2026-07-04 "텍스트로 보니까 확인이 안돼")</p>
+</section>
+
+<!-- 2 UX 라이팅 -->
+<section id="c2">
+  <h2 class="ch">2. UX 라이팅</h2>
+  <p class="ch-sub">해요체 · 능동형 · 긍정형 · 명사+명사 금지 · 중복 텍스트 금지</p>
+  <h3 class="sec">보이스 & 톤 <span class="oldref">§2.1</span></h3>
+  <div class="demo dd">
+    <div class="col ok"><b>✅ 이렇게</b>"주소를 다 적었어요" · "처리했어요"(능동) · 다이얼로그 왼쪽 = "닫기"</div>
+    <div class="col no"><b>⛔ 이렇게 X</b>"주소 입력 완료"(명사+명사) · "처리되었어요"(수동) · 왼쪽 "취소"(오해)</div>
+  </div>
+  <h3 class="sec">예외 규칙 — 기본값을 의도적으로 어길 때 <span class="oldref">§2.1 예외</span></h3>
+  <p class="desc">규칙을 위해 뜻을 흐리지 말 것. <b>명확성·안심이 캐주얼·긍정보다 우선하는 순간</b>엔 어긴다.</p>
+  <div class="demo dd">
+    <div class="col ok"><b>능동형 → 수동 OK</b>종료·만료·결과·안심: "바우처 이용 기간이 끝났어요"·"회기가 이월됐어요" (단 반복 종료엔 "종료돼요" X)</div>
+    <div class="col ok"><b>경어 → 시나요? OK</b>맥락·추정·선의(설문·모니터링): "확인해 주시겠어요?"</div>
+    <div class="col ok"><b>긍정형 → 부정 OK</b>정책 불가·일부 불가·안심: "수집하지 않아요"</div>
+  </div>
+  <p class="note">철자: <code>되어요 → 돼요</code> (항상, 모바일 공간). 전체 예외·근거 = 원칙 §2.1 예외 규칙 본문.</p>
+
+  <h3 class="sec">정보 밀도는 맥락에 맞춘다 <span class="oldref">§2.2</span></h3>
+  <p class="desc">반복·거래 화면 → 텍스트 줄임. 처음·고관여(학부모 신청폼) → 안심 정보 유지. 빼는 건 정보가 아니라 조작(FOMO)뿐.</p>
+
+  <h3 class="sec">반복 실무자 화면 = 미니멀 + 보조설명은 ? 도움말 시트 <span class="oldref">§2.2-4</span></h3>
+  <p class="desc">실사용 최다(반복) 화면은 토스 송금처럼 <b>작업 요소만</b>. 사용법·시험판 안내·주의 덩어리는 우상단 <b>? 버튼 → 바텀시트</b>로. 안전·법적 지침은 옮겨도 원문 보존+다른 채널 보완. 학부모 고관여 화면은 예외(안 숨김). 첫 적용=17 시험판(2026-07-04).</p>
+  <div class="demo dd">
+    <div class="col no"><b>⛔ 상시 안내 덩어리</b>화면 위에 "시험판이에요 — …기록돼요…넣지 말아 주세요…골라주세요" 4줄 배너가 매번 노출 → §2.1-7 군더더기, 작업 방해</div>
+    <div class="col ok"><b>✅ 미니멀 + ?</b>제목·입력·버튼만. 우상단 ? 누르면 바텀시트(§4.3)에 안내 전체 — 필요한 사람만, 필요할 때만</div>
+  </div>
+
+  <h3 class="sec">조작법은 텍스트가 아니라 어포던스로 <span class="oldref">§2.2-5</span></h3>
+  <p class="desc">누를 수 있는 건 <b>눌러지게 보이게</b> 만들면 "○○을 누르면 △△돼요" 설명이 필요 없다 — 눌러보고 안다(예: 요일·시간 이름을 칩처럼 → 그 줄 일괄 선택, 안내 문구 삭제). 조작을 글로 적고 있다면 디자인 실패 신호. ⚠️ <b>균형</b>: 텍스트 많다고 좋아지지 않지만, 줄이고 도형·이모지만 늘려도 안 좋다(둘 다 노이즈) — 각 요소가 제 몫의 의미를 지게. (2026-07-06 유성)</p>
+</section>
+
+<!-- 3 파운데이션 -->
+<section id="c3">
+  <h2 class="ch">3. 파운데이션 — 시각 토큰·규율</h2>
+  <p class="ch-sub">색·타입·라운드·그림자 토큰 (색은 §3.1 정본 :root 그대로 읽어 렌더)</p>
+
+  <h3 class="sec">색 — 초록 스케일 <span class="oldref">§3.1</span></h3>
+  <p class="desc">초록=강조에만(브랜드·1차액션·상태). 구조(텍스트·테두리·배경)는 회색/흰색 90%.</p>
+  <div class="demo sw" id="greenSw"></div>
+  <h3 class="sec">색 — 회색 스케일 (중립)</h3>
+  <div class="demo sw" id="graySw"></div>
+
+  <h3 class="sec">대비 통과선 — 값을 읽어 지금 계산 <span class="oldref">§3.6-7</span></h3>
+  <p class="desc">🔴 <b>파생 수치는 문서에 적어두지 말고 잰다</b>(2026-08-03 정정, 홈페이지 전수조사 #50): 옛 §3.1 표가 <code>--g400</code>을 "흰 배경 4.5:1"로 적었으나 <b>실측 2.01</b> → 홈페이지 6P <b>60곳+</b>이 그 표를 *충실히 따라서* 같이 미달했다. 아래는 하드코딩이 아니라 <b>:root 값을 읽어 이 자리에서 계산</b>한 값이라, 토큰을 바꾸면 판정도 따라 바뀐다. <b>배경이 바뀌면 통과선도 바뀐다</b>(흰 배경 g600 ✓ / 회색 면 g600 ✗).</p>
+  <div class="demo" id="crDemo"></div>
+
+  <h3 class="sec">타입 스케일 <span class="oldref">§3.2</span></h3>
+  <div class="demo type"><ul style="margin:0;padding:0">
+    <li><span class="lbl">display</span><span style="font-size:var(--fs-display,34px);font-weight:800">생각공작소</span></li>
+    <li><span class="lbl">h1</span><span style="font-size:var(--fs-h1,27px);font-weight:700">페이지 제목</span></li>
+    <li><span class="lbl">h2</span><span style="font-size:var(--fs-h2,22px);font-weight:700">섹션 제목</span></li>
+    <li><span class="lbl">title</span><span style="font-size:var(--fs-title,17px);font-weight:600">카드 제목</span></li>
+    <li><span class="lbl">body</span><span style="font-size:var(--fs-body,15px)">본문 — 오감쑥쑥 생각쑥쑥</span></li>
+    <li><span class="lbl">caption</span><span style="font-size:var(--fs-caption,12px);color:var(--g500)">캡션·라벨</span></li>
+  </ul></div>
+
+  <h3 class="sec">라운드 토큰 <span class="oldref">§3.3</span></h3>
+  <p class="desc">clamp 반응형 — 모바일서 자동 축소. 하드코딩 px 금지(알약·원 제외).</p>
+  <div class="demo tiles">
+    <div class="t" style="border-radius:var(--r-sm,10px)">--r-sm</div>
+    <div class="t" style="border-radius:var(--r-md,14px)">--r-md</div>
+    <div class="t" style="border-radius:var(--r-lg,20px)">--r-lg</div>
+  </div>
+  <p class="desc">🔄 <b>2026-07-24 부분 개정</b>: 반경 20px 이상 요소(시트 24·모달/드로어 20·폰목업 40)만 <code>corner-shape:superellipse(2.3)</code> — 크로미움만 렌더(사파리·파폭=일반 라운드 폴백, 아이폰에선 안 보임). 버튼 15·상태필 12는 일반 라운드. 적용=근태+대면 앱 전파(2026-07-25: 14·16 시트, photos·app 시트·모달, 06 카드 — 알약꼴은 제외). 아래 왼쪽=일반 라운드, 오른쪽=squircle(크롬에서만 차이 보임 — 변 가운데가 더 판판하고 모서리로 갈수록 부드럽게 말림).</p>
+  <div class="demo tiles">
+    <div class="t" style="width:120px;height:96px;border-radius:24px">radius 24</div>
+    <div class="t" style="width:120px;height:96px;border-radius:24px;corner-shape:superellipse(2.3)">+ squircle 2.3</div>
+  </div>
+
+  <h3 class="sec">PC 폰 목업 <span class="oldref">§3.8 신규</span></h3>
+  <p class="desc">폰 폭 앱을 PC 넓은 창에서 열 때(hover+fine 포인터) 남는 여백을 <b>폰 베젤</b>로 흡수 — 여백 19(상·좌·우, 아래 0=창 바닥에서 올라온 모양)·반경 40(상단만)·베젤 <code>--g200</code>·그림자 램프 상한·squircle 동일 지수. 폰·태블릿에선 목업 없음. 적용=근태·09·14·16·photos·app(전파 1차 완료 2026-07-25 — 06=임베드 자동높이라 비대상, tablet 허브=제외. 현황 정본=docs/1 §3.8).</p>
+  <div class="demo" style="background:var(--g200);padding:19px 19px 0;height:150px;overflow:hidden">
+    <div style="max-width:280px;height:100%;margin:0 auto;background:#fff;border-radius:40px 40px 0 0;corner-shape:superellipse(2.3);box-shadow:0 8px 20px rgba(25,31,40,.15);padding:26px 24px 0">
+      <div style="font-size:var(--fs-caption,12px);color:var(--g500)">남은 연차</div>
+      <div style="font-size:var(--fs-h3,20px);font-weight:800">44<span style="font-size:var(--fs-sm,13.5px);color:var(--g700)">시간</span> <span style="color:var(--green600);font-size:var(--fs-sm,13.5px)">(+4)</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">그림자 상한 <span class="oldref">§3.4</span></h3>
+  <p class="desc">불투명도 램프(.05/.10/.15 @ blur 4/10/20)를 상한으로. 헤어라인+넓은 그림자 동시 남용 금지(§3.6-6).</p>
+  <div class="demo sh"><div class="s s1">낮음</div><div class="s s2">중간</div><div class="s s3">강(그린틴트)</div></div>
+
+  <h3 class="sec">비고·인용 박스 = 좌측 색 보더 금지 <span class="oldref">§3.6-9 신규</span></h3>
+  <p class="desc">본문 옆 세로 색 띠 콜아웃(마크다운 blockquote 렌더 관례)은 AI 디폴트 티(유성 2026-08-09, 지도 IW 비고란 "과하게 AI스러움" 반려). 비고·메모는 <b>중립 회색 면</b>(<code>--g50</code> 라운드) 또는 라벨 행으로.</p>
+  <div class="demo" style="display:flex;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:180px;background:#f5f3ef;border-left:3px solid var(--green600);border-radius:6px;padding:9px 11px;font-size:13px;color:var(--g700)">[원본시간] 월,화,목 17:30~<br><small style="color:#c0392b;font-weight:700">✗ 좌보더 + 웜크림 콜아웃</small></div>
+    <div style="flex:1;min-width:180px;background:var(--g50);border-radius:8px;padding:9px 11px;font-size:13px;color:var(--g700)">[원본시간] 월,화,목 17:30~<br><small style="color:var(--green700,#166841);font-weight:700">✓ 중립 회색 면</small></div>
+  </div>
+
+  <h3 class="sec">어두운 배경 위 흰 글씨 <span class="oldref">§3.5</span></h3>
+  <p class="desc">중립 짙은 배경엔 순백 X(헐레이션). 오프화이트 <code>--ink-on-dark #F9FBFA</code>. (채도 있는 버튼 위는 #fff 예외)</p>
+  <div class="demo dk">
+    <div class="pure">순백 #FFFFFF<small>어두운 배경서 번져 보임(X)</small></div>
+    <div class="off">오프화이트 #F9FBFA<small>--ink-on-dark (O)</small></div>
+  </div>
+
+  <h3 class="sec">아이콘 = 라인 SVG <span class="oldref">§3.5</span></h3>
+  <p class="desc">컬러 이모지 금지. <code>stroke=currentColor</code> 라인 SVG(24×24, stroke 2, round). 색은 글자색 상속.</p>
+  <div class="demo ico">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+    <span class="note" style="margin:0">검색 · 수정 · 출력 · 메뉴</span>
+  </div>
+</section>
+
+<!-- 4 컴포넌트·패턴 -->
+<section id="c4">
+  <h2 class="ch">4. 컴포넌트·패턴</h2>
+  <p class="ch-sub">UI 표면별 · 요소와 행동을 한 지붕에서 (상담일지 코드 복제)</p>
+
+  <h3 class="sec">버튼 variant 체계 <span class="oldref">§4.14 · 제안</span></h3>
+  <p class="desc"><b>primary·dark·danger</b> × <b>fill·weak·disabled</b> 버튼 체계. fill=고채도+흰폰트 / weak=연틴트+동색조 진한폰트(테두리無, 보조 액션) / <b>disabled=회색 아니라 variant 색의 흐린 버전+흰폰트</b>(유성 비활성화.png). <b>✅ 확정·대면 전 표면 배포(2026-07-04 F7·F8)</b> — disabled는 *게이팅*용, 로딩(진행 중)은 채운 초록 유지(상태분기).</p>
+  <div class="demo">
+    <div class="bmatrix">
+      <div class="lbl">fill (1차 액션)</div>
+      <button class="bt p">Primary</button><button class="bt d">Dark</button><button class="bt g">Danger</button>
+      <div class="lbl">weak (보조 액션 · 연틴트+진한폰트)</div>
+      <button class="bt pw">Primary</button><button class="bt dw">Dark</button><button class="bt gw">Danger</button>
+      <div class="lbl">disabled (흐린 variant + 흰폰트)</div>
+      <button class="bt pd dis">Primary</button><button class="bt dd2 dis">Dark</button><button class="bt gd dis">Danger</button>
+    </div>
+    <p class="note">확정 색 — <b>primary</b> #3a8a5f(정본 green600) / <b>dark</b> #525966 / <b>danger</b> #D25357(--red #f04452는 상태알림 전용). <b>weak</b>: primary=green100+green700(<b>실자리 0 = 도입 보류 YAGNI</b>, §4.14-2 — 초록 보조가 생기면 그때) / dark=g100+--dark / danger=#fdecee+#c0392b. <b>disabled</b>: primary=#b7e0c8, dark=#c8ccd0, danger=#f2cdce(+흰폰트) — 다크모드 disabled는 <b>#2f5942+흰42%</b>(어두운 탈채도, A안 2026-07-04). weak-primary 연두 = green100(§3.1 정본 — 값은 토큰동기가 관리).</p>
+  </div>
+
+  <h3 class="sec">뱃지 <span class="oldref">§4.15 · 제안</span></h3>
+  <p class="desc">fill=고채도 채움+흰폰트(강조) / <b>weak=테두리 없이 연한 채움+동색조 진한 폰트</b>(유성 "좋다"). 버튼 weak와 같은 원리 = 일관.</p>
+  <div class="demo">
+    <div class="bdgrow" style="margin-bottom:12px"><span style="font-size:11px;font-weight:700;color:var(--g500);width:44px">fill</span>
+      <span class="bdg f-green">진행중</span><span class="bdg f-gray">대기</span><span class="bdg f-red">마감</span></div>
+    <div class="bdgrow"><span style="font-size:11px;font-weight:700;color:var(--g500);width:44px">weak</span>
+      <span class="bdg w-green">진행중</span><span class="bdg w-gray">대기</span><span class="bdg w-red">마감</span></div>
+  </div>
+
+  <h3 class="sec">대기 내역의 취소 어포던스 = '취소' 칩 <span class="oldref">§4.17 · 2026-07-27 확정</span></h3>
+  <p class="desc"><b>기다리는 내역이 취소 가능하면 '취소할 수 있음'을 UX로 알려주는 명시적 칩</b>(유저는 모르면 관리자에게 물어봄). ⛔X 아이콘(못 읽음)·긴 문구(좌우 경합) 금지. 스타일=<b>흰 배경+보더 g200+헤어라인 그림자</b>(§3.4 램프 내). 취소 불가면 칩을 안 그림(비활성 X). 누르면 확인 거침. 레퍼런스=근태 대기 카드.</p>
+  <p class="desc">⚠️ <b>누를 수 없는 알약은 이 절이 아니라 §4.15 뱃지</b>(테두리 없는 연채움). 흰+보더+그림자는 <i>떠 있음=누를 수 있음</i>의 신호라 상태 라벨에 쓰면 눌러보게 만든다. 아래 둘을 나란히 — 왼쪽=누르는 칩, 오른쪽=읽는 뱃지(근태 캘린더 '직접 입력', 21차).</p>
+  <div class="demo">
+    <div style="background:var(--g50);border-radius:14px;padding:14px 70px 14px 16px;display:flex;align-items:center;gap:10px;position:relative;max-width:360px">
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--g300);flex:none"></span>
+      <div><b style="display:block;font-size:15px;font-weight:700;color:var(--g800)">8월 24일 반차 신청</b><div style="font-size:13.5px;color:var(--g500);margin-top:3px">확인을 기다리고 있어요</div></div>
+      <button style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#fff;border:1px solid var(--g200);box-shadow:0 1px 3px rgba(25,31,40,.08);color:var(--g600);font:inherit;font-size:12px;font-weight:700;border-radius:99px;padding:7px 12px;cursor:pointer">취소</button>
+    </div>
+    <div style="background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:14px 18px;max-width:360px;margin-top:12px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:30px;height:30px;border-radius:10px;background:var(--g100);display:flex;align-items:center;justify-content:center;flex:none;color:var(--g600)"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M7 4 3 8l4 4"/><path d="M3 8h12"/><path d="M17 20l4-4-4-4"/><path d="M21 16H9"/></svg></span>
+        <b style="font-size:15px;font-weight:700">12:00~16:00<span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:4px 10px;border-radius:999px;background:var(--g100);color:var(--dark);font-size:12px;font-weight:700;vertical-align:middle"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.8 18.4h2.4"/></svg>직접 입력</span></b>
+        <span style="margin-left:auto;font-size:13.5px;color:var(--g500);font-weight:600;flex:none;padding-left:10px">출퇴근</span>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sec">구분선 · 보더 <span class="oldref">§4.7</span></h3>
+  <p class="desc">항목 간 = <b>인셋 헤어라인</b>(좌우 24 여백) / 섹션 간 = <b>여백 블록</b>(height 16). 선 남발 X. <b>고정 px OK</b>(1px 헤어라인은 §3.3처럼 반응형 불필요, 기기별 안 깨짐 — 유성 질문 답).</p>
+  <p class="desc"><b>반복 블록(형제 카드) 구분 = 입력 유형이 결정</b>(2026-07-05 L4 유성): 박스형 입력 폼=헤어라인(09) / <b>밑줄형 입력 폼=여백만</b>(16 — 밑줄이 이미 선이라 선 과다). 허용 유형 3(2026-07-05 명문): 라벨+선 소제목(폼 대주제 전환) · 같은 배경 섹션 경계 페이드선=<b>모바일/터치 전용</b>(PC=여백) · 원장(표) 안 다단 구분(굵은선=상위 경계). + §4.8 보강: 장문 값=세로 스택 허용 · <b>원장형 다건은 표가 정답</b>(카드 스택 X — 60~70건 밀도, L3 유성).</p>
+  <div class="demo"><div class="divcard">
+    <div class="divrow"><span class="k">기본 혜택</span><span class="v">2% 적립</span></div>
+    <div class="div-inset"></div>
+    <div class="divrow"><span class="k">연회비</span><span class="v">없음</span></div>
+    <div class="div-sec"></div>
+    <div class="divrow"><span class="k">안내 사항</span><span class="v">—</span></div>
+  </div></div>
+
+  <h3 class="sec">입력 필드 표준 <span class="oldref">§4.1</span></h3>
+  <p class="desc">떠 있는 라벨(포커스 시 그린) · 밑줄형 · 그린 캐럿 · 텍스트 있으면 오른쪽 작은 X. <b>인풋 글자(600·g900)와 placeholder(500·g300)는 굵기·색이 다름.</b></p>
+  <div class="demo">
+    <div class="tfield" id="fName"><label>이름</label>
+      <div class="tin-wrap"><input placeholder="홍길동">
+        <button class="clr" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div></div>
+  </div>
+  <p class="desc" style="margin-top:16px"><b>장문 회기 메모칸 = 괘선 메모지(§4.1-8, 유성 2026-07-05 확정 · 17 AI 일지 첫 적용)</b> — 박스 없이 <b>밑줄(괘선) 위에 글</b>이 앉는 메모지 결. 선은 글자에 거의 붙음(position-y 보정), 포커스=그린 캐럿, 내부 스크롤·리사이즈 없이 auto-grow. ⚠️ repeating-gradient 금지(§3.6) — linear-gradient+background-size 반복. 아래에 몇 줄 적어보세요 ↓</p>
+  <div class="demo">
+    <textarea id="memoPadDemo" placeholder="오늘 회기 메모를 거칠게 적어도 돼요" style="width:100%;max-width:420px;font-family:inherit;font-size:15px;line-height:30px;padding:4px 4px 0 2px;border:none;background-color:#fff;outline:none;resize:none;overflow:hidden;min-height:96px;caret-color:var(--green);background-image:linear-gradient(transparent calc(100% - 1px), var(--g200) 0);background-size:100% 30px;background-attachment:local;background-position:0 -4px" oninput="this.style.height='auto';this.style.height=(this.scrollHeight+(this.offsetHeight-this.clientHeight))+'px'"></textarea>
+  </div>
+  <p class="desc" style="margin-top:16px"><b>보강(§4.1-7)</b> — 단위 접미사(회/원/세)·helper text·error 상태(밑줄·라벨·helper 빨강).</p>
+  <div class="demo" style="display:flex;gap:34px;flex-wrap:wrap;align-items:flex-start">
+    <div class="tfield" style="margin:0;min-width:150px"><label>회기</label>
+      <div class="tin-wrap has-suffix"><input inputmode="numeric" placeholder="0"><span class="suffix">회</span></div>
+      <div class="help">이번 달 제공한 회기 수</div></div>
+    <div class="tfield err" style="margin:0;min-width:150px"><label>전화번호</label>
+      <div class="tin-wrap"><input value="010-12"></div>
+      <div class="help">번호를 다시 확인해 주세요</div></div>
+  </div>
+
+  <h3 class="sec">고정 길이 숫자 = 자동 다음 칸 이동 <span class="oldref">§4.1 · §4.2-9</span></h3>
+  <p class="desc">자릿수가 딱 떨어지는 입력(전화 11·주민 7)은 다 채우면 <b>자동으로 다음 칸으로 이동</b>(키패드 유지)·마지막 칸은 키패드 닫기. 진보형=다음 칸이 그때 등장. <b>휴대폰 11자리 채워보세요 ↓</b></p>
+  <div class="demo">
+    <div class="tfield" id="apPhone"><label>휴대폰 번호</label>
+      <div class="tin-wrap"><input inputmode="numeric" placeholder="010-0000-0000"></div></div>
+    <div class="tfield fhide" id="apBirth"><label>주민등록번호 (앞 7자리)</label>
+      <div class="rrn-row">
+        <input class="rrn-in rrn-front" inputmode="numeric" maxlength="6">
+        <span class="rrn-dash">-</span>
+        <span class="rrn-back-grp"><input class="rrn-in rrn-back" inputmode="numeric" maxlength="1"><span class="rrn-mask"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+      </div></div>
+    <div class="tfield fhide" id="apName"><label>이름</label>
+      <div class="tin-wrap"><input placeholder="홍길동"></div></div>
+  </div>
+
+  <h3 class="sec">입력 관용 — 밖에서 읽어 온 표기를 그대로 받는다 <span class="oldref">§4.1-9 · 2026-08-04 확정</span></h3>
+  <p class="desc">시각·전화·금액처럼 사용자가 <b>다른 곳에서 읽어 옮겨 적는</b> 값은, 우리가 고른 표기만 받고 나머지를 거절하면 사용자에겐 <b>앱이 고장 난 것</b>으로 보인다. 발단=근태 퇴근 시각 칸이 12시간제만 받는데 폰 시계는 <code>15:06</code>이라 그대로 <code>1506</code>을 적었고 → 형식 오류로 거절 → 퇴근 기록 자체가 막힘(26차-3 실사고). <b>판정 기준=뜻이 갈리는가</b> — 13~23시·0시는 12시간제로 읽을 길이 없으니 받고, <code>306</code>은 오전·오후 둘 다 실재하니 <b>판별자(세그)</b>가 정한다. 관용이 곧 추측은 아니다. 받았으면 <b>화면이 그 해석을 말해야</b> 한다(세그가 따라감 — 안 그러면 '오전 15:06'이라는 스스로 모순인 화면). 저장 값은 시스템 포맷 그대로(§2.1-8). <b>1506 · 306 · 2530을 쳐 보세요 ↓</b></p>
+  <div class="demo">
+    <div class="tw-ap" id="tolAp"><button type="button" data-ap="am">오전</button><button type="button" data-ap="pm" class="on">오후</button></div>
+    <div class="tw-box" id="tolBox"><span class="tw-cell"></span><span class="tw-cell"></span><span class="tw-colon">:</span><span class="tw-cell"></span><span class="tw-cell"></span><input class="tw-in" id="tolIn" inputmode="numeric" autocomplete="off"></div>
+    <p class="note" id="tolOut">저장될 값 — 아직 비어 있어요</p>
+  </div>
+
+  <h3 class="sec">키보드 위 액션 버튼 <span class="oldref">§4.1-5</span> <span class="rk">📱 실기기 검증</span></h3>
+  <p class="desc">OS 키보드가 뜨면 "다음/확인/제출" 버튼이 <b>키보드 바로 위에 붙어</b> 가려지지 않게(edge-to-edge, 라운드 없이). 웹 구현 = <code>interactive-widget=resizes-content</code> + footbar. 뷰포트·키보드라 헤드리스·데스크톱서 재현 불가 → 아래는 개념 목업.</p>
+  <div class="demo doc"><div class="kbmock"><div class="body">입력 화면…</div><div class="fbtn">다음</div><div class="kb">⌨ 키보드</div></div>
+    <p class="note">실제 동작·미세 규칙(ⓕ여백고정·ⓗ헤더고정+입력스크롤·적은칸 잠금)은 원칙 §4.1-5 본문 참조. 검증=실기기.</p></div>
+
+  <h3 class="sec">OTP 인증번호 6칸 <span class="oldref">§4.2-10</span></h3>
+  <p class="desc">안 친 칸=왼→오 물결 · 커서칸=초록 깜빡 · 입력=팝 · 입력된 칸=흰+테두리. 6자리 채우면 라운드 선 시계방향→초록 채움→원→체크. <b>🔄 2026-07-26(유성): '확인' 버튼=폐지</b> — 6자리=자동확인이라 중복(검증 중=note '확인하고 있어요' 점·재시도=인라인 링크). ✅근태 13차+태블릿 상담일지 07-27 전파 완료. <b><code>123456</code>=성공 / 그 외=오류.</b> 눌러서 입력해보세요 ↓</p>
+  <div class="demo tight">
+    <div class="otp-box" id="otpBox">
+      <div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div><div class="otp-cell"></div>
+      <input id="su-code" type="text" inputmode="numeric" aria-label="인증번호">
+      <svg class="otp-frame" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="10" pathLength="100" vector-effect="non-scaling-stroke"/></svg>
+      <div class="otp-morph" id="otpMorph"><svg class="om-check" viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6" pathLength="1"/></svg></div>
+    </div>
+    <div class="otp-stub" id="otpStub">5:00 남았어요</div>
+    <div class="otp-note" id="otpNote"></div>
+    <div class="done-text" id="doneText">인증을 마쳤어요!</div>
+    <div class="otp-foot">
+      <button class="lk-resend" id="resendLink">문자가 안 오나요?</button>
+      <button class="btn" id="otpBtn" disabled style="min-width:160px;display:none">확인</button><!-- 폐지(07-27) — 데모 JS 참조 보존용으로 숨김만 -->
+    </div>
+  </div>
+
+  <h3 class="sec">보안 키패드 → 게이트 화면 표준 <span class="oldref">§4.2-4</span></h3>
+  <p class="desc">🔄 <b>2026-07-25 게이트 화면 표준으로 확장</b>(근태 PIN이 태블릿과 달라 재이식하며 박제): 구조=<b>제목·점 가운데 유동 → 키패드 하단 → '몰라요' 슬롯</b> · <b>입력 시작=제목 접힘</b>(점이 올라옴, 비우면 복귀) · <b>오답=제목 빨강 스왑+shake+550ms 뒤 재배치</b> · 몰라요=3초 무입력 강조·2번째 실패 상시 강조 · 서브 문구 금지(§2.1) · 남은 기회=선택 요소. + 기존: 랜덤 재배치·리플=누른 키+랜덤 1·헤일로 dots·지움=입력 있을 때만. <b>🔄 2026-07-26 ⓗ: '몰라요'를 누르면 키패드가 아니라 전체화면 '본인 확인을 할게요' 재인증 폼</b>(밑줄 tfield·OS 키보드, 레퍼런스=상담일지 s-signup1·근태 idOv — 키패드 전화 모드 ⓖ는 잘못된 박제로 폐기). <b>✅ 2026-07-30 세 번째 적용 = 08 반출납 `s-pin`</b>(옛 `type="password"` 입력칸 걷어내고 통이식) — <b>적용 현황 = 태블릿 `g-pad`(원조)·근태 `pinov`·08 `s-pin`, 값이 셋 다 같아야 한다</b>. 신원 체계가 없는 앱(08=공용 관리자 PIN 하나)은 ⓗ 재인증을 못 쓰므로 '몰라요'를 <b>없애지 말고</b> 갈 곳 안내 바텀시트로 채운다. <b>게이트는 서버에 물어 판정할 것</b>(08 옛 구현은 검사 없이 통과시켜 다음 화면에서 실패=가짜 게이트). <b>데모: 1234=통과, 다른 번호=오답 인터랙션 ↓</b></p>
+  <div class="demo tight" style="display:flex;flex-direction:column;align-items:center">
+    <div id="kpTitles" style="overflow:hidden;max-height:60px;opacity:1;transform:translateY(0);transition:max-height .55s cubic-bezier(.4,0,.2,1),opacity .62s ease,transform .55s cubic-bezier(.4,0,.2,1)"><div id="kpTitle" style="font-size:19px;font-weight:600;transition:color .2s">비밀번호를 눌러주세요</div></div>
+    <div style="display:flex;gap:18px;margin:14px 0 22px" id="kpDots"></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;width:100%;max-width:300px" id="kpPad"></div>
+    <button id="kpForgot" style="margin-top:12px;width:100%;max-width:300px;background:none;border:0;font:inherit;font-size:13.5px;font-weight:600;color:var(--g500);opacity:.4;padding:12px;border-radius:12px;cursor:pointer;transition:background .45s,opacity .45s">비밀번호를 몰라요</button>
+  </div>
+  <p class="desc" style="margin-top:10px">§4.2-11 <b>본인 확인(OTP) 표준</b>도 같은 날 박제 — 분실·오답 소진·비밀번호 변경=한 길([전화]→문자 6자리→새 비밀번호 2회→<b>바로 로그인</b>) · <b>번호 진실원천=인사정보 시트</b>(수기 등록 금지) · <b>신원=입력한 전화 우선</b>(공용 PC 잔류 세션 함정) · 코드 5분·재발송 60초·오답 5회 폐기 · 발송=솔라피(HMAC=IP 무관). 서버 왕복이 필요해 데모는 근태 실앱으로.</p>
+  <style>
+    #kpPad button{position:relative;height:54px;border-radius:12px;background:transparent;border:0;font:inherit;font-size:26px;font-weight:500;color:var(--g900);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s cubic-bezier(.2,.7,.3,1)}
+    #kpPad button:active{transform:scale(.9)}
+    #kpPad button .kd{position:relative;z-index:1}
+    #kpPad button.fn{color:var(--g700);opacity:0;pointer-events:none;transition:opacity .22s}
+    #kpPad button.fn.show{opacity:1;pointer-events:auto}
+    #kpPad button.empty{pointer-events:none}
+    #kpDots i{width:9px;height:9px;border-radius:50%;background:var(--g300);box-shadow:0 0 0 3px rgba(176,184,193,.16);transition:background .22s,box-shadow .3s}
+    #kpDots i.f{background:var(--green600);box-shadow:0 0 0 3px rgba(58,138,95,.18)}
+    .kp-rip{position:absolute;left:50%;top:50%;width:175%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle, rgba(58,138,95,.42) 0%, rgba(58,138,95,.16) 42%, rgba(58,138,95,0) 70%);transform:translate(-50%,-50%) scale(.2);pointer-events:none;z-index:0;animation:kpGrip .58s ease-out forwards}
+    @keyframes kpGrip{0%{transform:translate(-50%,-50%) scale(.2);opacity:.95}100%{transform:translate(-50%,-50%) scale(1.75);opacity:0}}
+  </style>
+
+  <h3 class="sec">바텀시트 — 드래그로 닫기 <span class="oldref">§4.3</span></h3>
+  <p class="desc">상단 핸들 · 좌·우·아래 여백(플로팅) · 아래로 끌어 임계 넘기면 닫힘 · 열릴 때 내용 위→아래 순차 등장. <b>단서(07-21)</b>: 닫기 불가(필수 응답형) 시트는 핸들 없음 — 안 닫히는데 핸들이 있으면 거짓 신호. 상단 여백 ≈26px로 대체. <b>동작 데모</b> ↓</p>
+  <div class="demo"><button class="btn" onclick="openSheet()">바텀시트 열기</button></div>
+
+  <h3 class="sec">동의 바텀시트 <span class="oldref">§4.16</span></h3>
+  <p class="desc">개별 항목은 <b>박스 없이 체크(∨)만</b> — 다 같은 박스면 구별이 안 됨. <b>필수는 자동 체크·선택은 미체크</b>('모두 동의'를 안 눌러도 필수는 이미 체크됨). 우측 화살표로 <b>상세 펼침</b>(별 페이지 이동 없이). 버튼은 <b>둘 — 동의하고 계속 / 다음에 하기</b>(나갈 선택지 = 다크패턴 3 방지). '모두 동의'만 네모 체크박스. 레퍼런스=상담일지 consentSheet. <b>동작 데모</b> ↓</p>
+  <div class="demo"><button class="btn" onclick="openAg()">동의 시트 열기</button></div>
+
+  <h3 class="sec">센터 확인 다이얼로그 <span class="oldref">§4.4</span></h3>
+  <p class="desc">즉시 결정 1개 = 가운데 다이얼로그(가로 버튼 2개, 좌=닫기·우=주액션). 텍스트 왼쪽 정렬. <b>동작 데모</b> ↓</p>
+  <div class="demo"><button class="btn" onclick="openCm()">다이얼로그 열기</button></div>
+
+  <h3 class="sec">완료·결과 화면 골격 <span class="oldref">§4.6</span></h3>
+  <p class="desc">성공 결과 = <b>그림 → 제목 → 짧은 서브텍스트</b>. <b>확인 버튼 없음</b> — 잠깐 보여준 뒤 왼쪽으로 스르륵 사라짐. 자동으로 넘어가니 <b>서브텍스트는 한 줄로 짧게</b>(길면 사라지기 전에 못 읽음 — 긴 안내는 버튼형으로). 원=<b>기존 초록 채움</b>·체크=<b>흰색</b>, 중앙서 팝인+체크 왼→오. 레퍼런스=상담일지 가입완료. <b>동작 데모</b> ↓</p>
+  <div class="demo"><div class="rslide"><div class="result anim" id="doneCard">
+    <div class="ill"><svg class="om-check" viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6" pathLength="1"/></svg></div>
+    <h4>신청을 마쳤어요</h4>
+    <p>문자로 알려드릴게요</p>
+  </div></div>
+  <button class="lk" onclick="playDone()" style="margin-top:14px">다시 재생</button></div>
+
+  <h3 class="sec">전면 오류 화면 3종 <span class="oldref">§4.5</span></h3>
+  <p class="desc">화면 전체 실패(불러오기 실패·서버다운·없는 내역)는 <b>전면 오류 화면</b>(다이얼로그와 섞지 X — 다이얼로그는 <i>일시 확인·선택</i>용). 골격 <b>못 찾음 · 입력 오류 · 일시 오류</b>. 버튼은 <b>주액션 하나만</b>.</p>
+  <div class="demo"><div class="errgrid">
+    <div class="result err">
+      <div class="ill"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></div>
+      <h4>내역을 찾지 못했어요</h4><p>주소가 바뀌었거나 삭제된 화면일 수 있어요.</p>
+      <button class="bt p">홈으로</button>
+    </div>
+    <div class="result err">
+      <div class="ill"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.6"/></svg></div>
+      <h4>입력을 다시 확인해 주세요</h4><p>적어 주신 정보가 맞지 않아요.</p>
+      <button class="bt p">다시 입력</button>
+    </div>
+    <div class="result err">
+      <div class="ill"><svg viewBox="0 0 24 24"><polyline points="21 4 21 10 15 10"/><path d="M20 14a8 8 0 1 1-2-6l3 2"/></svg></div>
+      <h4>잠시 후 다시 시도해 주세요</h4><p>일시적으로 연결이 원활하지 않아요.</p>
+      <button class="bt p">다시 시도</button>
+    </div>
+  </div></div>
+
+  <h3 class="sec">선택 컨트롤 — 옵션카드=면 문법 · 탭/세그=흰-필 <span class="oldref">§4.9</span></h3>
+  <p class="desc"><b>옵션카드(값 고르기)</b> = 테두리 금지: 비선택=중립 채움+회색 글자 / <b>선택=green500 채움+흰 글자 w500(2026-07-05 유성 — 틴트는 베이지 위에서 묻힘. 적용=14 선택지·06 성별·시간표만, 16 칩=틴트 유지·검사=솔리드 green600 유지)</b> — '누를 수 있음'은 선이 아니라 면이 말한다. <b>탭·세그(뷰 전환)</b> = 회색 트랙 위 흰 배경+옅은 그림자+초록 글자(2026-07-03). ⚠️ <b>밝은 캔버스 예외</b>(자녀블록 #fafaf8 위 성별 버튼): g100이 묻혀 흰 채움+옅은 그림자로 띄움(C안, 2026-07-06). <b>카드 선택</b>(서비스/방식)=얕게 눌림+체크팝(초록원+흰체크→다음. 딤·시계방향 링 기각 — 실물=06 라이브). <b>눌러보세요</b> ↓</p>
+  <div class="demo">
+    <div class="optc" id="optcDemo"><button class="on">남자</button><button>여자</button></div>
+    <div style="height:14px"></div>
+    <div class="segd" id="segDemo"><button class="on">신청</button><button>변경</button><button>해지</button></div>
+  </div>
+
+  <h3 class="sec">액션 버튼 ≠ 모드 도구 — 모드가 2개 이상이면 세그먼트 <span class="oldref">§4.9</span></h3>
+  <p class="desc">유성(2026-07-28, pdfpng 편집 탭): <b>"이미지·글자 넣기는 한 번 실행하면 무언가를 넣는 <u>행위</u>인데, 펜은 껐다 켰다 하는 <u>모드</u>라 달라져야 한다."</b>
+  → <b>모드 1개</b>(켜거나 끄거나)=<b>솔리드 채움+약한 그림자</b>(서식함 펜툴) / <b>모드 2개 이상</b>(배타적으로 갈아타는 도구)=<b>세그먼트(흰-필)</b> — 솔리드 버튼을 여러 개 늘어놓으면 <i>"이 중 하나만 켜진다"</i>는 배타 관계가 눈에 안 보인다. 세그는 한 칸만 흰색이라 그 사실을 형태로 말한다.
+  <b>액션</b>은 다른 그릇에: 넣기끼리 묶어 <b>연초록 weak</b>, 보조(되돌리기·지우기)는 중립 회색. ⛔ 모드 세그에 <code>✕</code>(끄기) 칸 금지 — §4.17 선례대로 안 읽히고 옆 지우개와 헷갈린다. <b>하는 일을 이름으로</b>(‘선택’). <b>눌러보세요</b> ↓</p>
+  <div class="demo">
+    <div class="tbar" id="tbarDemo">
+      <div class="segd tool">
+        <button class="on" data-t="sel">선택</button><button data-t="pen">펜</button><button data-t="era">지우개</button>
+      </div>
+      <span class="gap"></span>
+      <button class="tbtn act">이미지 넣기</button>
+      <button class="tbtn act">글자 넣기</button>
+      <button class="tbtn">되돌리기</button>
+    </div>
+    <div style="height:16px"></div>
+    <p class="desc" style="margin:0 0 8px">모드가 <b>1개뿐</b>일 때(서식함 펜툴)는 세그가 아니라 토글 — 이건 그대로 유지:</p>
+    <div class="tbar"><button class="tbtn solo" id="soloDemo">펜</button></div>
+  </div>
+
+  <h3 class="sec">비활성 요소 = shake <span class="oldref">§4.9</span></h3>
+  <p class="desc">'지금 못 눌러요'를 조용한 무반응 대신 능동 표시(좌우 흔들림). 게이팅 비활성=연초록+흰폰트(§4.14). 구현=disabled 버튼은 이벤트 투명이라 <b>부모 위임</b>(footbar/시트 rect 히트테스트 — 상담일지·검사·허브·14 적용 2026-07-04). <b>🔄 2026-07-29 유성(근태 22차): shake는 "지금은 못 눌러요"까지만 말한다 — <b>왜</b>와 <b>그럼 뭘 하면 되나</b>를 토스트로 같이 준다.</b> 문구 골격=<b>①이유(현재 상태) + ②다음 행동(긍정형)</b> 두 문장, 버튼이 이미 말하는 값(시각 등)은 반복 X(§2.1-7), 성공 아니므로 체크 아이콘 없음(§5.5). 사유를 모르는 비활성은 shake만 — <b>틀린 이유를 말하는 게 침묵보다 나쁘다</b>. 토스트가 <b>버튼 위 12px</b>에 서는 것도 원칙(§5.5 하단 블록 회피). <b>🔄 2026-08-04(근태 26차-3): 비활성 버튼뿐 아니라 <b>눌렀는데 거절당한 입력</b>에도 같은 문법</b>(칸 shake + 사유 토스트) — 사유는 <b>적은 상태마다 다르다</b>(빈칸 / 덜 적음 / 없는 값). 셋을 한 문구로 뭉치면 <b>다 적은 사람에게 "더 적어라"</b>가 나간다(실사고). <b>비활성 버튼 눌러보세요</b> ↓</p>
+  <div class="demo" id="shkDemo" style="display:flex;flex-direction:column;gap:12px">
+    <div class="pvtoast" id="shkToast">아직 출근 전이에요
+출근을 누르면 퇴근할 수 있어요</div>
+    <button class="btn shk" id="shkBtn" disabled>퇴근</button>
+  </div>
+
+  <h3 class="sec">넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드 <span class="oldref">§4.13-6 · 2026-07-29 확정</span></h3>
+  <p class="desc">하단 고정 CTA 위에 스크롤 목록이 앉는 화면은 ⓐ <b>스크롤바를 숨긴다</b>(<code>scrollbar-width:none</code> + <code>::-webkit-scrollbar{width:0}</code>) — 미관만이 아니라, 막대가 <b>생기는 순간 콘텐츠 폭이 줄어 행 안의 우측 칩이 옆으로 튀기</b> 때문(유성 적발, 08 반출납). ⓑ 대신 아래쪽 ~28px를 <b>투명도 그라데이션</b>으로 옅어지게(<code>mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent)</code>) → "아래에 더 있다"를 가리지 않고 알림. ⚠️ <b>딤(어둡게)이 아니라 투명도</b>(유성: "어둡게 하자는 건 아니고"). <b>아래 목록을 스크롤해 보세요</b> ↓</p>
+  <div class="demo" style="max-width:360px">
+    <div style="height:150px; overflow-y:auto; scrollbar-width:none;
+      -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent);
+      mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent);">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-bottom:1px solid var(--g100)"><span>팥빙수의 전설</span><span style="font-size:12px;font-weight:700;color:var(--g700);border:1px solid var(--g200);border-radius:99px;padding:6px 11px;background:#fff">빼기</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-bottom:1px solid var(--g100)"><span>메모리체스</span><span style="font-size:12px;font-weight:700;color:var(--g700);border:1px solid var(--g200);border-radius:99px;padding:6px 11px;background:#fff">빼기</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-bottom:1px solid var(--g100)"><span>커다란 크리스마스 트리가 있었는데</span><span style="font-size:12px;font-weight:700;color:var(--g700);border:1px solid var(--g200);border-radius:99px;padding:6px 11px;background:#fff">빼기</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-bottom:1px solid var(--g100)"><span>수박 수영장</span><span style="font-size:12px;font-weight:700;color:var(--g700);border:1px solid var(--g200);border-radius:99px;padding:6px 11px;background:#fff">빼기</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 2px"><span>개구리 밸런스 게임</span><span style="font-size:12px;font-weight:700;color:var(--g700);border:1px solid var(--g200);border-radius:99px;padding:6px 11px;background:#fff">빼기</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">다중 선택 그리드 = 드래그 + 이름 일괄토글 · 완료신호 안티패턴 <span class="oldref">§4.9</span> <span class="rk">📱 실기기</span></h3>
+  <p class="desc">여러 칸 격자(요일×시간)는 <b>드래그로 쓸어 선택</b>(when2meet·구글캘린더식 — 켜진 칸서 시작하면 지우기) + <b>요일·시간 이름 탭 = 그 줄 일괄토글</b>(스태거 팝)로 "많이 고르기"의 노동을 없앤다(터치 드래그=<code>touch-action:none</code>+<code>touchmove</code> preventDefault). 이름 탭은 어포던스 없이 숨겨도(잠수함) 되지만 발견성 0이라 <b>주 수단(드래그)은 보이게</b>. ⚠️ <b>완료신호 안티패턴</b>: 더 많이 하길 원하는 자리엔 카운터·게이지·"충분해요"를 두지 말 것 — <b>완료감은 멈추게 한다</b>(빈 곳이 보여야 더 채움). 답은 압박이 아니라 '쉬움'. 표시는 12h·저장 value는 24h(§2.1-8). <b>실물 데모 = 06 시간표 라이브</b>(인터랙티브 드래그는 여기 재구현 대신 라이브·Artifact 참조 = §1.5 YAGNI). (2026-07-06 유성)</p>
+
+  <h3 class="sec">헤더 + 뒤로가기 · 역할 표시 <span class="oldref">§4.10 · §4.12</span></h3>
+  <p class="desc">뒤로가기 = 라인 SVG <code>←</code>. 역할 갈리는 앱은 현재 역할 표시 + 행정 게이트엔 자물쇠(행정계정에만).</p>
+  <div class="demo">
+    <div class="hd-demo">
+      <svg class="back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <span class="t">본인 확인을 할게요</span>
+      <span style="flex:1"></span>
+      <span class="who">홍길동 선생님</span>
+      <svg class="lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    </div>
+  </div>
+
+  <h3 class="sec">뒤로가기/스와이프 = 화면 단위로 단계적 <span class="oldref">§4.11</span> <span class="rk">📱 실기기 검증</span></h3>
+  <p class="desc">하드웨어/스와이프 뒤로가기는 <b>눈에 보이는 한 단계만</b> 되돌린다(전진마다 history push). 루트에서 뒤로 = 더블백 종료 확인(아래 박스). 제스처라 헤드리스 재현 불가 → 개념 명시.</p>
+  <div class="demo doc">
+    <div class="stages"><b>화면A</b> → <b>화면B</b> → <b>화면C</b> &nbsp;·&nbsp; 뒤로 1회 = C→B (밖으로 점프·앱종료 X)</div>
+    <p class="note" style="margin:14px 0 10px">루트에서 한 번 더 뒤로 = 종료 확인 박스(앱 전 표면 공통·2초). <b>재생해 보세요</b> — 실제 앱과 같은 2초 뒤 자동 소멸 ↓</p>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <button class="btn" id="ehPlay">뒤로가기 재생</button>
+      <span class="exithint" id="ehDemo" style="opacity:0;transition:opacity .25s"><span class="ck"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>한 번 더 뒤로 가면 나가요.</span>
+    </div>
+    <p class="note" style="margin-top:12px"><b>두 번째 뒤로가 실제로 닫히게 하는 순서(2026-08-16 실측 정정)</b> — 부트에 가드 1칸 → <b>첫 뒤로 = 안내만, 가드를 다시 쌓지 않는다</b>(설치 앱은 그 화면이 히스토리 첫 칸이라, 다시 쌓으면 두 번째 뒤로가 아무 일도 못 하고 세 번째에야 나간다) → 두 번째 뒤로는 브라우저·OS가 받아 앱이 닫힘 → 2초 뒤 안내가 사라질 때 가드 재장전. 그 2초 안에 화면을 만지면 즉시 무장 해제+가드 복구.</p>
+    <p class="note">앱에 이미 토스트가 있으면 별도 알약 대신 그 자리(08 반출납). 미저장 가드(임상기록)는 하드웨어 뒤로가기에도 동일. 공용 모듈 <code>tfnav.js</code>. 검증=실기기 스와이프.</p>
+  </div>
+</section>
+
+<!-- 5 인터랙션·모션 -->
+<section id="c5">
+  <h2 class="ch">5. 인터랙션·모션</h2>
+  <p class="ch-sub">피드백은 의미 있는 순간에만 · press-feedback은 패턴 아니라 여기</p>
+
+  <h3 class="sec">로딩 = 자리별 3층 (전면 로더 · 버튼 점 · 스켈레톤) <span class="oldref">§5.2</span></h3>
+  <p class="desc">정적 "…" 금지. <b>자리로 고른다(2026-07-04 유성)</b>: ① <b>최종 제출 + 보던 화면을 통째로 갈아끼우는 액션</b>(누르면 끝이거나 결과 전부 교체 — 06 신청·09·14·16 제출, <b>17 다시 정리·확정 저장</b>(유성 2026-07-05). ⚠️17 'AI로 정리'(첫 정리)=흐름 중간이라 ②(유성 정정)) = <b>전면 로더</b>(스피너+문구 한 줄, 잠금감·이중제출 차단 가시화. <b>화면 교체 금지</b> — 폼을 dim으로 페이드하고 그 위에: 적은 내용이 비쳐 "어디가 틀렸는지" 즉시 확인) ② <b>흐름 중간</b>(다음·저장·OTP·등록 — 그 화면을 계속 씀) = <b>버튼 로딩+점</b>(§4.13-4) ③ <b>목록 구조 로드</b> = 스켈레톤(아래). 출처: TDS 공식 Loader=스피너+label — 출렁점은 토스 앱 관찰 관례(2026-07-04 정정). <b>둘 다 재생해 보세요</b> ↓</p>
+  <div class="demo row">
+    <span class="ld">불러오고 있어요<span class="ld-dots"><i></i><i></i><i></i></span></span>
+    <button class="btn" id="ovlBtn">최종 제출 로더 보기</button>
+  </div>
+
+  <h3 class="sec">누름(press) <span class="oldref">§5.3 · 3안 신설 2026-07-27</span></h3>
+  <p class="desc"><b>🔄 3안(메뉴·목록 행)</b>: 전폭 칠 대신 <b>인셋 라운드 선택칸</b>(좌우 여백+radius 14, 살짝 빠르게 등장 opacity+scale .96→1)+<b>안쪽 내용만 scale .97 축소</b>. <b>지연 등장 요소</b>(§4.17 취소 칩 등)=점에서 커지는 등장(scale .15→1, 첫 등장에만 — 재렌더 재생 금지). 레퍼런스=근태 드로어·대기 카드(19차).</p>
+  <p class="desc">솔리드 색버튼 = 어두워짐 + 누른 지점서 양끝까지 ripple + scale(.97). <b>어두워지는 건 배경뿐 — 흰 글자는 흰색 그대로</b>(ripple을 라벨 아래 레이어로). 텍스트형 = scale(.93)만(색 변경 X). <b>눌러보세요</b> ↓</p>
+  <div class="demo row">
+    <button class="btn" id="rbtn">동의하고 시작하기</button>
+    <button class="lk">다음에 할게요</button>
+  </div>
+  <h3 class="sec">스켈레톤 — 로딩 구조 미리보기 <span class="oldref">§5.4</span></h3>
+  <p class="desc">느린 페이지·목록 로드 = 빈 화면 대신 <b>콘텐츠 구조를 회색 바로 미리</b>. §5.2 점과 분담: <b>스켈레톤=구조 로드(목록·카드) / 점=버튼 액션</b>. 중립 회색 shimmer(브랜드 틴트 X). <b>✅ 구현(2026-07-04)</b>: 상담일지 4목록·검사 2목록·서식 목차·voucher 내역 — 실제 카드 마크업(같은 클래스)에 바만 채워 위치·크기 자동 일치, <b>실패 시 스켈레톤 비우고</b> §4.5 '다시 시도'.</p>
+  <div class="demo"><div class="skel">
+    <div class="bar t"></div><div class="bar s"></div><div class="bar s2"></div>
+  </div></div>
+
+  <h3 class="sec">토스트 — 성공엔 초록 원+체크 <span class="oldref">§5.5 · 2026-07-26 확정</span></h3>
+  <p class="desc">성공(완료) 토스트 = 텍스트 왼쪽 <b>초록 원(≈18px) 안 흰 체크</b>. 에러·안내 토스트는 아이콘 없음 — 아이콘이 곧 "잘 됐다" 신호라 남발 금지. 문구는 §2.1(무엇이 어떻게 됐는지 — "바뀐 내용을 반영했어요" 같은 무정보 문구 X). 패턴=<code>toast(msg, ok)</code>. 레퍼런스=근태 12차. <b>🔄 2026-07-29 유성(근태 22차): 토스트는 <b>하단 고정 액션(footbar)을 가리지 않는다</b></b> — 기본 자리(하단 30px)는 버튼바 없는 화면 기준이라, CTA가 하단에 고정된 화면에선 <b>버튼 위 12px</b>로 올린다(두 줄 토스트면 버튼이 통째로 가려짐). 버튼 높이는 상태 따라 1줄↔2줄이라 <b>CSS 상수 금지·그 요소 <code>offsetHeight</code>만 실측</b>(§3.7 예외), <code>getBoundingClientRect</code>는 §3.8 목업 transform이 좌표계를 갈라 금지. <b>동작 데모=위 §4.9 shake 칸</b>(버튼 위 12px에 서는 이유 토스트). <b>🔄 2026-08-04(근태 26차-3): <b>열린 바텀시트도 그 '하단 고정 블록'</b></b> — 시트는 버튼보다 훨씬 높아 '버튼 위 12px'이 시트 <b>안쪽</b>을 가리킨다(퇴근 시트에서 토스트가 <b>시각 입력칸을 덮어</b> 무엇이 잘못됐는지 볼 칸 자체를 가림). 시트가 열려 있으면 기준을 시트 높이로, 시트가 화면을 거의 채우면 앱 높이로 <b>안쪽에 붙드는 클램프</b>(가리는 것보다 나쁜 건 안 보이는 것).</p>
+  <div class="demo" style="display:flex;flex-direction:column;gap:10px;align-items:center">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--g800);color:#fff;font-size:13.5px;font-weight:600;border-radius:12px;padding:12px 18px">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--green600);flex:none"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><polyline points="4 12 9 17 20 6"/></svg></span>
+      7월 27일 연차가 확정됐어요
+    </div>
+    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--g800);color:#fff;font-size:13.5px;font-weight:600;border-radius:12px;padding:12px 18px">연결이 안 돼요. 다시 시도해 주세요</div>
+  </div>
+
+  <p class="note">키보드 위 버튼(§4.1-5)·단계적 뒤로가기(§4.11)·<b>카톡 인앱→기본 브라우저 자동 전환(§3.7, 2026-07-04)</b> = 명시 항목 등재(📱 실기기 검증 배지) — 라이브 데모는 실기기서만. 카톡 전환 = 정적 진입 페이지에만(카톡 배포 링크는 항상 우리 도메인 정적 입구로).</p>
+</section>
+
+</div>
+
+<!-- 전면 로더 (§5.2 데모) -->
+<div class="ovl" id="pvOvl"><div class="spin"></div><p>보내고 있어요</p></div>
+
+<!-- 바텀시트 -->
+<div class="sheet-scrim" id="scrim" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="gripzone" id="gz"><div class="grip"></div></div>
+  <h4>드래그로 닫아 보세요</h4>
+  <p>상단 회색 바(또는 이 영역)를 아래로 끌면 닫혀요. 살짝만 끌면 제자리로 돌아가요.</p>
+  <button class="btn" onclick="closeSheet()">확인</button>
+</div>
+
+<!-- 동의 바텀시트 (§4.16) -->
+<div class="sheet-scrim" id="agScrim" onclick="closeAg()"></div>
+<div class="sheet ag" id="agSheet">
+  <div class="gripzone" id="agGz"><div class="grip"></div></div>
+  <h4>서비스 이용에<br>꼭 필요한 동의만 추렸어요</h4>
+  <div class="ag-all" id="agAllRow"><input type="checkbox" id="agAll"><span class="cbx"><svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg></span><span class="t">모두 동의해요</span></div>
+  <div class="ag-item on" data-req="1">
+    <div class="ag-row">
+      <button type="button" class="ag-check2"><span class="ag-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="ag-lab"><span class="ag-req">필수</span>개인정보 수집·이용</span></button>
+      <button type="button" class="ag-chev" aria-label="약관 보기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+    </div>
+    <div class="ag-sub2"><ul><li>이름·연락처 수집·이용</li><li>서비스 이용 기록</li></ul></div>
+  </div>
+  <div class="ag-item on" data-req="1">
+    <div class="ag-row">
+      <button type="button" class="ag-check2"><span class="ag-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="ag-lab"><span class="ag-req">필수</span>본인 확인 문자 발송·수신</span></button>
+      <button type="button" class="ag-chev" aria-label="약관 보기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+    </div>
+    <div class="ag-sub2"><ul><li>휴대폰 번호로 인증 문자 발송</li></ul></div>
+  </div>
+  <div class="ag-item" data-req="0">
+    <div class="ag-row">
+      <button type="button" class="ag-check2"><span class="ag-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="ag-lab"><span class="ag-opt">선택</span>안내 문자 받기</span></button>
+      <button type="button" class="ag-chev" aria-label="약관 보기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+    </div>
+    <div class="ag-sub2"><ul><li>서비스 안내·일정 문자 수신(동의 안 해도 이용에 영향 없어요)</li></ul></div>
+  </div>
+  <button class="btn" id="agBtn" onclick="closeAg()">동의하고 계속</button>
+  <button class="lk" onclick="closeAg()">다음에 하기</button>
+</div>
+
+<!-- 센터 다이얼로그 -->
+<div class="cmodal-dim" id="cmDim" onclick="closeCm()"></div>
+<div class="cmodal" id="cmModal">
+  <h3>문자를 다시 받을까요?</h3>
+  <p>입력할 수 있는 시간이 지났어요.</p>
+  <div class="cmodal-row">
+    <button class="cm-btn" onclick="closeCm()">닫기</button>
+    <button class="cm-btn primary" onclick="closeCm()">다시 받기</button>
+  </div>
+</div>
+
+<script>
+// ── §5.3 ripple (배경만 어두워짐 — 라벨은 .bl로 감싸 ripple 위 레이어 유지) ──
+function pressRipple(btn){
+  if(!btn.querySelector(':scope>.bl')){          // 라벨(텍스트·아이콘)을 .bl로 감싸 z-index:1 → 흰 텍스트 안 어두워짐
+    const w=document.createElement('span'); w.className='bl';
+    while(btn.firstChild) w.appendChild(btn.firstChild);
+    btn.appendChild(w);
+  }
+  btn.addEventListener('pointerdown', e=>{
+    const r=btn.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+    const far=Math.hypot(Math.max(x,r.width-x), r.height/2);
+    const rip=document.createElement('span'); rip.className='rip';
+    rip.style.left=x+'px'; rip.style.top=y+'px'; rip.style.setProperty('--rs', Math.ceil(far/15)+1);
+    btn.appendChild(rip); requestAnimationFrame(()=>rip.classList.add('go'));   // .bl 뒤에 붙지만 z-index로 라벨이 위
+    setTimeout(()=>rip.remove(),480);
+  });
+}
+document.querySelectorAll('.btn:not(:disabled), .cm-btn.primary').forEach(pressRipple);
+
+// ── §4.1 입력 필드 (focus·clr) ──
+function wireField(f){
+  const inp=f.querySelector('input'), clr=f.querySelector('.clr');
+  inp.addEventListener('focus',()=>f.classList.add('focus'));
+  inp.addEventListener('blur',()=>f.classList.remove('focus'));
+  inp.addEventListener('input',()=>f.classList.toggle('has-val', inp.value.length>0));
+  if(clr) clr.addEventListener('click',()=>{inp.value='';f.classList.remove('has-val');inp.focus();});
+}
+document.querySelectorAll('.tfield').forEach(wireField);
+
+// ── §4.1-9 입력 관용(밖에서 읽어 온 표기 그대로) — 근태 `twMount` 판정 규칙 복제. 정본=attend/index.html ──
+(function(){
+  const box=document.getElementById('tolBox'), inp=document.getElementById('tolIn'), out=document.getElementById('tolOut');
+  if(!box) return;
+  const cells=[...box.querySelectorAll('.tw-cell')], aps=[...document.querySelectorAll('#tolAp button')];
+  const pmOn=()=>aps[1].classList.contains('on');
+  const setAp=pm=>aps.forEach(b=>b.classList.toggle('on',(b.dataset.ap==='pm')===pm));
+  const hm=(h,m)=>String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  function val24(v){
+    let d; if(v.length===4) d=v; else if(v.length===3) d='0'+v; else return null;
+    const hh=+d.slice(0,2), m2=+d.slice(2);
+    if(m2>59) return null;
+    if(v.length===4 && (hh===0 || (hh>=13 && hh<=23))) return hm(hh,m2);   // 뜻이 갈리지 않는 구간만 24시간제로
+    if(hh<1||hh>12) return null;
+    return hm((hh%12)+(pmOn()?12:0), m2);
+  }
+  function paint(){
+    const v=inp.value;
+    cells.forEach((c,i)=>{ c.textContent=v[i]||''; c.classList.toggle('filled', i<v.length); });
+    if(v.length>=2){ const hh=+v.slice(0,2); if(hh>=13&&hh<=23) setAp(true); else if(hh===0) setAp(false); } // 해석을 화면이 말한다
+    const t=val24(v);
+    out.textContent = !v.length ? '저장될 값 — 아직 비어 있어요'
+      : t ? '저장될 값 ' + t + (v.length===4 && +v.slice(0,2)>12 ? '  ← 24시간제 그대로 받음' : '  ← 오전·오후 세그로 판정')
+      : (v.length<3 ? '아직 못 읽어요 — 시각을 끝까지 적어 주세요' : '없는 시각이에요. 다시 적어 주세요');
+  }
+  inp.addEventListener('input',()=>{ inp.value=inp.value.replace(/\D/g,'').slice(0,4); paint(); });
+  aps.forEach(b=>b.addEventListener('click',()=>{ setAp(b.dataset.ap==='pm'); paint(); }));
+  box.addEventListener('click',()=>inp.focus());
+  paint();
+})();
+
+// ── §4.1·§4.2-9 자동 다음 칸 이동 (진보형) ──
+(function(){
+  const phone=document.querySelector('#apPhone input');
+  const bf=document.querySelector('#apBirth .rrn-front'), bb=document.querySelector('#apBirth .rrn-back');
+  const name=document.querySelector('#apName input');
+  const reveal=id=>{const el=document.getElementById(id); el.classList.remove('fhide'); el.classList.add('fin'); el.querySelector('input').focus();};
+  phone.addEventListener('input',()=>{
+    let d=phone.value.replace(/\D/g,'').slice(0,11);
+    phone.value = d.length<4?d : d.length<8?d.slice(0,3)+'-'+d.slice(3) : d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+    if(d.length===11) reveal('apBirth');          // 11자리 → 주민번호 칸 등장+포커스
+  });
+  bf.addEventListener('input',()=>{ if(bf.value.replace(/\D/g,'').length===6) bb.focus(); });  // 앞6 → 뒤1
+  bb.addEventListener('input',()=>{ if(bb.value.replace(/\D/g,'').length===1) reveal('apName'); }); // 뒤1 → 이름
+})();
+
+// ── §4.2-10 OTP (상담일지 복제: wave/pop/cursor/done/fill/circle/check + timer + resend) ──
+let otpErr=false, prevLen=0;
+const codeEl=document.getElementById('su-code'), box=document.getElementById('otpBox'),
+      morph=document.getElementById('otpMorph'), btn=document.getElementById('otpBtn'),
+      note=document.getElementById('otpNote'), doneText=document.getElementById('doneText');
+function renderOtp(){
+  const v=codeEl.value, cells=box.querySelectorAll('.otp-cell');
+  cells.forEach((c,i)=>{ const ch=v[i]||''; c.textContent=ch;
+    c.classList.toggle('filled', !!ch && !otpErr);
+    c.classList.toggle('active', !otpErr && v.length<6 && i===v.length); });
+  if(v.length>prevLen){ const nc=cells[v.length-1]; if(nc){ nc.classList.remove('pop'); void nc.offsetWidth; nc.classList.add('pop'); } }
+  prevLen=v.length;
+}
+function clearErr(){ if(!otpErr)return; otpErr=false; box.classList.remove('err'); note.className='otp-note'; note.textContent=''; renderOtp(); }
+codeEl.oninput=()=>{
+  let v=codeEl.value.replace(/\D/g,''); if(otpErr){ clearErr(); v=v.slice(-1); }
+  v=v.slice(0,6); codeEl.value=v; renderOtp(); btn.disabled = v.length!==6;
+  if(v.length===6){ codeEl.blur(); verify(); }
+};
+codeEl.addEventListener('focus',()=>{ if(otpErr){ clearErr(); codeEl.value=''; renderOtp(); btn.disabled=true; } });
+btn.onclick=verify;
+function verify(){
+  if(codeEl.value.length!==6) return;
+  box.classList.add('done');                       // ★ 즉시: 라운드 선 시계방향 그려짐
+  setTimeout(()=>{                                  // (실앱은 서버 verify — 여기선 데모 판정)
+    if(codeEl.value==='123456'){                    // 성공 연출
+      morph.classList.add('fill','circle'); box.classList.add('filling');
+      setTimeout(()=>{ morph.classList.add('checked'); doneText.classList.add('on'); }, 460);
+    } else {                                        // 오류
+      box.classList.remove('done'); note.className='otp-note err';
+      note.innerHTML='<span class="eic">!</span>인증번호가 틀렸어요'; box.classList.add('err'); otpErr=true; renderOtp(); btn.disabled=true;
+    }
+  }, 520);
+}
+function resetOtp(){ otpErr=false; box.classList.remove('err','done','filling'); morph.classList.remove('fill','circle','checked');
+  doneText.classList.remove('on'); codeEl.value=''; renderOtp(); btn.disabled=true; }
+document.getElementById('resendLink').onclick=()=>{ resetOtp(); startTimer(); codeEl.focus(); };
+// 타이머 (5:00 → 서버 TTL 300초와 동기가 원칙. 0:00 돼도 자리 유지)
+let deadline=0, timer=null;
+function tick(){ const left=Math.max(0,Math.round((deadline-Date.now())/1000));
+  document.getElementById('otpStub').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+' 남았어요';
+  if(left<=0){ clearInterval(timer); openCm(); } }
+function startTimer(){ clearInterval(timer); deadline=Date.now()+300*1000; tick(); timer=setInterval(tick,1000); }
+startTimer(); renderOtp();
+
+// ── §4.3 바텀시트 + 드래그 닫기 ──
+const sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim');
+function openSheet(){scrim.classList.add('on');sheet.classList.add('on');sheet.style.transform='';}
+function closeSheet(){scrim.classList.remove('on');sheet.classList.remove('on');sheet.style.transform='';}
+(function(){
+  const gz=document.getElementById('gz'); let sy=0,dy=0,drag=false;
+  gz.addEventListener('pointerdown',e=>{drag=true;sy=e.clientY;sheet.style.transition='none';sheet.style.transform='scale(.99)';gz.setPointerCapture(e.pointerId);});
+  gz.addEventListener('pointermove',e=>{if(!drag)return;dy=Math.max(0,e.clientY-sy);sheet.style.transform=`translateY(${dy}px)`;});
+  const end=()=>{if(!drag)return;drag=false;sheet.style.transition='';if(dy>80)closeSheet();else sheet.style.transform='';dy=0;};
+  gz.addEventListener('pointerup',end); gz.addEventListener('pointercancel',end);
+})();
+
+// ── §4.4 센터 다이얼로그 ──
+function openCm(){document.getElementById('cmDim').classList.add('on');document.getElementById('cmModal').classList.add('on');}
+function closeCm(){document.getElementById('cmDim').classList.remove('on');document.getElementById('cmModal').classList.remove('on');}
+
+// ── §4.16 동의 시트 (∨체크·필수자동체크·선택미체크·모두동의·상세아코디언·드래그닫기) ──
+const agSheet=document.getElementById('agSheet'), agScrim=document.getElementById('agScrim');
+function openAg(){agScrim.classList.add('on');agSheet.classList.add('on');agSheet.style.transform='';}
+function closeAg(){agScrim.classList.remove('on');agSheet.classList.remove('on');agSheet.style.transform='';}
+(function(){
+  const allRow=document.getElementById('agAllRow'), allIn=document.getElementById('agAll');
+  const items=[...agSheet.querySelectorAll('.ag-item')], gbtn=document.getElementById('agBtn');
+  const reqItems=items.filter(it=>it.dataset.req==='1');   // 필수만 게이트
+  const sync=()=>{ const allOn=items.every(it=>it.classList.contains('on'));   // 모두동의 = 선택 포함 전부
+    allRow.classList.toggle('on',allOn); allIn.checked=allOn;
+    gbtn.disabled=!reqItems.every(it=>it.classList.contains('on')); };
+  items.forEach(it=>{
+    it.querySelector('.ag-check2').addEventListener('click',()=>{ if(it.dataset.req==='1')return; it.classList.toggle('on'); sync(); });   // ∨ 토글(필수는 항상 체크 — 못 끔)
+    it.querySelector('.ag-chev').addEventListener('click',()=>it.classList.toggle('open'));                // 우측 화살표 = 상세 펼침
+  });
+  allRow.addEventListener('click',e=>{ if(e.target.closest('.ag-check2'))return; const on=!allRow.classList.contains('on'); items.forEach(it=>it.classList.toggle('on', on || it.dataset.req==='1')); sync(); });   // 취소해도 필수는 체크 유지(유성)
+  const gz=document.getElementById('agGz'); let sy=0,dy=0,drag=false;
+  gz.addEventListener('pointerdown',e=>{drag=true;sy=e.clientY;agSheet.style.transition='none';gz.setPointerCapture(e.pointerId);});
+  gz.addEventListener('pointermove',e=>{if(!drag)return;dy=Math.max(0,e.clientY-sy);agSheet.style.transform=`translateY(${dy}px)`;});
+  const end=()=>{if(!drag)return;drag=false;agSheet.style.transition='';if(dy>80)closeAg();else agSheet.style.transform='';dy=0;};
+  gz.addEventListener('pointerup',end); gz.addEventListener('pointercancel',end);
+  sync();   // 초기: 필수 2개 on(HTML) → 버튼 활성, 선택 off
+})();
+
+// ── §4.6 완료 화면 인터랙션 (원 팝인 → 흰 체크 왼→오 → hold → 왼쪽 슬라이드 아웃) ──
+function playDone(){
+  const c=document.getElementById('doneCard'); if(!c)return;
+  clearTimeout(c._t1); clearTimeout(c._t2);
+  c.classList.remove('slideout','play'); void c.offsetWidth;   // 리셋 후 리플로우
+  c.classList.add('play');
+  c._t1=setTimeout(()=>c.classList.add('slideout'), 460+1400);          // 체크 후 ~1.4s hold → 슬라이드
+  c._t2=setTimeout(()=>c.classList.remove('play','slideout'), 460+1400+480);  // 숨김 상태로 리셋(재생 대기)
+}
+(function(){ const c=document.getElementById('doneCard'); if(!c)return;   // 화면에 보이면 1회 자동 재생
+  const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ playDone(); io.unobserve(c);} }),{threshold:.5});
+  io.observe(c);
+})();
+
+// ── §4.9 shake (비활성 누름) — disabled 버튼은 이벤트 투명 → 부모(demo) 위임(라이브 앱과 동일 문법, 2026-07-04 데모 버그 수정) ──
+(function(){ const b=document.getElementById('shkBtn'), t=document.getElementById('shkToast');
+  b.parentElement.addEventListener('pointerdown',()=>{ b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+    t.classList.add('on'); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('on'),2600); }); // 22차: shake+이유 토스트 한 세트
+})();
+
+// ── §4.11 더블백 종료 안내(2초 알약) 데모 — 값은 실앱(문서리더·근태·허브)과 동일 ──
+(function(){ const b=document.getElementById('ehPlay'), h=document.getElementById('ehDemo'); if(!b||!h) return;
+  b.addEventListener('click',()=>{ h.style.opacity=1; clearTimeout(h._tm); h._tm=setTimeout(()=>{ h.style.opacity=0; },2000); });
+})();
+
+// ── §5.2 전면 로더 (최종 제출) 데모 ──
+(function(){ const btn=document.getElementById('ovlBtn'), o=document.getElementById('pvOvl'); if(!btn||!o) return;
+  btn.addEventListener('click',()=>{ o.classList.add('show'); setTimeout(()=>o.classList.remove('show'),1800); });
+})();
+
+// ── §4.9 선택 컨트롤 (옵션카드 면 문법 · 세그 흰-필) ──
+(function(){ ['optcDemo','segDemo'].forEach(id=>{ const box=document.getElementById(id); if(!box) return;
+  box.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+    box.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
+}); })();
+
+// ── §4.9 세그 선택 표시가 미끄러진다 (initSegSlide — 실물 pdfpng와 같은 방식) ──
+(function(){
+  function initSegSlide(seg){
+    const sync=()=>{ const on=seg.querySelector('button.on'); const w=on?on.getBoundingClientRect().width:0;
+      if(!w){ seg.classList.remove('slide'); return; }
+      const sr=seg.getBoundingClientRect(), br=on.getBoundingClientRect();
+      const pad=parseFloat(getComputedStyle(seg).paddingLeft)||0;
+      seg.style.setProperty('--sw', w+'px'); seg.style.setProperty('--sx',(br.left-sr.left-pad)+'px');
+      seg.classList.add('slide'); };
+    new ResizeObserver(sync).observe(seg);
+    seg.addEventListener('click',()=>requestAnimationFrame(sync));
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(sync);
+    requestAnimationFrame(sync);
+  }
+  document.querySelectorAll('.segd').forEach(initSegSlide);
+})();
+
+// ── §4.9 액션 ≠ 모드 (모드 2개↑=세그 / 모드 1개=토글) ──
+(function(){ const bar=document.getElementById('tbarDemo'); if(bar){
+  const seg=bar.querySelector('.segd.tool');
+  seg.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+    seg.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
+}
+const solo=document.getElementById('soloDemo');
+if(solo) solo.addEventListener('click',()=>solo.classList.toggle('solo'));
+})();
+
+// ── 색 스와치 (:root computed 값 읽어 렌더 — 하드코딩 X) ──
+(function(){
+  const cs=getComputedStyle(document.documentElement);
+  const mk=(host,names)=>{const el=document.getElementById(host);
+    names.forEach(n=>{const v=cs.getPropertyValue('--'+n).trim(); if(!v)return;
+      el.insertAdjacentHTML('beforeend',`<div class="chip"><div class="box" style="background:${v}"></div><span class="n">${n}</span><br>${v}</div>`);});};
+  mk('greenSw',['green50','green100','green200','green300','green400','green500','green600','green700','green800','green900']);
+  mk('graySw',['g50','g100','g200','g300','g400','g500','g600','g700','g800','g900']);
+})();
+
+// ── §3.6-7 대비 통과선 — :root 값 읽어 WCAG 실계산(하드코딩 금지: 문서 수치가 틀려 전 표면이 같이 틀린 2026-08-02 선례) ──
+(function(){
+  const host=document.getElementById('crDemo'); if(!host) return;
+  const cs=getComputedStyle(document.documentElement);
+  const hx=n=>cs.getPropertyValue('--'+n).trim();
+  const lum=h=>{const c=h.replace('#','');const p=[0,2,4].map(i=>parseInt(c.substr(i,2),16)/255)
+    .map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return .2126*p[0]+.7152*p[1]+.0722*p[2];};
+  const cr=(a,b)=>{const s=[lum(a),lum(b)].sort((x,y)=>y-x);return (s[0]+.05)/(s[1]+.05);};
+  const row=(name,fg,bg,need,label)=>{const r=cr(fg,bg),ok=r>=need;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:4px 0">
+      <span style="font-size:11px;color:var(--g600);width:60px;flex:0 0 auto">${name}</span>
+      <span style="flex:1;min-width:0;font-size:14px;color:${fg}">${label}</span>
+      <b style="font-size:12px;flex:0 0 auto;color:${ok?'var(--green700)':'#c0392b'}">${r.toFixed(2)} ${ok?'✓':'✗'}</b></div>`;};
+  const panel=(bg,title,rows)=>`<div style="background:${bg};border:1px solid var(--g200);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+    <div style="font-size:11px;font-weight:700;color:var(--g600);margin-bottom:6px">${title}</div>${rows}</div>`;
+  let html='';
+  [['#ffffff','흰 배경 — 본문 기준 4.5'],[hx('g50'),'--g50 면 — 본문 기준 4.5'],[hx('g100'),'--g100 면 — 본문 기준 4.5']]
+    .forEach(([bg,t])=>{ html+=panel(bg,t+' · '+bg,
+      ['g400','g500','g600','g700'].map(n=>row(n,hx(n),bg,4.5,'보조 텍스트는 이 밝기로 보여요')).join('')); });
+  html+=panel('#ffffff','흰 배경 위 초록 글자 — 본문 기준 4.5 (큰 글씨·아이콘은 3.0)',
+    ['green500','green600','green700','green800'].map(n=>row(n,hx(n),'#ffffff',4.5,'초록으로 쓴 링크·라벨')).join(''));
+  html+=panel(hx('green100'),'초록 틴트 면 위 글자 — 기준 4.5',
+    ['green600','green800','g900'].map(n=>row(n,hx(n),hx('green100'),4.5,'칩·뱃지 라벨')).join(''));
+  html+=panel('#ffffff','초록 채움 버튼의 흰 글자 — 기준 4.5',
+    ['green600','green700','green800'].map(n=>{const bg=hx(n),r=cr('#ffffff',bg),ok=r>=4.5;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:4px 0">
+        <span style="font-size:11px;color:var(--g600);width:60px;flex:0 0 auto">${n}</span>
+        <span style="flex:1;min-width:0"><span style="display:inline-block;background:${bg};color:#fff;font-size:14px;font-weight:700;border-radius:8px;padding:8px 16px">상담 신청</span></span>
+        <b style="font-size:12px;flex:0 0 auto;color:${ok?'var(--green700)':'#c0392b'}">${r.toFixed(2)} ${ok?'✓':'✗'}</b></div>`;}).join(''));
+  host.innerHTML=html;
+})();
+
+// ── §4.2-4 게이트 화면 표준 (2026-07-25 데모 승격 — 제목 접힘·오답 인터랙션·몰라요 슬롯. 1234=통과) ──
+(function () {
+  var pin = '', DOTS = 4, fails = 0, forgotTm = null, forgotUsed = false;
+  var dots = document.getElementById('kpDots'), titles = document.getElementById('kpTitles'), title = document.getElementById('kpTitle'), forgot = document.getElementById('kpForgot');
+  for (var i = 0; i < DOTS; i++) dots.appendChild(document.createElement('i'));
+  function titleSync() { var hide = pin.length > 0; titles.style.maxHeight = hide ? '0' : '60px'; titles.style.opacity = hide ? '0' : '1'; titles.style.transform = hide ? 'translateY(-16px)' : 'translateY(0)'; }
+  function titleSet(t, err) { title.textContent = t; title.style.color = err ? 'var(--red)' : ''; }
+  function shakeTitle() { title.style.animation = 'none'; void title.offsetWidth; title.style.animation = 'kpShake .35s'; }
+  function armForgot() { clearTimeout(forgotTm); forgotTm = setTimeout(function () { if (!forgotUsed && !pin.length) { forgot.style.opacity = '1'; forgot.style.background = 'rgba(58,138,95,.06)'; forgot.style.color = 'var(--green700)'; } }, 3000); }
+  function paint() {
+    [].slice.call(dots.children).forEach(function (d, i) { d.classList.toggle('f', i < pin.length); });
+    var del = document.getElementById('kpDel'); if (del) del.classList.toggle('show', pin.length > 0);
+    titleSync();
+  }
+  function rip(b) { var r = document.createElement('span'); r.className = 'kp-rip'; b.appendChild(r); setTimeout(function () { r.remove(); }, 560); }
+  function check() {
+    if (pin === '1234') { pin = ''; titleSet('통과했어요 (데모)', false); paint(); setTimeout(function () { titleSet('비밀번호를 눌러주세요', false); build(); }, 1200); return; }
+    fails++; pin = ''; paint();
+    titleSet('비밀번호가 맞지 않아요', true); shakeTitle();               // 오답=제목 빨강 스왑+shake
+    if (fails >= 2) { clearTimeout(forgotTm); forgot.style.opacity = '1'; forgot.style.background = 'rgba(58,138,95,.06)'; forgot.style.color = 'var(--green700)'; } // 2번째 실패=몰라요 상시 강조
+    setTimeout(build, 550);                                               // 흔들림 끝난 뒤 재배치
+  }
+  function build() {
+    var pad = document.getElementById('kpPad'); pad.innerHTML = '';
+    var n = '0123456789'.split('').sort(function () { return Math.random() - .5; });
+    function key(d) {
+      var b = document.createElement('button'); b.dataset.k = d; b.innerHTML = '<span class="kd">' + d + '</span>';
+      b.onclick = function () {
+        rip(b);
+        var ks = [].slice.call(pad.querySelectorAll('button[data-k]')).filter(function (x) { return x !== b; });
+        rip(ks[Math.floor(Math.random() * ks.length)]); // 누른 키+랜덤 1개 = 숄더서핑 차단
+        if (title.style.color) titleSet('비밀번호를 눌러주세요', false);   // 다시 입력=에러 제목 복귀
+        forgotUsed = true; clearTimeout(forgotTm); if (fails < 2) { forgot.style.opacity = '.4'; forgot.style.background = 'none'; forgot.style.color = 'var(--g500)'; }
+        if (pin.length < DOTS) pin += d; paint();
+        if (pin.length === DOTS) setTimeout(check, 120);
+      };
+      return b;
+    }
+    for (var i = 0; i < 9; i++) pad.appendChild(key(n[i]));
+    var e = document.createElement('button'); e.className = 'empty'; pad.appendChild(e);
+    pad.appendChild(key(n[9]));
+    var del = document.createElement('button'); del.className = 'fn'; del.id = 'kpDel'; del.innerHTML = '<span class="kd">←</span>';
+    del.onclick = function () { pin = pin.slice(0, -1); paint(); };
+    pad.appendChild(del); paint();
+  }
+  var st = document.createElement('style'); st.textContent = '@keyframes kpShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}'; document.head.appendChild(st);
+  forgot.onclick = function () { titleSet('여기서 문자 인증(OTP)으로 넘어가요 (데모)', false); setTimeout(function () { titleSet('비밀번호를 눌러주세요', false); }, 1400); };
+  build(); armForgot();
+})();
+</script>
+</body>
+</html>
