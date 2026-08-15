@@ -825,10 +825,13 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   function hideExitHint(){ var e=$('exitHint'); if(e) e.classList.remove('on'); }
   window.addEventListener('popstate', function(){
     if(navStack.length){ var fn=navStack.pop(); try{ fn(); }catch(e){} return; }                       // 오버레이 한 겹 닫기(이동 X)
-    if(exitArmed){ exitArmed=false; clearTimeout(exitT); hideExitHint(); history.go(-1); return; }       // 두 번째 → 진짜 종료
-    history.pushState({root:1},''); showExitHint(); exitArmed=true;                                       // 첫 번째 → 머무르고 안내
-    exitT=setTimeout(function(){ exitArmed=false; hideExitHint(); }, 2000);
+    if(exitArmed){ exitArmed=false; clearTimeout(exitT); hideExitHint(); history.go(-1); return; }       // 아래에 앱 칸이 남아 있던 예외 경로의 종료
+    showExitHint(); exitArmed=true;                                                                       // 첫 번째 → 안내만. 가드 재적재 금지(§4.11-4: 다시 쌓으면 두 번째 뒤로가 갈 곳이 없어 세 번째에야 닫힘)
+    exitT=setTimeout(function(){ exitArmed=false; hideExitHint(); history.pushState({root:1},''); }, 2000);   // 2초 지나면 가드 재장전
   });
+  document.addEventListener('pointerdown', function(){                                                    // 그 2초 안에 화면을 만지면 = 나가려던 게 아님 → 즉시 무장 해제+가드 복구
+    if(exitArmed){ exitArmed=false; clearTimeout(exitT); hideExitHint(); history.pushState({root:1},''); }
+  }, true);
   // 상담사 등록: (미등록) 번호(5007) → 필수확인(서약) / (등록됨) 해제
   var COUNSELOR_HASH = "8d0a8cbf9d1e53373e02a4ad80e49b2853259c854de49349cd776a7569c47142";  // sha256("5007") — 모든 상담사 공용 코드(소스에 평문 대신 해시)
   function showOath(){ $('oathDim').classList.add('on'); $('oathSheet').classList.add('on'); }
