@@ -805,6 +805,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
       <span class="exithint" id="ehDemo" style="opacity:0;transition:opacity .25s"><span class="ck"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>한 번 더 뒤로 가면 나가요.</span>
     </div>
     <p class="note" style="margin-top:12px"><b>두 번째 뒤로가 실제로 닫히게 하는 순서(2026-08-16 실측 정정)</b> — 부트에 가드 1칸 → <b>첫 뒤로 = 안내만, 가드를 다시 쌓지 않는다</b>(설치 앱은 그 화면이 히스토리 첫 칸이라, 다시 쌓으면 두 번째 뒤로가 아무 일도 못 하고 세 번째에야 나간다) → 두 번째 뒤로는 브라우저·OS가 받아 앱이 닫힘 → 2초 뒤 안내가 사라질 때 가드 재장전. 그 2초 안에 화면을 만지면 즉시 무장 해제+가드 복구.</p>
+    <p class="note">🔴 <b>화면을 한 번도 안 만진 채의 첫 스와이프는 웹이 못 잡는다(2026-08-16 확정·⛔우회 재시도 금지)</b> — 크롬이 제스처 없이 만든 히스토리 칸을 뒤로 제스처에서 무시한다(백 가두기 방지 개입). 무터치면 안내 없이 1번에 닫히고, <b>탭·스크롤 한 번 뒤에는 소급 유효</b>해 더블백이 정상 동작. JS <code>history.back()</code>은 이 개입을 안 타서 헤드리스로 못 잰다 — 제스처 판정=실기기만.</p>
     <p class="note">앱에 이미 토스트가 있으면 별도 알약 대신 그 자리(08 반출납). 미저장 가드(임상기록)는 하드웨어 뒤로가기에도 동일. 공용 모듈 <code>tfnav.js</code>. 검증=실기기 스와이프.</p>
   </div>
 </section>
