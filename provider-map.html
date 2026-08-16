@@ -167,6 +167,84 @@
   #planSheet.on .sbd.intro > *:nth-child(5){animation-delay:.46s}
   #planSheet.on .sbd.intro > *:nth-child(6){animation-delay:.56s}
   @keyframes pUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ══ 월 스케줄 (2026-08-16 — 프리뷰 06_월스케줄_확정안 6라운드 정식 병합. 확정 이력=docs/4 §7) ══
+     골격=#planSheet 복제(§4.3) · 격자=A 채움·56px/시간 고정·라운딩 0·동네색(시트 안 순서·bname).
+     ⛔접힌 블록엔 '추정'·±N분 금지 / 빈자리에 "이동 N분 빼고" 금지 / 격자 아래 요약 텍스트 금지 (유성 08-15·16) */
+  #schedSheet{position:absolute;right:12px;bottom:0;width:min(344px,72%);max-height:82%;z-index:8;
+              display:none;flex-direction:column;background:#fff;border-radius:20px 20px 0 0;
+              box-shadow:var(--sh-up);transform:translateY(100%);
+              transition:transform .32s cubic-bezier(.22,.7,.25,1)}
+  #schedSheet.on{display:flex;transform:translateY(0)}
+  #schedSheet .grab{padding:10px 0 6px;cursor:grab;flex:none;touch-action:none}
+  #schedSheet .grab:active{cursor:grabbing}
+  #schedSheet .bar{width:40px;height:4px;border-radius:2px;background:var(--g200);margin:0 auto}
+  #schedSheet .shd{padding:2px 16px 9px;flex:none;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  #schedSheet .shd h3{font-size:15px;font-weight:700;letter-spacing:-.2px;margin:0}
+  #schedSheet .shd .sub{font-size:11.5px;color:var(--g500);margin-top:2px}
+  #schedSheet .shd .sunk{color:var(--warn-weak-fg);font-weight:700;cursor:pointer;text-decoration:underline}
+  /* ⛔스크롤바 제거 — 대신 하단 green700 반투명 그라데이션 2겹(아래가 진하게), 넘칠 때만 (유성 08-15) */
+  #schedSheet .sbd{padding:0 12px 16px;overflow:auto;flex:1;scrollbar-width:none}
+  #schedSheet .sbd::-webkit-scrollbar{width:0;height:0}
+  #schedSheet::after{content:'';position:absolute;left:1px;right:1px;bottom:0;height:46px;pointer-events:none;
+    border-radius:0 0 2px 2px;opacity:0;transition:opacity .18s;
+    background:linear-gradient(to bottom,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+               linear-gradient(to bottom,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%)}
+  #schedSheet.more::after{opacity:1}
+  #schedRouteBtn{border:1px solid var(--g200);border-radius:9px;background:#fff;color:var(--g700);
+    font-family:inherit;font-size:11.5px;font-weight:700;padding:6px 10px;cursor:pointer;flex:none}
+  #schedRouteBtn.on{background:var(--g900);color:#fff;border-color:var(--g900)}
+  #schedRouteBtn:active{transform:scale(.97)}
+  /* 접힌 상태 = 좌상단 알약 (유성 원 요청 "핸들을 접으면 좌상단 버튼"). planDays와 같은 자리지만
+     접을 때 동선을 같이 꺼서(schedFold) 동시에 뜨지 않는다 */
+  #schedPill{position:fixed;left:14px;top:88px;z-index:41;display:none;background:#fff;color:var(--g800);
+    border:1px solid var(--g200);border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:700;
+    font-family:inherit;cursor:pointer;box-shadow:var(--sh1)}
+  #schedPill.on{display:block}
+  #schedPill:active{transform:scale(.97)}
+  /* 격자 — 프리뷰 6라운드 확정판 그대로(#schedSheet 스코프) */
+  #schedSheet .ghead{display:flex;margin-bottom:5px}
+  #schedSheet .ghead .dh{flex:1;text-align:center;font-size:11.5px;font-weight:700;color:var(--g600)}
+  #schedSheet .gbody{display:flex;position:relative}
+  #schedSheet .axis{flex:none;position:relative}
+  #schedSheet .axis span{position:absolute;right:6px;transform:translateY(-50%);font-size:9.5px;color:var(--g500);
+             font-weight:600;font-variant-numeric:tabular-nums}
+  #schedSheet .hr{position:absolute;left:0;right:0;height:1px;background:#f1f4f7}
+  #schedSheet .lane{flex:1;position:relative;min-width:0}
+  #schedSheet .lane + .lane{box-shadow:inset 1px 0 0 #f1f4f7}
+  /* 블록 = A 채움(유성 확정)·라운딩 0. 평소 그림자 0(§3.6-2 depth) — hover·펼침만 */
+  #schedSheet .blk{position:absolute;left:1px;right:1px;overflow:hidden;cursor:pointer;border-radius:0;
+       color:var(--g900);padding:5px 6px 3px;transition:box-shadow .16s}
+  #schedSheet .blk .nm{font-size:11.5px;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ⚠️ nowrap 필수 — 6열(토요일)에서 시각 줄이 두 줄로 접혀 칸을 넘쳤다(프리뷰 실측 tm 9.3→18.7px) */
+  #schedSheet .blk .tm{font-size:9px;line-height:1.35;font-variant-numeric:tabular-nums;opacity:.78;
+           white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #schedSheet .blk.tight{padding:2px 6px 1px}
+  #schedSheet .blk.tight .nm{font-size:11px;line-height:1.12}
+  #schedSheet .blk.tight .tm{font-size:8.5px;line-height:1.1}
+  #schedSheet .blk:hover{z-index:5;box-shadow:var(--sh1)}
+  /* 겹침 = 색이 유일하게 '뜻'인 자리. ⛔접힌 상태엔 좌측바 없음(유성 08-15) */
+  #schedSheet .blk.clash{background:var(--danger-weak-bg)!important;color:var(--danger-weak-fg)!important}
+  /* 펼친 카드 — 흰 바탕 + 좌측바(동네색) + 그림자 2겹 (유성 확정. §3.6-9는 비고박스 조항이라 다른 층) */
+  #schedSheet .blk.open{z-index:9;background:#fff!important;color:var(--g900)!important;box-shadow:var(--sh2);
+            padding:9px 12px 10px 13px;border-left:4px solid var(--g300)}
+  #schedSheet .blk.open .nm{font-size:13px;font-weight:800;line-height:1.3;white-space:normal}
+  #schedSheet .blk.open .tm{font-size:10.5px;opacity:1;color:var(--g600);margin-top:1px}
+  #schedSheet .det{font-size:10.5px;line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px solid var(--g100)}
+  #schedSheet .drow{display:flex;gap:8px;padding:2.5px 0;align-items:baseline}
+  #schedSheet .drow .dl{flex:none;width:30px;color:var(--g600);font-weight:600}
+  #schedSheet .drow .dv{flex:1;min-width:0;color:var(--g800);line-height:1.45}
+  #schedSheet .lnk{background:none;border:0;padding:0;margin-left:6px;font-family:inherit;font-size:10.5px;font-weight:700;
+       color:var(--green700);text-decoration:underline;cursor:pointer}
+  #schedSheet .memo{margin-top:7px;color:var(--g600);font-size:10px;line-height:1.5}
+  /* 빈자리 — 시간 한 줄만(유성 08-16 "이동 12분 빼고 안 써도 돼") · --g500(비텍스트 3:1 하한) */
+  #schedSheet .free{position:absolute;left:3px;right:3px;border:1px dashed var(--g200);border-radius:3px;
+        display:flex;align-items:center;justify-content:center;
+        background:#fff;cursor:pointer;overflow:hidden;padding:0 2px;text-align:center}
+  #schedSheet .free .f1{font-size:9.5px;font-weight:700;color:var(--g500);line-height:1.15}
+  #schedSheet .free:hover{border-color:var(--green600);background:#f6fbf8}
+  #schedSheet .free:hover .f1{color:var(--green700)}
+
   .pcand{background:#fff;border:1.5px solid #d1d6db;border-radius:12px;padding:14px;margin-bottom:9px;cursor:pointer;word-break:keep-all}
   .pcand:active{transform:scale(.99)}
   .pcand.static{cursor:default}
@@ -714,6 +792,17 @@
   <div class="shd"><h3 id="planTitle">배치안</h3><div class="sub" id="planSub"></div></div>
   <div id="planSeg"></div>
   <div class="sbd" id="planBody"></div>
+</div>
+
+<!-- ════ 월 스케줄 논모달 (2026-08-16 정식 병합 — 프리뷰 6라운드 확정판) ════ -->
+<button id="schedPill" onclick="schedOpen()"></button>
+<div id="schedSheet">
+  <div class="grab" id="schedGrab"><div class="bar"></div></div>
+  <div class="shd">
+    <div style="min-width:0"><h3 id="schedTitle"></h3><div class="sub" id="schedSub"></div></div>
+    <button id="schedRouteBtn" onclick="schedRouteToggle()">동선</button>
+  </div>
+  <div class="sbd" id="schedBody"></div>
 </div>
 
 <div class="legend">
@@ -1869,6 +1958,7 @@ var OCC = { map: {}, unknown: {} };
 function loadOccupancy() {
   return fetchGAS('occupancy').then(function(r) {
     if (r && r.occupancy) { OCC.map = r.occupancy; OCC.unknown = r.unknown || {}; }
+    schedRefresh();   // 월 스케줄 시트가 이미 떠 있으면(점유표가 늦게 도착) 격자를 채운다
   }).catch(function() { /* 실패해도 배정은 되어야 한다 — 배지만 안 뜬다 */ });
 }
 /** 그 교사의 (요일, 시각) 자리에 이미 있는 아동 이름들. 자기 자신은 뺀다(엣지 5). */
@@ -2423,6 +2513,7 @@ function _renderCurrent() {
   // 🔴 이 한 줄이 없어서 「후보안 뽑기」 버튼이 **영영 안 떴다** — 유일한 호출부가 planExit이라
   //    시트를 나가야만 켜지는데 들어갈 수가 없었다(2026-08-09 검증). 마크·제공인력이 바뀔 때마다 갱신.
   planSyncFab();
+  schedSync();       // 월 스케줄 시트도 같은 단일 렌더 경로에서만 동기한다(복제 금지 교훈)
   _lastRenderSig = _renderSig(currentData);
 }
 
@@ -3161,6 +3252,7 @@ function _planMarkedRows() {
 var planReqId = 0;
 function _planSkeleton(title, sub) {
   infoWindow.close();
+  schedClose();   // 논모달 시트 2개가 동시에 뜨면 지도가 다 가려진다(docs/4 §6)
   // 옛 동선·요일 버튼을 남기면 뼈대를 보는 동안 지도엔 지난 안이 그려져 있다(전원 화면에서 모드 B로 갈 때 발생)
   planClear();
   document.getElementById('planDays').classList.remove('on');
@@ -4134,6 +4226,8 @@ function planDay(d) {
   planDayF = d;
   Array.prototype.forEach.call(document.querySelectorAll('.pd'), function(b){
     if (b.dataset.d) b.classList.toggle('on', b.dataset.d === d); });
+  // 요일 버튼은 배치안과 월 스케줄 동선이 **공유**한다 — 배치안이 없으면 월 스케줄 쪽을 그린다
+  if (!PLAN && SCHED.route) { schedDraw(d); return; }
   planDraw();
 }
 
@@ -4283,6 +4377,8 @@ function planClear() {
 }
 
 function planExit() {
+  // 배치안이 아니라 **월 스케줄 동선**이 켜져 있을 때의 「나가기」 — 동선만 끈다(요일 버튼을 공유하므로)
+  if (!PLAN && !PLANB && SCHED.route) { schedRouteOff(); return; }
   planClear();
   planDim(false);
   document.getElementById('planSheet').classList.remove('on');
@@ -4294,6 +4390,7 @@ function planExit() {
   // (조율 도중에 매번 재렌더하면 검토 중인 마커가 깜빡인다)
   if (planDirty) { planDirty = false; reloadCurrent(true); }
   planSyncFab();
+  schedSync();   // 배치안을 나가면 교사 선택 상태의 기본 화면(월 스케줄)으로 복귀
 }
 
 /** 확정 — 배정(Q·R) + 확정 요일·시각(S·T)을 한 번에. 하나라도 이미 배정돼 있으면 서버가 전부 거부한다 */
@@ -4368,6 +4465,403 @@ function planCommit() {
   function up(){ if (y0 === null) return;
     sh.style.transition = ''; sh.style.transform = '';
     if (dy > 80) planExit();
+    y0 = null; }
+  gb.addEventListener('mousedown', down); window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+  gb.addEventListener('touchstart', down, {passive:true}); gb.addEventListener('touchmove', move, {passive:false}); gb.addEventListener('touchend', up);
+})();
+
+/* ════════════════════════════════════════════════════════════════════
+   월 스케줄 논모달 (2026-08-16 정식 병합 — 프리뷰 06_월스케줄_확정안 6라운드 확정판 이식)
+
+   진입 = 좌상단 드롭다운에서 제공인력을 고르면 자동으로 뜬다(유성 원 요청).
+   데이터 = OCC(부팅 병렬 1회 수신한 점유표: 6탭 S·T + 대장 역산) + currentData.assigned 조인.
+   유성 확정 요지(전체 이력=docs/4 §7): A 채움·56px/시간 고정·기본 14~20(밖에 아이 있으면 확장)·
+   토요일은 있을 때만·8주 초과 조용히 제외·형제=성+5분 60분 합반 한 칸·겹침 5분 이하 무시·
+   동네색 시트 안 순서·접힌 블록엔 시각만·빈자리 50분+ 한 줄·격자 아래 텍스트 금지·
+   계획/기록은 펼쳤을 때 두 줄 나란히(블록 시각 = 기록).
+   내부 헬퍼는 전부 클로저 — 전역 오염은 sched*·scTap·scFx·scFix 만([[gas-duplicate-global-function-collision]] 부류 예방).
+   ════════════════════════════════════════════════════════════════════ */
+var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: false };
+(function(){
+  var PALN = ['코랄','주황','노랑','민트','파랑','보라','연두','초록'];   // 배정 순서 = 유성 확정 08-15
+  var PAL = [["#ee8a7a","#ea705d"],["#fbac6b","#ef7006"],["#ebc368","#bd8b19"],["#7dd1c1","#3aa490"],
+             ["#7da6e6","#6394e1"],["#9e87e1","#9c85e0"],["#a8c872","#7ca03e"],["#79ca8a","#42a758"]];
+  var NEUT = ["#eceff3","#b0b8c1"];   // 동을 모르는 아이(06에 행 없음 — 42% 실측) = 무채색. 거짓말 안 함
+  var LIVE_DAYS = 56, SHAKE_MIN = 30, CLASH_TOL = 5, MOVE_DEFAULT = 12, PPH = 56;
+  var RL = [], DONGCOL = {}, DONGSEQ = [];
+
+  function hh(m){ var h=Math.floor(m/60), x=m%60; return (h<10?'0':'')+h+':'+(x<10?'0':'')+x; }
+  function dur(m){ if(m<60) return m+'분'; var h=Math.floor(m/60), x=m%60; return h+'시간'+(x?' '+x+'분':''); }
+  function short(a){ return String(a||'').replace(/^인천(광역시)?\s*/,'').replace(/^[가-힣]+시\s*/,'')
+    .replace(/^[가-힣]+구\s*/,'').replace(/\s+/g,' ').trim().slice(0,18); }
+
+  /** 점유표 + assigned 조인 → 렌더 행. 8주 넘게 결제 없는 추정 아이는 조용히 뺀다(유성 08-13 ⑧) */
+  function rows(){
+    var prov = SCHED.prov;
+    var slots = (OCC.map && OCC.map[prov]) || [];
+    var asg = (currentData && currentData.assigned) || [];
+    function join(n, dob){
+      for (var i=0;i<asg.length;i++){
+        var c = asg[i];
+        if (c.name !== n) continue;
+        var a = String(c.dob||'').slice(0,8), b = String(dob||'').slice(0,8);
+        if (a && b && a !== b) continue;   // 동명이인 방어 — 이름만 조인하면 남의 주소가 붙는다(§7-10 실측 8.4%)
+        return c;
+      }
+      return null;
+    }
+    var out = [];
+    slots.forEach(function(s){
+      if (s.src === 'recon' && s.last != null && s.last > LIVE_DAYS) return;
+      var c = join(s.n, s.dob);
+      out.push({ d:s.d, s:s.s, e:s.e, m:(s.e-s.s), n:s.n, dob:s.dob, src:s.src,
+                 ses:s.ses||0, conf:s.conf, last:s.last, span:s.span||0, iqr:s.iqr||0,
+                 was:s.was||null, shift:s.shift||null, plan:s.plan||null,
+                 dong:(c&&c.bname)||'', ad:(c?short(c.addr1||c.address):''), tel:(c&&c.phone)||'',
+                 want:(c? String(c.times||'').slice(0,24) : ''), row:(c&&c.formRow)||null,
+                 lat:(c&&c.lat)||null, lng:(c&&c.lng)||null, sg:null });
+    });
+    // 형제 = 성 같고 시작 ±5분 + 서버가 이미 60분 합반으로 잰 것(유성 08-15 규칙·서버 _srDuration_와 동일 기준)
+    var sg = 0;
+    out.forEach(function(a,i){ out.forEach(function(b,j){
+      if (j<=i || a.d!==b.d) return;
+      if (a.m<60 || b.m<60) return;
+      if (Math.abs(a.s-b.s)>5) return;
+      if (a.n.charAt(0)!==b.n.charAt(0)) return;
+      if (a.sg==null && b.sg==null){ a.sg=b.sg=++sg; }
+      else if (a.sg==null) a.sg=b.sg; else if (b.sg==null) b.sg=a.sg;
+    });});
+    return out;
+  }
+  function DAYS(vs){ var d=['월','화','수','목','금'];
+    if (vs.some(function(v){return v.d==='토';})) d.push('토');
+    return d; }
+  function BND(vs, ds){ var lo=14*60, hi=20*60;
+    vs.forEach(function(v){ if(ds.indexOf(v.d)<0) return;
+      if(v.s<lo) lo=Math.floor(v.s/60)*60;
+      if(v.e>hi) hi=Math.ceil(v.e/60)*60; });
+    return {lo:lo,hi:hi}; }
+  function assignColors(vs){
+    DONGCOL={}; DONGSEQ=[]; var i=0;
+    vs.slice().sort(function(a,b){ return '월화수목금토'.indexOf(a.d)-'월화수목금토'.indexOf(b.d) || a.s-b.s; })
+      .forEach(function(v){
+        if(!v.dong) return;
+        if(!(v.dong in DONGCOL)){ DONGCOL[v.dong]=PAL[i%PAL.length]; DONGSEQ.push(v.dong); i++; } });
+  }
+  function palOf(v){ return (v.dong && DONGCOL[v.dong]) || NEUT; }
+  function dayRows(vs,d){ return vs.filter(function(v){return v.d===d;}).sort(function(a,b){return a.s-b.s;}); }
+  function units(vs,d){
+    var list=dayRows(vs,d), map={}, out=[];
+    list.forEach(function(v,vi){
+      // ⚠️ 키를 이름+시각으로 쓰면 같은 요일·같은 시각의 동명이인이 한 칸으로 합쳐진다(김도윤 3명 실재)
+      var k=(v.sg!=null)?('g'+v.sg):('i'+vi);
+      if(!map[k]){ map[k]={mem:[],sib:(v.sg!=null)}; out.push(map[k]); }
+      map[k].mem.push(v);
+    });
+    out.forEach(function(u){
+      u.mem.sort(function(a,b){return a.s-b.s;});
+      u.s=Math.min.apply(null,u.mem.map(function(x){return x.s;}));
+      u.e=Math.max.apply(null,u.mem.map(function(x){return x.e;}));
+      u.nm=u.mem.map(function(x){return x.n;}).join(' · ');
+    });
+    return out.sort(function(a,b){return a.s-b.s;});
+  }
+  function ovMin(a,b){ return Math.min(a.e,b.e)-Math.max(a.s,b.s); }
+  /** 형제로 묶고 남은 겹침만 — 5분 이하로 스치는 건 겹침이 아니다(유성 08-15 "추정 오차로 보여") */
+  function groups(vs,d){
+    var us=units(vs,d), used=[], out=[];
+    us.forEach(function(u){
+      if(used.indexOf(u)>=0) return;
+      var g=[u]; used.push(u);
+      us.forEach(function(o){ if(used.indexOf(o)<0 && ovMin(u,o)>CLASH_TOL){ g.push(o); used.push(o); } });
+      out.push(g.sort(function(a,b){return a.s-b.s;}));
+    });
+    return out.sort(function(a,b){return a[0].s-b[0].s;});
+  }
+  /** 빈자리 = 이동시간 빼고 50분 이상만 (유성 확정) */
+  function gaps(vs,d){
+    var gs=groups(vs,d), out=[];
+    for(var i=0;i<gs.length-1;i++){
+      var end=Math.max.apply(null,gs[i].map(function(u){return u.e;}));
+      var nxt=gs[i+1][0].s, sl=nxt-end-MOVE_DEFAULT;
+      if(sl>=50) out.push({s:end,e:nxt,min:sl,mv:MOVE_DEFAULT});
+    }
+    return out;
+  }
+
+  function paint(){
+    var body = document.getElementById('schedBody');
+    var vs = rows();
+    assignColors(vs);
+    var ds = DAYS(vs), b = BND(vs, ds), H = (b.hi-b.lo)/60*PPH, aw = 26;
+    function Y(m){ return (m-b.lo)/60*PPH; }
+    RL = [];
+    var unk = (OCC.unknown && OCC.unknown[SCHED.prov]) || [];
+    document.getElementById('schedTitle').textContent = SCHED.prov + ' 선생님';
+    document.getElementById('schedSub').innerHTML = vs.length + '명 · ' + hh(b.lo) + '~' + hh(b.hi)
+      + (unk.length ? ' · <span class="sunk" onclick="schedUnknown()">시간 미상 ' + unk.length + '명</span>' : '');
+
+    if (!vs.length && !unk.length){
+      body.innerHTML = '<div class="pnote">최근 8주 결제 기록도, 계획(S·T)도 없어요</div>';
+      return;
+    }
+    var h='<div class="ghead" style="padding-left:'+aw+'px">'
+      + ds.map(function(d){return '<div class="dh">'+d+'</div>';}).join('')+'</div>';
+    h+='<div class="gbody" style="height:'+H+'px"><div class="axis" style="width:'+aw+'px">';
+    for(var t=b.lo;t<=b.hi;t+=60) h+='<span style="top:'+Y(t)+'px">'+(t/60)+'</span>';
+    h+='</div><div style="position:absolute;left:'+aw+'px;right:0;top:0;bottom:0;pointer-events:none">';
+    for(var t2=b.lo+60;t2<b.hi;t2+=60) h+='<i class="hr" style="top:'+Y(t2)+'px"></i>';
+    h+='</div>';
+
+    ds.forEach(function(d,di){
+      h+='<div class="lane">';
+      gaps(vs,d).forEach(function(g){
+        RL.push({free:1,d:d,g:g});
+        var top=Y(g.s)+3, hgt=Y(g.e)-Y(g.s)-6;
+        // ⛔"이동 N분 빼고" 문구는 안 쓴다(유성 08-16) — 값엔 이동 12분이 이미 빠져 있고 설명은 탭 토스트가 한다
+        h+='<div class="free" style="top:'+top+'px;height:'+hgt+'px" onclick="scFx('+(RL.length-1)+')">'
+          + '<span class="f1">+'+dur(g.min)+'</span></div>';
+      });
+      var GS=groups(vs,d);
+      GS.forEach(function(g,gi){
+        var many=g.length>1, u=g[0], v=u.mem[0], p=palOf(v);
+        var s0=g[0].s, eRaw=Math.max.apply(null,g.map(function(x){return x.e;})), e0=eRaw;
+        if(GS[gi+1] && GS[gi+1][0].s < e0) e0 = GS[gi+1][0].s;   // 5분 이하 스침은 몇 px만 잘라 겹쳐 그리지 않는다
+        RL.push({g:g,d:d,end:eRaw});
+        var id=RL.length-1, op=(SCHED.open===id);
+        var bh=Y(e0)-Y(s0);
+        var upward = op && Y(s0) > H*0.5;
+        var sty = upward ? ('bottom:'+(H-Y(e0))+'px;min-height:'+bh+'px;')
+                         : ('top:'+Y(s0)+'px;'+(op?'min-height:':'height:')+bh+'px;');
+        if(op) sty+='width:226px;z-index:9;border-left-color:'+(many?'var(--danger)':p[1])+';'
+                   +(di>=ds.length-2?'left:auto;right:1px;':'left:1px;right:auto;');
+        else if(!many) sty+='background:'+p[0]+';';
+        var lines = many ? 1 : u.mem.length;
+        var tight = !op && bh < (lines*14+13+8);   // 축소 임계는 이름 줄 수가 정한다(형제 합반=두 줄)
+        h+='<div class="blk'+(many?' clash':'')+(op?' open':'')+(tight?' tight':'')
+          + '" style="'+sty+'" onclick="scTap('+id+')">';
+        if(many && !op){
+          h+='<div class="nm">겹침</div><div class="tm">'+hh(s0)+'</div>';
+        } else if(many && op){
+          h+='<div class="nm">겹침</div><div class="tm">'+hh(s0)+'~'+hh(e0)+'</div>';
+          h+='<div class="det">'+g.map(function(x){
+               return '<div class="drow"><span class="dl" style="width:auto;min-width:30px">'+esc(x.nm)+'</span>'
+                 +'<span class="dv">'+hh(x.s)+'~'+hh(x.e)+(x.sib?' 합반':'')
+                 +' · '+(x.mem[0].ses||0)+'회'
+                 +(x.mem[0].iqr>=SHAKE_MIN?' · ±'+x.mem[0].iqr+'분':'')+'</span></div>'; }).join('')
+            + '<div class="memo">'+clashWhy(g)+'</div></div>';
+        } else if(u.sib){
+          h+=u.mem.map(function(x){return '<div class="nm">'+esc(x.n)+'</div>';}).join('')
+            + '<div class="tm">'+hh(u.s)+' 합반</div>';
+          if(op) h+=detailSib(u,id);
+        } else {
+          // ⛔접힌 블록엔 '추정'도 '±N분'도 안 쓴다 — 시각만(유성 08-15·16). 흔들림은 펼친 카드가 말한다
+          h+='<div class="nm">'+esc(v.n)+'</div><div class="tm">'+hh(v.s)
+            + (op&&v.src==='recon'?' 추정':'')+'</div>';
+          if(op) h+=detail(v,id);
+        }
+        h+='</div>';
+      });
+      h+='</div>';
+    });
+    h+='</div>';
+    // ⛔격자 아래 요약 텍스트는 쓰지 않는다 (유성 08-15)
+    body.innerHTML=h;
+    // 펼친 카드가 격자 밖으로 나가면 재보고 끌어당긴다 — 높이는 렌더 전엔 모른다(프리뷰 실측 15px 초과)
+    var opEl=body.querySelector('.blk.open');
+    if(opEl){
+      var gH=body.querySelector('.gbody').offsetHeight;
+      if(!opEl.style.bottom){
+        if(opEl.offsetTop+opEl.offsetHeight>gH) opEl.style.top=Math.max(0,gH-opEl.offsetHeight)+'px';
+      } else if(opEl.offsetTop<0){
+        opEl.style.bottom='auto'; opEl.style.top='0px';
+      }
+    }
+    syncFade();   // ⚠️ rAF에만 걸지 말 것 — 가려진 탭에선 rAF가 안 돈다(프리뷰 실측)
+    document.getElementById('schedBody').onscroll = syncFade;
+  }
+  function syncFade(){
+    var sb=document.getElementById('schedBody'), sh=document.getElementById('schedSheet');
+    sh.classList.toggle('more', sb.scrollHeight - sb.clientHeight - sb.scrollTop > 6);
+  }
+  function clashWhy(g){
+    var ov=999;
+    for(var i=0;i<g.length;i++) for(var j=i+1;j<g.length;j++)
+      ov=Math.min(ov, Math.min(g[i].e,g[j].e)-Math.max(g[i].s,g[j].s));
+    var names=g.map(function(u){return u.mem[0].n.charAt(0);});
+    var sameSur=names.every(function(x){return x===names[0];});
+    return (sameSur? '성은 같지만 시각이 5분 넘게 달라 합반으로 안 봤어요'
+                   : '성이 달라 형제가 아니에요')
+      + ' — <b>'+ov+'분</b> 겹칩니다'
+      + (ov<=10? '. 흔들림이 큰 아이면 추정 오차일 수 있어요':'');
+  }
+  /** 계획(S·T)/기록(역산)을 펼쳤을 때 두 줄 나란히 — 블록에 그리는 시각은 기록이 이긴다(유성 픽 08-16) */
+  function detail(v,id){
+    var st = v.src==='st';
+    var h='<div class="det">';
+    h+='<div class="drow"><span class="dl">주소</span><span class="dv">'+(v.ad?esc(v.ad):'-')+'</span></div>';
+    h+='<div class="drow"><span class="dl">계획</span><span class="dv">'
+      + (st? v.d+' '+hh(v.s)+fixBtn(v,id,'고치기')
+        : v.plan? v.plan.d+' '+hh(v.plan.s)+fixBtn(v,id,'고치기')
+        : '없음'+fixBtn(v,id,'정하기'))
+      + '</span></div>';
+    if(!st) h+='<div class="drow"><span class="dl">기록</span><span class="dv">'
+      + v.d+' '+hh(v.s)+' 추정 · '+(v.ses||0)+'회 / '+(v.span||0)+'일'
+      + (v.iqr>=SHAKE_MIN?'<br><span style="color:#8a5a00">회차마다 ±'+v.iqr+'분 흔들려요</span>':'')
+      // 연속 4회+ 새 슬롯 = 바뀐 쪽이 1차 추정(유성 08-15) — 옛 값은 참고로만. 1회짜리 옛 슬롯은 이상치라 말 안 한다
+      + (v.was && (v.was.n||0)>=2 ?'<br><span style="color:#8a5a00">'+(v.was.run||4)+'회 연속 바뀌었어요 · 이전엔 '
+               +v.was.d+' '+hh(v.was.s)+'('+v.was.n+'회)</span>':'')
+      + (v.shift?'<br><span style="color:#8a5a00">최근 결제는 '+v.shift.d+' '+hh(v.shift.s)
+               +' — 바뀌는 중(아직 4회 안 됨)</span>':'')
+      + '</span></div>';
+    h+='<div class="drow"><span class="dl">희망</span><span class="dv">'+(v.want?esc(v.want):'-')+'</span></div>';
+    h+='<div class="drow"><span class="dl">전화</span><span class="dv">'+(v.tel?esc(v.tel):'-')+'</span></div>';
+    return h+'</div>';
+  }
+  function detailSib(u,id){
+    var a=u.mem[0];
+    var h='<div class="det">';
+    h+='<div class="drow"><span class="dl">주소</span><span class="dv">'+(a.ad?esc(a.ad):'-')+'</span></div>';
+    u.mem.forEach(function(x,mi){
+      h+='<div class="drow"><span class="dl">기록</span><span class="dv">'+esc(x.n)+' '+x.d+' '+hh(x.s)
+        + (x.src==='recon'?' 추정 · '+(x.ses||0)+'회':'')
+        + (x.iqr>=SHAKE_MIN?' · ±'+x.iqr+'분':'')
+        + fixBtn(x,id,'시간',mi)+'</span></div>'; });
+    h+='<div class="drow"><span class="dl">전화</span><span class="dv">'+(a.tel?esc(a.tel):'-')+'</span></div>';
+    h+='<div class="memo">성이 같고 시각이 5분 안이라 형제로 봤어요 — 60분 합반</div>';
+    return h+'</div>';
+  }
+  /** 시간 바꾸기 = 기존 배정 다이얼로그(setChildTime) 재사용 — Q·R·S·T 정본 경로는 하나(0-9) */
+  function fixBtn(v,id,label,mi){
+    return '<button class="lnk" onclick="scFix(event,'+id+','+(mi||0)+')">'+label+'</button>';
+  }
+
+  // ── 전역 노출 (onclick·훅용) ──────────────────────────────────────
+  window.scTap = function(i){ SCHED.open = (SCHED.open===i? null : i); paint(); };
+  window.scFx = function(i){ var r=RL[i];
+    showToast(r.d + ' ' + hh(r.g.s) + '부터 ' + dur(r.g.min) + ' 비어요 (이동 ' + r.g.mv + '분 뺀 값)'); };
+  window.scFix = function(e,i,mi){ e.stopPropagation();
+    var v = RL[i].g[0].mem[mi||0];
+    if (v.row) { setChildTime(v.row); return; }
+    showToast('이 서비스 탭 신청폼에 행이 없는 아이라 여기서는 바꿀 수 없어요'); };
+  window.schedUnknown = function(){
+    var unk = (OCC.unknown && OCC.unknown[SCHED.prov]) || [];
+    showToast('시간 미상(결제 기록 부족): ' + unk.join(', ')); };
+
+  /** 렌더 단일 경로(_renderCurrent)에서만 부른다. 교사 개별 선택 + 배치안 안 열림 = 시트 자동 */
+  window.schedSync = function(){
+    var sel = document.getElementById('providerSelect');
+    var prov = sel ? sel.value : '';
+    var admin = (typeof isAdmin === 'function') ? isAdmin() : false;
+    var planOn = document.getElementById('planSheet').classList.contains('on');
+    if (!admin || !prov || prov === '__ALL__' || planOn) { schedClose(); return; }
+    if (SCHED.prov !== prov) { SCHED.prov = prov; SCHED.open = null; SCHED.folded = false; schedRouteOff(); }
+    if (SCHED.folded) { schedPillShow(); return; }
+    document.getElementById('schedSheet').classList.add('on');
+    document.getElementById('schedPill').classList.remove('on');
+    paint();
+  };
+  window.schedRefresh = function(){
+    if (document.getElementById('schedSheet').classList.contains('on')) paint();
+  };
+  window.schedOpen = function(){ SCHED.folded = false; schedSync(); };
+  window.schedFold = function(){
+    schedRouteOff();   // 접으면 동선도 끈다 — pill과 요일 버튼이 같은 자리를 쓴다
+    SCHED.folded = true; SCHED.open = null;
+    document.getElementById('schedSheet').classList.remove('on');
+    schedPillShow();
+  };
+  function schedPillShow(){
+    var pill = document.getElementById('schedPill');
+    pill.textContent = SCHED.prov + ' 선생님 월 스케줄';
+    pill.classList.add('on');
+  }
+  window.schedClose = function(){
+    document.getElementById('schedSheet').classList.remove('on');
+    document.getElementById('schedPill').classList.remove('on');
+    schedRouteOff();
+  };
+  /** 「현재 동선」 — 배치안 동선과 같은 문법(요일 버튼·요일색 폴리라인·86% 화살표·planDraw 자산 재사용) */
+  window.schedRouteToggle = function(){
+    if (SCHED.route) { schedRouteOff(); return; }
+    SCHED.route = true; SCHED.missWarned = false;
+    document.getElementById('schedRouteBtn').classList.add('on');
+    document.getElementById('planDays').classList.add('on');
+    planDim(true);
+    planDay('all');
+  };
+  window.schedRouteOff = function(){
+    if (!SCHED.route) return;
+    SCHED.route = false;
+    document.getElementById('schedRouteBtn').classList.remove('on');
+    document.getElementById('planDays').classList.remove('on');
+    planClear(); planDim(false);
+  };
+  window.schedDraw = function(dayF){
+    planClear();
+    var vs = rows();
+    var home = currentData && currentData.provider;
+    var miss = 0;
+    ['월','화','수','목','금','토'].forEach(function(d){
+      if (dayF !== 'all' && d !== dayF) return;
+      var list = dayRows(vs, d);
+      if (!list.length) return;
+      var col = PLAN_DC[d] || '#666';
+      var byXY = {}, order = [];
+      var seen = {};
+      list.forEach(function(v){
+        if (v.sg != null && seen['g'+v.sg]) return;   // 형제 한 집 = 한 정거장
+        if (v.sg != null) seen['g'+v.sg] = 1;
+        if (!v.lat || !v.lng) { miss++; return; }
+        var k = v.lat.toFixed(6)+','+v.lng.toFixed(6);
+        if (!byXY[k]) { byXY[k] = { lat:v.lat, lng:v.lng, kids:[] }; order.push(byXY[k]); }
+        byXY[k].kids.push({ name:v.n, phone:v.tel });
+      });
+      var path = [];
+      if (home && home.lat) path.push(new kakao.maps.LatLng(home.lat, home.lng));
+      order.forEach(function(g, gi){
+        path.push(new kakao.maps.LatLng(g.lat, g.lng));
+        var m = new kakao.maps.Marker({
+          position: new kakao.maps.LatLng(g.lat, g.lng),
+          image: _planDayIcon(col, d + (gi+1), 0),
+          map: map, zIndex: 20
+        });
+        planMarkers.push(m);
+        var ov = new kakao.maps.CustomOverlay({
+          position: new kakao.maps.LatLng(g.lat, g.lng),
+          content: '<div class="mlbl assigned plan">' + esc(_planJoinNames(g.kids)) + '</div>',
+          zIndex: 21, xAnchor: 0, yAnchor: 0
+        });
+        ov.setMap(map); planLabels.push(ov);
+      });
+      if (home && home.lat) path.push(new kakao.maps.LatLng(home.lat, home.lng));   // 귀가 포함
+      if (path.length > 1) {
+        var line = new kakao.maps.Polyline({
+          path: path, strokeWeight: 4, strokeColor: col,
+          strokeOpacity: dayF === 'all' ? 0.45 : 0.9, strokeStyle: 'solid'
+        });
+        line.setMap(map); planLines.push(line);
+        for (var ai = 0; ai < path.length - 1; ai++) _planArrow(path[ai], path[ai+1], col);
+      }
+    });
+    // 좌표를 모르는 아이는 조용히 빠지면 안 된다 — 06에 행이 없는 42%가 여기 걸린다(docs/4 §3)
+    if (miss && !SCHED.missWarned) { SCHED.missWarned = true;
+      showToast(miss + '명은 주소·좌표가 없어 동선에 못 그렸어요 (06 신청폼에 행이 없는 아이)'); }
+  };
+
+  // 핸들 드래그로 접기 (§4.3-5 — 아래로만·임계 80px. planSheet과 같은 패턴) + 탭해도 접힘
+  var sh = document.getElementById('schedSheet'), gb = document.getElementById('schedGrab');
+  var y0 = null, dy = 0;
+  function down(e){ y0 = (e.touches ? e.touches[0].clientY : e.clientY); dy = 0;
+    sh.style.transition = 'none'; sh.style.transform = 'translateY(0) scale(.97)'; }
+  function move(e){ if (y0 === null) return;
+    var y = (e.touches ? e.touches[0].clientY : e.clientY);
+    dy = Math.max(0, y - y0);
+    sh.style.transform = 'translateY(' + dy + 'px) scale(.97)';
+    if (e.cancelable) e.preventDefault(); }
+  function up(){ if (y0 === null) return;
+    sh.style.transition = ''; sh.style.transform = '';
+    if (dy > 80 || dy < 5) schedFold();   // 쭉 내리거나(80+) 톡 치거나(5 미만 = 클릭) = 접기
     y0 = null; }
   gb.addEventListener('mousedown', down); window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
   gb.addEventListener('touchstart', down, {passive:true}); gb.addEventListener('touchmove', move, {passive:false}); gb.addEventListener('touchend', up);
