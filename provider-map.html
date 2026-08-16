@@ -34,10 +34,12 @@
     --red:#f04452; --warn-weak-bg:#fef4e2; --warn-weak-fg:#c07f00;
     --danger:#D25357; --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;
     /* §3.4 그림자 정본 — 그린틴트 2겹, 토스 램프(.05/.10/.15 @ blur 4/10/20)가 상한.
-       2026-08-15 신설(유성 "원칙대로 해"). 아직 #planSheet에만 적용 — 나머지 raw 그림자는 손댈 때 정렬 */
+       2026-08-15 신설 → 2026-08-16 전면 적용(유성 "남은 그림자 모두 원칙으로").
+       ⛔남긴 raw 2종: .pcand.best 링(그림자 아니라 선택 링) · .iw-chip 헤어라인(§4.17 확정 스타일) */
     --sh1:0 1px 2px rgba(25,31,40,.06), 0 4px 10px rgba(25,31,40,.08);
     --sh2:0 1px 3px rgba(25,31,40,.08), 0 8px 20px rgba(25,31,40,.10);
     --sh-up:0 -1px 3px rgba(25,31,40,.08), 0 -8px 20px rgba(25,31,40,.10);
+    --sh-left:-1px 0 3px rgba(25,31,40,.08), -8px 0 20px rgba(25,31,40,.10);
   }
   html,body{height:100%;overflow:hidden}
   body{font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;color:#1a1a1a;background:#f0ebe4}
@@ -97,7 +99,7 @@
   .search-results{
     display:none;position:absolute;top:100%;left:0;right:0;z-index:60;
     background:#fff;border:1px solid #e0dcd5;border-radius:0 0 8px 8px;
-    box-shadow:0 4px 16px rgba(0,0,0,.1);max-height:260px;overflow-y:auto;
+    box-shadow:var(--sh2);max-height:260px;overflow-y:auto;
   }
   .search-results.show{display:block}
   .sr-item{
@@ -126,12 +128,12 @@
      ⇒ 화면 고정(`fixed`)으로 통일하고 상단바(76px, 모바일 70px) 아래로 내린다. .legend·.nl-fab과 같은 방식. */
   #planFab{position:fixed;right:14px;bottom:16px;z-index:45;display:none;background:#166841;color:#fff;
            border:0;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;font-family:inherit;
-           cursor:pointer;box-shadow:0 4px 14px rgba(58,138,95,.42)}
+           cursor:pointer;box-shadow:var(--sh2)}
   #planFab.on{display:block}
   #planFab:active{transform:scale(.97)}
   /* 요일 원 버튼 = 지도 좌상단 플로팅 (유성 확정 4-A ②) */
   #planDays{position:fixed;left:14px;top:88px;z-index:41;display:none;gap:6px;
-            background:rgba(255,255,255,.96);border-radius:12px;padding:7px;box-shadow:0 3px 12px rgba(0,0,0,.16)}
+            background:rgba(255,255,255,.96);border-radius:12px;padding:7px;box-shadow:var(--sh1)}
   #planDays.on{display:flex}
   .pd{width:30px;height:30px;border-radius:50%;border:2px solid #e5e8eb;background:#fff;color:#8b95a1;
       font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .12s}
@@ -264,14 +266,14 @@
   body.plan-review .legend{opacity:.35}
   /* 검토 범례 — 무지개 5색이 뭔지, 회색이 뭔지 말해준다 (유성 2026-08-07 "저 범례 어디에 담을 건데") */
   #planLg{position:fixed;left:14px;top:136px;z-index:41;display:none;gap:9px;flex-wrap:wrap;max-width:210px;
-          background:rgba(255,255,255,.96);border-radius:10px;padding:7px 9px;box-shadow:0 3px 12px rgba(0,0,0,.14);
+          background:rgba(255,255,255,.96);border-radius:10px;padding:7px 9px;box-shadow:var(--sh1);
           font-size:10.5px;color:#4e5968;word-break:keep-all}
   #planLg.on{display:flex}
   #planLg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;vertical-align:-1px}
   .legend{
     position:fixed;bottom:16px;left:14px;z-index:40;
     background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-    border-radius:10px;padding:8px 12px;box-shadow:0 2px 12px rgba(0,0,0,.1);
+    border-radius:10px;padding:8px 12px;box-shadow:var(--sh1);
     font-size:11px;display:flex;gap:12px;pointer-events:none;
   }
   .legend-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
@@ -362,7 +364,7 @@
   .route-panel{
     position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:45;
     background:rgba(255,255,255,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-    border-radius:12px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,.12);
+    border-radius:12px;padding:12px 16px;box-shadow:var(--sh2);
     display:none;min-width:260px;max-width:360px;
   }
   .route-panel.show{display:block}
@@ -425,7 +427,7 @@
   .loading-overlay.show{display:flex}
   .ld-spinner{width:32px;height:32px;border:3px solid #e5e8eb;border-top-color:#3a8a5f;border-radius:50%;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .toast{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:60;background:#842029;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none}
+  .toast{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:60;background:#842029;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:var(--sh2);display:none}
   .toast.show{display:block;animation:fadeIn .3s}
   .toast.success{background:#16a34a}
   @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
@@ -435,7 +437,7 @@
     position:fixed;right:14px;top:92px;z-index:44;
     width:44px;height:44px;border-radius:50%;
     background:#166841;color:#fff;border:none;cursor:pointer;
-    box-shadow:0 4px 14px rgba(0,0,0,.18);
+    box-shadow:var(--sh2);
     font-size:18px;display:flex;align-items:center;justify-content:center;
     transition:all .2s;
   }
@@ -452,7 +454,7 @@
     width:340px;background:rgba(255,255,255,.97);
     backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
     border-left:1px solid rgba(0,0,0,.08);
-    box-shadow:-4px 0 16px rgba(0,0,0,.06);
+    box-shadow:var(--sh-left);
     display:flex;flex-direction:column;
     transform:translateX(100%);transition:transform .25s cubic-bezier(.3,.7,.3,1);
   }
@@ -506,7 +508,7 @@
 
 <!-- ════ 관리자 토큰 입력 모달 (password 마스킹) ════ -->
 <div id="tokenModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:10px;padding:20px;width:300px;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,.25)">
+  <div style="background:#fff;border-radius:10px;padding:20px;width:300px;max-width:90vw;box-shadow:var(--sh2)">
     <div id="tokenModalMsg" style="font-size:13px;color:#333;margin-bottom:10px">관리자 인증 토큰을 입력하세요</div>
     <div style="position:relative">
       <input id="tokenModalInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"
@@ -524,7 +526,7 @@
 <!-- ════ 제공인력 로그인 모달 (11 OTP 재사용 · 토스식 §5.5/토스토큰) ════ -->
 <style>
   #staffModal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px}
-  .sm-card{background:#fff;border-radius:20px;padding:28px 24px 20px;width:340px;max-width:92vw;box-shadow:0 12px 44px rgba(0,0,0,.22);font-family:inherit;word-break:keep-all}
+  .sm-card{background:#fff;border-radius:20px;padding:28px 24px 20px;width:340px;max-width:92vw;box-shadow:var(--sh2);font-family:inherit;word-break:keep-all}
   .sm-title{font-size:20px;font-weight:700;color:#191f28;letter-spacing:-.3px;margin-bottom:18px}
   .sm-input{width:100%;box-sizing:border-box;font-family:inherit;font-size:16px;color:#191f28;padding:15px 16px;border-radius:14px;border:2px solid transparent;background:#f2f4f6;outline:none;transition:border-color .15s,background .15s;caret-color:#3a8a5f}
   .sm-input::placeholder{color:#b0b8c1}
