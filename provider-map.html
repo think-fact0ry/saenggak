@@ -39,6 +39,7 @@
     --sh1:0 1px 2px rgba(25,31,40,.06), 0 4px 10px rgba(25,31,40,.08);
     --sh2:0 1px 3px rgba(25,31,40,.08), 0 8px 20px rgba(25,31,40,.10);
     --sh-up:0 -1px 3px rgba(25,31,40,.08), 0 -8px 20px rgba(25,31,40,.10);
+    --sh-fab:0 1px 3px rgba(25,31,40,.09), 0 6px 16px rgba(25,31,40,.13);   /* 우하단 버튼 2종 공통(유성 08-24 — 흰 버튼에서 sh2가 세고 초록에선 안 보여 중간값) */
     --sh-left:-1px 0 3px rgba(25,31,40,.08), -8px 0 20px rgba(25,31,40,.10);
   }
   html,body{height:100%;overflow:hidden}
@@ -126,11 +127,23 @@
      `absolute`면 지도가 아니라 **문서** 기준이라 ①FAB이 바닥에서 74px 떠 있고(유성: "우하단에 안 붙어")
      ②요일 버튼이 `top:12px` = **상단바 뒤**로 들어가 영영 안 보였다(유성: "애초에 있긴 한건가?").
      ⇒ 화면 고정(`fixed`)으로 통일하고 상단바(76px, 모바일 70px) 아래로 내린다. .legend·.nl-fab과 같은 방식. */
+  /* 우하단 버튼 2종(후보 배치안·월 스케줄) — 140×38 고정·같은 규격·같은 그림자, 위계는 색만(유성 08-24 확정).
+     시트가 열리면 상대 버튼이 48px 원으로 morph하며 시트 바로 왼쪽·같은 가로줄로 이동(가림 해소). */
   #planFab{position:fixed;right:14px;bottom:16px;z-index:45;display:none;background:#166841;color:#fff;
-           border:0;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;font-family:inherit;
-           cursor:pointer;box-shadow:var(--sh2)}
-  #planFab.on{display:block}
+           border:0;border-radius:999px;width:140px;height:38px;font-size:13.5px;font-weight:700;font-family:inherit;
+           cursor:pointer;box-shadow:var(--sh-fab);align-items:center;justify-content:center;
+           white-space:nowrap;overflow:hidden;
+           transition:right .38s cubic-bezier(.22,.7,.25,1), width .38s cubic-bezier(.22,.7,.25,1),
+                      height .38s cubic-bezier(.22,.7,.25,1), font-size .38s cubic-bezier(.22,.7,.25,1)}
+  #planFab.on{display:flex}
   #planFab:active{transform:scale(.97)}
+  #planFab.circle{width:48px;height:48px;font-size:12.5px}
+  /* 월 스케줄 시트(폭 344) 왼쪽 10px. ⚠️ID 셀렉터라야 기본 right(ID 규칙)를 이긴다 — 프리뷰서 실측한 함정 */
+  #planFab.beside{right:calc(12px + min(344px,72%) + 10px)}
+  #planFab .full,#schedPill .full{transition:opacity .18s ease}
+  #planFab .mini,#schedPill .mini{position:absolute;opacity:0;transition:opacity .18s ease}
+  #planFab.circle .full,#schedPill.circle .full{opacity:0}
+  #planFab.circle .mini,#schedPill.circle .mini{opacity:1}
   /* 요일 원 버튼 = 지도 좌상단 플로팅 (유성 확정 4-A ②) */
   #planDays{position:fixed;left:14px;top:88px;z-index:41;display:none;gap:6px;
             background:rgba(255,255,255,.96);border-radius:12px;padding:7px;box-shadow:var(--sh1)}
@@ -195,13 +208,19 @@
     font-family:inherit;font-size:11.5px;font-weight:700;padding:6px 10px;cursor:pointer;flex:none}
   #schedRouteBtn.on{background:var(--g900);color:#fff;border-color:var(--g900)}
   #schedRouteBtn:active{transform:scale(.97)}
-  /* 접힌 상태 = 좌상단 알약 (유성 원 요청 "핸들을 접으면 좌상단 버튼"). planDays와 같은 자리지만
-     접을 때 동선을 같이 꺼서(schedFold) 동시에 뜨지 않는다 */
-  #schedPill{position:fixed;left:14px;top:88px;z-index:41;display:none;background:#fff;color:var(--g800);
-    border:1px solid var(--g200);border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:700;
-    font-family:inherit;cursor:pointer;box-shadow:var(--sh1)}
-  #schedPill.on{display:block}
+  /* 월 스케줄 버튼 = 우하단, 후보 배치안 옆 (2026-08-24 유성 — 옛 좌상단 알약은 "버튼은 왼쪽 위인데
+     시트는 오른쪽 아래"라 동선이 어긋났다). 배치안 시트가 열리면 흰 원 '스케줄'로 시트 왼쪽에 붙는다 */
+  #schedPill{position:fixed;right:164px;bottom:16px;z-index:45;display:none;background:#fff;color:var(--g900);
+    border:1px solid var(--g200);border-radius:999px;width:140px;height:38px;font-size:13.5px;font-weight:700;
+    font-family:inherit;cursor:pointer;box-shadow:var(--sh-fab);align-items:center;justify-content:center;
+    white-space:nowrap;overflow:hidden;
+    transition:right .38s cubic-bezier(.22,.7,.25,1), width .38s cubic-bezier(.22,.7,.25,1),
+               height .38s cubic-bezier(.22,.7,.25,1), font-size .38s cubic-bezier(.22,.7,.25,1)}
+  #schedPill.on{display:flex}
   #schedPill:active{transform:scale(.97)}
+  #schedPill.circle{width:48px;height:48px;font-size:11.5px;font-weight:800}
+  /* 배치안 시트(폭 340) 왼쪽 10px */
+  #schedPill.beside{right:calc(12px + min(340px,72%) + 10px)}
   /* 격자 — 프리뷰 6라운드 확정판 그대로(#schedSheet 스코프) */
   #schedSheet .ghead{display:flex;margin-bottom:5px}
   #schedSheet .ghead .dh{flex:1;text-align:center;font-size:11.5px;font-weight:700;color:var(--g600)}
@@ -776,7 +795,7 @@
 
 <div id="map"></div>
 
-<button id="planFab" onclick="planOpen()">후보안 뽑기</button>
+<button id="planFab" onclick="planOpen()"><span class="full">후보 배치안</span><span class="mini">후보</span></button>
 <div id="planDays">
   <button class="pd on" data-d="all" onclick="planDay('all')">전</button>
   <button class="pd" data-d="월" onclick="planDay('월')">월</button>
@@ -795,7 +814,7 @@
 </div>
 
 <!-- ════ 월 스케줄 논모달 (2026-08-16 정식 병합 — 프리뷰 6라운드 확정판) ════ -->
-<button id="schedPill" onclick="schedOpen()"></button>
+<button id="schedPill" onclick="schedPillTap()"><span class="full"></span><span class="mini">스케줄</span></button>
 <div id="schedSheet">
   <div class="grab" id="schedGrab"><div class="bar"></div></div>
   <div class="shd">
@@ -3228,7 +3247,23 @@ function planSyncFab() {
   //    마크는 "여기에 더 넣어볼 후보"일 뿐이라 라벨에서도 그렇게 말한다.
   var show = isAdmin() && prov && prov !== '__ALL__' && !document.getElementById('planSheet').classList.contains('on');
   fab.classList.toggle('on', show);
-  fab.textContent = n ? '주간 배치안 (후보 ' + n + '명)' : '주간 배치안 보기';
+  fab.querySelector('.full').textContent = n ? '후보 배치안 (' + n + '명)' : '후보 배치안';   // 라벨 유성 확정 08-24
+  _fabShape();
+}
+
+/* 시트 상태 → 버튼 모양 동기 (유성 2026-08-24: 버튼이 시트를 가리는 문제 + 좌상단↔우하단 왕복 동선 해소).
+   월 스케줄 시트가 열려 있으면 후보 배치안 버튼은 초록 원 '후보'로 시트 바로 왼쪽·같은 가로줄에 붙는다. */
+function _fabShape() {
+  var fab = document.getElementById('planFab');
+  var schedOn = document.getElementById('schedSheet').classList.contains('on');
+  fab.classList.toggle('circle', schedOn);
+  fab.classList.toggle('beside', schedOn);
+}
+
+/* 월 스케줄 버튼 — 배치안 시트가 열려 있으면(원형 '스케줄' 상태) 배치안을 나가며 월 스케줄로 복귀 */
+function schedPillTap() {
+  if (document.getElementById('planSheet').classList.contains('on')) { planExit(); return; }
+  schedOpen();
 }
 
 function _planMarkedRows() {
@@ -3264,6 +3299,15 @@ function _planSkeleton(title, sub) {
     '<div class="pskel"></div><div class="pskel"></div><div class="pskel sm"></div>';
   document.getElementById('planSheet').classList.add('on');
   document.getElementById('planFab').classList.remove('on');
+  // 월 스케줄 버튼 = 흰 원 '스케줄'로 시트 왼쪽에 — 교사 선택 상태에서만(모드 B·전체 보기엔 월 스케줄이 없다)
+  var _sp = document.getElementById('schedPill');
+  var _pv = document.getElementById('providerSelect').value;
+  if (isAdmin() && _pv && _pv !== '__ALL__') {
+    _sp.querySelector('.full').textContent = _pv + '님 월 스케줄';
+    _sp.classList.add('on', 'circle', 'beside');
+  } else {
+    _sp.classList.remove('on', 'circle', 'beside');
+  }
 }
 function _planSkelFail(msg) {
   document.getElementById('planSub').textContent = '';
@@ -4758,8 +4802,9 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     if (SCHED.prov !== prov) { SCHED.prov = prov; SCHED.open = null; SCHED.folded = false; schedRouteOff(); }
     if (SCHED.folded) { schedPillShow(); return; }
     document.getElementById('schedSheet').classList.add('on');
-    document.getElementById('schedPill').classList.remove('on');
+    document.getElementById('schedPill').classList.remove('on', 'circle', 'beside');
     paint();
+    _fabShape();   // 시트가 열렸으니 후보 배치안 버튼을 원형으로 시트 옆에
   };
   window.schedRefresh = function(){
     if (document.getElementById('schedSheet').classList.contains('on')) paint();
@@ -4773,13 +4818,16 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   };
   function schedPillShow(){
     var pill = document.getElementById('schedPill');
-    pill.textContent = SCHED.prov + ' 선생님 월 스케줄';
+    pill.querySelector('.full').textContent = SCHED.prov + '님 월 스케줄';   // 라벨 유성 확정 08-24
+    pill.classList.remove('circle', 'beside');   // 알약 상태로 (원형 잔재 제거)
     pill.classList.add('on');
+    _fabShape();
   }
   window.schedClose = function(){
     document.getElementById('schedSheet').classList.remove('on');
-    document.getElementById('schedPill').classList.remove('on');
+    document.getElementById('schedPill').classList.remove('on', 'circle', 'beside');
     schedRouteOff();
+    _fabShape();
   };
   /** 「현재 동선」 — 배치안 동선과 같은 문법(요일 버튼·요일색 폴리라인·86% 화살표·planDraw 자산 재사용) */
   window.schedRouteToggle = function(){
