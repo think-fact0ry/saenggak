@@ -3260,9 +3260,10 @@ function _fabShape() {
   fab.classList.toggle('beside', schedOn);
 }
 
-/* 월 스케줄 버튼 — 배치안 시트가 열려 있으면(원형 '스케줄' 상태) 배치안을 나가며 월 스케줄로 복귀 */
+/* 월 스케줄 버튼 — 배치안 시트가 열려 있으면(원형 '스케줄' 상태) 배치안을 나가고, 어떤 상태든 시트를 연다
+   (planExit만 부르면 접힘 기본값이라 알약으로 떨어진다 — "원을 누르면 시트가 서로 전환"이 깨진다) */
 function schedPillTap() {
-  if (document.getElementById('planSheet').classList.contains('on')) { planExit(); return; }
+  if (document.getElementById('planSheet').classList.contains('on')) planExit();
   schedOpen();
 }
 
@@ -4799,7 +4800,13 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     var admin = (typeof isAdmin === 'function') ? isAdmin() : false;
     var planOn = document.getElementById('planSheet').classList.contains('on');
     if (!admin || !prov || prov === '__ALL__' || planOn) { schedClose(); return; }
-    if (SCHED.prov !== prov) { SCHED.prov = prov; SCHED.open = null; SCHED.folded = false; schedRouteOff(); }
+    // 🔴 자동 오픈 폐기(유성 2026-08-24 "선택했을때 스케줄표가 바로 나와버리는데 아니야") —
+    //    교사를 골라도 기본은 접힘(두 알약). 시트는 「○○님 월 스케줄」 버튼으로만 연다.
+    if (SCHED.prov !== prov) {
+      SCHED.prov = prov; SCHED.open = null; SCHED.folded = true;
+      document.getElementById('schedSheet').classList.remove('on');
+      schedRouteOff();
+    }
     if (SCHED.folded) { schedPillShow(); return; }
     document.getElementById('schedSheet').classList.add('on');
     document.getElementById('schedPill').classList.remove('on', 'circle', 'beside');
