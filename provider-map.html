@@ -1440,6 +1440,56 @@ function getFilteredWaiting() {
 
 function applyFilters() { renderMarkers(); updateDashboard(); }
 
+// ══ 말풍선 정렬 (유성 2026-08-31) ══
+//  기본 = **최신순**(맨 위 = 가장 최근 신청). 축은 리스트 '최신순'과 같은 **행 번호 역순**이다 —
+//  A열 접수시각은 신청폼 수정에도 원본이 유지된 채 그 행만 맨 아래로 가므로 날짜로는 최신성을 못 잰다
+//  (renderNewList의 같은 주석 참조). 대기=c.row / 배정=c.formRow, 둘은 같은 탭의 같은 행 좌표계다.
+function _rowNo(c) { return c.row || c.formRow || 0; }
+function _sortLatest(items) {
+  return items.slice().sort(function(a, b) { return _rowNo(b) - _rowNo(a); });
+}
+//  검색·리스트로 **특정 아이를 지목해** 들어왔을 때는 그 아이를 맨 위로 올린다.
+//  말풍선 높이가 '첫 카드 + 회색 띠'로 잘려 있어(setContent 래퍼) 맨 위 카드가 사실상 보이는 전부다.
+function _sortPicked(items, picked) {
+  var pk = _rowNo(picked);
+  return items.slice().sort(function(a, b) {
+    if (_rowNo(a) === pk) return -1;
+    if (_rowNo(b) === pk) return 1;
+    return _rowNo(b) - _rowNo(a);
+  });
+}
+//  좌표가 아니라 **그 아이를 실제로 담고 있는 마커**를 찾는다.
+//  🔴 findMarkerAt(좌표)은 같은 자리에 마커가 여럿이면 *마지막에 추가된 것*을 돌려준다. 마크 필터가 켜져
+//     있으면 같은 좌표에 [마크 안 된 아이들 마커]와 [마크된 아이들 마커]가 동시에 서므로, 리스트에서 마크
+//     안 된 아이를 눌러도 마크 마커가 잡혀 **그 아이가 없는 말풍선**이 열린다. 행 번호로 찾으면 안 헷갈린다
+//     (대기 row·배정 formRow는 같은 탭의 같은 행 좌표계라 한 아이가 두 마커에 동시에 들어갈 수 없다).
+function _markerHolding(picked) {
+  var pk = _rowNo(picked), found = null;
+  if (!pk) return null;
+  markers.forEach(function(m) {
+    if (!m.__items) return;
+    for (var i = 0; i < m.__items.length; i++) if (_rowNo(m.__items[i]) === pk) { found = m; return; }
+  });
+  return found;
+}
+//  마커가 **실제로 들고 있는** 아이 목록으로 말풍선을 다시 만든다.
+//  ⚠️ currentData에서 좌표로 다시 모으면 안 된다 — 요일/시간 필터·마크 필터가 걸린 상태를 재구성하지
+//     못해 화면에 없는 아이가 말풍선에 뜬다. 마커에 붙여 둔 원본(__items)이 유일하게 화면과 일치한다.
+function _iwForPicked(marker, picked, fallbackType) {
+  var hLat = currentData && currentData.provider ? currentData.provider.lat : null;
+  var hLng = currentData && currentData.provider ? currentData.provider.lng : null;
+  var items = (marker && marker.__items && marker.__items.length) ? marker.__items : [picked];
+  var kind = (marker && marker.__kind) || fallbackType;
+  // 이중 안전: 넘어온 마커가 그 아이를 안 담고 있으면(좌표로만 잡힌 경우) 그 아이 단독으로 연다.
+  var pk = _rowNo(picked), has = false;
+  for (var i = 0; i < items.length; i++) if (_rowNo(items[i]) === pk) { has = true; break; }
+  if (!has) { items = [picked]; kind = fallbackType; }
+  var sorted = _sortPicked(items, picked);
+  return kind === 'assigned'
+    ? buildGroupedAssignedIW(sorted, hLat, hLng)
+    : buildGroupedWaitingIW(sorted, hLat, hLng);
+}
+
 // ══ 좌표 그룹핑 ══
 function groupByCoord(items) {
   var g = {};
@@ -1485,7 +1535,7 @@ function renderMarkers() {
   // 마크 필터 ON이면 마크된 아동은 배정/대기 레이어에서 빼고 아래 마크 레이어에서 빨강으로 하나만(핀 2개 방지)
   var baseAssigned = showMark ? d.assigned.filter(function(c){ return !c.marked; }) : d.assigned;
   if (showAssigned) groupByCoord(baseAssigned).forEach(function(g) {
-    addMarker(g.lat, g.lng, 'assigned', g.items.length, buildGroupedAssignedIW(g.items, hLat, hLng));
+    addMarker(g.lat, g.lng, 'assigned', g.items.length, buildGroupedAssignedIW(_sortLatest(g.items), hLat, hLng), g.items);
     var label = '';
     var names = {};
     g.items.forEach(function(c){ if(c.assignedTo) names[c.assignedTo]=1; });
@@ -1502,7 +1552,7 @@ function renderMarkers() {
     var filtered = getFilteredWaiting();
     if (showMark) filtered = filtered.filter(function(c){ return !c.marked; });   // 마크된 대기는 마크 레이어로
     groupByCoord(filtered).forEach(function(g) {
-      addMarker(g.lat, g.lng, 'waiting', g.items.length, buildGroupedWaitingIW(g.items, hLat, hLng));
+      addMarker(g.lat, g.lng, 'waiting', g.items.length, buildGroupedWaitingIW(_sortLatest(g.items), hLat, hLng), g.items);
     });
   }
 
@@ -1510,11 +1560,11 @@ function renderMarkers() {
   //  대기 마크는 요일/시간 필터 무시(shortlist 전량 노출). 마커/IW는 원 상태(배정/대기) 그대로, 색만 빨강.
   if (showMark) {
     groupByCoord(d.assigned.filter(function(c){ return c.marked; })).forEach(function(g) {
-      addMarkMarker(g.lat, g.lng, g.items.length, buildGroupedAssignedIW(g.items, hLat, hLng));
+      addMarkMarker(g.lat, g.lng, g.items.length, buildGroupedAssignedIW(_sortLatest(g.items), hLat, hLng), g.items, 'assigned');
       addLabel(g.lat, g.lng, markNames(g.items), 'mark');
     });
     groupByCoord(d.waiting.filter(function(c){ return c.marked; })).forEach(function(g) {
-      addMarkMarker(g.lat, g.lng, g.items.length, buildGroupedWaitingIW(g.items, hLat, hLng));
+      addMarkMarker(g.lat, g.lng, g.items.length, buildGroupedWaitingIW(_sortLatest(g.items), hLat, hLng), g.items, 'waiting');
       addLabel(g.lat, g.lng, markNames(g.items), 'mark');
     });
   }
@@ -1546,11 +1596,14 @@ function addLabel(lat, lng, text, type, markerH) {
   overlays.push(ov);
 }
 
-function addMarker(lat, lng, type, count, iwContent) {
+// items = 이 마커가 실제로 대표하는 아이들(필터가 걸린 뒤의 목록). 리스트·검색이 '그 아이를 맨 위로'
+// 다시 그릴 때 이 원본을 쓴다 — currentData에서 좌표로 재수집하면 필터 상태가 어긋난다.
+function addMarker(lat, lng, type, count, iwContent, items) {
   if (!lat || !lng) return;
   var pos = new kakao.maps.LatLng(lat, lng);
   var img = getMarkerImage(type, count);
   var m = new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:type==='home'?10:(type==='assigned'?5:1)});
+  m.__items = items || null; m.__kind = type;
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
   markers.push(m);
 }
@@ -1567,10 +1620,11 @@ function getMarkImage(count){
   if (_markImgCache[key]) return _markImgCache[key];
   return (_markImgCache[key] = new kakao.maps.MarkerImage(markerBookmark(count>1?count:0), new kakao.maps.Size(26,28), {offset:new kakao.maps.Point(13,26)}));
 }
-function addMarkMarker(lat, lng, count, iwContent) {
+function addMarkMarker(lat, lng, count, iwContent, items, kind) {
   if (!lat || !lng) return;
   var pos = new kakao.maps.LatLng(lat, lng);
   var m = new kakao.maps.Marker({position:pos,image:getMarkImage(count),map:map,zIndex:11});   // 배정(5)·집(10) 위, 센터(12) 아래
+  m.__items = items || null; m.__kind = kind || 'waiting';
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
   markers.push(m);
 }
@@ -3142,10 +3196,20 @@ function renderNewList() {
         map.setLevel(3);
       }
 
-      // 기존 마커 찾아서 인포윈도우 열기
-      var existing = findMarkerAt(item.lat, item.lng);
+      // 기존 마커 찾아서 인포윈도우 열기 — **고른 아이를 맨 위로**(유성 2026-08-31).
+      // 옛 코드는 trigger('click')으로 마커에 박힌 정적 말풍선을 그대로 열어, 같은 위치에 여러 명이면
+      // 고른 아이가 어디 있는지 알 수 없었다(말풍선이 첫 카드까지만 보이므로 사실상 안 보인다).
+      var existing = _markerHolding(item.data) || findMarkerAt(item.lat, item.lng);
+      var iwHtml = _iwForPicked(existing, item.data, item.statusType);
       if (existing) {
-        kakao.maps.event.trigger(existing, 'click');
+        infoWindow.setContent(iwHtml);
+        infoWindow.open(map, existing);
+      } else {
+        // 🐛 옛 코드엔 이 분기가 없어서, 요일·시간 필터로 마커가 사라진 아이를 리스트에서 누르면
+        //    지도만 움직이고 말풍선이 안 열렸다. 검색과 같은 길(빨간 핀)로 통일한다.
+        var sm = placeSearchMarker(item.lat, item.lng, iwHtml);
+        infoWindow.setContent(iwHtml);
+        infoWindow.open(map, sm);
       }
     });
   });
