@@ -41,6 +41,16 @@
     --sh-up:0 -1px 3px rgba(25,31,40,.08), 0 -8px 20px rgba(25,31,40,.10);
     --sh-fab:0 1px 3px rgba(25,31,40,.09), 0 6px 16px rgba(25,31,40,.13);   /* 우하단 버튼 2종 공통(유성 08-24 — 흰 버튼에서 sh2가 세고 초록에선 안 보여 중간값) */
     --sh-left:-1px 0 3px rgba(25,31,40,.08), -8px 0 20px rgba(25,31,40,.10);
+    --ease:cubic-bezier(.22,.85,.25,1);
+    /* 지도 전용 색 — 지금까지 JS 상수(MC·SVC_COLOR)에만 있고 CSS 토큰이 없었다(유성 08-27 "그린을 왜 #으로 썼어").
+       SVG 문자열은 var()를 못 받으므로 JS 상수는 그대로 두고, CSS가 쓰는 값만 여기 올린다. */
+    --wait-f:#f59e0b; --wait-s:#d97706; --wait-s-dark:#b45309; --wait-mid:#fcd9a0;
+    --ink-on-dark:#F9FBFA;   /* §3.5 — 어두운 면 위 흰 글씨는 순백 금지 */
+    /* 기간 슬라이더로 가라앉힌 대기 마커 — 유성 확정 10% / 탈색 100% */
+    --cutop:.10; --cutgray:1;
+    /* 띠(대시보드 바) 치수 — 유성 조절판 확정(2026-08-31). PC 기본, 모바일은 @media 480에서 갈아끼운다. */
+    --ds-lab:12px; --ds-num:14px; --ds-gap:4px; --ds-unit:2px;
+    --bar-gap:10px; --bar-padx:12px; --bar-pady:6px;
   }
   html,body{height:100%;overflow:hidden}
   body{font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;color:#1a1a1a;background:#f0ebe4}
@@ -80,21 +90,52 @@
     position:fixed;top:44px;left:0;right:0;z-index:49;
     background:rgba(250,250,247,.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
     border-bottom:1px solid rgba(0,0,0,.04);
-    padding:6px 14px;display:none;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:var(--bar-pady) var(--bar-padx);display:none;align-items:center;gap:var(--bar-gap);flex-wrap:wrap;
     font-size:12px;
   }
   .dashboard.show{display:flex}
-  .dash-stat{color:#888}
-  .dash-stat b{color:#166841;font-weight:700}
+  /* 띠 통계 = 라벨/숫자 두 층(유성 2026-08-31). 라벨(배정·대기·명 중)은 셋이 같은 크기여야 한다.
+     ⚠️ 연결어 '명 중'도 <i>로 감싸야 라벨과 같아진다(맨 텍스트면 바 font-size가 그대로 남는다).
+     ⚠️ line-height:1 필수 — 바에서 상속받은 line-height를 그대로 두면 상자가 글자보다 커져 글자가 위로 쏠린다. */
+  .dash-stat{color:var(--g500);display:inline-flex;align-items:center;gap:var(--ds-gap);white-space:nowrap;line-height:1}
+  .dash-stat i{font-style:normal;font-size:var(--ds-lab);font-weight:600;color:var(--g500);line-height:1}
+  .dash-stat b{font-size:var(--ds-num);color:var(--green700);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.2px;line-height:1}
+  .dash-stat b + i{margin-left:calc(var(--ds-unit) - var(--ds-gap))}   /* 숫자 바로 뒤 단위는 더 바짝 */
+  /* ⚠️ 이름을 .den으로 둔 이유: 공용 유틸 클래스와 겹치면 그쪽 margin이 flex 아이템에 붙어 상자가 늘어난다(프리뷰 실사고). */
+  .dash-stat b.den{color:var(--g700);margin:0}   /* 모수(268)는 강조색 아님 — 유성 */
+
+  /* ══ 대기 기간 슬라이더 (2026-08-31) ══
+     상자 높이를 원 지름(18px)만으로 두고 알약은 상자 **밖 아래**로 내보낸다(absolute라 바 높이에 영향 0).
+     .controls/.dashboard 어디에도 overflow가 없어 잘리지 않고, pointer-events:none이라 지도 조작도 안 막는다. */
+  .wa{position:relative;width:180px;flex-shrink:0;height:18px;display:flex;align-items:center;
+      touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+  .wa.dragging{cursor:grabbing}
+  .wa .track{position:relative;width:100%;height:8px;border-radius:99px;
+    background:linear-gradient(90deg,var(--g300,#d1d6db) 0%,var(--g300,#d1d6db) 34%,var(--wait-mid) 70%,var(--wait-f) 100%)}
+  .wa .stops{position:absolute;left:0;right:0;top:50%;margin-top:-1.5px;height:3px;pointer-events:none}
+  .wa .stops i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;margin-left:-1.5px;opacity:.92}
+  .wa .thumb{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
+    background:#fff;border:4px solid var(--wait-s);box-shadow:0 1px 4px rgba(0,0,0,.2);z-index:2;
+    transition:transform .16s var(--ease), box-shadow .18s, border-color .18s}
+  .wa.dragging .thumb{transform:scale(.86);box-shadow:0 1px 3px rgba(0,0,0,.26);border-color:var(--wait-s-dark)}
+  .wa .pill{position:absolute;top:calc(100% + 3px);background:var(--g900);color:var(--ink-on-dark);z-index:1;
+    font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;
+    pointer-events:none;box-shadow:var(--sh1);letter-spacing:-.2px}
+  /* 탭 이동·놓고 안착만 미끄러진다. 끄는 중엔 클래스가 없어 left 전환 0 = 손가락 그대로 따라온다. */
+  .wa.anim .thumb,.wa.anim .pill{transition:left .34s var(--ease), transform .16s var(--ease), box-shadow .18s, border-color .18s}
+  .wa:focus-visible{outline:2px solid var(--green600);outline-offset:3px;border-radius:8px}
   .dash-filters{display:flex;gap:6px;margin-left:auto}
   .prov-link-btn{padding:3px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid #e5e8eb;background:#fff;color:#666;transition:all .15s;white-space:nowrap}
   .prov-link-btn:hover{background:#f8fbf9;border-color:#3a8a5f;color:#166841}
 
   /* ══ 검색 ══ */
   .search-wrap{position:relative;flex:1;max-width:200px}
+  /* §3.5 — 버튼·툴 아이콘은 라인 SVG, 이모지 금지. 옛 placeholder의 🔍를 배경 아이콘으로 바꿨다. */
   .search-input{
-    width:100%;padding:6px 10px;border:1.5px solid #e5e8eb;border-radius:7px;
+    width:100%;padding:6px 10px 6px 28px;border:1.5px solid #e5e8eb;border-radius:7px;
     font-size:12px;font-family:inherit;outline:none;background:#fff;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23b0b8c1' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='20' y1='20' x2='16.2' y2='16.2'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:left 9px center;
   }
   .search-input:focus{border-color:#3a8a5f}
   .search-results{
@@ -589,6 +630,20 @@
     .nl-panel{width:min(380px,92vw)}
   }
   @media(max-width:480px){
+    /* 띠 치수 모바일 값 — 유성 조절판 확정(2026-08-31). PC와 따로 고른 값이다. */
+    .dashboard{--ds-lab:10.5px;--ds-num:12px;--ds-gap:3px;--ds-unit:2px;--bar-gap:6px;--bar-padx:8px;--bar-pady:5px}
+    /* 요일·시간 드롭다운을 아이콘으로 줄인다(유성 픽) — 라벨 글자를 지우고 축은 라인 아이콘이 말한다(§3.5).
+       ⚠️ width:auto면 브라우저가 가장 긴 option에 맞춰 벌리므로 고정 폭. */
+    .dashboard .dash-filters select{
+      width:50px;max-width:none;min-width:0;flex-shrink:0;padding:4px 14px 4px 20px;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+      background-repeat:no-repeat,no-repeat;background-position:left 4px center,right 3px center;
+    }
+    .dashboard .dash-filters select#filterTime{
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    }
+    .wa{width:130px}
+    .wa .pill{font-size:9.5px;padding:2px 7px}
     .controls{padding:6px 8px;gap:4px}
     .logo,.divider{display:none}
     #providerSelect{max-width:none}
@@ -757,6 +812,12 @@
     <button class="fbtn active" id="filterWaiting" onclick="toggleFilter('waiting')">대기</button>
     <button class="fbtn" id="filterMark" onclick="toggleFilter('mark')">마크</button>
   </div>
+  <!-- 대기 기간 슬라이더 (2026-08-31) — 유성이 지정한 자리(필터와 서비스 사이 구분선).
+       divider와 폭만 바꾸는 인라인 삽입이라 상단 바 높이가 늘지 않는다(#map{top:76px} 그대로 유효). -->
+  <div class="wa" id="waitAge" role="slider" aria-label="대기 기간" tabindex="0" style="display:none">
+    <div class="track"><div class="stops"></div><div class="thumb"></div></div>
+    <div class="pill"></div>
+  </div>
   <div class="divider"></div>
   <div class="svc-filter" id="svcFilter">
     <button class="sbtn active" data-svc="오감" onclick="pickService('오감')">오감<i style="background:#22c55e"></i></button>
@@ -768,15 +829,16 @@
   </div>
   <div class="divider"></div>
   <div class="search-wrap" id="searchWrap">
-    <input type="text" class="search-input" id="searchInput" placeholder="🔍 이름 · 주소 · 전화번호" autocomplete="off">
+    <input type="text" class="search-input" id="searchInput" placeholder="이름 / 주소 / 전화번호" autocomplete="off">
     <div class="search-results" id="searchResults"></div>
   </div>
 </div>
 
 <!-- ════ 대시보드 ════ -->
 <div class="dashboard" id="dashboard">
-  <span class="dash-stat">전체 <b id="dashTotal">0</b></span>
-  <span class="dash-stat">배정 <b id="dashAssigned">0</b></span>
+  <span class="dash-stat ds-total"><i>전체</i><b id="dashTotal">0</b></span>
+  <span class="dash-stat ds-asg"><i>배정</i><b id="dashAssigned">0</b></span>
+  <span class="dash-stat ds-wait" id="dashWait"><i>대기</i><b>0</b><i>명</i></span>
   <button class="prov-link-btn" id="provLinkBtn" onclick="copyProviderLink()" style="display:none">📎 선생님 지도 링크</button>
   <div class="dash-filters">
     <select id="filterDay" onchange="applyFilters()">
@@ -1072,6 +1134,18 @@ function initMap() {
   setupLongPress(mapEl);
 
   setupMapMoveListener();
+  // ══ 대기 기간 슬라이더 부팅 ══
+  // 기본값 = **최근 3개월**(유성 2026-08-31). 저장하지 않으므로 새로고침하면 늘 여기로 돌아온다.
+  waV = WA_STOPS[2].v;
+  _waBind(); _waPlace(); _waLayout();
+  // 화면이 480px 경계를 넘나들면 슬라이더 자리(상단 바 ↔ 둘째 줄)와 둘째 줄 축약을 다시 잡는다.
+  var _waRz = null;
+  function _waOnResize(){
+    clearTimeout(_waRz);
+    _waRz = setTimeout(function(){ _waPlace(); _fitDashbar(); updateDashboard(); }, 120);
+  }
+  window.addEventListener('resize', _waOnResize);
+  window.addEventListener('orientationchange', _waOnResize);
   boot();   // 3모드 분기(기본/제공인력/행정) — 행정만 loadProviders 경로
 }
 
@@ -1297,7 +1371,7 @@ function loadAllProviders(keepView) {
   var done=function(data){
     if (data.error) { showToast(data.error); return; }
     _svcCache[key]=data;
-    currentData = data;
+    currentData = data; _waInvalidate();
     // 🔴 렌더 단계를 여기서 **복제하지 않는다.** 2026-08-09에 `planSyncFab()`이 `_renderCurrent`에만
     //    추가됐는데 이 경로는 복제본이라 빠졌고 → **제공인력을 골라도 「후보안 뽑기」가 영영 안 떴다**
     //    (유성 지적). 켜지는 유일한 길이 `planExit()`이라 "검정 버튼을 눌렀다 나와야 보이는" 증상이 났다.
@@ -1334,7 +1408,7 @@ function loadMapData(name, keepView) {
   var done=function(data){
     if (data.error) { showToast(data.error); return; }
     _svcCache[key]=data;
-    currentData = data; currentData.allProviders = null;
+    currentData = data; currentData.allProviders = null; _waInvalidate();
     _renderCurrent();                 // ⚠️ 렌더 복제 금지 — 위 loadAllProviders 주석 참조
     if(!keepView) fitBounds();
   };
@@ -1368,6 +1442,7 @@ function applyModeUI(){
   show('filterHome', admin || provider);
   show('filterAssigned', admin || provider);
   show('filterMark', admin);              // 마크 = 행정 매칭 shortlist 전용
+  show('waitAge', admin);                 // 대기 기간 슬라이더 = 행정 전용(확정: 서버 0줄·행정만)
   show('legendMark', admin);
   show('staffLoginBtn', MODE === 'basic');
   show('adminKeyBtn', MODE === 'basic');   // 신규/초기화 브라우저(basic)서 행정으로 올라갈 입구 — PC 주소 직접진입 대비
@@ -1396,7 +1471,7 @@ function loadBasicMap(keepView){
   fetchGAS('basicmap', { service: currentService }).then(function(data){
     showLoading(false);
     if (!data || data.error){ showToast((data && data.error) || '로드 실패'); return; }
-    currentData = { provider:{ name:'', lat:null, lng:null }, assigned:[], waiting:data.waiting||[], allProviders:null };
+    currentData = { provider:{ name:'', lat:null, lng:null }, assigned:[], waiting:data.waiting||[], allProviders:null }; _waInvalidate();
     renderMarkers(); if (!keepView) fitBounds();
   }).catch(function(e){ showLoading(false); showToast('로드 실패: '+e.message); });
 }
@@ -1415,7 +1490,7 @@ function loadStaffMap(keepView){
     }
     if (!data || data.error){ showToast((data && data.error) || '로드 실패'); return; }
     if (!data.provider) data.provider = { name: s.name||'', lat:null, lng:null };
-    currentData = data; currentData.allProviders = null;
+    currentData = data; currentData.allProviders = null; _waInvalidate();
     renderMarkers(); if (!keepView) fitBounds();
   }).catch(function(e){ showLoading(false); showToast('로드 실패: '+e.message); });
 }
@@ -1427,7 +1502,19 @@ function updateDashboard() {
   var total = d.assigned.length + d.waiting.length;
   document.getElementById('dashTotal').textContent = total;
   document.getElementById('dashAssigned').textContent = d.assigned.length;
+  // 대기 = 요일/시간 필터가 걸린 뒤의 수. 자르면 '268명 중 58명'(PC) / '268 중 58'(폰, '명' 없이).
+  var dw = document.getElementById('dashWait');
+  if (dw){
+    var base = getFilteredWaiting();
+    var live = base.filter(_waAlive).length;
+    var narrow = window.innerWidth <= 480;
+    var unit = narrow ? '' : '<i>명</i>';
+    dw.innerHTML = (_waCutoff() === Infinity)
+      ? '<i>대기</i><b>' + base.length + '</b>' + unit
+      : '<i>대기</i><b class="den">' + base.length + '</b><i>' + (narrow ? '중' : '명 중') + '</i><b>' + live + '</b>' + unit;
+  }
   document.getElementById('dashboard').classList.add('show');
+  _fitDashbar();
 }
 function hideDashboard() { document.getElementById('dashboard').classList.remove('show'); }
 
@@ -1439,6 +1526,223 @@ function getFilteredWaiting() {
 }
 
 function applyFilters() { renderMarkers(); updateDashboard(); }
+// currentData가 갈리면 기준 시각표(_waEff)도 다시 만들어야 한다 — 안 하면 옛 서비스의 행 번호로 자른다
+function _waInvalidate(){ _waEff = null; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   대기 기간 슬라이더 (2026-08-31, 유성 발의 · 프리뷰 10라운드로 전 항목 확정)
+   통증 = "오래된 대기 마커와 방금 온 것이 구분 안 됨(오래된 건 사실상 잠수)".
+   확정 = 대기만 자른다 / 묶기 전에 자른다(같은 자리 N명 숫자가 같이 줄어든다) / 배정·집·마크는 그대로 /
+          기본 최근 3개월 / 칸 5개를 로그 간격 / 행정 전용 / 서버 0줄.
+   ══════════════════════════════════════════════════════════════════════════════ */
+var WA_STOPS = [
+  { age: Infinity, label: '전체' },
+  { age: 180, label: '최근 6개월' },
+  { age: 90,  label: '최근 3개월' },
+  { age: 30,  label: '최근 1개월' },
+  { age: 7,   label: '최근 1주' }
+];
+(function(){   // 칸 위치 = 로그 간격. 기준 축을 365→7로 **고정**한다 — 데이터 최고령에 맞추면 계절마다 칸이 흔들린다.
+  var HI = Math.log(365), LO = Math.log(7);
+  WA_STOPS.forEach(function(x){ x.v = (x.age === Infinity) ? 0 : (HI - Math.log(x.age)) / (HI - LO); });
+})();
+var waV = 0;   // 슬라이더 값 0~1. 부팅에서 '최근 3개월'로 세팅(저장 안 함 — 새로고침하면 늘 3개월)
+
+function _waStopAt(v){
+  var best = WA_STOPS[0], bd = Infinity;
+  WA_STOPS.forEach(function(x){ var d = Math.abs(x.v - v); if (d < bd){ bd = d; best = x; } });
+  return best;
+}
+function _waCutoff(){ return _waStopAt(waV).age; }
+
+/* 🔴 기준축 = '마지막 움직임(행 순서)'. A열 접수시각은 재신청·본인수정에도 **원본이 유지된 채** 그 행만
+   맨 아래로 가므로 날짜로 자르면 어제 다시 신청한 집이 숨는다(리스트 '최신순'이 행 번호를 쓰는 이유와 같다).
+   ⇒ 행 순서를 훑으며 '그 행 위쪽의 가장 늦은 접수일'을 하한으로 삼는다.
+   🔴 모집단이 결과를 뒤집는다(실측 08-30): 이 running-max를 **전체 행**(거절 포함)으로 돌리면 시트 4행의
+      이상치 한 줄(접수 2026-06-04·거절)이 아래 전 행에 상속돼 3개월 컷에서 대기 268명이 **전원 살아남는다**
+      = 슬라이더가 아무것도 안 자른다. **대기 배열만**으로 돌리면 58명(22%)이 남아 정상 동작한다. */
+var _waEff = null;   // row → 기준 시각(ms)
+function _waBuildEff(){
+  _waEff = {};
+  if (!currentData || !currentData.waiting) return;
+  var list = currentData.waiting.slice().sort(function(a,b){ return (a.row||0) - (b.row||0); });
+  var run = 0;
+  list.forEach(function(c){
+    var t = c.timestamp ? new Date(c.timestamp).getTime() : 0;
+    if (isNaN(t)) t = 0;
+    var eff = Math.max(t, run);
+    _waEff[c.row] = eff;
+    if (t > run) run = t;
+  });
+}
+function _waAgeDays(c){
+  if (!_waEff) _waBuildEff();
+  var eff = _waEff[c.row] || 0;
+  if (!eff) return Infinity;          // 시각을 못 읽으면 '오래됨'이 아니라 **모름** — 자르지 않는다(아래 _waAlive)
+  return (Date.now() - eff) / 86400000;
+}
+/* 모름(시각 없음)은 '아님'이 아니다 — 안 자르는 쪽으로 안전하게 틀린다(data-presence 규율). */
+function _waAlive(c){
+  var cut = _waCutoff();
+  if (cut === Infinity) return true;
+  var eff = (_waEff || (_waBuildEff(), _waEff))[c.row] || 0;
+  if (!eff) return true;
+  return (Date.now() - eff) / 86400000 <= cut;
+}
+
+// ── 슬라이더 기하 (원·점·알약이 같은 매핑을 쓴다) ──
+var WA_INSET = 4, WA_THUMB_R = 9;
+function _waPosPx(el, v){ var w = el.clientWidth || 180; return WA_INSET + v * (w - 2 * WA_INSET); }
+function _waVFromPx(el, px){ var w = el.clientWidth || 180; return Math.max(0, Math.min(1, (px - WA_INSET) / (w - 2 * WA_INSET))); }
+function _waLayout(){
+  var el = document.getElementById('waitAge'); if (!el || el.style.display === 'none') return;
+  var c = _waPosPx(el, waV);
+  var th = el.querySelector('.thumb'); if (th) th.style.left = c + 'px';
+  var st = el.querySelector('.stops');
+  if (st){
+    if (st.childElementCount !== WA_STOPS.length){
+      st.innerHTML = '';
+      WA_STOPS.forEach(function(){ st.appendChild(document.createElement('i')); });
+    }
+    Array.prototype.forEach.call(st.children, function(d,i){ d.style.left = _waPosPx(el, WA_STOPS[i].v) + 'px'; });
+  }
+  var pill = el.querySelector('.pill');
+  if (pill){
+    var label = _waStopAt(waV).label;
+    if (pill.textContent !== label) pill.textContent = label;
+    // 양끝에서 알약 가장자리가 원 가장자리에 맞는다(유성 확정): L = C − r − (Wp − 2r)·v
+    var wp = pill.offsetWidth || 60;
+    pill.style.left = (c - WA_THUMB_R - (wp - 2 * WA_THUMB_R) * waV) + 'px';
+  }
+}
+/* 드래그 중엔 **스냅하지 않는다** — 칸이 5개뿐이라 스냅하면 손가락을 끌어도 다섯 단계로 점프해 뚝뚝 끊긴다
+   (유성 지적). 원은 손가락을 그대로 따라오고, 보여줄 값(알약 글자·마커)만 가장 가까운 칸을 쓴다. */
+function _waBind(){
+  var el = document.getElementById('waitAge'); if (!el || el.__bound) return; el.__bound = true;
+  var grabbing = false, ended = true;
+  function vAt(cx){ var r = el.getBoundingClientRect(); return _waVFromPx(el, cx - r.left); }
+  function nearThumb(cx){ var r = el.getBoundingClientRect(); return Math.abs(cx - (r.left + _waPosPx(el, waV))) <= 16; }
+  function snap(v){ return _waStopAt(v).v; }
+  function put(v, glide){
+    waV = Math.max(0, Math.min(1, v));
+    el.classList.toggle('anim', !!glide);
+    _waSchedule();
+  }
+  function cxOf(e){ return e.clientX != null ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : null); }
+  function down(e){
+    var cx = cxOf(e); if (cx == null) return;
+    ended = false; grabbing = true; el.classList.add('dragging');
+    if (nearThumb(cx)) el.classList.remove('anim');
+    else put(snap(vAt(cx)), true);
+    if (e.pointerId != null && el.setPointerCapture){ try { el.setPointerCapture(e.pointerId); } catch(_){} }
+    if (e.cancelable) e.preventDefault();
+  }
+  function move(e){
+    if (!grabbing) return;
+    var cx = cxOf(e); if (cx == null) return;
+    put(vAt(cx), false);
+    if (e.cancelable) e.preventDefault();
+  }
+  function up(){
+    if (ended) return; ended = true; grabbing = false;
+    el.classList.remove('dragging');
+    put(snap(waV), true);
+  }
+  el.addEventListener('pointerdown', down);
+  el.addEventListener('pointermove', move);
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(ev){ el.addEventListener(ev, up); });
+  // 터치는 pointer만으론 스크롤에 뺏긴다 — 반드시 {passive:false}
+  el.addEventListener('touchstart', function(e){ if (!grabbing) down(e); }, {passive:false});
+  el.addEventListener('touchmove', move, {passive:false});
+  ['touchend','touchcancel'].forEach(function(ev){ el.addEventListener(ev, up); });
+  el.addEventListener('keydown', function(e){
+    var i = WA_STOPS.indexOf(_waStopAt(waV)), d = 0;
+    if (e.key === 'ArrowRight') d = 1;
+    else if (e.key === 'ArrowLeft') d = -1;
+    else if (e.key === 'Home'){ put(0, true); e.preventDefault(); return; }
+    else if (e.key === 'End'){ put(1, true); e.preventDefault(); return; }
+    else return;
+    e.preventDefault();
+    put(WA_STOPS[Math.max(0, Math.min(WA_STOPS.length - 1, i + d))].v, true);
+  });
+}
+// 드래그 입력 코얼레싱 — 한 프레임에 한 번만 그린다
+var _waPending = null;
+function _waSchedule(){
+  if (_waPending) return;
+  _waPending = requestAnimationFrame(function(){ _waPending = null; _waLayout(); _waApplyCut(); updateDashboard(); });
+}
+
+/* 🟢 마커를 다시 만들지 않는다 — kakao.maps.Marker.setOpacity()/setZIndex()/setImage()로 상태만 민다.
+   (필터 토글·서비스 전환은 여전히 전량 재생성. 여기만 델타.) 마커에 붙여둔 __items가 판정 소스다. */
+function _waApplyCut(){
+  var cut = _waCutoff();
+  markers.forEach(function(m){
+    if (!m.__items || m.__kind !== 'waiting' || m.__mark) return;
+    var live = 0, absent = false;
+    for (var i = 0; i < m.__items.length; i++){
+      if (_waAlive(m.__items[i])){ live++; if (m.__items[i].status === '부재1') absent = true; }
+    }
+    var sunk = (live === 0);
+    var showN = sunk ? m.__items.length : live;
+    if (sunk){ for (var j = 0; j < m.__items.length; j++) if (m.__items[j].status === '부재1') absent = true; }
+    var img = getMarkerImage('waiting', showN, { absent: absent, gray: sunk });
+    if (m.__imgKey !== showN + '|' + (absent?1:0) + '|' + (sunk?1:0)){
+      m.__imgKey = showN + '|' + (absent?1:0) + '|' + (sunk?1:0);
+      m.setImage(img);
+    }
+    if (m.setOpacity) m.setOpacity(sunk ? _waOpacity() : 1);
+    // 가라앉은 건 **전부 또렷한 마커 밑**으로(유성). 카카오 음수 zIndex는 미확인이라 0으로 두고 정상은 1 이상.
+    m.setZIndex(sunk ? 0 : 1);
+  });
+}
+function _waOpacity(){
+  var v = getComputedStyle(document.documentElement).getPropertyValue('--cutop');
+  var n = parseFloat(v); return isNaN(n) ? 0.1 : n;
+}
+
+/* 슬라이더 자리 = PC는 상단 바(유성 지정), 폰(≤480)은 둘째 줄(대시보드 바) — 갈래 6 A안 확정.
+   CSS로는 부모를 못 바꾸므로 DOM을 옮긴다. */
+function _waPlace(){
+  var el = document.getElementById('waitAge'); if (!el) return;
+  var narrow = window.innerWidth <= 480;
+  var host = narrow ? document.querySelector('.dashboard .dash-filters') : null;
+  if (narrow){
+    if (host && el.parentElement !== host) host.appendChild(el);
+  } else {
+    var svc = document.getElementById('svcFilter');
+    if (svc && el.nextElementSibling !== svc.previousElementSibling) {
+      svc.parentElement.insertBefore(el, svc.previousElementSibling);   // 서비스 앞 divider 앞자리
+    }
+  }
+  _waLayout();
+}
+
+/* 모바일 둘째 줄이 한 줄에 안 들어가면 '배정'을 뺀다(V2→V3, 유성 2026-08-31).
+   고정 브레이크포인트가 아니라 **실측**이다 — 필요 폭은 기기·폰트에 따라 몇 px 달라져서
+   @media로 박으면 그 오차만큼 어긋난다. 한 태스크 안에서 보이게→재고→숨기므로 깜빡임이 없다.
+   ⚠️ 줄 수는 **바 높이**로 본다. offsetTop 비교는 align-items:center라 같은 줄에서도 다르고,
+      left 되감김은 .dash-filters의 margin-left:auto 때문에 둘째 줄에서 오히려 left가 커져 못 잡는다. */
+function _barWraps(bar){
+  var cs = getComputedStyle(bar);
+  var padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  var maxH = 0;
+  Array.prototype.forEach.call(bar.children, function(k){
+    if (getComputedStyle(k).display === 'none') return;
+    maxH = Math.max(maxH, k.getBoundingClientRect().height);
+  });
+  return bar.getBoundingClientRect().height > padY + maxH + 1;
+}
+function _fitDashbar(){
+  var bar = document.getElementById('dashboard');
+  if (!bar || !bar.classList.contains('show')) return;
+  var asg = bar.querySelector('.ds-asg'), tot = bar.querySelector('.ds-total');
+  if (!asg || !tot) return;
+  if (window.innerWidth > 480){ asg.style.display = ''; tot.style.display = ''; return; }
+  tot.style.display = 'none';        // 폰에선 '전체'를 늘 뺀다(V2 확정)
+  asg.style.display = '';
+  if (_barWraps(bar)) asg.style.display = 'none';   // 그래도 안 들어가면 '배정'까지(V3)
+}
 
 // ══ 말풍선 정렬 (유성 2026-08-31) ══
 //  기본 = **최신순**(맨 위 = 가장 최근 신청). 축은 리스트 '최신순'과 같은 **행 번호 역순**이다 —
@@ -1467,7 +1771,7 @@ function _markerHolding(picked) {
   var pk = _rowNo(picked), found = null;
   if (!pk) return null;
   markers.forEach(function(m) {
-    if (!m.__items) return;
+    if (!m.__items || _sunk(m)) return;   // 가라앉은 마커는 빨간 핀으로 보낸다(위 _sunk 주석)
     for (var i = 0; i < m.__items.length; i++) if (_rowNo(m.__items[i]) === pk) { found = m; return; }
   });
   return found;
@@ -1572,6 +1876,8 @@ function renderMarkers() {
   // ── 4개 센터 표시 ── 집 마커보다 작은 빨간 테두리 흰 원. 항상 맨 위(z=12)로 올려
   // 안 가려지게 + 탭하면 항상 '○○ 센터'만 뜨게(아래 깔린 아동 마커가 클릭 가로채 주소/동 노출되는 것 차단)
   centerPoints.forEach(function(c){ addCenterMarker(c.pos, c.name, 12); });
+  // 마커를 새로 만들었으니 기간 컷을 다시 입힌다(안 하면 슬라이더가 걸린 채 전부 또렷하게 돌아온다)
+  if (typeof _waApplyCut === 'function') _waApplyCut();
 }
 
 // markerH = 마커가 점(latlng) 위로 솟은 픽셀 높이. 이걸로 라벨을 마커 위에 '바짝' 붙인다(#5).
@@ -1625,6 +1931,7 @@ function addMarkMarker(lat, lng, count, iwContent, items, kind) {
   var pos = new kakao.maps.LatLng(lat, lng);
   var m = new kakao.maps.Marker({position:pos,image:getMarkImage(count),map:map,zIndex:11});   // 배정(5)·집(10) 위, 센터(12) 아래
   m.__items = items || null; m.__kind = kind || 'waiting';
+  m.__mark = true;   // 마크(행정 shortlist)는 기간 슬라이더로 자르지 않는다 — 요일/시간 필터를 무시하는 규칙과 같은 결
   kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
   markers.push(m);
 }
@@ -1666,18 +1973,27 @@ function pickService(svc){
 }
 function svgUri(s){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s)}
 // viewBox 상단에 -2 여백: 물방울 원의 맨 위 stroke가 잘리던 문제(#4) 방지
-function markerSVG(t){var c=MC[t];if(t==='home')return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="34" viewBox="0 -2 32 34"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>');return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="26" viewBox="0 -2 24 26"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/></svg>')}
-function markerSVGCount(t,n){var c=MC[t];return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="32" viewBox="0 -2 30 32"><path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/><circle cx="15" cy="11" r="7" fill="#fff"/><text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+n+'</text></svg>')}
+/* 기간 슬라이더로 가라앉힌 대기 마커는 **회색 이미지**로 바꾼다 — 카카오 Marker는 setOpacity()는 있어도
+   CSS filter(grayscale)를 못 건다. 탈색 100%(유성 확정)라 회색 한 벌이면 된다.
+   부재1은 빗금(유성 확정) — 마커 이미지에 흰 사선 2줄. */
+var GRAY={f:'#c9ced6',s:'#aab1ba'};
+function _mcolor(t,gray){ return gray ? GRAY : MC[t]; }
+function _hatch(){ return '<path d="M5.2 11.6 L18.8 5.2 M6.6 15.2 L19.6 9.1" stroke="#fff" stroke-width="1.7" stroke-linecap="round" opacity=".95"/>'; }
+function markerSVG(t,opt){opt=opt||{};var c=_mcolor(t,opt.gray);if(t==='home')return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="34" viewBox="0 -2 32 34"><path d="M16 30C16 30 4 18 4 12A12 12 0 0128 12C28 18 16 30 16 30Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M13 13.5L16 10.5L19 13.5V16H17V14H15V16H13Z" fill="'+c.f+'"/></svg>');return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="26" viewBox="0 -2 24 26"><path d="M12 23C12 23 3 14 3 9A9 9 0 0121 9C21 14 12 23 12 23Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.2"/><circle cx="12" cy="9" r="3.5" fill="#fff"/>'+(opt.absent?_hatch():'')+'</svg>')}
+function markerSVGCount(t,n,opt){opt=opt||{};var c=_mcolor(t,opt.gray);return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="32" viewBox="0 -2 30 32"><path d="M15 29C15 29 4 17 4 11A11 11 0 0126 11C26 17 15 29 15 29Z" fill="'+c.f+'" stroke="'+c.s+'" stroke-width="1.3"/><circle cx="15" cy="11" r="7" fill="#fff"/><text x="15" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="'+c.f+'" font-family="sans-serif">'+n+'</text>'+(opt.absent?'<path d="M6.5 13.5 L23.5 6.5" stroke="'+c.s+'" stroke-width="1.6" stroke-linecap="round"/>':'')+'</svg>')}
 
 // 집(선생님) 테두리 링 — ALL 모드 전용. 가운데가 비어 밑의 아동이 비쳐 보임.
 function markerHomeRing(){return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="rgba(59,130,246,0.12)" stroke="#1d4ed8" stroke-width="2.5"/></svg>')}
 
 // ── 마커 이미지 캐시: 같은 모양은 한 번만 생성 (렌더/줌 재배치 시 SVG 인코딩 반복 제거) ──
 var _imgCache = {}, _ringImg = null;
-function getMarkerImage(type, count) {
-  var key = type + '|' + (count > 1 ? count : 1);
+// ⚠️ 캐시 키는 **그리는 데 쓰는 모든 축**을 담아야 한다. 옛 키가 'type|count'뿐이라 탈색·부재를 넣으면
+//    첫 이미지가 전부에 재사용된다(백로그 ⚙️⑤).
+function getMarkerImage(type, count, opt) {
+  opt = opt || {};
+  var key = type + '|' + (count > 1 ? count : 1) + '|' + (opt.absent ? 1 : 0) + '|' + (opt.gray ? 1 : 0);
   if (_imgCache[key]) return _imgCache[key];
-  var svg = count > 1 ? markerSVGCount(type, count) : markerSVG(type);
+  var svg = count > 1 ? markerSVGCount(type, count, opt) : markerSVG(type, opt);
   var sz, off;
   if (type==='home') { sz=new kakao.maps.Size(32,34); off=new kakao.maps.Point(16,34); }
   else if (count>1)  { sz=new kakao.maps.Size(30,32); off=new kakao.maps.Point(15,32); }
@@ -2602,7 +2918,7 @@ function _afterWrite(res) {
   var data = res.map;
   if (sel !== '__ALL__') data.allProviders = null;   // loadMapData와 동일 규칙
   _svcCache[sel + '|' + currentService] = data;
-  currentData = data;
+  currentData = data; _waInvalidate();
   if (_renderSig(data) === _lastRenderSig) return;   // 낙관 반영과 동일 → 재렌더 생략
   _renderCurrent();
 }
@@ -2683,9 +2999,13 @@ function placeSearchMarker(lat, lng, iwContent) {
 }
 
 // 같은 좌표에 이미 있는 마커 찾기
+/* ⚠️ 기간 슬라이더로 **완전히 가라앉은** 마커는 후보에서 뺀다. 안 빼면 투명도 10%·회색·맨 아래로 깔린
+   마커에 말풍선이 붙어 꼬리가 어디를 가리키는지 안 보인다. 빼면 요일·시간 필터와 같은 길(빨간 검색 핀)을 탄다. */
+function _sunk(m){ return !!(m.__items && m.__kind === 'waiting' && !m.__mark && !m.__items.some(_waAlive)); }
 function findMarkerAt(lat, lng) {
   var found = null;
   markers.forEach(function(m){
+    if (_sunk(m)) return;
     var p = m.getPosition();
     if (Math.abs(p.getLat()-lat) < 0.00001 && Math.abs(p.getLng()-lng) < 0.00001) found = m;
   });
