@@ -1146,6 +1146,8 @@ function initMap() {
   }
   window.addEventListener('resize', _waOnResize);
   window.addEventListener('orientationchange', _waOnResize);
+  // 알약 위치는 제 폭(offsetWidth)으로 계산한다 — Pretendard가 늦게 오면 폭이 바뀌므로 한 번 더 맞춘다.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ _waLayout(); });
   boot();   // 3모드 분기(기본/제공인력/행정) — 행정만 loadProviders 경로
 }
 
@@ -1443,6 +1445,9 @@ function applyModeUI(){
   show('filterAssigned', admin || provider);
   show('filterMark', admin);              // 마크 = 행정 매칭 shortlist 전용
   show('waitAge', admin);                 // 대기 기간 슬라이더 = 행정 전용(확정: 서버 0줄·행정만)
+  // 숨김→보임으로 바뀐 **그 자리에서** 다시 그린다. 안 하면 원이 0px에 남고 알약 글자가 비어
+  // '작은 검정 조각'만 뜬다(유성 08-31). 알약 폭(offsetWidth)도 보이는 상태에서만 제대로 잰다.
+  if (admin && typeof _waLayout === 'function') _waLayout();
   show('legendMark', admin);
   show('staffLoginBtn', MODE === 'basic');
   show('adminKeyBtn', MODE === 'basic');   // 신규/초기화 브라우저(basic)서 행정으로 올라갈 입구 — PC 주소 직접진입 대비
@@ -1595,7 +1600,9 @@ var WA_INSET = 4, WA_THUMB_R = 9;
 function _waPosPx(el, v){ var w = el.clientWidth || 180; return WA_INSET + v * (w - 2 * WA_INSET); }
 function _waVFromPx(el, px){ var w = el.clientWidth || 180; return Math.max(0, Math.min(1, (px - WA_INSET) / (w - 2 * WA_INSET))); }
 function _waLayout(){
-  var el = document.getElementById('waitAge'); if (!el || el.style.display === 'none') return;
+  // ⚠️ display:none을 이유로 빠져나가면 **보이게 된 뒤에 다시 부를 사람이 없다**(유성 08-31 적발).
+  //    폭이 0일 때만 건너뛴다 — 그때만 계산이 망가지고, 폭이 생기는 순간 다시 불리면 정확해진다.
+  var el = document.getElementById('waitAge'); if (!el || !el.clientWidth) return;
   var c = _waPosPx(el, waV);
   var th = el.querySelector('.thumb'); if (th) th.style.left = c + 'px';
   var st = el.querySelector('.stops');
