@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>QR 인식 점검</title>
+<!--
+  08 반출납 — QR 인식 실측 진단기 (2026-08-31)
+
+  왜 만들었나: 현아쌤 "기존 QR은 여전히 초점이 안 잡혀요(갤럭시)" / 유성 S25는 잘 됨.
+  08-27 처방(@123 ROI 원본화질 우선)이 라이브에 있는데도 그렇다 → 원인을 **추측하지 말고 그 폰에서 재자**.
+
+  ⚠️ 이 페이지의 존재 이유는 **충실도**다. 카메라 파이프라인은 08 app.html에서 그대로 이식한 것이고
+     상수를 여기서 "개선"하면 측정이 앱을 대표하지 못한다. 값을 바꾸지 말 것 — 바꾸면 앱도 같이 바꿔야 한다.
+     이식 출처: app.html 의 SCAN_W/CROP_* 상수 · Cam.roiOf_ · Cam.read_ · Hold · --fw/--peek 프레임 치수.
+
+  측정 3단
+   A. 카메라 없는 합성 벤치마크 — 이 폰 디코더의 임계 px/모듈 (사람 기술·광학과 분리된 기준선)
+   B. 카메라 — B1 앱과 동일한 1경로(타이밍의 진실) / B2 4경로 동시(어느 경로가 잡나. 타이밍 판정에 쓰지 않음)
+   C. 판정 — 측정 타임라인에 실제 Hold 알고리즘을 재생 + 손잡이 A/B
+
+  아무것도 서버로 보내지 않는다. 전부 이 폰 안에서 끝난다.
+-->
+<style>
+:root{
+  /* docs/1 §3.1 정본 블록 */
+  --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db;
+  --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
+  --g800:#333d4b; --g900:#191f28;
+  --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
+  --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
+  --green:var(--green600); --green-dark:var(--green700); --green-bg:var(--green100);
+  --red:#f04452; --warn:#f5a623; --warn-weak-bg:#fef4e2; --warn-weak-fg:#c07f00;
+  --ink-on-dark:#F9FBFA;
+  --dark:#525966; --danger:#D25357;
+  --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;
+  --p-disabled:#b7e0c8;
+  --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
+  --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
+  --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
+  --sh1: 0 1px 2px rgba(25,31,40,.06), 0 4px 10px rgba(25,31,40,.08);
+  /* ⛔ 아래 둘은 app.html 과 같은 값이어야 한다 — 프레임 크기가 다르면 사용자가 라벨을 대는 거리가 달라진다 */
+  --peek:54px;
+  --fw:min(46vw,170px);
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; height:100%; }
+body{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif; color:var(--g900);
+  background:#fff; -webkit-text-size-adjust:100%; -webkit-font-smoothing:antialiased; word-break:keep-all; }
+#app{ height:100%; max-width:520px; margin:0 auto; position:relative; overflow:hidden; display:flex; flex-direction:column; }
+.scr{ display:none; flex:1; min-height:0; flex-direction:column; }
+.scr.on{ display:flex; }
+.pad{ padding:24px 20px; }
+h1{ font-size:var(--fs-h1); margin:0 0 10px; letter-spacing:-.02em; }
+h2{ font-size:var(--fs-h3); margin:26px 0 10px; letter-spacing:-.01em; }
+p{ font-size:var(--fs-body); line-height:1.62; color:var(--g700); margin:0 0 12px; }
+.muted{ color:var(--g500); font-size:var(--fs-sm); }
+.btn{ display:block; width:100%; border:0; border-radius:15px; padding:16px; font-size:var(--fs-title);
+  font-weight:700; font-family:inherit; background:var(--green700); color:#fff; cursor:pointer; }
+.btn:active{ background:var(--green800); transform:scale(.985); }
+.btn:disabled{ background:var(--p-disabled); }
+.btn.weak{ background:var(--g100); color:var(--dark); }
+.btn.weak:active{ background:var(--g200); }
+.foot{ padding:16px 20px calc(16px + env(safe-area-inset-bottom)); background:#fff; }
+
+/* 진행 — 정적 '…' 금지(docs/1 §5.2). 점이 출렁인다 */
+.ld{ display:inline-flex; align-items:baseline; gap:2px; color:var(--green700); font-weight:700; }
+.ld i{ width:4px; height:4px; border-radius:50%; background:currentColor; display:inline-block; animation:ldb .9s infinite; }
+.ld i:nth-child(2){ animation-delay:.16s } .ld i:nth-child(3){ animation-delay:.32s }
+@keyframes ldb{ 0%,60%,100%{ transform:translateY(0); opacity:.45 } 30%{ transform:translateY(-4px); opacity:1 } }
+.bar{ height:6px; border-radius:999px; background:var(--g200); overflow:hidden; margin:14px 0 6px; }
+.bar > i{ display:block; height:100%; width:0; background:var(--green600); border-radius:999px; transition:width .2s; }
+
+/* 카메라 — app.html 이식 */
+.cam{ position:relative; background:#1b1f24; overflow:hidden; flex:1; min-height:0;
+  display:flex; align-items:center; justify-content:center; }
+.cam video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.camframe{ position:relative; width:var(--fw); aspect-ratio:1; margin-bottom:var(--peek); z-index:2; }
+.camframe::before{ content:''; position:absolute; inset:0; border-radius:7.6%;
+  box-shadow:0 0 0 9999px rgba(0,0,0,.15); pointer-events:none; }
+.camring{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.2)); }
+.camring rect{ fill:none; stroke-linecap:round; }
+.camring .trk{ stroke:var(--ink-on-dark); stroke-width:3; }
+.camring .val{ stroke:var(--green); stroke-width:4.5; }
+/* ROI 오버레이 — 크롭이 실제로 어디를 보는지 **눈으로** 확인하는 자리.
+   숫자만으로는 "ROI가 엉뚱한 곳을 자른다"를 아무도 못 알아챈다. */
+#roiBox{ position:absolute; border:2px dashed var(--green300); border-radius:6px; pointer-events:none; z-index:3; display:none; }
+.camtop{ position:absolute; top:0; left:0; right:0; z-index:5; padding:10px 12px;
+  background:linear-gradient(rgba(0,0,0,.55), transparent); color:var(--ink-on-dark); }
+/* 🥇 스트림 해상도·화면비는 이 측정의 1순위 값이라 맨 위에 크게 둔다 — 중간에 끊겨도 이건 건진다 */
+.camtop b{ display:block; font-size:var(--fs-title); letter-spacing:-.01em; }
+.camtop span{ font-size:var(--fs-caption); opacity:.85; }
+.camhint{ position:absolute; bottom:calc(var(--peek) + 24px); left:0; right:0; text-align:center;
+  color:var(--ink-on-dark); font-size:var(--fs-body); font-weight:600; z-index:4; text-shadow:0 1px 4px rgba(0,0,0,.5); }
+.camlive{ position:absolute; bottom:14px; left:0; right:0; text-align:center; z-index:4;
+  color:var(--ink-on-dark); font-size:var(--fs-caption); font-variant-numeric:tabular-nums; opacity:.9; }
+
+/* 결과 */
+.card{ border:1px solid var(--g200); border-radius:var(--r-md); padding:14px 16px; margin:0 0 10px; }
+.card.bad{ border-color:var(--danger-weak-fg); background:var(--danger-weak-bg); }
+.card.ok{ border-color:var(--green200); background:var(--green50); }
+.card h3{ margin:0 0 4px; font-size:var(--fs-title); }
+.card p{ margin:0; font-size:var(--fs-sm); color:var(--g700); }
+.kv{ display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid var(--g100); font-size:var(--fs-sm); }
+.kv:last-child{ border-bottom:0 }
+.kv span{ color:var(--g600) } .kv b{ font-weight:700; font-variant-numeric:tabular-nums; text-align:right }
+.badge{ display:inline-block; border-radius:999px; padding:3px 10px; font-size:var(--fs-caption); font-weight:700 }
+.b-ok{ background:var(--green-bg); color:var(--green-dark) }
+.b-no{ background:var(--danger-weak-bg); color:var(--danger-weak-fg) }
+.b-un{ background:var(--g100); color:var(--dark) }
+.shots{ display:flex; gap:10px; margin:10px 0 }
+.shots figure{ margin:0; flex:1; text-align:center }
+.shots img{ width:100%; border-radius:var(--r-sm); background:var(--g100); display:block }
+.shots figcaption{ font-size:var(--fs-caption); color:var(--g500); margin-top:5px }
+.grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:3px; width:132px; margin:8px 0 }
+.grid3 i{ aspect-ratio:1; border-radius:4px; background:var(--g100); display:grid; place-items:center;
+  font-size:11px; font-style:normal; font-weight:700; color:var(--g700) }
+pre{ background:var(--g50); border:1px solid var(--g200); border-radius:var(--r-sm); padding:12px;
+  font-size:11.5px; line-height:1.55; overflow:auto; max-height:260px; white-space:pre-wrap; word-break:break-all; }
+canvas.hidden{ display:none }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ① 안내 -->
+  <section class="scr on" id="s-intro">
+    <div class="pad" style="flex:1; overflow:auto">
+      <h1>QR 인식 점검</h1>
+      <p>책에 붙은 QR이 왜 안 읽히는지 이 폰에서 직접 재요. 2분쯤 걸려요.</p>
+      <div class="card">
+        <h3>준비할 것</h3>
+        <p>책에 붙어 있는 QR 라벨 한 장. 반출납 앱을 쓰던 그대로 들면 돼요.</p>
+      </div>
+      <p class="muted">찍은 화면은 이 폰 안에서만 쓰고 어디로도 보내지 않아요.</p>
+      <div id="warnBox"></div>
+    </div>
+    <div class="foot"><button class="btn" id="go">시작</button></div>
+  </section>
+
+  <!-- ② 합성 벤치마크 -->
+  <section class="scr" id="s-bench">
+    <div class="pad" style="flex:1; overflow:auto">
+      <h1>디코더 성능부터 재요</h1>
+      <p>카메라 없이, 이 폰이 QR을 얼마나 작게까지 읽는지 먼저 재요.</p>
+      <div class="bar"><i id="benchBar"></i></div>
+      <p class="muted" id="benchNow"></p>
+      <div id="benchOut"></div>
+    </div>
+  </section>
+
+  <!-- ③ 카메라 -->
+  <section class="scr" id="s-cam">
+    <div class="cam" id="camWrap">
+      <video id="v" playsinline muted></video>
+      <div class="camtop">
+        <b id="topRes">카메라 여는 중</b>
+        <span id="topSub"></span>
+      </div>
+      <div id="roiBox"></div>
+      <div class="camframe" id="camFrame">
+        <!-- app.html 과 동일한 링. pathLength 쓰지 않음(사파리) -->
+        <svg class="camring" viewBox="0 0 164 164">
+          <rect class="trk" x="1.5" y="1.5" width="161" height="161" rx="12.5"
+                stroke-dasharray="54.40 101.24" stroke-dashoffset="37.02"/>
+          <rect class="val" id="camVal" x="1.5" y="1.5" width="161" height="161" rx="12.5"
+                stroke-dasharray="622.54 9999" stroke-dashoffset="622.54"/>
+        </svg>
+      </div>
+      <div class="camhint" id="camHint">라벨을 프레임 안에 비춰 주세요</div>
+      <div class="camlive" id="camLive"></div>
+    </div>
+    <div class="foot" style="border-top:1px solid var(--g200)">
+      <div class="bar" style="margin:0 0 10px"><i id="camBar"></i></div>
+      <button class="btn weak" id="skip">여기서 끝내기</button>
+    </div>
+  </section>
+
+  <!-- ④ 결과 -->
+  <section class="scr" id="s-done">
+    <div class="pad" style="flex:1; overflow:auto">
+      <h1>다 쟀어요</h1>
+      <p>아래 결과를 복사해서 유성에게 보내 주세요.</p>
+      <div id="verdicts"></div>
+      <h2>눈으로 보는 것</h2>
+      <div class="shots">
+        <figure><img id="shotBest" alt=""><figcaption>가장 선명했던 장면</figcaption></figure>
+        <figure><img id="shotWorst" alt=""><figcaption>가장 흐렸던 장면</figcaption></figure>
+      </div>
+      <p class="muted" id="gridCap">프레임 어디에서 읽혔나</p>
+      <div class="grid3" id="grid3"></div>
+      <h2>보낼 내용</h2>
+      <pre id="report"></pre>
+    </div>
+    <div class="foot">
+      <button class="btn" id="copy">결과 복사</button>
+      <button class="btn weak" id="again" style="margin-top:8px">다시 재기</button>
+    </div>
+  </section>
+</div>
+
+<canvas id="cv" class="hidden"></canvas>
+<canvas id="cv2" class="hidden"></canvas>
+<canvas id="cvm" class="hidden"></canvas>
+
+<script src="qrcode.js"></script>
+<script src="jsqr.js"></script>
+<script>
+/* 카톡 인앱 브라우저 = 카메라가 안 켜질 수 있다 → 기본 브라우저로 전환 (saenggak/kakao-escape.js 와 동일) */
+if (/KAKAOTALK/i.test(navigator.userAgent)){
+  location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+}
+
+const $ = id => document.getElementById(id);
+const P  = new URLSearchParams(location.search);
+const DEV = P.get('dev') === '1';                 // 내 검증용 — 시간을 줄여 빨리 돈다
+const B1_MS = DEV ? 6000 : 45000;
+const B2_MS = DEV ? 6000 : 45000;
+
+/* ── 앱에서 그대로 이식한 상수 (app.html) — ⛔ 여기서 바꾸지 말 것 ───────── */
+const SCAN_W   = 720;
+const CROP_PAD = 1.4;
+const CROP_MAX = 720;
+const CROP_MIN = 480;
+const HOLD_MS = 1400, HOLD_GRACE = 200;
+const RING_LEN = 622.54;
+
+/* 판본별 실제 인코딩 — 08 Code.js·git 최초 커밋에서 확인한 값 */
+const EXEC = 'https://script.google.com/macros/s/AKfycbwd5AcT6yq7wF3L5MeWnJTJ9tf3Ra9Yi8HO2ncEtGHCUDFFH-OR2lAz7_TGVG-JYvg5/exec';
+const VARIANTS = [
+  { key:'old', name:'옛 라벨(붙어 있는 494장)', text: EXEC + '?copyId=BK-202607-0005', ec:'L' },
+  { key:'new', name:'새 라벨',                  text: 'https://think-factory.kr/q?i=BK-202607-0005', ec:'M' }
+];
+
+const R = {                                        // 리포트에 실릴 것 전부
+  env:{}, bench:[], cam:{}, b1:[], b2:[], verdicts:[], notes:[]
+};
+
+/* ══ 환경 ══════════════════════════════════════════ */
+async function collectEnv(){
+  const e = R.env;
+  e.ua = navigator.userAgent;
+  e.topLevel = (window.top === window);
+  e.screen = innerWidth + 'x' + innerHeight + ' @' + (devicePixelRatio || 1);
+  e.mem = navigator.deviceMemory || null;
+  e.cpu = navigator.hardwareConcurrency || null;
+  e.hasBD = ('BarcodeDetector' in window);
+  e.lang = navigator.language;
+  /* 크롬 안드로이드는 UA 문자열에서 기종을 가린다 → UA-CH 로만 실제 모델이 나온다 */
+  try{
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues){
+      const h = await navigator.userAgentData.getHighEntropyValues(['model','platformVersion','platform','fullVersionList']);
+      e.model = h.model || null;
+      e.platform = (h.platform || '') + ' ' + (h.platformVersion || '');
+      e.browser = (h.fullVersionList || []).map(b => b.brand + ' ' + b.version).join(', ');
+    }
+  }catch(err){}
+  if (e.hasBD){
+    try{ e.bdFormats = (await BarcodeDetector.getSupportedFormats()).join(','); }catch(err){ e.bdFormats = '확인 실패'; }
+  }
+  /* 인앱 웹뷰 판별 — 여기서 열면 카메라·디코더가 크롬과 다를 수 있다 */
+  const ua = e.ua;
+  e.webview = /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(ua) ? '인앱 브라우저'
+            : /SamsungBrowser/i.test(ua) ? '삼성 인터넷'
+            : /CriOS|Chrome/i.test(ua) ? '크롬' : /Safari/i.test(ua) ? '사파리' : '알 수 없음';
+}
+
+/* ══ A단 — 합성 벤치마크 ═══════════════════════════
+   카메라·사람 기술과 분리된 순수 기준선. 이 폰의 디코더가 몇 px/모듈까지 읽는가.
+   🔑 낮은 값에서 반드시 실패가 나와야 한다 — ❌를 낼 줄 모르는 계측기는 못 믿는다. */
+function matrixOf(text, ec){
+  const q = qrcode(0, ec); q.addData(text); q.make();
+  const n = q.getModuleCount(), m = [];
+  for (let r = 0; r < n; r++){ const row = []; for (let c = 0; c < n; c++) row.push(q.isDark(r, c)); m.push(row); }
+  return m;
+}
+let blurSupported = null;
+function drawQR(mx, scale, blur){
+  const quiet = 4, n = mx.length, side = Math.round((n + quiet * 2) * scale), off = quiet * scale;
+  const c = $('cv'); c.width = side; c.height = side;
+  const g = c.getContext('2d', { willReadFrequently:true });
+  g.filter = 'none';
+  g.fillStyle = '#fff'; g.fillRect(0, 0, side, side);
+  g.fillStyle = '#000';
+  /* ⚠️ 칸 크기를 Math.ceil 로 키우지 말 것 — 소수 배율에서 칸이 겹쳐 그려져
+     **정수 배율만 유리해지는 가짜 결과**가 나온다(1.5는 실패하는데 1.0은 성공하는 역전을 헤드리스가 잡았다).
+     소수 그대로 그려 캔버스가 가장자리를 섞게 두는 것이 실제 카메라 리샘플링에 가깝다. */
+  for (let r = 0; r < n; r++) for (let col = 0; col < n; col++)
+    if (mx[r][col]) g.fillRect(off + col * scale, off + r * scale, scale, scale);
+  if (!blur) return c;
+  /* 초점 흐림 근사 = canvas filter blur. 지원 안 하면 그 조건은 '미측정'으로 남긴다(추정 금지) */
+  const c2 = $('cv2'); c2.width = side; c2.height = side;
+  const g2 = c2.getContext('2d', { willReadFrequently:true });
+  g2.fillStyle = '#fff'; g2.fillRect(0, 0, side, side);
+  g2.filter = 'blur(' + blur + 'px)';
+  g2.drawImage(c, 0, 0);
+  g2.filter = 'none';
+  if (blurSupported === null){
+    const px = g2.getImageData(0, 0, side, side).data;
+    let mid = 0; for (let i = 0; i < px.length; i += 4) if (px[i] > 40 && px[i] < 215) mid++;
+    blurSupported = mid > side;                    // 중간 회색이 거의 없으면 filter 가 안 먹은 것
+  }
+  return c2;
+}
+let bdDetector = null;
+async function decodeCanvas(c, useBD){
+  if (useBD){
+    if (!bdDetector) bdDetector = new BarcodeDetector({ formats:['qr_code'] });
+    try{ const r = await bdDetector.detect(c); return (r && r.length) ? r[0].rawValue : null; }catch(e){ return null; }
+  }
+  const g = c.getContext('2d', { willReadFrequently:true });
+  const d = g.getImageData(0, 0, c.width, c.height);
+  const r = jsQR(d.data, c.width, c.height, { inversionAttempts:'dontInvert' });
+  return r ? r.data : null;
+}
+const idle = () => new Promise(r => setTimeout(r, 0));
+
+/* px/모듈을 위에서 아래로 훑어 마지막 성공값을 찾는다(거친 뒤 정밀). */
+async function thresholdOf(mx, blur, useBD, expect){
+  let last = null;
+  for (let s = 8; s >= 1; s -= 0.5){
+    const got = await decodeCanvas(drawQR(mx, s, blur), useBD);
+    await idle();
+    if (got === expect) last = s; else if (last !== null) break;
+  }
+  if (last === null) return null;
+  for (let s = last - 0.1; s >= 1; s -= 0.1){
+    const v = Math.round(s * 10) / 10;
+    const got = await decodeCanvas(drawQR(mx, v, blur), useBD);
+    await idle();
+    if (got === expect) last = v; else break;
+  }
+  return Math.round(last * 10) / 10;
+}
+async function runBench(){
+  show('s-bench');
+  const decoders = [{ id:'jsQR', bd:false }];
+  if (R.env.hasBD) decoders.push({ id:'BarcodeDetector', bd:true });
+  const blurs = [0, 2, 4];
+  const total = VARIANTS.length * decoders.length * blurs.length;
+  let done = 0;
+  for (const v of VARIANTS){
+    const mx = matrixOf(v.text, v.ec);
+    v.mods = mx.length;
+    for (const d of decoders){
+      for (const b of blurs){
+        $('benchNow').innerHTML = v.name + ' · ' + d.id + ' · 흐림 ' + b +
+          '<span class="ld"><i></i><i></i><i></i></span>';
+        const t = await thresholdOf(mx, b, d.bd, v.text);
+        R.bench.push({ variant:v.key, name:v.name, mods:mx.length, decoder:d.id, blur:b,
+                       thr:t, needPx: t === null ? null : Math.round(t * mx.length) });
+        done++; $('benchBar').style.width = (done / total * 100) + '%';
+      }
+    }
+  }
+  if (blurSupported === false) R.notes.push('이 브라우저는 canvas 흐림 효과를 지원하지 않아 흐림 조건은 측정하지 못했어요.');
+  /* 계측기 자기검증 — ❌를 낼 줄 아는가.
+     ①아주 작게 그리면 반드시 실패해야 하고 ②임계값을 하나라도 찾았어야 한다.
+     둘 중 하나라도 어긋나면 이 페이지의 숫자를 믿으면 안 된다. */
+  const mx0 = matrixOf(VARIANTS[0].text, VARIANTS[0].ec);
+  const tiny = await decodeCanvas(drawQR(mx0, 0.6, 0), false);
+  const found = R.bench.some(b => b.thr !== null);
+  R.env.selfTest = (tiny === null && found) ? '통과 (작게 그리면 실패함)'
+    : '🔴 미통과' + (tiny !== null ? ' — 0.6px/모듈에서도 읽혔다' : '') + (!found ? ' — 임계를 하나도 못 찾았다' : '');
+  renderBench();
+}
+function renderBench(){
+  let h = '';
+  for (const v of VARIANTS){
+    const rows = R.bench.filter(b => b.variant === v.key);
+    h += '<h2>' + v.name + ' <span class="muted">' + v.mods + '모듈</span></h2>';
+    for (const r of rows){
+      h += '<div class="kv"><span>' + r.decoder + ' · 흐림 ' + r.blur + '</span><b>' +
+        (r.thr === null ? '못 읽음' : r.thr + ' px/모듈 · QR ' + r.needPx + 'px 필요') + '</b></div>';
+    }
+  }
+  $('benchOut').innerHTML = h;
+}
+
+/* ══ B단 — 카메라 ═══════════════════════════════════
+   app.html 의 Cam.roiOf_ / Cam.read_ 를 그대로 이식했다. 값·구조를 바꾸면 앱을 대표하지 못한다. */
+const Cam = {
+  stream:null, det:null, on:false, roi:null, roiKey:'', alt:false, canvas:null, ctx:null,
+  async start(video){
+    try{
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1920 }, height:{ ideal:1080 } }, audio:false });
+    }catch(err){ return 'nocam:' + (err && err.name || 'unknown'); }
+    if ('BarcodeDetector' in window){
+      try{ this.det = new BarcodeDetector({ formats:['qr_code'] }); }catch(e){ this.det = null; }
+    }
+    video.srcObject = this.stream;
+    video.setAttribute('playsinline','');
+    await video.play().catch(()=>{});
+    const tr = this.stream.getVideoTracks()[0];
+    R.cam.track = tr ? tr.label : '';
+    try{ R.cam.settings = tr.getSettings ? tr.getSettings() : null; }catch(e){}
+    try{ R.cam.caps = tr.getCapabilities ? tr.getCapabilities() : null; }catch(e){ R.cam.caps = null; }
+    /* 연속 자동초점 — 앱과 같은 순서(열린 뒤 따로, 실패는 무시) */
+    R.cam.focusApplied = false;
+    try{
+      if (tr && tr.getCapabilities && (tr.getCapabilities().focusMode || []).indexOf('continuous') >= 0){
+        await tr.applyConstraints({ advanced:[{ focusMode:'continuous' }] });
+        R.cam.focusApplied = true;
+      }
+    }catch(e){}
+    try{
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      R.cam.cameras = devs.filter(d => d.kind === 'videoinput').map(d => d.label || '(이름 없음)');
+    }catch(e){ R.cam.cameras = []; }
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d', { willReadFrequently:true });
+    this.on = true;
+    return true;
+  },
+  roiOf_(video){
+    const frame = $('camFrame'), cam = frame && frame.parentElement;
+    if (!cam) return null;
+    const cw = cam.clientWidth, ch = cam.clientHeight;
+    if (!cw || !ch) return null;
+    const key = cw + 'x' + ch + '/' + video.videoWidth + 'x' + video.videoHeight;
+    if (this.roiKey === key) return this.roi;
+    const cr = cam.getBoundingClientRect(), fr = frame.getBoundingClientRect();
+    if (!fr.width) return null;
+    const s  = Math.max(cw / video.videoWidth, ch / video.videoHeight);
+    const ox = (video.videoWidth  * s - cw) / 2;
+    const oy = (video.videoHeight * s - ch) / 2;
+    const grow = fr.width * (CROP_PAD - 1) / 2;
+    const x = (fr.left - cr.left - grow + ox) / s;
+    const y = (fr.top  - cr.top  - grow + oy) / s;
+    const w = (fr.width  + grow * 2) / s;
+    const h = (fr.height + grow * 2) / s;
+    const x0 = Math.max(0, x), y0 = Math.max(0, y);
+    const x1 = Math.min(video.videoWidth, x + w), y1 = Math.min(video.videoHeight, y + h);
+    const roi = { x:Math.round(x0), y:Math.round(y0), w:Math.round(x1 - x0), h:Math.round(y1 - y0) };
+    this.roiKey = key;
+    this.roi = (roi.w > 40 && roi.h > 40) ? roi : null;
+    return this.roi;
+  },
+  /* 앱의 read_ 와 같다. 다만 어느 경로가 잡았는지·좌표를 함께 돌려준다(측정용) */
+  async read_(video, crop, forceJs){
+    let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight, w, h;
+    if (crop){
+      const r = this.roiOf_(video);
+      if (!r) return null;
+      sx = r.x; sy = r.y; sw = r.w; sh = r.h; w = sw; h = sh;
+      const fit = w > CROP_MAX ? CROP_MAX / w : (w < CROP_MIN ? CROP_MIN / w : 1);
+      if (fit !== 1){ w = Math.round(w * fit); h = Math.round(h * fit); }
+    } else {
+      if (this.det && !forceJs){
+        const codes = await this.det.detect(video);
+        return (codes && codes.length) ? { text:codes[0].rawValue, pts:codes[0].cornerPoints, scale:1 } : null;
+      }
+      w = SCAN_W; h = Math.round(sh * (SCAN_W / sw));
+    }
+    const c = this.canvas, g = this.ctx;
+    c.width = w; c.height = h;
+    g.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+    if (this.det && !forceJs){
+      const codes = await this.det.detect(c);
+      if (!codes || !codes.length) return null;
+      return { text:codes[0].rawValue, pts:codes[0].cornerPoints, scale:sw / w, ox:sx, oy:sy };
+    }
+    const img = g.getImageData(0, 0, w, h);
+    const r = jsQR(img.data, w, h, { inversionAttempts:'dontInvert' });
+    if (!r) return null;
+    const L = r.location;
+    return { text:r.data, version:r.version, scale:sw / w, ox:sx, oy:sy,
+      pts:[L.topLeftCorner, L.topRightCorner, L.bottomRightCorner, L.bottomLeftCorner] };
+  },
+  stop(){
+    this.on = false;
+    if (this.stream){ this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
+  }
+};
+
+/* QR 한 변이 영상에서 몇 픽셀인가 — 벤치마크의 '필요 px'과 직접 맞대는 값 */
+function sideOf(res){
+  if (!res || !res.pts || res.pts.length < 4) return null;
+  const p = res.pts, s = res.scale || 1;
+  const d = (a, b) => Math.hypot((a.x - b.x), (a.y - b.y)) * s;
+  return Math.round((d(p[0], p[1]) + d(p[1], p[2]) + d(p[2], p[3]) + d(p[3], p[0])) / 4);
+}
+/* 프레임 품질 — ROI 를 작게 줄여서 잰다(매 틱 도는 것이라 비용을 묶어 둔다) */
+const MET = { c:null, g:null, prev:null };
+function metrics(video, roi){
+  if (!MET.c){ MET.c = $('cvm'); MET.c.width = 96; MET.c.height = 96; MET.g = MET.c.getContext('2d', { willReadFrequently:true }); }
+  const g = MET.g;
+  if (roi) g.drawImage(video, roi.x, roi.y, roi.w, roi.h, 0, 0, 96, 96);
+  else g.drawImage(video, 0, 0, 96, 96);
+  const d = g.getImageData(0, 0, 96, 96).data;
+  const y = new Float32Array(96 * 96);
+  let sum = 0, clip = 0;
+  for (let i = 0, j = 0; i < d.length; i += 4, j++){
+    const v = d[i] * .299 + d[i+1] * .587 + d[i+2] * .114;
+    /* ⚠️ 밝게 날아간 것만 센다. 어두운 픽셀까지 같이 세면 **QR의 검정 칸이 반사로 잡혀**
+       흰 종이에 인쇄된 정상 라벨이 늘 "반사 심함"으로 나온다(헤드리스가 잡은 오탐). */
+    y[j] = v; sum += v; if (v > 250) clip++;
+  }
+  const mean = sum / y.length;
+  let varSum = 0, sharp = 0;
+  for (let r = 1; r < 95; r++) for (let c = 1; c < 95; c++){
+    const i = r * 96 + c;
+    const lap = 4 * y[i] - y[i-1] - y[i+1] - y[i-96] - y[i+96];
+    sharp += lap * lap;
+    const dv = y[i] - mean; varSum += dv * dv;
+  }
+  const n = 94 * 94;
+  let diff = 0;
+  if (MET.prev){ for (let i = 0; i < y.length; i++) diff += Math.abs(y[i] - MET.prev[i]); diff /= y.length; }
+  MET.prev = y;
+  return {
+    sharp: Math.round(Math.sqrt(sharp / n)),          // 초점 흐릴수록 작아진다
+    lum: Math.round(mean),
+    rms: Math.round(Math.sqrt(varSum / n)),
+    clip: Math.round(clip / y.length * 100),          // 반사·과노출
+    move: Math.round(diff)
+  };
+}
+function thumb(video, roi){
+  const c = document.createElement('canvas'); c.width = 160; c.height = 160;
+  const g = c.getContext('2d');
+  if (roi) g.drawImage(video, roi.x, roi.y, roi.w, roi.h, 0, 0, 160, 160);
+  else g.drawImage(video, 0, 0, 160, 160);
+  try{ return c.toDataURL('image/jpeg', .7); }catch(e){ return ''; }
+}
+
+function paintRing(p){
+  const f = Math.max(0, Math.min(1, p));
+  $('camVal').setAttribute('stroke-dashoffset', (RING_LEN - f * RING_LEN).toFixed(2));
+}
+function drawRoiBox(video){
+  const roi = Cam.roi, cam = $('camWrap');
+  const box = $('roiBox');
+  if (!roi || !video.videoWidth){ box.style.display = 'none'; return; }
+  const cw = cam.clientWidth, ch = cam.clientHeight;
+  const s  = Math.max(cw / video.videoWidth, ch / video.videoHeight);
+  const ox = (video.videoWidth * s - cw) / 2, oy = (video.videoHeight * s - ch) / 2;
+  box.style.display = 'block';
+  box.style.left   = (roi.x * s - ox) + 'px';
+  box.style.top    = (roi.y * s - oy) + 'px';
+  box.style.width  = (roi.w * s) + 'px';
+  box.style.height = (roi.h * s) + 'px';
+}
+
+/* B1 — 앱과 완전히 같은 1경로. 여기서 나온 tick 간격·성공률만 타이밍 판정에 쓴다.
+   ⚠️ 여기에 경로를 더 얹으면 tick 이 늘어져 측정 자체가 오염된다. */
+async function phase1(video){
+  const v = $('v'), end = performance.now() + B1_MS;
+  let holdProg = 0, holdSeen = 0, holdKey = '', lastT = 0;
+  return new Promise(resolve => {
+    const tick = async () => {
+      if (!Cam.on || performance.now() > end) return resolve();
+      const t0 = performance.now();
+      let res = null, via = '';
+      try{
+        if (v.videoWidth){
+          const roi = Cam.roiOf_(v);
+          if (roi){ res = await Cam.read_(v, true); if (res) via = 'ROI'; }
+          if (!res && (!roi || (Cam.alt = !Cam.alt))){ res = await Cam.read_(v, false); if (res) via = '전체'; }
+        }
+      }catch(e){}
+      const t1 = performance.now();
+      /* ⚠️ 이 구간에 무거운 것을 얹지 말 것 — B1 의 존재 이유가 **앱과 같은 tick 을 재는 것**이다.
+         썸네일 저장(toDataURL)은 일부러 B2 로 옮겼다. metrics 는 96x96 한 장이라 남긴다. */
+      const m = v.videoWidth ? metrics(v, Cam.roi) : null;
+      const rec = { t:Math.round(t1), ms:Math.round(t1 - t0), ok:!!res, via:via,
+                    side: sideOf(res), m:m, text: res ? res.text : null, ver: res ? res.version : null };
+      /* QR 중심을 **영상 전체 기준 0~1** 로 환산해 둔다(3x3 격자용) */
+      if (res && res.pts && res.pts.length >= 4 && v.videoWidth){
+        const s = res.scale || 1, ox = res.ox || 0, oy = res.oy || 0;
+        let cx = 0, cy = 0;
+        for (const p of res.pts){ cx += p.x * s + ox; cy += p.y * s + oy; }
+        rec.nx = (cx / res.pts.length) / v.videoWidth;
+        rec.ny = (cy / res.pts.length) / v.videoHeight;
+      }
+      R.b1.push(rec);
+      /* 홀드 링 — 앱과 같은 산수로 화면에도 그린다(현아가 평소 보던 것과 같아야 한다) */
+      const now = t1;
+      if (res){ if (res.text !== holdKey){ holdKey = res.text; holdProg = 0; } holdSeen = now; }
+      const dt = lastT ? now - lastT : 0; lastT = now;
+      const alive = holdKey && (now - holdSeen) < HOLD_GRACE;
+      holdProg = Math.max(0, Math.min(1, holdProg + (alive ? dt : -dt) / HOLD_MS));
+      paintRing(holdProg);
+      drawRoiBox(v);
+      $('camLive').textContent = '읽음 ' + (res ? '○' : '−') + ' · ' + Math.round(holdProg * 100) + '%' +
+        (via ? ' · ' + via : '') + (rec.side ? ' · QR ' + rec.side + 'px' : '') +
+        (m ? ' · 선명도 ' + m.sharp : '');
+      $('camBar').style.width = ((1 - (end - performance.now()) / B1_MS) * 50) + '%';
+      setTimeout(() => requestAnimationFrame(tick), Cam.det ? 90 : 140);
+    };
+    tick();
+  });
+}
+
+/* B2 — 같은 프레임에 4경로를 다 돌려 어느 것이 잡는지 본다.
+   ⚠️ tick 이 느려지므로 **타이밍 판정에는 쓰지 않는다.** */
+async function phase2(video){
+  const v = $('v'), end = performance.now() + B2_MS;
+  /* B1 에서 한 번도 못 읽었으면 이 45초를 **거리 스윕**으로 쓴다.
+     선명도가 어떤 거리에서 확 올라가면 초점은 잡히는 것이고(=크기 문제),
+     내내 낮으면 초점 자체가 안 잡히는 것이다. 이걸로 두 원인이 갈린다. */
+  const blind = R.b1.length > 0 && R.b1.every(r => !r.ok);
+  $('camHint').textContent = blind ? '라벨을 천천히 가까이, 그다음 멀리 움직여 주세요' : '그대로 조금만 더 비춰 주세요';
+  R.cam.sweep = blind;
+  let best = { sharp:-1, img:'' }, worst = { sharp:1e9, img:'' };
+  return new Promise(resolve => {
+    const tick = async () => {
+      if (!Cam.on || performance.now() > end){
+        R.cam.best = best; R.cam.worst = worst;
+        return resolve();
+      }
+      const row = { t:Math.round(performance.now()) };
+      if (v.videoWidth){
+        const roi = Cam.roiOf_(v);
+        try{ row.roiJs   = roi ? !!(await Cam.read_(v, true,  true)) : null; }catch(e){ row.roiJs = null; }
+        try{ row.fullJs  = !!(await Cam.read_(v, false, true)); }catch(e){ row.fullJs = null; }
+        if (Cam.det){
+          try{ row.roiBd  = roi ? !!(await Cam.read_(v, true,  false)) : null; }catch(e){ row.roiBd = null; }
+          try{ row.fullBd = !!(await Cam.read_(v, false, false)); }catch(e){ row.fullBd = null; }
+        }
+        const m = metrics(v, Cam.roi);
+        row.sharp = m.sharp;
+        /* 눈으로 보는 증거는 여기서 모은다 — B1 의 tick 을 오염시키지 않으려고 옮긴 것 */
+        if (m.sharp > best.sharp)  best  = { sharp:m.sharp, img:thumb(v, Cam.roi) };
+        if (m.sharp < worst.sharp) worst = { sharp:m.sharp, img:thumb(v, Cam.roi) };
+      }
+      R.b2.push(row);
+      drawRoiBox(v);
+      const left = Math.ceil((end - performance.now()) / 1000);
+      $('camLive').textContent = '경로별로 비교하는 중 · ' + left + '초';
+      $('camBar').style.width = (50 + (1 - (end - performance.now()) / B2_MS) * 50) + '%';
+      setTimeout(() => requestAnimationFrame(tick), 60);
+    };
+    tick();
+  });
+}
+
+/* ══ C단 — 홀드 재생 + 판정 ══════════════════════════
+   측정된 타임라인에 실제 Hold 산수를 그대로 돌린다. 손잡이를 바꿔 다시 돌리면
+   "무엇이 실제로 고치는가"를 이 폰 데이터 위에서 비교할 수 있다(추측 아님). */
+function replayHold(timeline, grace, ms){
+  let prog = 0, seen = -1e9, key = '', last = 0, fills = 0, maxProg = 0, rewinds = 0;
+  for (const r of timeline){
+    const now = r.t;
+    if (r.ok){ if (r.text !== key){ key = r.text; prog = 0; } seen = now; }
+    const dt = last ? now - last : 0; last = now;
+    const alive = key && (now - seen) < grace;
+    const before = prog;
+    prog = Math.max(0, Math.min(1, prog + (alive ? dt : -dt) / ms));
+    if (prog < before - 0.02) rewinds++;
+    if (prog > maxProg) maxProg = prog;
+    if (prog >= 1){ fills++; prog = 0; key = ''; seen = -1e9; }
+  }
+  return { fills, maxProg:Math.round(maxProg * 100), rewinds };
+}
+/* 가장 길게 끊긴 구간(ms). 한 번도 못 읽었으면 0이 아니라 **null** 이다 —
+   0으로 돌려주면 "끊김 없음 = 좋음"으로 읽혀 정반대 뜻이 된다(음성 테스트가 적발). */
+function gaps(timeline){
+  let g = 0, lastOkT = null;
+  for (const r of timeline){
+    if (r.ok){ lastOkT = r.t; }
+    else if (lastOkT !== null){ const cur = r.t - lastOkT; if (cur > g) g = cur; }
+  }
+  return lastOkT === null ? null : Math.round(g);
+}
+function median(a){ if (!a.length) return null; const s = a.slice().sort((x,y)=>x-y); return s[Math.floor(s.length/2)]; }
+
+function analyse(){
+  const b1 = R.b1, seen = b1.filter(r => r.ok);
+  const ticks = [];
+  for (let i = 1; i < b1.length; i++) ticks.push(b1[i].t - b1[i-1].t);
+  const tickMed = median(ticks);
+  const okRate = b1.length ? Math.round(seen.length / b1.length * 100) : 0;
+  const maxGap = gaps(b1);
+  const sides = seen.map(r => r.side).filter(Boolean);
+  const sideMed = median(sides);
+  const sharpsOk = seen.map(r => r.m && r.m.sharp).filter(v => v != null);
+  const sharpsNo = b1.filter(r => !r.ok).map(r => r.m && r.m.sharp).filter(v => v != null);
+  const st = R.cam.settings || {};
+  const res = (st.width && st.height) ? st.width + 'x' + st.height : ($('v').videoWidth + 'x' + $('v').videoHeight);
+  const ar = st.width && st.height ? (st.width / st.height).toFixed(2) : null;
+
+  const A = R.stats = {
+    ticks: b1.length, okRate, tickMed, maxGap, sideMed,
+    sharpOk: median(sharpsOk), sharpNo: median(sharpsNo),
+    res, ar,
+    replay: replayHold(b1, HOLD_GRACE, HOLD_MS),
+    replay300: replayHold(b1, 300, HOLD_MS),
+    replayTick: replayHold(b1, Math.max(200, (tickMed || 100) * 2.5), HOLD_MS),
+    label: seen.length ? seen[seen.length - 1].text : null
+  };
+  /* 판본 판정 — 원문을 그대로 봐야 어느 라벨을 쥐었는지 갈린다 */
+  A.variant = !A.label ? '읽지 못함'
+    : A.label.indexOf('exec?copyId=') >= 0 ? '옛 라벨(41모듈·EC L)'
+    : A.label.indexOf('/q?i=') >= 0 ? '새 라벨(33모듈·EC M) — 16mm인지 21mm인지는 자로 재야 갈려요'
+    : /^[A-Z]{2}-\d{6}-\d{4}$/i.test(A.label.trim()) ? '순수 ID 라벨(주소가 없는 옛 판본)'
+    : '우리 라벨이 아님';
+
+  /* B2 경로 비교 */
+  const cnt = k => R.b2.filter(r => r[k] === true).length;
+  A.paths = { roiJs:cnt('roiJs'), fullJs:cnt('fullJs'), roiBd:cnt('roiBd'), fullBd:cnt('fullBd'), n:R.b2.length };
+
+  /* ── 판정 트리 — 확인됨 / 배제됨 / 미판정. 없는 숫자를 추정으로 채우지 않는다 ── */
+  const V = R.verdicts = [];
+  const add = (state, title, why) => V.push({ state, title, why });
+
+  if (!R.cam.opened){ add('un', '카메라를 못 열었어요', R.cam.err || '권한이나 기기 문제일 수 있어요.'); return; }
+
+  // 1. 스트림 해상도
+  const w = st.width || $('v').videoWidth;
+  if (!w) add('un', '스트림 해상도', '값을 못 읽었어요.');
+  else if (w >= 1280) add('ok', '카메라 해상도는 충분해요', res + ' 로 열렸어요.');
+  else add('no', '카메라가 낮은 해상도로 열렸어요', res + '. 요청은 1920인데 이만큼만 열렸어요 — QR 픽셀이 그만큼 줄어요.');
+
+  // 2. 디코더 경로
+  if (!R.env.hasBD) add('no', '이 브라우저엔 내장 QR 인식기가 없어요',
+    '브라우저 = ' + R.env.webview + '. 앱이 jsQR 로 도는 쪽이라 확인 주기가 길어지고, 한 프레임만 놓쳐도 링이 되감겨요.');
+  else add('ok', '내장 QR 인식기를 써요', '앱에서 빠른 쪽 경로로 돌아요.');
+
+  // 3. 실제 tick
+  if (tickMed == null) add('un', '확인 주기', '샘플이 부족해요.');
+  else if (tickMed > HOLD_GRACE) add('no', '확인 주기가 여유보다 길어요',
+    '실측 ' + tickMed + 'ms > 여유 ' + HOLD_GRACE + 'ms. 한 프레임만 늦어도 링이 되감겨요.');
+  else add('ok', '확인 주기는 여유 안이에요', '실측 ' + tickMed + 'ms.');
+
+  // 4. 인식 자체가 되나
+  if (okRate === 0) add('no', 'QR을 한 번도 못 읽었어요', b1.length + '번 봤는데 0번 읽혔어요.');
+  else if (okRate < 60) add('no', '읽다 말다 해요', b1.length + '번 중 ' + okRate + '%만 읽혔어요. 가장 길게 끊긴 구간 ' + maxGap + 'ms.');
+  else add('ok', '대체로 잘 읽혀요', okRate + '% 읽혔어요.');
+
+  /* 5. 초점 — 읽힌 순간과 못 읽은 순간의 선명도를 비교한다. 이게 "정말 초점인가"의 답이다.
+     한 번도 못 읽었으면 비교 대상이 없으므로, 거리 스윕에서 선명도가 오르내렸는지로 대신 가른다. */
+  const b2s = R.b2.map(r => r.sharp).filter(v => v != null);
+  A.sharpMin = b2s.length ? Math.min.apply(null, b2s) : null;
+  A.sharpMax = b2s.length ? Math.max.apply(null, b2s) : null;
+  A.sharpMed = median(b2s);
+  if (okRate === 0 && R.cam.sweep && A.sharpMax != null){
+    if (A.sharpMed && A.sharpMax > A.sharpMed * 1.6)
+      add('no', '초점은 잡히는데도 못 읽었어요',
+        '거리를 바꾸니 선명도가 ' + A.sharpMed + '에서 ' + A.sharpMax + '까지 올라갔는데도 못 읽었어요 — QR이 너무 작거나 촘촘한 쪽이에요.');
+    else
+      add('no', '어느 거리에서도 초점이 안 잡혔어요',
+        '선명도가 ' + A.sharpMin + '~' + A.sharpMax + ' 사이에만 머물렀어요. 카메라가 이 거리에서 초점을 못 잡아요.');
+  }
+  else if (A.sharpNo == null && A.sharpOk != null) add('ok', '초점 문제는 안 보여요', '못 읽은 순간이 없어서 비교할 게 없어요.');
+  else if (A.sharpOk == null || A.sharpNo == null) add('un', '초점', '비교할 표본이 모자라요.');
+  else if (A.sharpNo < A.sharpOk * 0.75)
+    add('no', '못 읽을 때는 화면이 흐렸어요',
+      '읽힘 선명도 ' + A.sharpOk + ' vs 못 읽음 ' + A.sharpNo + '. 초점이 원인 쪽이에요.');
+  else
+    add('ok', '초점 때문은 아니에요',
+      '읽힘 ' + A.sharpOk + ' vs 못 읽음 ' + A.sharpNo + ' 로 선명도 차이가 거의 없어요.');
+
+  // 6. QR 픽셀 vs 벤치마크 임계 — 산수로 갈린다
+  const isOld = A.variant.indexOf('옛') === 0;
+  const bkey = isOld ? 'old' : 'new';
+  const need0 = (R.bench.find(b => b.variant === bkey && b.blur === 0 && b.decoder === (R.env.hasBD ? 'BarcodeDetector' : 'jsQR')) || {}).needPx;
+  const need2 = (R.bench.find(b => b.variant === bkey && b.blur === 2 && b.decoder === (R.env.hasBD ? 'BarcodeDetector' : 'jsQR')) || {}).needPx;
+  if (sideMed == null) add('un', 'QR이 영상에서 몇 픽셀인가', '한 번도 못 읽어서 못 쟀어요.');
+  else if (need0 == null) add('un', 'QR 픽셀 여유', '기준선을 못 얻었어요.');
+  else if (sideMed < need0) add('no', 'QR이 너무 작게 잡혀요', '실측 ' + sideMed + 'px인데 또렷해도 ' + need0 + 'px은 있어야 읽혀요.');
+  else if (need2 != null && sideMed < need2) add('no', '여유가 거의 없어요',
+    '실측 ' + sideMed + 'px. 또렷하면 ' + need0 + 'px로 되지만 조금만 흐려도 ' + need2 + 'px이 필요해요 — 살짝 흔들리면 바로 끊겨요.');
+  else add('ok', 'QR 크기는 여유가 있어요', '실측 ' + sideMed + 'px (필요 ' + need0 + 'px).');
+
+  // 7. ROI 크롭이 사나
+  if (!Cam.roi) add('no', '크롭 경로를 못 써요', '화면 비율 때문에 QR 언저리만 보는 경로가 꺼졌어요 — 화면 전체만 보고 있어요.');
+  else if (A.paths.n){
+    const roiN = R.env.hasBD ? A.paths.roiBd : A.paths.roiJs;
+    const fullN = R.env.hasBD ? A.paths.fullBd : A.paths.fullJs;
+    /* ⚠️ 둘 다 0이면 경로를 비교할 근거가 없다 — '정상'으로 떨어뜨리지 말 것(음성 테스트가 잡은 오판) */
+    if (roiN === 0 && fullN === 0) add('un', '어느 경로가 나은지 못 가렸어요', A.paths.n + '번 봤는데 어느 쪽도 못 읽었어요.');
+    else if (roiN === 0) add('no', '크롭 경로가 못 잡아요', '전체 화면은 ' + fullN + '번 잡았는데 크롭은 0번이에요 — 크롭이 엉뚱한 곳을 보고 있을 수 있어요.');
+    else add('ok', '크롭 경로가 잘 잡아요', '크롭 ' + roiN + '번 · 전체 ' + fullN + '번 (' + A.paths.n + '번 중)');
+  }
+
+  /* 8. 밝게 날아간 비율 — 숫자만 리포트에 남기고 **판정은 내지 않는다.**
+     ⛔ 예전엔 "빛 반사가 있어요" 판정을 냈는데, 흰 종이 라벨은 원래 밝아서
+        *또렷한 정상 라벨*과 *흐려서 못 읽는 라벨* 양쪽에서 똑같이 95%가 나왔다(음성 테스트가 적발).
+        가르지 못하는 지표로 원인을 지목하면 현아쌤을 엉뚱한 곳(조명 바꾸기)으로 보낸다.
+        다시 판정으로 승격하려면 *국소* 포화(블록 단위 편차)를 재는 지표부터 만들 것. */
+  const clips = b1.map(r => r.m && r.m.clip).filter(v => v != null);
+  A.clip = median(clips);
+
+  // 9. 홀드 재생 — 현아가 본 그 증상을 숫자로
+  const rp = A.replay;
+  if (rp.fills > 0) add('ok', '링이 끝까지 찼어요', B1_MS / 1000 + '초 동안 ' + rp.fills + '번 완성됐어요.');
+  else add('no', '링이 한 번도 안 찼어요',
+    '가장 많이 찬 게 ' + rp.maxProg + '%이고 ' + rp.rewinds + '번 되감겼어요. 현아쌤이 본 그 화면이에요.');
+
+  // 10. 손잡이 A/B — 무엇이 고치나
+  if (rp.fills === 0){
+    if (A.replay300.fills > 0) add('ok', '여유를 300ms로 늘리면 찼을 거예요', '같은 데이터로 다시 돌리니 ' + A.replay300.fills + '번 완성돼요.');
+    else if (A.replayTick.fills > 0) add('ok', '여유를 확인 주기에 맞추면 찼을 거예요', A.replayTick.fills + '번 완성돼요.');
+    else add('un', '여유를 늘려도 안 돼요', '인식 자체가 모자라서 손잡이로는 안 풀려요.');
+  }
+}
+
+/* ══ 리포트 ══════════════════════════════════════ */
+function buildReport(){
+  const e = R.env, A = R.stats || {}, st = R.cam.settings || {};
+  const L = [];
+  L.push('[08 반출납 QR 인식 점검] ' + new Date().toLocaleString('ko-KR'));
+  L.push('기기 ' + (e.model || '모름') + ' · ' + (e.platform || '') + ' · ' + e.webview);
+  L.push('화면 ' + e.screen + ' · 메모리 ' + (e.mem || '?') + 'GB · 코어 ' + (e.cpu || '?'));
+  L.push('내장인식기 ' + (e.hasBD ? '있음' : '없음') + ' · 액자안 ' + (e.topLevel ? '아니오' : '예') + ' · 자기검증 ' + (e.selfTest || '-'));
+  L.push('');
+  L.push('[카메라]');
+  if (!R.cam.opened){ L.push('  열지 못함 — ' + (R.cam.err || '')); }
+  else{
+    L.push('  스트림 ' + A.res + (A.ar ? ' (비율 ' + A.ar + ')' : '') + ' · ' + (st.frameRate ? Math.round(st.frameRate) + 'fps' : ''));
+    L.push('  트랙 ' + (R.cam.track || '(이름 없음)'));
+    L.push('  후면 카메라 후보 ' + ((R.cam.cameras || []).length) + '개' + ((R.cam.cameras || []).length ? ' — ' + R.cam.cameras.join(' / ') : ''));
+    const cp = R.cam.caps || {};
+    L.push('  초점 ' + ((cp.focusMode || []).join('/') || '조절 불가') + (R.cam.focusApplied ? ' · continuous 적용됨' : ' · continuous 미적용'));
+    L.push('  줌 ' + (cp.zoom ? cp.zoom.min + '~' + cp.zoom.max : '없음') + ' · 손전등 ' + (cp.torch ? '있음' : '없음'));
+    L.push('  ROI 크롭 ' + (Cam.roi ? Cam.roi.w + 'x' + Cam.roi.h + ' @' + Cam.roi.x + ',' + Cam.roi.y : '못 씀'));
+  }
+  L.push('');
+  L.push('[디코더 기준선] px/모듈 → 필요한 QR 픽셀');
+  for (const b of R.bench) L.push('  ' + b.name + ' ' + b.mods + '모듈 · ' + b.decoder + ' · 흐림' + b.blur + ' → ' +
+    (b.thr === null ? '못 읽음' : b.thr + ' / QR ' + b.needPx + 'px'));
+  L.push('');
+  if (R.cam.opened){
+    L.push('[실측]');
+    L.push('  라벨 판본 ' + (A.variant || '-'));
+    L.push('  읽은 원문 ' + (A.label || '(없음)'));
+    L.push('  확인 주기 중앙값 ' + (A.tickMed == null ? '-' : A.tickMed + 'ms') + ' (여유 ' + HOLD_GRACE + 'ms)');
+    L.push('  인식률 ' + A.okRate + '% (' + A.ticks + '틱) · 가장 긴 끊김 ' + (A.maxGap == null ? '잰 적 없음(한 번도 못 읽음)' : A.maxGap + 'ms'));
+    L.push('  QR 한 변 중앙값 ' + (A.sideMed == null ? '-' : A.sideMed + 'px'));
+    L.push('  선명도 읽힘 ' + (A.sharpOk == null ? '-' : A.sharpOk) + ' vs 못읽음 ' + (A.sharpNo == null ? '-' : A.sharpNo));
+    L.push('  선명도 범위(B2' + (R.cam.sweep ? ' 거리스윕' : '') + ') ' +
+      (A.sharpMin == null ? '-' : A.sharpMin + ' ~ ' + A.sharpMax + ' (중앙 ' + A.sharpMed + ')'));
+    L.push('  밝게 날아간 픽셀 ' + (A.clip == null ? '-' : A.clip + '%') + ' (흰 종이라 원래 높다 — 판정 근거로 쓰지 않음)');
+    L.push('  경로별 성공(B2 ' + A.paths.n + '틱) 크롭jsQR ' + A.paths.roiJs + ' · 전체jsQR ' + A.paths.fullJs +
+      ' · 크롭내장 ' + A.paths.roiBd + ' · 전체내장 ' + A.paths.fullBd);
+    L.push('  격자별 성공 ' + (R.gridTxt || '-'));
+    L.push('');
+    L.push('[홀드 재생] 여유200 = ' + A.replay.fills + '회 완성 / 최대 ' + A.replay.maxProg + '% / 되감김 ' + A.replay.rewinds +
+      '  |  여유300 = ' + A.replay300.fills + '회  |  주기x2.5 = ' + A.replayTick.fills + '회');
+  }
+  L.push('');
+  L.push('[판정]');
+  for (const v of R.verdicts) L.push('  ' + (v.state === 'ok' ? '[정상]' : v.state === 'no' ? '[문제]' : '[미판정]') + ' ' + v.title + ' — ' + v.why);
+  if (R.notes.length){ L.push(''); L.push('[참고]'); for (const n of R.notes) L.push('  ' + n); }
+  return L.join('\n');
+}
+
+/* 프레임 3×3 어디에서 읽혔나 — 인식 범위를 눈으로.
+   ⚠️ 좌표는 **영상 픽셀 기준으로 환산한 뒤에** 센다. 크롭 경로의 점은 잘라낸 캔버스 좌표라
+      ox/oy 를 더하지 않으면 전부 왼쪽 위로 몰려 "가운데서만 읽힌다"는 거짓 그림이 나온다. */
+function buildGrid(){
+  const cells = new Array(9).fill(0);
+  let counted = 0;
+  for (const r of R.b1){
+    if (!r.ok || r.nx == null) continue;
+    const col = Math.min(2, Math.max(0, Math.floor(r.nx * 3)));
+    const row = Math.min(2, Math.max(0, Math.floor(r.ny * 3)));
+    cells[row * 3 + col]++; counted++;
+  }
+  const g = $('grid3');
+  g.innerHTML = '';
+  for (let i = 0; i < 9; i++){
+    const el = document.createElement('i');
+    el.textContent = cells[i] || '';
+    if (cells[i]) el.style.background = 'var(--green100)';
+    g.appendChild(el);
+  }
+  R.gridTxt = counted ? cells.join(',') : '표본 없음';
+  $('gridCap').textContent = counted ? '프레임 어디에서 읽혔나 (' + counted + '번)' : '읽힌 적이 없어 표시할 게 없어요';
+}
+
+/* ══ 화면 전환 ══════════════════════════════════ */
+function show(id){
+  document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === id));
+}
+function renderVerdicts(){
+  let h = '';
+  for (const v of R.verdicts){
+    const cls = v.state === 'no' ? 'card bad' : v.state === 'ok' ? 'card ok' : 'card';
+    const b = v.state === 'no' ? '<span class="badge b-no">문제</span>'
+            : v.state === 'ok' ? '<span class="badge b-ok">정상</span>'
+            : '<span class="badge b-un">미판정</span>';
+    h += '<div class="' + cls + '"><h3>' + b + ' ' + v.title + '</h3><p>' + v.why + '</p></div>';
+  }
+  $('verdicts').innerHTML = h;
+}
+
+async function finish(){
+  Cam.stop();
+  try{ analyse(); }catch(e){ R.verdicts.push({ state:'un', title:'분석 중 문제가 생겼어요', why:String(e && e.message || e) }); }
+  try{ buildGrid(); }catch(e){}
+  renderVerdicts();
+  const b = R.cam.best, w = R.cam.worst;
+  if (b && b.img) $('shotBest').src = b.img;
+  if (w && w.img) $('shotWorst').src = w.img;
+  $('report').textContent = buildReport();
+  show('s-done');
+}
+
+$('go').onclick = async () => {
+  $('go').disabled = true;
+  await collectEnv();
+  await runBench();
+  show('s-cam');
+  const v = $('v');
+  const r = await Cam.start(v);
+  if (r !== true){
+    R.cam.opened = false; R.cam.err = r;
+    return finish();
+  }
+  R.cam.opened = true;
+  const st = R.cam.settings || {};
+  $('topRes').textContent = (st.width || v.videoWidth) + ' x ' + (st.height || v.videoHeight);
+  $('topSub').textContent = '비율 ' + ((st.width && st.height) ? (st.width / st.height).toFixed(2) : '?') +
+    ' · ' + (Cam.det ? '내장 인식기' : 'jsQR') + ' · ' + (st.frameRate ? Math.round(st.frameRate) + 'fps' : '');
+  await phase1(v);
+  await phase2(v);
+  finish();
+};
+$('skip').onclick = finish;
+$('again').onclick = () => location.reload();
+$('copy').onclick = async () => {
+  const t = $('report').textContent;
+  try{ await navigator.clipboard.writeText(t); $('copy').textContent = '복사했어요'; }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); $('copy').textContent = '복사했어요'; }
+    catch(e2){ $('copy').textContent = '복사가 안 돼요 — 아래 글을 길게 눌러 복사해 주세요'; }
+    ta.remove();
+  }
+  setTimeout(() => { $('copy').textContent = '결과 복사'; }, 2200);
+};
+
+/* 진입 경고 — 카메라를 못 쓰는 환경이면 시작 전에 알린다 */
+(function(){
+  const w = [];
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) w.push('이 브라우저는 카메라를 쓸 수 없어요. 크롬에서 열어 주세요.');
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') w.push('https 주소로 열어야 카메라가 켜져요.');
+  if (w.length) $('warnBox').innerHTML = '<div class="card bad"><h3>먼저 확인해 주세요</h3><p>' + w.join('<br>') + '</p></div>';
+})();
+</script>
+</body>
+</html>
