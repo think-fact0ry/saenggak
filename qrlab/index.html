@@ -125,26 +125,20 @@ canvas.hidden{ display:none }
 <body>
 <div id="app">
 
-  <!-- ① 안내 -->
+  <!-- ① 진입 = 버튼 하나 (유성 2026-08-31: "주소 들어가면 점검 시작 버튼만")
+       설명·준비물·안내 문구를 전부 뺐다. 무엇을 하는 도구인지는 링크를 건네는 자리에서 이미 말한다.
+       warnBox 는 설명이 아니라 **카메라를 못 쓰는 환경일 때만** 뜨는 기능 경고라 남긴다. -->
   <section class="scr on" id="s-intro">
-    <div class="pad" style="flex:1; overflow:auto">
-      <h1>QR 인식 점검</h1>
-      <p>책에 붙은 QR이 왜 안 읽히는지 이 폰에서 직접 재요. 2분쯤 걸려요.</p>
-      <div class="card">
-        <h3>준비할 것</h3>
-        <p>책에 붙어 있는 QR 라벨 한 장. 반출납 앱을 쓰던 그대로 들면 돼요.</p>
-      </div>
-      <p class="muted">찍은 화면은 이 폰 안에서만 쓰고 어디로도 보내지 않아요.</p>
+    <div class="pad" style="flex:1; display:flex; flex-direction:column; justify-content:center">
       <div id="warnBox"></div>
+      <button class="btn" id="go">점검 시작</button>
     </div>
-    <div class="foot"><button class="btn" id="go">시작</button></div>
   </section>
 
   <!-- ② 합성 벤치마크 -->
   <section class="scr" id="s-bench">
     <div class="pad" style="flex:1; overflow:auto">
       <h1>디코더 성능부터 재요</h1>
-      <p>카메라 없이, 이 폰이 QR을 얼마나 작게까지 읽는지 먼저 재요.</p>
       <div class="bar"><i id="benchBar"></i></div>
       <p class="muted" id="benchNow"></p>
       <div id="benchOut"></div>
