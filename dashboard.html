@@ -5,9 +5,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>오감쑥쑥 배정 대시보드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+  /* ⚠️ 옛 판은 `@import url(fonts.googleapis.com/…Pretendard…)` 였다 — Pretendard는 구글 폰트에 없어
+     이 파일은 줄곧 Noto Sans KR로 떨어져 렌더되고 있었다(2026-08-31 정정, 지도와 같은 CDN으로). */
   *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    /* §3.1 정본 토큰 — provider-map.html과 같은 값만 복사(이 파일은 그 지도의 자매 화면이다) */
+    --g300:#d1d6db; --g500:#8b95a1; --g700:#4e5968; --g900:#191f28;
+    --green600:#3a8a5f; --green700:#166841;
+    --wait-f:#f59e0b; --wait-s:#d97706; --wait-s-dark:#b45309; --wait-mid:#fcd9a0;
+    --ink-on-dark:#F9FBFA;                       /* §3.5 — 어두운 면 위 흰 글씨는 순백 금지 */
+    --sh1:0 1px 2px rgba(25,31,40,.06), 0 4px 10px rgba(25,31,40,.08);
+    --ease:cubic-bezier(.22,.85,.25,1);
+    /* 띠 치수 = 유성 조절판 확정치(2026-08-31, 지도와 같은 값) */
+    --ds-lab:12px; --ds-num:14px; --ds-gap:4px; --ds-unit:2px;
+  }
   body{font-family:'Pretendard','Noto Sans KR',sans-serif;color:#1a1a1a;background:#f0ebe4;line-height:1.6}
 
   .wrap{max-width:720px;margin:0 auto;padding:20px 16px 60px}
@@ -21,7 +34,7 @@
     background:#fff;border-radius:10px;padding:14px 12px;text-align:center;
     box-shadow:0 1px 4px rgba(0,0,0,.05);
   }
-  .sum-num{font-size:24px;font-weight:700;color:#3a6b4e}
+  .sum-num{font-size:24px;font-weight:700;color:var(--green700)}
   .sum-num.warn{color:#d97706}
   .sum-num.bad{color:#c0392b}
   .sum-label{font-size:11px;color:#999;margin-top:2px}
@@ -37,7 +50,7 @@
   .prov-table tr:hover td{background:#fafaf7}
   .prov-name{font-weight:600}
   .prov-bar-wrap{height:8px;background:#eee;border-radius:4px;overflow:hidden;min-width:60px}
-  .prov-bar{height:100%;background:#3a6b4e;border-radius:4px;transition:width .3s}
+  .prov-bar{height:100%;background:var(--green700);border-radius:4px;transition:width .3s}
 
   /* 지역 분포 */
   .dist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
@@ -47,15 +60,44 @@
     display:flex;justify-content:space-between;align-items:center;
   }
   .dist-name{font-size:13px;font-weight:600;color:#333}
-  .dist-count{font-size:18px;font-weight:700;color:#3a6b4e}
+  .dist-count{font-size:18px;font-weight:700;color:var(--green700)}
 
   /* 상태 분포 */
   .status-bar{display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
   .sb-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;transition:width .3s}
   .sb-assigned{background:#22c55e}
-  .sb-waiting{background:#f59e0b}
+  .sb-waiting{background:var(--wait-f)}
   .sb-absent{background:#fb923c}
   .sb-rejected{background:#ef4444}
+  .sb-nocoord{background:var(--g300)}          /* 좌표가 없어 지도에 못 뜨는 행 — 숨기지 않고 보여준다 */
+
+  /* ══ 대기 기간 슬라이더 — provider-map.html의 확정 컴포넌트를 그대로 옮겨 온 것 ══
+     확정(유성 08-31): 대기만 자른다 · 칸 5개 로그 간격 · 알약은 상자 밖 아래 · 원은 주황이고 누르면 작아진다
+     ⚠️ 대시보드 기본값은 지도(3개월)와 달리 **전체**다(유성 확정) — 저장 없음, 새로고침하면 전체로 돌아온다. */
+  .agebox{background:#fff;border-radius:10px;padding:13px 16px 20px;margin-bottom:18px;
+          box-shadow:0 1px 4px rgba(0,0,0,.05);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .wa{position:relative;width:180px;flex-shrink:0;height:18px;display:flex;align-items:center;
+      touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+  .wa.dragging{cursor:grabbing}
+  .wa .track{position:relative;width:100%;height:8px;border-radius:99px;
+    background:linear-gradient(90deg,var(--g300) 0%,var(--g300) 34%,var(--wait-mid) 70%,var(--wait-f) 100%)}
+  .wa .stops{position:absolute;left:0;right:0;top:50%;margin-top:-1.5px;height:3px;pointer-events:none}
+  .wa .stops i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;margin-left:-1.5px;opacity:.92}
+  .wa .thumb{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
+    background:#fff;border:4px solid var(--wait-s);box-shadow:0 1px 4px rgba(0,0,0,.2);z-index:2;
+    transition:transform .16s var(--ease), box-shadow .18s, border-color .18s}
+  .wa.dragging .thumb{transform:scale(.86);box-shadow:0 1px 3px rgba(0,0,0,.26);border-color:var(--wait-s-dark)}
+  .wa .pill{position:absolute;top:calc(100% + 3px);background:var(--g900);color:var(--ink-on-dark);z-index:1;
+    font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;
+    pointer-events:none;box-shadow:var(--sh1);letter-spacing:-.2px}
+  .wa.anim .thumb,.wa.anim .pill{transition:left .34s var(--ease), transform .16s var(--ease), box-shadow .18s, border-color .18s}
+  .wa:focus-visible{outline:2px solid var(--green600);outline-offset:3px;border-radius:8px}
+  .dash-stat{color:var(--g500);display:inline-flex;align-items:center;gap:var(--ds-gap);white-space:nowrap;line-height:1}
+  .dash-stat i{font-style:normal;font-size:var(--ds-lab);font-weight:600;color:var(--g500);line-height:1}
+  .dash-stat b{font-size:var(--ds-num);color:var(--green700);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.2px;line-height:1}
+  .dash-stat b + i{margin-left:calc(var(--ds-unit) - var(--ds-gap))}
+  .dash-stat b.den{color:var(--g700);margin:0}   /* 모수는 강조색 아님 — 유성 */
+  .agenote{font-size:11px;color:var(--g500);margin-left:auto}
   .status-legend{display:flex;gap:14px;font-size:11px;color:#888;flex-wrap:wrap}
   .status-legend span{display:flex;align-items:center;gap:4px}
   .sl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -65,7 +107,7 @@
 
   /* 링크 */
   .back-link{
-    display:inline-block;margin-bottom:16px;font-size:12px;color:#3a6b4e;
+    display:inline-block;margin-bottom:16px;font-size:12px;color:var(--green700);
     text-decoration:none;font-weight:600;
   }
   .back-link:hover{text-decoration:underline}
@@ -83,6 +125,16 @@
   <div class="page-title">오감쑥쑥 배정 대시보드</div>
   <div class="page-sub" id="timestamp">로딩 중...</div>
 
+  <!-- 대기 기간 슬라이더 (2026-08-31) — 지도와 같은 컴포넌트·같은 기준축. 기본값만 '전체'로 다르다. -->
+  <div class="agebox">
+    <div class="wa" id="waitAge" role="slider" aria-label="대기 기간" tabindex="0">
+      <div class="track"><div class="stops"></div><div class="thumb"></div></div>
+      <div class="pill"></div>
+    </div>
+    <span class="dash-stat" id="dashWait"><i>대기</i><b>0</b><i>명</i></span>
+    <span class="agenote" id="ageNote"></span>
+  </div>
+
   <!-- 요약 -->
   <div class="summary" id="summary">
     <div class="sum-card"><div class="sum-num" id="sTotal">-</div><div class="sum-label">전체 신청</div></div>
@@ -98,8 +150,9 @@
     <div class="status-legend">
       <span><div class="sl-dot" style="background:#22c55e"></div>배정</span>
       <span><div class="sl-dot" style="background:#f59e0b"></div>대기</span>
-      <span><div class="sl-dot" style="background:#fb923c"></div>부재</span>
+      <span><div class="sl-dot" style="background:#fb923c"></div>부재2(잠수)</span>
       <span><div class="sl-dot" style="background:#ef4444"></div>거절</span>
+      <span><div class="sl-dot" style="background:#d1d6db"></div>지도에 못 뜸</span>
     </div>
   </div>
 
@@ -169,29 +222,195 @@ function _getJson(url, tries, timeoutMs){
   });
 })();
 
-function render(data) {
-  document.getElementById('timestamp').textContent = '마지막 갱신: ' + new Date().toLocaleString('ko-KR');
+/* ══════════════════════════════════════════════════════════════════════════════
+   대기 기간 슬라이더 — provider-map.html의 확정 로직을 **그대로** 옮겼다.
+   두 화면이 같은 컷에서 같은 사람을 잘라야 하므로 상수·기준축·모집단 규칙을 고쳐 쓰면 안 된다.
+   차이는 단 하나 = 기본값(지도 3개월 / 여기 전체, 유성 확정 08-31).
+   ══════════════════════════════════════════════════════════════════════════════ */
+var WA_STOPS = [
+  { age: Infinity, label: '전체' },
+  { age: 180, label: '최근 6개월' },
+  { age: 90,  label: '최근 3개월' },
+  { age: 30,  label: '최근 1개월' },
+  { age: 7,   label: '최근 1주' }
+];
+(function(){   // 칸 위치 = 로그 간격. 기준 축 365→7 **고정**(데이터 최고령에 맞추면 계절마다 칸이 흔들린다)
+  var HI = Math.log(365), LO = Math.log(7);
+  WA_STOPS.forEach(function(x){ x.v = (x.age === Infinity) ? 0 : (HI - Math.log(x.age)) / (HI - LO); });
+})();
+var waV = 0;              // 0 = 전체. 대시보드 기본값(저장 안 함)
+var WA_INSET = 4, WA_THUMB_R = 9;
+var lastData = null;
 
-  var total = data.total || 0;
+function _waStopAt(v){
+  var best = WA_STOPS[0], bd = Infinity;
+  WA_STOPS.forEach(function(x){ var d = Math.abs(x.v - v); if (d < bd){ bd = d; best = x; } });
+  return best;
+}
+function _waCutoff(){ return _waStopAt(waV).age; }
+
+/* 🔴 기준축 = '마지막 움직임(행 순서)'. A열 접수시각은 재신청·본인수정에도 원본이 유지된 채 그 행만
+   맨 아래로 가므로, 날짜로 자르면 어제 다시 신청한 집이 숨는다.
+   🔴 모집단 = **서버가 준 waitingRows만**. 이건 지도 waiting과 같은 모수다(거절·부재2·좌표 없는 행 제외).
+      전체 행으로 돌리면 앞쪽 이상치 한 줄이 running-max를 오염시켜 아무도 안 잘린다(08-30 실측). */
+var _waEff = null;   // row → 기준 시각(ms)
+function _waBuildEff(){
+  _waEff = {};
+  if (!lastData || !lastData.waitingRows) return;
+  var list = lastData.waitingRows.slice().sort(function(a, b){ return (a[0]||0) - (b[0]||0); });
+  var run = 0;
+  list.forEach(function(r){
+    var t = r[1] ? new Date(r[1]).getTime() : 0;
+    if (isNaN(t)) t = 0;
+    _waEff[r[0]] = Math.max(t, run);
+    if (t > run) run = t;
+  });
+}
+// 모름(시각 없음)은 '아님'이 아니다 — 안 자르는 쪽으로 안전하게 틀린다
+function _waAliveRow(row){
+  var cut = _waCutoff();
+  if (cut === Infinity) return true;
+  if (!_waEff) _waBuildEff();
+  var eff = _waEff[row] || 0;
+  if (!eff) return true;
+  return (Date.now() - eff) / 86400000 <= cut;
+}
+function _waLiveCount(){
+  if (!lastData || !lastData.waitingRows) return 0;
+  return lastData.waitingRows.filter(function(r){ return _waAliveRow(r[0]); }).length;
+}
+
+function _waPosPx(el, v){ var w = el.clientWidth || 180; return WA_INSET + v * (w - 2 * WA_INSET); }
+function _waVFromPx(el, px){ var w = el.clientWidth || 180; return Math.max(0, Math.min(1, (px - WA_INSET) / (w - 2 * WA_INSET))); }
+function _waLayout(){
+  // 폭이 0일 때만 건너뛴다 — display로 게이트하면 보이게 된 뒤 다시 부를 사람이 없다(지도에서 실제로 겪은 버그)
+  var el = document.getElementById('waitAge'); if (!el || !el.clientWidth) return;
+  var c = _waPosPx(el, waV);
+  var th = el.querySelector('.thumb'); if (th) th.style.left = c + 'px';
+  var st = el.querySelector('.stops');
+  if (st){
+    if (st.childElementCount !== WA_STOPS.length){
+      st.innerHTML = '';
+      WA_STOPS.forEach(function(){ st.appendChild(document.createElement('i')); });
+    }
+    Array.prototype.forEach.call(st.children, function(d, i){ d.style.left = _waPosPx(el, WA_STOPS[i].v) + 'px'; });
+  }
+  var pill = el.querySelector('.pill');
+  if (pill){
+    var label = _waStopAt(waV).label;
+    if (pill.textContent !== label) pill.textContent = label;
+    var wp = pill.offsetWidth || 60;   // 양끝에서 알약 가장자리가 원 가장자리에 맞는다(유성 확정)
+    pill.style.left = (c - WA_THUMB_R - (wp - 2 * WA_THUMB_R) * waV) + 'px';
+  }
+}
+/* 드래그 중엔 스냅하지 않는다 — 칸이 5개뿐이라 스냅하면 손가락을 끌어도 다섯 단계로 점프한다(유성 지적) */
+function _waBind(){
+  var el = document.getElementById('waitAge'); if (!el || el.__bound) return; el.__bound = true;
+  var grabbing = false, ended = true;
+  function vAt(cx){ var r = el.getBoundingClientRect(); return _waVFromPx(el, cx - r.left); }
+  function nearThumb(cx){ var r = el.getBoundingClientRect(); return Math.abs(cx - (r.left + _waPosPx(el, waV))) <= 16; }
+  function snap(v){ return _waStopAt(v).v; }
+  function put(v, glide){ waV = Math.max(0, Math.min(1, v)); el.classList.toggle('anim', !!glide); _waSchedule(); }
+  function cxOf(e){ return e.clientX != null ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : null); }
+  function down(e){
+    var cx = cxOf(e); if (cx == null) return;
+    ended = false; grabbing = true; el.classList.add('dragging');
+    if (nearThumb(cx)) el.classList.remove('anim'); else put(snap(vAt(cx)), true);
+    if (e.pointerId != null && el.setPointerCapture){ try { el.setPointerCapture(e.pointerId); } catch(_){} }
+    if (e.cancelable) e.preventDefault();
+  }
+  function move(e){
+    if (!grabbing) return;
+    var cx = cxOf(e); if (cx == null) return;
+    put(vAt(cx), false);
+    if (e.cancelable) e.preventDefault();
+  }
+  function up(){
+    if (ended) return; ended = true; grabbing = false;
+    el.classList.remove('dragging');
+    put(snap(waV), true);
+  }
+  el.addEventListener('pointerdown', down);
+  el.addEventListener('pointermove', move);
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(ev){ el.addEventListener(ev, up); });
+  // 터치는 pointer만으론 스크롤에 뺏긴다 — 반드시 {passive:false}
+  el.addEventListener('touchstart', function(e){ if (!grabbing) down(e); }, {passive:false});
+  el.addEventListener('touchmove', move, {passive:false});
+  ['touchend','touchcancel'].forEach(function(ev){ el.addEventListener(ev, up); });
+  el.addEventListener('keydown', function(e){
+    var i = WA_STOPS.indexOf(_waStopAt(waV)), d = 0;
+    if (e.key === 'ArrowRight') d = 1;
+    else if (e.key === 'ArrowLeft') d = -1;
+    else if (e.key === 'Home'){ put(0, true); e.preventDefault(); return; }
+    else if (e.key === 'End'){ put(1, true); e.preventDefault(); return; }
+    else return;
+    e.preventDefault();
+    put(WA_STOPS[Math.max(0, Math.min(WA_STOPS.length - 1, i + d))].v, true);
+  });
+}
+var _waPending = null;
+function _waSchedule(){
+  if (_waPending) return;
+  _waPending = requestAnimationFrame(function(){ _waPending = null; _waLayout(); paint(); });
+}
+window.addEventListener('resize', function(){ _waLayout(); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ _waLayout(); });
+
+function render(data) {
+  lastData = data;
+  _waEff = null;                    // 데이터가 갈리면 기준 시각표도 다시 만든다
+  document.getElementById('timestamp').textContent = '마지막 갱신: ' + new Date().toLocaleString('ko-KR')
+    + (data.tab ? ' · ' + data.tab + ' 탭' : '');
+  _waBind(); _waLayout();
+  paint();
+  paintStatic(data);
+}
+
+/* 숫자·분포 바는 슬라이더 값에 따라 다시 그린다. **대기만 잘린다**(배정·거절·부재2·좌표없음은 그대로) —
+   지도의 확정 규칙과 같다. 그래서 컷이 걸리면 분모(전체 신청)도 같이 줄어든다. */
+function paint() {
+  var data = lastData; if (!data) return;
+
   var assigned = data.assigned || 0;
-  var waiting = data.waiting || 0;
-  var absent = data.absent || 0;
+  var waitingAll = data.waiting || 0;
+  var absent = data.absent || 0;            // 부재2만
   var rejected = data.rejected || 0;
+  var noCoord = data.noCoord || 0;
+  var waiting = (data.waitingRows && data.waitingRows.length) ? _waLiveCount() : waitingAll;
+  var total = assigned + waiting + absent + rejected + noCoord;
 
   document.getElementById('sTotal').textContent = total;
   document.getElementById('sAssigned').textContent = assigned;
   document.getElementById('sWaiting').textContent = waiting;
   document.getElementById('sExcluded').textContent = absent + rejected;
 
+  // 띠 — 자르지 않았으면 `대기 274명`, 자르면 `대기 274명 중 58명`(모수는 강조색 아님)
+  var dw = document.getElementById('dashWait');
+  dw.innerHTML = (waiting === waitingAll)
+    ? '<i>대기</i><b>' + waitingAll + '</b><i>명</i>'
+    : '<i>대기</i><b class="den">' + waitingAll + '</b><i>명 중</i><b>' + waiting + '</b><i>명</i>';
+
+  var notes = [];
+  if (data.absent1) notes.push('부재1 ' + data.absent1 + '명 포함');
+  if (noCoord) notes.push('좌표 없어 지도에 못 뜨는 신청 ' + noCoord + '건');
+  document.getElementById('ageNote').textContent = notes.join(' · ');
+
   // 상태 바
   var bar = document.getElementById('statusBar');
   if (total > 0) {
-    bar.innerHTML = seg('sb-assigned', assigned, total, '배정 '+assigned)
-      + seg('sb-waiting', waiting, total, '대기 '+waiting)
-      + seg('sb-absent', absent, total, '부재 '+absent)
-      + seg('sb-rejected', rejected, total, '거절 '+rejected);
+    bar.innerHTML = segs(total, [
+      ['sb-assigned', assigned, '배정 '   + assigned],
+      ['sb-waiting',  waiting,  '대기 '   + waiting],
+      ['sb-absent',   absent,   '부재2 '  + absent],
+      ['sb-rejected', rejected, '거절 '   + rejected],
+      ['sb-nocoord',  noCoord,  '지도 밖 '+ noCoord]
+    ]);
   }
+}
 
+/* 슬라이더와 무관한 섹션 — 데이터가 새로 올 때 한 번만 그린다.
+   (드래그 프레임마다 45개 노드를 다시 만들면 손가락이 무거워진다 — 2-3 속도 우선) */
+function paintStatic(data) {
   // 제공인력별
   var provs = data.providers || [];
   provs.sort(function(a,b){return b.count - a.count});
@@ -223,9 +442,16 @@ function render(data) {
   });
 }
 
-function seg(cls, count, total, label) {
-  var pct = Math.max(count/total*100, count>0?3:0);
-  return '<div class="sb-seg '+cls+'" style="width:'+pct+'%">'+(pct>8?label:'')+'</div>';
+/* 0이 아닌 칸은 최소 3%를 줘서 보이게 하되, **합을 100%로 정규화**한다.
+   옛 판은 바닥값을 그냥 더해 합이 100을 넘겼고, `overflow:hidden`이라 마지막 칸이 조용히 잘렸다
+   (칸이 4개일 땐 티가 안 났는데 '지도 밖'을 더하며 드러났다 — 2026-08-31). */
+function segs(total, items) {
+  var w = items.map(function(it){ return it[1] > 0 ? Math.max(it[1] / total * 100, 3) : 0; });
+  var sum = w.reduce(function(a, b){ return a + b; }, 0) || 1;
+  return items.map(function(it, i){
+    var pct = w[i] / sum * 100;
+    return '<div class="sb-seg ' + it[0] + '" style="width:' + pct + '%">' + (pct > 8 ? it[2] : '') + '</div>';
+  }).join('');
 }
 
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}

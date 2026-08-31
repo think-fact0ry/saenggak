@@ -2813,13 +2813,20 @@ function doUnassign(row) {
 // 마크 토글 (북마크 버튼) — 확인창 없음(가벼운 개인 뷰 토글).
 // 낙관 반영(유성 2026-08-10 "해제 로딩이 너무 오래"): 결과가 결정적(marked 뒤집기)이라 화면 먼저(대기 0초),
 // 서버는 뒤에서 확정. doUnassign과 같은 패턴 — undo 실패 시에만 옛 로딩바 경로.
+// 화면이 그 행을 누구로 알고 있는지 — 서버가 시트 B열과 대조해 낡은 탭의 오마크를 막는다(08-31).
+function _markName(row) {
+  var c = _findChildByRow(row);
+  return (c && c.name) ? String(c.name) : '';
+}
+
 function doMark(row, on) {
   infoWindow.close();
   var undo = _optimisticMark(row, on);
   if (!undo) showLoading(true);
-  fetchGAS('mark', { row: row, on: on ? '1' : '0', service: currentService, ctx: _ctxKeyName() }).then(function(res) {
+  fetchGAS('mark', { row: row, on: on ? '1' : '0', service: currentService, ctx: _ctxKeyName(), name: _markName(row) }).then(function(res) {
     showLoading(false);
-    if (res.error) { if (undo) undo(); showToast(res.error); return; }
+    // stale = 그 행이 이미 다른 아이 것이다(재제출·본인수정으로 행이 밀림) → 화면을 서버 실물로 다시 맞춘다
+    if (res.error) { if (undo) undo(); showToast(res.error); if (res.stale) { _invalidateServiceCache(); reloadCurrent(true); } return; }
     showToast(on ? '마크됨' : '마크 해제', true);
     _afterWrite(res);
   }).catch(function(e) { showLoading(false); if (undo) undo(); showToast('처리 실패: '+e.message); });
@@ -3334,7 +3341,13 @@ function populateNlFilters() {
   if (!currentData) return;
   var all = (currentData.assigned || []).concat(currentData.waiting || []);
 
-  // 거절만 제외 (부재1/2는 리스트에 노출되므로 필터 옵션에도 포함)
+  // 거절만 제외.
+  // ⚠️ 서버 계약(Code.js:449~456) — 여기 오는 두 배열의 규칙이 다르다.
+  //    waiting = Q열 비었고 + 거절·**부재2 아님** + **좌표 있음**  → 부재2와 좌표 없는 행은 애초에 안 온다
+  //    assigned = Q열에 제공인력이 있으면 **상태 무관**(거절·부재1·부재2여도 담긴다)
+  //    ⇒ 부재2가 이 목록에 들어올 수 있는 유일한 경로는 배정된 아동뿐이다.
+  //    (2026-08-31 정정 — 옛 주석 "부재1/2는 리스트에 노출되므로 필터 옵션에도 포함"은
+  //     클라만 고치고 서버 필터를 안 본 서술이었다)
   all = all.filter(function(c) {
     var s = String(c.status || '').trim();
     return s !== '거절';
@@ -3419,7 +3432,10 @@ function renderNewList() {
   var totalEl = document.getElementById('nlTotalCount');
   var badgeEl = document.getElementById('nlFabBadge');
 
-  // 전체 모수 (거절/부재2 제외)
+  // 전체 모수 — 여기서 빼는 건 **거절뿐**이다(아래 waiting 루프).
+  // 부재2는 서버가 waiting에 안 담아 이미 없고(Code.js:453), 좌표 없는 행도 마찬가지다(:456).
+  // ⇒ 이 숫자는 "대기 전원"이 아니라 **지도에 찍힐 수 있는 대기 + 배정 전원**이다.
+  //    (대시보드 페이지의 '대기'는 부재1까지 빼고 좌표 없는 행은 넣으므로 값이 다르다 — 06 CLAUDE.md)
   var all = [];
   (currentData.assigned || []).forEach(function(c) {
     all.push({
@@ -3432,7 +3448,8 @@ function renderNewList() {
   });
   (currentData.waiting || []).forEach(function(c) {
     var st = String(c.status || '').trim();
-    if (st === '거절') return;   // 거절만 제외 — 부재1/2는 대기 기본뱃지 + 부재 서브뱃지로 노출(지도엔 이미 뜸)
+    if (st === '거절') return;   // 거절만 제외 — 부재1은 대기 기본뱃지 + 부재 서브뱃지로 노출(지도엔 이미 뜸).
+                                 // 부재2는 서버가 안 보내므로 이 분기가 걸릴 일이 없다(방어로만 남긴다).
     all.push({
       name: c.name, lat: c.lat, lng: c.lng, address: c.address,
       phone: c.phone, sigungu: c.sigungu || '', bname: c.bname || '',
@@ -3716,7 +3733,7 @@ function planFromChild(row, marked) {
   infoWindow.close();
   if (marked) { planOpen(); return; }
   planOpen([Number(row)]);
-  fetchGAS('mark', { row: row, on: '1', service: currentService, ctx: _ctxKeyName() })
+  fetchGAS('mark', { row: row, on: '1', service: currentService, ctx: _ctxKeyName(), name: _markName(row) })
     .then(function(res) {
       if (res.error) return;
       // ⚠️ 시트가 열린 동안 `_afterWrite`로 지도를 다시 그리면 **검토 중인 마커가 통째로 새로 만들어져**
