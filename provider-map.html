@@ -5303,9 +5303,15 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
       if (pv) km = Math.min(km, haversine(c.lat, c.lng, pv.lat, pv.lng));
       if (nx) km = Math.min(km, haversine(c.lat, c.lng, nx.lat, nx.lng));
       if (km > CAND_KM) return;
-      var strict = /[월화수목금토일]-\d/.test(c.times || '');
-      var hit = hrs.some(function(x){ return matchesTimeFilter(c.times, d, x); });
-      out.push({ c:c, km:km, v:(!hit ? 2 : (strict ? 0 : 1)),
+      /* 3분법 — 0 앎 / 1 모름 / 2 안 맞음.
+         ⚠️ 희망시간이 **빈칸**인 아이(실측 274명 중 1명)를 라이브 matchesTimeFilter는 `false`로 떨군다.
+            그건 '안 맞음'이 아니라 '모름'이다 — 안 적은 걸 안 맞는다고 말하면 거짓말이다(08-08 규율).
+         ⚠️ 형식을 못 읽는 아이(실측 7명, 최근 3개월 안엔 1명)도 마찬가지로 모름. */
+      var raw = String(c.times || '');
+      var v;
+      if (!raw || !/[월화수목금토일]-\d/.test(raw)) v = 1;
+      else v = hrs.some(function(x){ return matchesTimeFilter(raw, d, x); }) ? 0 : 2;
+      out.push({ c:c, km:km, v:v,
                  rk:(((pv && sameSpot(c,pv)) || (nx && sameSpot(c,nx))) ? 0 : 1) });
     });
     out.sort(function(a,b){
