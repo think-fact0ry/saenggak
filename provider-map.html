@@ -5328,7 +5328,8 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
       var c = o.c;
       var badge = o.v===2 ? '<span class="ctb no">시간 안 맞음</span>'
                 : o.v===1 ? '<span class="ctb unk">시간 모름</span>' : '';
-      return '<div class="cc enter'+(o.v===2?' dim':'')+'" onclick="candGo('+c.row+')">'
+      // 시간이 안 맞거나 모르면 뱃지 + 흐리게 (유성 09-01). 앎만 선명하다
+      return '<div class="cc enter'+(o.v?' dim':'')+'" onclick="candGo('+c.row+')">'
         + '<div class="c1"><span class="crk">'+(i+1)+'</span>'
         + '<span class="cnm">'+esc(c.name)+'</span>'
         + '<span class="ckm">'+o.km.toFixed(2)+'km</span></div>'
@@ -5357,8 +5358,11 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     var el = document.getElementById('candSheet');
     if (!CAND.key) { el.classList.remove('on'); return; }
     var live = CAND.list ? CAND.list.filter(function(o){ return _waAlive(o.c); }) : null;
+    // 구 탭 토스트 문구를 그대로 흡수했다(2026-09-01) — 토스트와 헤더가 같은 말을 하면 §2.1 중복.
+    // 폰 실측: 가장 긴 '월 14:30부터 1시간 27분 (이동 12분 뺀 값)'=184px < 360px폰 제목칸 194px.
+    // ≥680px에선 .lg가 숨어 '월 14:30'만 — 시간은 격자 빈칸의 '+57분'이 바로 옆에서 말한다.
     document.getElementById('candTitle').innerHTML = CAND.g.d + ' ' + hh(CAND.g.s)
-      + '<span class="lg">부터 ' + dur(CAND.g.min) + '</span>';
+      + '<span class="lg">부터 ' + dur(CAND.g.min) + ' (이동 ' + CAND.g.mv + '분 뺀 값)</span>';
     document.getElementById('candN').textContent = live ? ('근처 ' + live.length + '명') : '';
     // 내용이 그대로면 다시 그리지 않는다 — 아동 블록을 탭할 때마다 카드가 다시 튀어오르고
     // 스크롤 위치가 처음으로 돌아가는 걸 막는다.
@@ -5423,7 +5427,8 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     var r = RL[i], k = gkey(r.d, r.g);
     if (CAND.key === k) { candClose(); paint(); return; }     // 같은 칸 두 번 = 닫기
     CAND.key = k; _candSig = '';
-    showToast(r.d + ' ' + hh(r.g.s) + '부터 ' + dur(r.g.min) + ' 비어요 (이동 ' + r.g.mv + '분 뺀 값)');
+    // ⛔토스트 안 띄운다 — 모달 헤더가 같은 말을 한다(§2.1 문구 중복). 유성 08-16 "설명은 탭 토스트가 한다"의
+    //   그 설명 자리를 모달이 가져갔다(유성 09-01 "아직 토스트가 나오는데?").
     paint();                                                   // 초록 표시 + candSync
   };
   window.scFix = function(e,i,mi){ e.stopPropagation();
