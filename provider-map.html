@@ -304,6 +304,68 @@
   #schedSheet .free .f1{font-size:9.5px;font-weight:700;color:var(--g500);line-height:1.15}
   #schedSheet .free:hover{border-color:var(--green600);background:#f6fbf8}
   #schedSheet .free:hover .f1{color:var(--green700)}
+  #schedSheet .free.on{border-style:solid;border-color:var(--green600);background:var(--green100)}
+  #schedSheet .free.on .f1{color:var(--green700)}
+
+  /* ════ 빈 자리 후보 모달 (2026-09-01 유성 확정) ════════════════════════════════
+     #schedSheet의 **자식**이다 — 폭·열림/접힘·translateY 전환을 공짜로 그대로 따라간다.
+     폰 = 시트 위에 8px 띄운 같은 폭 / ≥680px = 시트 왼쪽 140px·높이 2/3·상단 맞춤(기존 사이드 시트안).
+     680px 근거: 옆에 붙이려면 12+344+8+140=504px 필요 → 폰 360~430은 전부 넘치고 태블릿 744는 240px 남는다.
+     (431~743 구간엔 우리 기기가 하나도 없어 그 사이 아무 값이나 된다 — 680은 지도가 176px 남는 선)
+     ⛔스크롤바 금지(유성 08-15 시트 규칙 그대로) ⛔'맞음' 뱃지 금지 — 모름·안 맞음만 단다(유성 09-01) */
+  #candSheet{position:absolute;right:0;bottom:100%;margin-bottom:8px;width:100%;
+             display:none;flex-direction:column;background:#fff;border-radius:14px;
+             box-shadow:var(--sh-up);overflow:hidden}
+  #candSheet.on{display:flex}
+  #candSheet .chd{height:24px;flex:none;padding:0 10px;border-bottom:1px solid var(--g100);
+                  display:flex;align-items:center;justify-content:space-between;gap:6px}
+  #candSheet .chd h4{font-size:10.5px;font-weight:800;letter-spacing:-.2px;margin:0;line-height:1.2;
+                     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #candSheet .chd .cn{font-size:9.5px;font-weight:700;color:var(--green700);white-space:nowrap;flex:none}
+  #candSheet .cbd{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 8px 8px;
+                  scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
+  #candSheet .cbd::-webkit-scrollbar{width:0;height:0}
+  /* 2열 = CSS grid(행 우선 = 1 2 / 3 4 / 5 6). column-count는 엔진마다 칸을 다르게 나눠 PC·폰이 어긋난다 */
+  #candSheet .cg{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  #candSheet .cc{border:1px solid var(--g200);border-radius:7px;padding:4px 6px;background:#fff;
+                 height:34px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;
+                 overflow:hidden;transition:opacity .18s,transform .18s}
+  #candSheet .cc:active{transform:scale(.97)}
+  /* 대기 기간 슬라이더로 빠지는 아이 — 격자에서 접으면 그 칸이 구멍으로 남는다(1열 때와 다름).
+     그래서 '사라짐→다시 그림→올라오며 나타남' 두 단계로 민다. */
+  #candSheet .cc.leaving{opacity:0;transform:scale(.96)}
+  #candSheet .cc.enter{animation:candIn .26s cubic-bezier(.22,.7,.25,1) both}
+  @keyframes candIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  #candSheet .c1{display:flex;align-items:center;gap:4px;min-width:0}
+  #candSheet .crk{flex:none;width:13px;height:13px;border-radius:4px;background:var(--g900);color:#fff;
+                  font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  #candSheet .cnm{flex:1;min-width:0;font-size:10.5px;font-weight:700;overflow:hidden;
+                  text-overflow:ellipsis;white-space:nowrap}
+  #candSheet .ckm{flex:none;font-size:8.5px;font-weight:700;color:var(--g600)}
+  #candSheet .c2{display:flex;align-items:center;justify-content:space-between;gap:4px;
+                 font-size:8.5px;color:var(--g500);margin-top:1px;padding-left:17px;white-space:nowrap}
+  #candSheet .c2 > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  #candSheet .ctb{flex:none;font-weight:700;padding:0 4px;border-radius:4px;white-space:nowrap}
+  #candSheet .ctb.no{background:var(--warn-weak-bg);color:var(--warn-weak-fg)}
+  #candSheet .ctb.unk{background:var(--g100);color:var(--g600)}
+  #candSheet .cc.dim{opacity:.62}
+  #candSheet .cmsg{padding:12px 10px;text-align:center;font-size:10.5px;line-height:1.5;color:var(--g500)}
+  #candSheet .cmsg.warn{color:var(--warn-weak-fg)}
+  /* 넘칠 때만 뜨는 하단 그라데이션 — 시트(#schedSheet::after)와 같은 공식, 높이만 46→26 */
+  #candSheet::after{content:'';position:absolute;left:1px;right:1px;bottom:1px;height:26px;pointer-events:none;
+    border-radius:0 0 13px 13px;opacity:0;transition:opacity .18s;
+    background:linear-gradient(to bottom,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+               linear-gradient(to bottom,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%)}
+  #candSheet.more::after{opacity:1}
+  @media(min-width:680px){
+    /* 폭 140 — 115에선 '08-26 + 시간 안 맞음'이 한 줄에 안 들어가 두 줄로 접혔다(실측).
+       필요 최소 = 접수일 27 + 4 + 뱃지 59 + 들여쓰기 17 + 카드패딩 14 + 바디패딩 16 = 137 */
+    #candSheet{bottom:auto;top:0;right:100%;width:140px;height:66.6%;
+               margin-bottom:0;margin-right:8px;border-radius:14px 0 0 0;box-shadow:var(--sh-left)}
+    #candSheet .cg{grid-template-columns:1fr}
+    #candSheet .chd .lg{display:none}   /* 140px엔 '부터 1시간 1분'이 안 들어간다(실측) — 시간은 토스트가 말한다 */
+    #candSheet::after{border-radius:0}
+  }
 
   .pcand{background:#fff;border:1.5px solid #d1d6db;border-radius:12px;padding:14px;margin-bottom:9px;cursor:pointer;word-break:keep-all}
   .pcand:active{transform:scale(.99)}
@@ -884,6 +946,11 @@
     <button id="schedRouteBtn" onclick="schedRouteToggle()">동선</button>
   </div>
   <div class="sbd" id="schedBody"></div>
+  <!-- 빈 자리 후보 — 시트의 자식이라 폭·열림·접힘을 그대로 따라간다(2026-09-01) -->
+  <div id="candSheet">
+    <div class="chd"><h4 id="candTitle"></h4><span class="cn" id="candN"></span></div>
+    <div class="cbd" id="candBody"></div>
+  </div>
 </div>
 
 <div class="legend">
@@ -1677,7 +1744,9 @@ function _waBind(){
 var _waPending = null;
 function _waSchedule(){
   if (_waPending) return;
-  _waPending = requestAnimationFrame(function(){ _waPending = null; _waLayout(); _waApplyCut(); updateDashboard(); });
+  _waPending = requestAnimationFrame(function(){ _waPending = null; _waLayout(); _waApplyCut(); updateDashboard();
+    if (window.candCut) candCut();   // 빈 자리 후보도 같이 잘린다(전량 재렌더 없이 델타)
+  });
 }
 
 /* 🟢 마커를 다시 만들지 않는다 — kakao.maps.Marker.setOpacity()/setZIndex()/setImage()로 상태만 민다.
@@ -5037,7 +5106,8 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     for(var i=0;i<gs.length-1;i++){
       var end=Math.max.apply(null,gs[i].map(function(u){return u.e;}));
       var nxt=gs[i+1][0].s, sl=nxt-end-MOVE_DEFAULT;
-      if(sl>=50) out.push({s:end,e:nxt,min:sl,mv:MOVE_DEFAULT});
+      // pv·nx = 앞뒤 기준점 그룹. 후보 반경을 어디서 재는지는 이 둘이 정한다(2026-09-01)
+      if(sl>=50) out.push({s:end,e:nxt,min:sl,mv:MOVE_DEFAULT,pv:gs[i],nx:gs[i+1]});
     }
     return out;
   }
@@ -5056,6 +5126,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
 
     if (!vs.length && !unk.length){
       body.innerHTML = '<div class="pnote">최근 8주 결제 기록도, 계획(S·T)도 없어요</div>';
+      candClose();   // 격자가 없으면 자리도 없다 — 열려 있던 후보 모달을 남기지 않는다
       return;
     }
     var h='<div class="ghead" style="padding-left:'+aw+'px">'
@@ -5072,7 +5143,8 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
         RL.push({free:1,d:d,g:g});
         var top=Y(g.s)+3, hgt=Y(g.e)-Y(g.s)-6;
         // ⛔"이동 N분 빼고" 문구는 안 쓴다(유성 08-16) — 값엔 이동 12분이 이미 빠져 있고 설명은 탭 토스트가 한다
-        h+='<div class="free" style="top:'+top+'px;height:'+hgt+'px" onclick="scFx('+(RL.length-1)+')">'
+        h+='<div class="free'+(CAND.key===gkey(d,g)?' on':'')+'" style="top:'+top+'px;height:'+hgt
+          + 'px" onclick="scFx('+(RL.length-1)+')">'
           + '<span class="f1">+'+dur(g.min)+'</span></div>';
       });
       var GS=groups(vs,d);
@@ -5132,6 +5204,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     }
     syncFade();   // ⚠️ rAF에만 걸지 말 것 — 가려진 탭에선 rAF가 안 돈다(프리뷰 실측)
     document.getElementById('schedBody').onscroll = syncFade;
+    candSync();   // 빈 자리 후보 모달도 같은 렌더 경로에서만 동기(복제 금지)
   }
   function syncFade(){
     var sb=document.getElementById('schedBody'), sh=document.getElementById('schedSheet');
@@ -5189,10 +5262,170 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     return '<button class="lnk" onclick="scFix(event,'+id+','+(mi||0)+')">'+label+'</button>';
   }
 
+  /* ════ 빈 자리 후보 (2026-09-01) ═══════════════════════════════════════════════
+     빈 칸을 누르면 그 자리 앞뒤 아동 근처에서 기다리는 아이를 시트 위(폰)·왼쪽(PC)에 띄운다.
+     서버 0줄 — 대기 아동 좌표·희망시간·접수시각이 이미 currentData.waiting에 다 와 있다.
+
+     규칙(유성 확정 2026-09-01)
+       반경 = 앞뒤 아동 중 **가까운 쪽까지 1km**. 사전계획 §4-B의 타원(k배 우회) 가지는
+              1km 컷이 이미 더 좁아서 아무것도 못 넣는다 ⇒ k는 안 쓴다(1.2/1.3 선택 불요).
+       순위 = ①같은 단지(좌표 일치) ②시간 앎 > 시간 모름 > 시간 안 맞음 ③최신순(행 번호 역순)
+       뱃지 = '시간 모름'(회색)·'시간 안 맞음'(주황)만. **'맞음'은 안 단다.**
+       대기 기간 슬라이더는 여기에도 걸린다(기본 최근 3개월).
+     ⚠️ 시간 판정은 3분법이다 — 라이브 matchesTimeFilter는 못 읽는 형식을 '맞음'으로 통과시키는데,
+        그건 맞는 게 아니라 **모름**이다(08-08 가용시간 사고와 같은 규율: 모름 ≠ 아님/맞음). */
+  var CAND = { key:null, g:null, list:[] };
+  var CAND_KM = 1, CAND_HD = 24, CAND_PAD = 14, CAND_CARD = 34, CAND_GAP = 4, CAND_MAPMIN = 120;
+  function gkey(d,g){ return d+'|'+g.s+'|'+g.e; }
+  function candH(rows){ return CAND_HD + CAND_PAD + rows*CAND_CARD + (rows-1)*CAND_GAP; }
+
+  /** 기준점 = 그 그룹에서 좌표를 아는 멤버 중 자리에 가장 붙은 쪽. 아무도 좌표가 없으면 null */
+  function anchor(gp, side){
+    var best = null;
+    (gp||[]).forEach(function(u){ (u.mem||[]).forEach(function(m){
+      if (m.lat == null || m.lng == null) return;
+      if (!best) { best = m; return; }
+      best = (side === 'end') ? (m.e > best.e ? m : best) : (m.s < best.s ? m : best);
+    });});
+    return best;
+  }
+  function sameSpot(c, a){ return Math.abs(c.lat-a.lat) < 1e-6 && Math.abs(c.lng-a.lng) < 1e-6; }
+
+  /** 자리 하나 → 후보 배열(대기 기간은 아직 안 자른다 — 슬라이더가 실시간으로 자를 수 있게) */
+  function candBuild(g, d){
+    var pv = anchor(g.pv,'end'), nx = anchor(g.nx,'start');
+    if (!pv && !nx) return null;                       // 앞뒤 둘 다 주소를 모른다
+    var hrs = []; for (var h=0; h<24; h++) if (h*60 >= g.s && h*60 < g.e) hrs.push(h);
+    var out = [];
+    ((currentData && currentData.waiting) || []).forEach(function(c){
+      if (!c.lat || !c.lng) return;
+      var km = Infinity;
+      if (pv) km = Math.min(km, haversine(c.lat, c.lng, pv.lat, pv.lng));
+      if (nx) km = Math.min(km, haversine(c.lat, c.lng, nx.lat, nx.lng));
+      if (km > CAND_KM) return;
+      var strict = /[월화수목금토일]-\d/.test(c.times || '');
+      var hit = hrs.some(function(x){ return matchesTimeFilter(c.times, d, x); });
+      out.push({ c:c, km:km, v:(!hit ? 2 : (strict ? 0 : 1)),
+                 rk:(((pv && sameSpot(c,pv)) || (nx && sameSpot(c,nx))) ? 0 : 1) });
+    });
+    out.sort(function(a,b){
+      if (a.rk !== b.rk) return a.rk - b.rk;
+      if (a.v  !== b.v ) return a.v  - b.v;
+      return (b.c.row||0) - (a.c.row||0);              // 최신순 = 행 번호 역순(A열 접수시각이 아니라)
+    });
+    return out;
+  }
+
+  /** 접수일 MM-DD. 슬라이더가 자르는 기준은 _waEff(행 순서 running-max)지만, 카드에 적는 건 **원본 접수일**이다 */
+  function candDay(c){
+    if (!c.timestamp) return '';
+    var t = new Date(c.timestamp); if (isNaN(t)) return '';
+    return ('0'+(t.getMonth()+1)).slice(-2) + '-' + ('0'+t.getDate()).slice(-2);
+  }
+  function candCards(list){
+    if (!list.length) return '<div class="cmsg">'+CAND_KM+'km 안에 대기 중인 아이가 없어요</div>';
+    return '<div class="cg">' + list.map(function(o,i){
+      var c = o.c;
+      var badge = o.v===2 ? '<span class="ctb no">시간 안 맞음</span>'
+                : o.v===1 ? '<span class="ctb unk">시간 모름</span>' : '';
+      return '<div class="cc enter'+(o.v===2?' dim':'')+'" onclick="candGo('+c.row+')">'
+        + '<div class="c1"><span class="crk">'+(i+1)+'</span>'
+        + '<span class="cnm">'+esc(c.name)+'</span>'
+        + '<span class="ckm">'+o.km.toFixed(2)+'km</span></div>'
+        + '<div class="c2"><span>'+candDay(c)+'</span>'+badge+'</div></div>';
+    }).join('') + '</div>';
+  }
+
+  /** 높이 = 기본으로 보여줄 인원이 정한다(작은 폰 4명·큰 폰 6명, 유성 09-01. 2/3 규칙은 철회됨).
+      ⚠️ 시트 높이는 내용이 정해서 렌더 전엔 모른다 → offsetHeight로 잰다(transform 영향 없음). */
+  function candFit(){
+    var el = document.getElementById('candSheet');
+    if (!el.classList.contains('on') || window.innerWidth >= 680) { el.style.height=''; return; }
+    var mapH = document.getElementById('map').clientHeight;
+    var sheetH = document.getElementById('schedSheet').offsetHeight;
+    var avail = mapH - sheetH - 8;                              // 시트 위로 남은 지도
+    var h = candH((avail - candH(3) >= CAND_MAPMIN) ? 3 : 2);
+    // 극단(BND가 14~20시보다 넓어 시트가 클 때)엔 2행도 안 들어간다 — 상단 바를 덮느니 줄인다
+    if (h > avail) h = Math.max(candH(1), avail);
+    el.style.height = h + 'px';
+  }
+  function candFade(){
+    var el = document.getElementById('candSheet'), bd = document.getElementById('candBody');
+    el.classList.toggle('more', bd.scrollHeight - bd.clientHeight - bd.scrollTop > 6);
+  }
+  function candDraw(){
+    var el = document.getElementById('candSheet');
+    if (!CAND.key) { el.classList.remove('on'); return; }
+    var live = CAND.list ? CAND.list.filter(function(o){ return _waAlive(o.c); }) : null;
+    document.getElementById('candTitle').innerHTML = CAND.g.d + ' ' + hh(CAND.g.s)
+      + '<span class="lg">부터 ' + dur(CAND.g.min) + '</span>';
+    document.getElementById('candN').textContent = live ? ('근처 ' + live.length + '명') : '';
+    // 내용이 그대로면 다시 그리지 않는다 — 아동 블록을 탭할 때마다 카드가 다시 튀어오르고
+    // 스크롤 위치가 처음으로 돌아가는 걸 막는다.
+    var bd = document.getElementById('candBody');
+    _candSig = live ? live.map(function(o){ return o.c.row; }).join(',') : '';
+    var sig = CAND.key + '#' + (live ? _candSig : 'noaddr');
+    if (bd.__sig !== sig){
+      bd.__sig = sig;
+      bd.innerHTML = live ? candCards(live)
+        : '<div class="cmsg warn">앞뒤 아동의 주소를 몰라 근처 아이를 찾을 수 없어요.</div>';
+    }
+    el.classList.add('on');
+    candFit(); candFade();
+    bd.onscroll = candFade;
+  }
+  /** paint() 끝에서 부른다 — 자리가 사라졌으면(교사·데이터 변경) 조용히 닫는다 */
+  function candSync(){
+    if (!CAND.key) { document.getElementById('candSheet').classList.remove('on'); return; }
+    var found = null;
+    RL.forEach(function(r){ if (r.free && gkey(r.d, r.g) === CAND.key) found = r; });
+    if (!found) { CAND.key=null; CAND.g=null; CAND.list=null;
+                  document.getElementById('candSheet').classList.remove('on'); return; }
+    CAND.g = { d:found.d, s:found.g.s, e:found.g.e, min:found.g.min, mv:found.g.mv };
+    CAND.list = candBuild(found.g, found.d);
+    candDraw();
+  }
+  /** 대기 기간 슬라이더 델타 — 다시 그리지 않고 '사라짐 → 다시 그림'만.
+      (2열 격자에선 카드를 접으면 그 칸이 구멍으로 남는다. 1열이던 프리뷰와 다른 점) */
+  var _candCutT = null, _candSig = '';
+  function candCut(){
+    if (!CAND.key || !CAND.list) return;
+    var live = CAND.list.filter(function(o){ return _waAlive(o.c); });
+    var sig = live.map(function(o){ return o.c.row; }).join(',');
+    if (sig === _candSig) return;
+    _candSig = sig;
+    var bd = document.getElementById('candBody');
+    [].forEach.call(bd.querySelectorAll('.cc'), function(e){ e.classList.add('leaving'); });
+    clearTimeout(_candCutT);
+    _candCutT = setTimeout(function(){ candDraw(); }, 180);
+  }
+  window.candCut = candCut;
+  window.candGo = function(row){
+    var c = null;
+    ((currentData && currentData.waiting) || []).forEach(function(x){ if (Number(x.row)===Number(row)) c = x; });
+    if (!c || !c.lat || !c.lng) return;
+    map.setCenter(new kakao.maps.LatLng(c.lat, c.lng));
+    map.setLevel(3);
+    // 아동 카드 = 검색 결과 클릭과 같은 경로(0-9 — IW 만드는 문법은 하나)
+    var iw = buildGroupedWaitingIW([c], currentData.provider.lat, currentData.provider.lng);
+    var ex = findMarkerAt(c.lat, c.lng);
+    if (ex) { clearSearchMarker(); infoWindow.setContent(iw); infoWindow.open(map, ex); }
+    else { var sm = placeSearchMarker(c.lat, c.lng, iw); infoWindow.setContent(iw); infoWindow.open(map, sm); }
+  };
+  window.candClose = function(){ CAND.key=null; CAND.g=null; CAND.list=null; _candSig='';
+    document.getElementById('candSheet').classList.remove('on'); };
+  // 폰 회전·창 크기 변경 = 옆/위와 행 수가 같이 바뀐다(PC 분기에선 inline height를 지운다)
+  window.addEventListener('resize', function(){ if (CAND.key) { candFit(); candFade(); } });
+
   // ── 전역 노출 (onclick·훅용) ──────────────────────────────────────
   window.scTap = function(i){ SCHED.open = (SCHED.open===i? null : i); paint(); };
-  window.scFx = function(i){ var r=RL[i];
-    showToast(r.d + ' ' + hh(r.g.s) + '부터 ' + dur(r.g.min) + ' 비어요 (이동 ' + r.g.mv + '분 뺀 값)'); };
+  window.scFx = function(i){
+    var r = RL[i], k = gkey(r.d, r.g);
+    if (CAND.key === k) { candClose(); paint(); return; }     // 같은 칸 두 번 = 닫기
+    CAND.key = k; _candSig = '';
+    showToast(r.d + ' ' + hh(r.g.s) + '부터 ' + dur(r.g.min) + ' 비어요 (이동 ' + r.g.mv + '분 뺀 값)');
+    paint();                                                   // 초록 표시 + candSync
+  };
   window.scFix = function(e,i,mi){ e.stopPropagation();
     var v = RL[i].g[0].mem[mi||0];
     if (v.row) { setChildTime(v.row); return; }
@@ -5213,7 +5446,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     if (SCHED.prov !== prov) {
       SCHED.prov = prov; SCHED.open = null; SCHED.folded = true;
       document.getElementById('schedSheet').classList.remove('on');
-      schedRouteOff();
+      schedRouteOff(); candClose();   // 교사가 바뀌면 그 자리 후보도 의미가 없다
     }
     if (SCHED.folded) { schedPillShow(); return; }
     document.getElementById('schedSheet').classList.add('on');
@@ -5227,6 +5460,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   window.schedOpen = function(){ SCHED.folded = false; schedSync(); };
   window.schedFold = function(){
     schedRouteOff();   // 접으면 동선도 끈다 — pill과 요일 버튼이 같은 자리를 쓴다
+    candClose();
     SCHED.folded = true; SCHED.open = null;
     document.getElementById('schedSheet').classList.remove('on');
     schedPillShow();
@@ -5239,6 +5473,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     _fabShape();
   }
   window.schedClose = function(){
+    candClose();
     document.getElementById('schedSheet').classList.remove('on');
     document.getElementById('schedPill').classList.remove('on', 'circle', 'beside');
     schedRouteOff();
