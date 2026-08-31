@@ -20,6 +20,11 @@
    B. 카메라 — B1 앱과 동일한 1경로(타이밍의 진실) / B2 4경로 동시(어느 경로가 잡나. 타이밍 판정에 쓰지 않음)
    C. 판정 — 측정 타임라인에 실제 Hold 알고리즘을 재생 + 손잡이 A/B
 
+  v2 (2026-09-01) — 3대 판정에서 나온 확장: B1 이 0독이면 **다른 후면 카메라를 하나씩 열어 같은 것을 잰다**.
+   근거 = 현아 폰(S942N)이 기본 카메라(camera 2)로 거리 무관 선명도 43~49 고정 = 초점이 안 잡히는데,
+   미사용 후면 camera 0 이 남아 있었다. 앱에 카메라 폴백을 넣으려면 그 카메라가 실제로 초점을 잡는지부터
+   실측해야 한다(유성: "가정하는 데이터는 원인을 해결할 수 없다"). ⚠️ B1/B2 는 그대로다 — C2 는 뒤에 붙는 별도 단계.
+
   아무것도 서버로 보내지 않는다. 전부 이 폰 안에서 끝난다.
 -->
 <style>
@@ -212,6 +217,7 @@ const P  = new URLSearchParams(location.search);
 const DEV = P.get('dev') === '1';                 // 내 검증용 — 시간을 줄여 빨리 돈다
 const B1_MS = DEV ? 6000 : 45000;
 const B2_MS = DEV ? 6000 : 45000;
+const ALT_MS = DEV ? 4000 : 12000;                // C2 카메라 후보 1대당 측정 시간
 
 /* ── 앱에서 그대로 이식한 상수 (app.html) — ⛔ 여기서 바꾸지 말 것 ───────── */
 const SCAN_W   = 720;
@@ -402,8 +408,10 @@ const Cam = {
     }catch(e){}
     try{
       const devs = await navigator.mediaDevices.enumerateDevices();
-      R.cam.cameras = devs.filter(d => d.kind === 'videoinput').map(d => d.label || '(이름 없음)');
-    }catch(e){ R.cam.cameras = []; }
+      R.cam.devices = devs.filter(d => d.kind === 'videoinput')
+        .map(d => ({ id:d.deviceId, label:d.label || '(이름 없음)' }));   // C2 가 deviceId 로 다시 연다
+      R.cam.cameras = R.cam.devices.map(d => d.label);
+    }catch(e){ R.cam.cameras = []; R.cam.devices = []; }
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d', { willReadFrequently:true });
     this.on = true;
@@ -589,6 +597,75 @@ async function phase1(video){
   });
 }
 
+/* C2 — 다른 후면 카메라 전수 실측 (v2, 2026-09-01)
+   발동 = B1 이 0독일 때 자동(또는 ?cams=1 강제 — 검증용). 현재 스트림을 세우고
+   나머지 후면 후보를 deviceId 로 하나씩 열어, 같은 read_ 파이프라인으로 [초점 caps ·
+   continuous 적용 여부 · 선명도 스윕 · 디코드 성공]을 잰다.
+   ⚠️ 여기 타이밍은 타이밍 판정에 쓰지 않는다(B1 만이 앱 대표). 앱 폴백을 넣을지는
+   이 실측이 "다른 카메라는 초점을 잡는가"에 답한 뒤에만 결정한다. */
+async function phaseCameras(video){
+  const forced = P.get('cams') === '1';
+  const blind = R.b1.length > 0 && R.b1.every(r => !r.ok);
+  if (!blind && !forced) return;
+  const curId = (R.cam.settings || {}).deviceId || '';
+  const isBack = d => /back|rear|environment|후면/i.test(d.label);
+  const others = (R.cam.devices || []).filter(d => d.id && d.id !== curId && (forced || isBack(d)));
+  if (!others.length){ if (blind) R.notes.push('다른 후면 카메라가 없어서 카메라 후보 실측은 건너뛰었어요.'); return; }
+  R.cam.alts = [];
+  for (const d of others.slice(0, 3)){
+    const rec = { label:d.label };
+    if (Cam.stream){ Cam.stream.getTracks().forEach(t => t.stop()); Cam.stream = null; }
+    try{
+      Cam.stream = await navigator.mediaDevices.getUserMedia({
+        video:{ deviceId:{ exact:d.id }, width:{ ideal:1920 }, height:{ ideal:1080 } }, audio:false });
+    }catch(err){ rec.err = '열지 못함 ' + (err && err.name || ''); R.cam.alts.push(rec); continue; }
+    video.srcObject = Cam.stream;
+    await video.play().catch(()=>{});
+    const tr = Cam.stream.getVideoTracks()[0];
+    let caps = null, st = null;
+    try{ caps = tr.getCapabilities ? tr.getCapabilities() : null; }catch(e){}
+    try{ st = tr.getSettings ? tr.getSettings() : null; }catch(e){}
+    rec.res = st && st.width ? st.width + 'x' + st.height : video.videoWidth + 'x' + video.videoHeight;
+    rec.focus = (caps && caps.focusMode || []).join('/') || '조절 불가';
+    rec.focusDist = caps && caps.focusDistance ? caps.focusDistance.min + '~' + caps.focusDistance.max : null;
+    rec.zoom = caps && caps.zoom ? caps.zoom.min + '~' + caps.zoom.max : null;
+    rec.cont = false;
+    try{
+      if (caps && (caps.focusMode || []).indexOf('continuous') >= 0){
+        await tr.applyConstraints({ advanced:[{ focusMode:'continuous' }] });
+        rec.cont = true;
+      }
+    }catch(e){}
+    Cam.roiKey = '';                                 // 새 스트림 = ROI 다시 계산
+    rec.ok = 0; rec.n = 0; rec.sharpMin = 1e9; rec.sharpMax = -1; rec.side = null; rec.text = null;
+    $('camHint').textContent = '다른 카메라로 다시 재요. 라벨을 천천히 가까이, 그다음 멀리 움직여 주세요';
+    const end = performance.now() + ALT_MS;
+    await new Promise(res => {
+      const tick = async () => {
+        if (performance.now() > end) return res();
+        let got = null;
+        try{
+          if (video.videoWidth){
+            const roi = Cam.roiOf_(video);
+            if (roi) got = await Cam.read_(video, true);
+            if (!got) got = await Cam.read_(video, false);
+          }
+        }catch(e){}
+        const m = video.videoWidth ? metrics(video, Cam.roi) : null;
+        if (m){ if (m.sharp < rec.sharpMin) rec.sharpMin = m.sharp; if (m.sharp > rec.sharpMax) rec.sharpMax = m.sharp; }
+        rec.n++;
+        if (got){ rec.ok++; if (!rec.text){ rec.text = got.text; rec.side = sideOf(got); } }
+        drawRoiBox(video);
+        $('camLive').textContent = '카메라 후보 · 읽음 ' + rec.ok + '/' + rec.n + (m ? ' · 선명도 ' + m.sharp : '');
+        setTimeout(() => requestAnimationFrame(tick), Cam.det ? 90 : 140);
+      };
+      tick();
+    });
+    if (rec.sharpMax < 0){ rec.sharpMin = null; rec.sharpMax = null; }
+    R.cam.alts.push(rec);
+  }
+}
+
 /* B2 — 같은 프레임에 4경로를 다 돌려 어느 것이 잡는지 본다.
    ⚠️ tick 이 느려지므로 **타이밍 판정에는 쓰지 않는다.** */
 async function phase2(video){
@@ -703,11 +780,13 @@ function analyse(){
 
   if (!R.cam.opened){ add('un', '카메라를 못 열었어요', R.cam.err || '권한이나 기기 문제일 수 있어요.'); return; }
 
-  // 1. 스트림 해상도
-  const w = st.width || $('v').videoWidth;
-  if (!w) add('un', '스트림 해상도', '값을 못 읽었어요.');
-  else if (w >= 1280) add('ok', '카메라 해상도는 충분해요', res + ' 로 열렸어요.');
-  else add('no', '카메라가 낮은 해상도로 열렸어요', res + '. 요청은 1920인데 이만큼만 열렸어요 — QR 픽셀이 그만큼 줄어요.');
+  /* 1. 스트림 해상도 — **긴 변**으로 판정한다. 세로 폰은 1920x1080 요청이 1080x1920 으로
+     돌아오는데(회전만 다르고 화소는 같다) width 만 보면 정상 스트림을 "낮다"고 오판한다
+     (2026-09-01 정정 — 3대 리포트 전부가 이 오표기를 달고 왔다). */
+  const wLong = Math.max(st.width || 0, st.height || 0) || Math.max($('v').videoWidth, $('v').videoHeight);
+  if (!wLong) add('un', '스트림 해상도', '값을 못 읽었어요.');
+  else if (wLong >= 1280) add('ok', '카메라 해상도는 충분해요', res + ' 로 열렸어요.');
+  else add('no', '카메라가 낮은 해상도로 열렸어요', res + '. 긴 변 기준 1920을 요청했는데 ' + wLong + '만 열렸어요 — QR 픽셀이 그만큼 줄어요.');
 
   // 2. 디코더 경로
   if (!R.env.hasBD) add('no', '이 브라우저엔 내장 QR 인식기가 없어요',
@@ -791,6 +870,17 @@ function analyse(){
     else if (A.replayTick.fills > 0) add('ok', '여유를 확인 주기에 맞추면 찼을 거예요', A.replayTick.fills + '번 완성돼요.');
     else add('un', '여유를 늘려도 안 돼요', '인식 자체가 모자라서 손잡이로는 안 풀려요.');
   }
+
+  /* 11. 카메라 후보 실측(C2) — 앱이 기본으로 여는 카메라가 범인인지 그 자리서 갈린다 */
+  if (R.cam.alts && R.cam.alts.length){
+    const good = R.cam.alts.filter(a => a.ok > 0);
+    if (good.length)
+      add('ok', '다른 후면 카메라는 읽었어요',
+        good.map(a => a.label + ' ' + a.ok + '/' + a.n).join(', ') + ' — 앱이 기본으로 여는 카메라가 문제라는 뜻이에요.');
+    else
+      add('no', '다른 후면 카메라로도 못 읽었어요',
+        R.cam.alts.length + '개 후보 전부 0번이에요. 카메라 선택 문제가 아니라 렌즈나 라벨 쪽이에요.');
+  }
 }
 
 /* ══ 리포트 ══════════════════════════════════════ */
@@ -807,11 +897,25 @@ function buildReport(){
   else{
     L.push('  스트림 ' + A.res + (A.ar ? ' (비율 ' + A.ar + ')' : '') + ' · ' + (st.frameRate ? Math.round(st.frameRate) + 'fps' : ''));
     L.push('  트랙 ' + (R.cam.track || '(이름 없음)'));
-    L.push('  후면 카메라 후보 ' + ((R.cam.cameras || []).length) + '개' + ((R.cam.cameras || []).length ? ' — ' + R.cam.cameras.join(' / ') : ''));
+    L.push('  카메라 목록 ' + ((R.cam.cameras || []).length) + '개' + ((R.cam.cameras || []).length ? ' — ' + R.cam.cameras.join(' / ') : ''));
     const cp = R.cam.caps || {};
-    L.push('  초점 ' + ((cp.focusMode || []).join('/') || '조절 불가') + (R.cam.focusApplied ? ' · continuous 적용됨' : ' · continuous 미적용'));
+    L.push('  초점 ' + ((cp.focusMode || []).join('/') || '조절 불가') + (R.cam.focusApplied ? ' · continuous 적용됨' : ' · continuous 미적용') +
+      ' · 초점거리 ' + (cp.focusDistance ? cp.focusDistance.min + '~' + cp.focusDistance.max : '조절 불가'));
     L.push('  줌 ' + (cp.zoom ? cp.zoom.min + '~' + cp.zoom.max : '없음') + ' · 손전등 ' + (cp.torch ? '있음' : '없음'));
     L.push('  ROI 크롭 ' + (Cam.roi ? Cam.roi.w + 'x' + Cam.roi.h + ' @' + Cam.roi.x + ',' + Cam.roi.y : '못 씀'));
+    if (R.cam.alts && R.cam.alts.length){
+      L.push('');
+      L.push('[다른 후면 카메라 실측] 기본 카메라가 0독이라 자동 실행 (1대당 ' + Math.round(ALT_MS / 1000) + '초)');
+      for (const a of R.cam.alts){
+        if (a.err){ L.push('  ' + a.label + ' — ' + a.err); continue; }
+        L.push('  ' + a.label + ' — ' + a.res +
+          ' · 초점 ' + a.focus + (a.cont ? ' · continuous 적용됨' : ' · continuous 미적용') +
+          ' · 초점거리 ' + (a.focusDist || '조절 불가') + ' · 줌 ' + (a.zoom || '없음'));
+        L.push('    읽음 ' + a.ok + '/' + a.n + '틱 · QR 한 변 ' + (a.side == null ? '-' : a.side + 'px') +
+          ' · 선명도 ' + (a.sharpMin == null ? '-' : a.sharpMin + '~' + a.sharpMax) +
+          ' · 원문 ' + (a.text || '(없음)'));
+      }
+    }
   }
   L.push('');
   L.push('[디코더 기준선] px/모듈 → 필요한 QR 픽셀');
@@ -913,6 +1017,7 @@ $('go').onclick = async () => {
     ' · ' + (Cam.det ? '내장 인식기' : 'jsQR') + ' · ' + (st.frameRate ? Math.round(st.frameRate) + 'fps' : '');
   await phase1(v);
   await phase2(v);
+  try{ await phaseCameras(v); }catch(e){ R.notes.push('카메라 후보 실측 중 문제 — ' + String(e && e.message || e)); }
   finish();
 };
 $('skip').onclick = finish;
