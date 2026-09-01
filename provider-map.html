@@ -5822,9 +5822,11 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     ((currentData && currentData.assigned) || []).forEach(function(x){ if (Number(x.formRow)===Number(row)) c = x; });
     focusChild(lat, lng, c);   // 월 스케줄에서 들어오는 건 전부 배정 아동(c = 그 아이)
     var h = currentData && currentData.provider;
-    var iw = c ? buildGroupedAssignedIW([c], h&&h.lat, h&&h.lng)
+    // 마커를 직접 누른 것과 **같은 내용**(그 자리 전원, 고른 아이 맨 위) — 유성 09-02 확정(Q3), 후보 카드와 같은 전파.
+    // 리스트 클릭과 같은 문법(`_markerHolding`→`_iwForPicked`) — 좌표만으로 잡으면 마크 필터가 켜졌을 때 남의 마커에 붙는다.
+    var ex = c ? (_markerHolding(c) || findMarkerAt(lat, lng)) : findMarkerAt(lat, lng);
+    var iw = c ? _iwForPicked(ex, c, 'assigned')
                : '<div class="iw"><div class="iw-nm">이 서비스 탭에 행이 없는 아이예요</div></div>';
-    var ex = findMarkerAt(lat, lng);
     if (ex) { clearSearchMarker(); infoWindow.setContent(iw); infoWindow.open(map, ex); }
     else { var sm = placeSearchMarker(lat, lng, iw); infoWindow.setContent(iw); infoWindow.open(map, sm); }
   };
@@ -5835,9 +5837,10 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     if (!c || !c.lat || !c.lng) return;
     map.setCenter(new kakao.maps.LatLng(c.lat, c.lng));
     map.setLevel(3);
-    // 아동 카드 = 검색 결과 클릭과 같은 경로(0-9 — IW 만드는 문법은 하나)
-    var iw = buildGroupedWaitingIW([c], currentData.provider.lat, currentData.provider.lng);
-    var ex = findMarkerAt(c.lat, c.lng);
+    // 마커를 직접 누른 것과 **같은 내용**(같은 자리 전원, 고른 아이 맨 위) — 유성 09-02 확정(Q3). 옛 코드는 그 1명만
+    // 넣어, 같은 아파트에 두 명이 더 기다려도 그 화면에선 알 수 없었다. 리스트 클릭과 같은 문법(0-9 — IW 문법은 하나).
+    var ex = _markerHolding(c) || findMarkerAt(c.lat, c.lng);
+    var iw = _iwForPicked(ex, c, 'waiting');
     if (ex) { clearSearchMarker(); infoWindow.setContent(iw); infoWindow.open(map, ex); }
     else { var sm = placeSearchMarker(c.lat, c.lng, iw); infoWindow.setContent(iw); infoWindow.open(map, sm); }
   };
