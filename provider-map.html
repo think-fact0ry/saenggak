@@ -3488,7 +3488,7 @@ function setupLongPress(el) {
         var idx = parseInt(this.getAttribute('data-cidx'));
         var item = childResults[idx];
         if (!item || !item.lat || !item.lng) return;
-        window.focusChild(item.lat, item.lng, item.type === 'assigned');
+        window.focusChild(item.lat, item.lng, item.type === 'assigned' ? item.data : null);
         var iwContent = item.type === 'assigned'
           ? buildGroupedAssignedIW([item.data], currentData.provider.lat, currentData.provider.lng)
           : buildGroupedWaitingIW([item.data], currentData.provider.lat, currentData.provider.lng);
@@ -3793,7 +3793,7 @@ function renderNewList() {
         // zoom은 절대 건드리지 않음
       } else {
         // 최신순: 점프 후 확대. 배정 아동이면 선생님 집까지 담아 축소한다(유성 09-02)
-        window.focusChild(item.lat, item.lng, item.statusType === 'assigned');
+        window.focusChild(item.lat, item.lng, item.statusType === 'assigned' ? item.data : null);
       }
 
       // 기존 마커 찾아서 인포윈도우 열기 — **고른 아이를 맨 위로**(유성 2026-08-31).
@@ -5677,10 +5677,21 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
         유성이 말한 1000×1000 상자를 넘는다(실측). 폰은 폭이 작아 여백이 최소값 30으로 떨어진다.
      ② 너무 당겨지는 것만 막는다 — 아동이 선생님과 같은 건물이면 250m 시야까지 가므로 레벨 3이 하한.
      ⛔ 둘을 잇는 선은 그리지 않는다(유성 09-02). */
-  function focusChild(lat, lng, assigned){
+  /* 어느 집을 같이 보여줄 것인가 — **아이의 담당 교사** 집이다.
+     개별 교사 모드면 `provider`가 곧 그 교사지만, '전체 제공인력' 모드에선 `provider.lat`이 null이고
+     아이마다 교사가 다르다(실측: 배정 167명 / allProviders 26명). 그때는 `assignedTo`로 찾는다. */
+  function _homeOf(child){
+    var p = currentData && currentData.provider;
+    if (p && p.lat && p.lng) return p;
+    var to = child && child.assignedTo, list = (currentData && currentData.allProviders) || [];
+    for (var i = 0; i < list.length; i++) if (list[i].name === to && list[i].lat && list[i].lng) return list[i];
+    return null;
+  }
+
+  function focusChild(lat, lng, child){
     var pos = new kakao.maps.LatLng(lat, lng);
-    var h = assigned && currentData && currentData.provider;
-    if (!h || !h.lat || !h.lng){ map.setCenter(pos); map.setLevel(3); return; }
+    var h = child && _homeOf(child);
+    if (!h){ map.setCenter(pos); map.setLevel(3); return; }   // 대기 아동·집을 못 찾는 경우 = 종전 동작
     var b = new kakao.maps.LatLngBounds();
     b.extend(pos); b.extend(new kakao.maps.LatLng(h.lat, h.lng));
     var el = document.getElementById('map');
@@ -5697,7 +5708,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     if (iwToggle('sched:'+row)) return;   // 같은 버튼 다시 누름 = 말풍선만 내린다(화면 고정)
     var c = null;
     ((currentData && currentData.assigned) || []).forEach(function(x){ if (Number(x.formRow)===Number(row)) c = x; });
-    focusChild(lat, lng, true);   // 월 스케줄에서 들어오는 건 전부 배정 아동
+    focusChild(lat, lng, c);   // 월 스케줄에서 들어오는 건 전부 배정 아동(c = 그 아이)
     var h = currentData && currentData.provider;
     var iw = c ? buildGroupedAssignedIW([c], h&&h.lat, h&&h.lng)
                : '<div class="iw"><div class="iw-nm">이 서비스 탭에 행이 없는 아이예요</div></div>';
