@@ -291,7 +291,17 @@
   #schedSheet .blk.clash{background:var(--danger-weak-bg)!important;color:var(--danger-weak-fg)!important}
   /* 펼친 카드 — 흰 바탕 + 좌측바(동네색) + 그림자 2겹 (유성 확정. §3.6-9는 비고박스 조항이라 다른 층) */
   #schedSheet .blk.open{z-index:9;background:#fff!important;color:var(--g900)!important;box-shadow:var(--sh2);
-            padding:9px 12px 10px 13px;border-left:4px solid var(--g300)}
+            padding:9px 12px 10px 13px;border-left:4px solid var(--g300);position:absolute}
+  /* 펼친 아동 카드 우상단 = 지도로 보내는 버튼 (유성 2026-09-01). 이름 줄과 겹치지 않게 절대 배치 */
+  #schedSheet .blk.open .gomap{position:absolute;top:6px;right:6px;width:24px;height:24px;padding:0;
+            border:1px solid var(--g200);border-radius:7px;background:#fff;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;color:var(--g600);
+            box-shadow:0 1px 3px rgba(25,31,40,.08);transition:transform .12s,border-color .15s}
+  #schedSheet .blk.open .gomap:hover{border-color:var(--green600);color:var(--green700)}
+  #schedSheet .blk.open .gomap:active{transform:scale(.92)}
+  #schedSheet .blk.open .gomap svg{width:14px;height:14px;stroke:currentColor;fill:none;
+            stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #schedSheet .blk.open .nm{padding-right:26px}   /* 버튼 자리 확보 — 이름이 아이콘 밑으로 안 들어가게 */
   #schedSheet .blk.open .nm{font-size:13px;font-weight:800;line-height:1.3;white-space:normal}
   #schedSheet .blk.open .tm{font-size:10.5px;opacity:1;color:var(--g600);margin-top:1px}
   #schedSheet .det{font-size:10.5px;line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px solid var(--g100)}
@@ -1025,6 +1035,19 @@ var CONFIG = {
 };
 
 var map, markers = [], overlays = [], infoWindow;
+
+/* ── 같은 곳을 다시 누르면 말풍선을 내린다 (유성 2026-09-01) ──────────────────────────
+   말풍선이 아래 지도를 가려서, 위치를 확인한 뒤엔 걷어낼 길이 필요하다.
+   ⛔**화면은 안 움직인다** — 두 번째 누름은 닫기만 하고 `setCenter`까지 못 가게 호출부에서 `return`한다.
+      (유성: "화면만 그 아동 마커에 이동인 거고, 마커의 정보를 끄는 느낌")
+   적용 = 후보 사이드바 카드 · 신청폼 리스트 · 월 스케줄 지도 버튼 · 마커 직접 클릭 4종.
+   ⛔검색 결과는 제외(유성) — 거긴 매번 새 대상을 찾는 흐름이다.
+   열림 판정은 내 플래그가 아니라 **DOM에 `.iw`가 있나**로 본다 — 카카오가 제 맘대로 닫아도 안 어긋난다. */
+var _iwKey = null, _mkSeq = 0;
+function iwToggle(key){
+  if (_iwKey === key && document.querySelector('.iw')) { infoWindow.close(); _iwKey = null; return true; }
+  _iwKey = key; return false;
+}
 var currentData = null;
 var michuholCenter = null;   // 미추홀 센터(주안로 128) 좌표 — 지오코딩 1회로 채워 시작 중심에 사용
 // 4개 센터(빨간 테두리 흰 원 마커로 표시). 주소→좌표 1회 변환. ⚠️ 서구·연수·남동(행복마음) 주소 받으면 addr 채울 것
@@ -2037,7 +2060,10 @@ function addMarker(lat, lng, type, count, iwContent, items) {
   var img = getMarkerImage(type, count);
   var m = new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:type==='home'?10:(type==='assigned'?5:1)});
   m.__items = items || null; m.__kind = type;
-  kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
+  var _mkKey = 'mk:' + (++_mkSeq);   // 좌표로 키를 만들면 같은 집의 대기·마크 마커가 충돌한다
+  kakao.maps.event.addListener(m,'click',function(){
+    if (iwToggle(_mkKey)) return;   // 같은 마커 다시 클릭 = 말풍선 내리기(유성 09-01)
+    infoWindow.setContent(iwContent); infoWindow.open(map,m); });
   markers.push(m);
 }
 
@@ -2059,7 +2085,10 @@ function addMarkMarker(lat, lng, count, iwContent, items, kind) {
   var m = new kakao.maps.Marker({position:pos,image:getMarkImage(count),map:map,zIndex:11});   // 배정(5)·집(10) 위, 센터(12) 아래
   m.__items = items || null; m.__kind = kind || 'waiting';
   m.__mark = true;   // 마크(행정 shortlist)는 기간 슬라이더로 자르지 않는다 — 요일/시간 필터를 무시하는 규칙과 같은 결
-  kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
+  var _mkKey = 'mk:' + (++_mkSeq);   // 좌표로 키를 만들면 같은 집의 대기·마크 마커가 충돌한다
+  kakao.maps.event.addListener(m,'click',function(){
+    if (iwToggle(_mkKey)) return;   // 같은 마커 다시 클릭 = 말풍선 내리기(유성 09-01)
+    infoWindow.setContent(iwContent); infoWindow.open(map,m); });
   markers.push(m);
 }
 
@@ -2137,7 +2166,10 @@ function addHomeRingMarker(lat,lng,iwContent,z){
   var pos=new kakao.maps.LatLng(lat,lng);
   var img=getRingImage();
   var m=new kakao.maps.Marker({position:pos,image:img,map:map,zIndex:z||0});
-  kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iwContent);infoWindow.open(map,m)});
+  var _mkKey = 'mk:' + (++_mkSeq);   // 좌표로 키를 만들면 같은 집의 대기·마크 마커가 충돌한다
+  kakao.maps.event.addListener(m,'click',function(){
+    if (iwToggle(_mkKey)) return;   // 같은 마커 다시 클릭 = 말풍선 내리기(유성 09-01)
+    infoWindow.setContent(iwContent); infoWindow.open(map,m); });
   markers.push(m);
 }
 
@@ -2150,8 +2182,13 @@ function getCenterImage(){
 }
 function addCenterMarker(pos, name, z){
   var m = new kakao.maps.Marker({position:pos, image:getCenterImage(), map:map, zIndex:z});
-  var iw = '<div class="iw"><div class="iw-nm">'+esc(name)+'<span class="iw-bdg ctr">센터</span></div></div>';
-  kakao.maps.event.addListener(m,'click',function(){infoWindow.setContent(iw);infoWindow.open(map,m)});
+  // 센터에도 출발·도착을 단다 (유성 2026-09-01 — 원래 없었다). 아동·선생님 집과 같은 문법
+  var _mkKey = 'mk:' + (++_mkSeq);
+  var iw = '<div class="iw"><div class="iw-nm">'+esc(name)+'<span class="iw-bdg ctr">센터</span></div>'
+    + routeBtns(name, pos.getLat(), pos.getLng()) + '</div>';
+  kakao.maps.event.addListener(m,'click',function(){
+    if (iwToggle(_mkKey)) return;      // 같은 마커 다시 클릭 = 말풍선 내리기
+    infoWindow.setContent(iw); infoWindow.open(map,m); });
   markers.push(m);
 }
 
@@ -3675,6 +3712,8 @@ function renderNewList() {
       var idx = parseInt(this.getAttribute('data-idx'));
       var item = filtered[idx];
       if (!item || !item.lat || !item.lng) { showToast('좌표 없음'); return; }
+      // 같은 줄 다시 누름 = 말풍선만 내린다(화면 고정, 유성 09-01)
+      if (iwToggle('nl:'+(item.row || item.formRow || '')+':'+item.name)) return;
 
       var pos = new kakao.maps.LatLng(item.lat, item.lng);
 
@@ -5101,6 +5140,10 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
 
   function hh(m){ var h=Math.floor(m/60), x=m%60; return (h<10?'0':'')+h+':'+(x<10?'0':'')+x; }
   function dur(m){ if(m<60) return m+'분'; var h=Math.floor(m/60), x=m%60; return h+'시간'+(x?' '+x+'분':''); }
+  /** 빈 칸 문구는 **두 줄**로 (유성 지시) — `+1시간` / `23분`. 레인이 41~60px라 한 줄이면 잘린다.
+      시간 단위가 없으면(`+45분`) 한 줄 그대로. */
+  function durBr(m){ var s=dur(m), i=s.indexOf(' ');
+    return i<0 ? '+'+esc(s) : '+'+esc(s.slice(0,i))+'<br>'+esc(s.slice(i+1)); }
   function short(a){ return String(a||'').replace(/^인천(광역시)?\s*/,'').replace(/^[가-힣]+시\s*/,'')
     .replace(/^[가-힣]+구\s*/,'').replace(/\s+/g,' ').trim().slice(0,18); }
 
@@ -5250,7 +5293,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
         // 앞·뒤 자리(edge)는 **투명**하게 둔다(유성 08-26) — hover·열림에서만 드러난다
         h+='<div class="free'+(g.edge?' edge':'')+(CAND.key===gkey(d,g)?' on':'')
           + '" style="top:'+top+'px;height:'+hgt+'px" onclick="scFx('+(RL.length-1)+')">'
-          + '<span class="f1">+'+dur(g.min)+'</span></div>';
+          + '<span class="f1">'+durBr(g.min)+'</span></div>';
       });
       var GS=groups(vs,d);
       GS.forEach(function(g,gi){
@@ -5327,9 +5370,16 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
       + (ov<=10? '. 흔들림이 큰 아이면 추정 오차일 수 있어요':'');
   }
   /** 계획(S·T)/기록(역산)을 펼쳤을 때 두 줄 나란히 — 블록에 그리는 시각은 기록이 이긴다(유성 픽 08-16) */
+  /** 펼친 아동 카드 우상단 「지도에서 보기」 (유성 2026-09-01). 좌표를 모르는 아이(06에 행 없음)는 안 단다 */
+  function goMapBtn(v){
+    if (v.lat == null || v.lng == null) return '';
+    return '<button class="gomap" title="지도에서 보기" onclick="scGo(event,'+v.lat+','+v.lng
+      + ',' + (v.row||0) + ')"><svg viewBox="0 0 24 24">'
+      + '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></button>';
+  }
   function detail(v,id){
     var st = v.src==='st';
-    var h='<div class="det">';
+    var h=goMapBtn(v)+'<div class="det">';
     h+='<div class="drow"><span class="dl">주소</span><span class="dv">'+(v.ad?esc(v.ad):'-')+'</span></div>';
     h+='<div class="drow"><span class="dl">계획</span><span class="dv">'
       + (st? v.d+' '+hh(v.s)+fixBtn(v,id,'고치기')
@@ -5351,7 +5401,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   }
   function detailSib(u,id){
     var a=u.mem[0];
-    var h='<div class="det">';
+    var h=goMapBtn(a)+'<div class="det">';   // 형제는 같은 집이라 첫 아이 좌표로 보낸다
     h+='<div class="drow"><span class="dl">주소</span><span class="dv">'+(a.ad?esc(a.ad):'-')+'</span></div>';
     u.mem.forEach(function(x,mi){
       h+='<div class="drow"><span class="dl">기록</span><span class="dv">'+esc(x.n)+' '+x.d+' '+hh(x.s)
@@ -5551,7 +5601,24 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     _candCutT = setTimeout(function(){ candDraw(); }, 180);
   }
   window.candCut = candCut;
+  /** 월 스케줄 아동 카드 → 지도 (유성 2026-09-01). 배정 아동이라 `assigned`에서 찾는다.
+      ⚠️ `e.stopPropagation()`이 없으면 카드가 접힌다(블록 전체가 `scTap` 핸들러). */
+  window.scGo = function(e, lat, lng, row){
+    if (e) e.stopPropagation();
+    if (iwToggle('sched:'+row)) return;   // 같은 버튼 다시 누름 = 말풍선만 내린다(화면 고정)
+    var c = null;
+    ((currentData && currentData.assigned) || []).forEach(function(x){ if (Number(x.formRow)===Number(row)) c = x; });
+    map.setCenter(new kakao.maps.LatLng(lat, lng));
+    map.setLevel(3);
+    var h = currentData && currentData.provider;
+    var iw = c ? buildGroupedAssignedIW([c], h&&h.lat, h&&h.lng)
+               : '<div class="iw"><div class="iw-nm">이 서비스 탭에 행이 없는 아이예요</div></div>';
+    var ex = findMarkerAt(lat, lng);
+    if (ex) { clearSearchMarker(); infoWindow.setContent(iw); infoWindow.open(map, ex); }
+    else { var sm = placeSearchMarker(lat, lng, iw); infoWindow.setContent(iw); infoWindow.open(map, sm); }
+  };
   window.candGo = function(row){
+    if (iwToggle('cand:'+row)) return;   // 같은 카드 다시 누름 = 말풍선만 내린다(화면 고정, 유성 09-01)
     var c = null;
     ((currentData && currentData.waiting) || []).forEach(function(x){ if (Number(x.row)===Number(row)) c = x; });
     if (!c || !c.lat || !c.lng) return;
