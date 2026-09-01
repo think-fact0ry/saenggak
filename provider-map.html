@@ -5315,6 +5315,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
         그건 맞는 게 아니라 **모름**이다(08-08 가용시간 사고와 같은 규율: 모름 ≠ 아님/맞음). */
   var CAND = { key:null, g:null, list:[] };
   var CAND_KM = 1, CAND_HD = 24, CAND_PAD = 14, CAND_CARD = 34, CAND_GAP = 4, CAND_MAPMIN = 120;
+  var CAND_FRESH = 90;   // 같은 단지를 1순위로 올리는 신청 나이 상한(일) — 슬라이더 '최근 3개월'과 같은 값
   function gkey(d,g){ return d+'|'+g.s+'|'+g.e; }
   function candH(rows){ return CAND_HD + CAND_PAD + rows*CAND_CARD + (rows-1)*CAND_GAP; }
 
@@ -5357,8 +5358,15 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
       var v;
       if (!raw || !/[월화수목금토일]-\d/.test(raw)) v = 1;
       else v = hrs.some(function(x){ return matchesTimeFilter(raw, d, x); }) ? 0 : 2;
+      /* 같은 단지(좌표 일치)는 시간이 안 맞아도 1순위로 올린다 — **단 3개월 내 신청일 때만**(유성 09-01).
+         오래 기다린 집을 "같은 건물"이라는 이유만으로 맨 위에 올리면, 정작 지금 움직이는 집이 밀린다.
+         기준은 슬라이더와 **같은 축**(`_waAgeDays` = 행 순서 running-max)이라 「최근 3개월」로 놓고 보면
+         화면에 남은 같은 단지 아이는 전부 승격된다. ⚠️ 카드에 찍는 접수일(원본)과는 다를 수 있다 —
+         재신청·본인수정한 집은 접수일이 옛날이어도 '최근'으로 잡힌다(그게 "다시 하고 싶다"는 신호).
+         시각을 모르는 집은 승격 안 한다(`_waAgeDays`가 Infinity) — 모르면 안 올리는 쪽이 안전하다. */
+      var sameSite = (pv && sameSpot(c,pv)) || (nx && sameSpot(c,nx));
       out.push({ c:c, km:km, v:v,
-                 rk:(((pv && sameSpot(c,pv)) || (nx && sameSpot(c,nx))) ? 0 : 1) });
+                 rk:(sameSite && _waAgeDays(c) <= CAND_FRESH) ? 0 : 1 });
     });
     out.sort(function(a,b){
       if (a.rk !== b.rk) return a.rk - b.rk;
