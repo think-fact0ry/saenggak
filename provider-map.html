@@ -2210,8 +2210,8 @@ function buildHomeIW(p) {
              && [].some.call(_sel.options, function(o){ return o.value === p.name; });
   return '<div class="iw"><div class="iw-nm">'+esc(p.name)+'<span class="iw-bdg tc">선생님</span></div>'
     +'<div class="iw-tbl">'+iwRow('pin','위치','집')+'</div>'
-    +(_can ? '<div class="iw-r2"><button class="iw-chip gw" onclick="pickProvider(\''+escQ(p.name)
-             +'\')">이 선생님만 보기</button></div>' : '')
+    +(_can ? '<div class="iw-r2"><button class="iw-chip wb" onclick="pickProvider(\''+escQ(p.name)
+             +'\')">이 선생님만 보기</button></div>' : '')   /* 출발·도착과 같은 결(유성 09-01) */
     +routeBtns(p.name+' 집',p.lat,p.lng)+'</div>';
 }
 
