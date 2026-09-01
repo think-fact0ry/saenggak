@@ -98,7 +98,7 @@
   /* 띠 통계 = 라벨/숫자 두 층(유성 2026-08-31). 라벨(배정·대기·명 중)은 셋이 같은 크기여야 한다.
      ⚠️ 연결어 '명 중'도 <i>로 감싸야 라벨과 같아진다(맨 텍스트면 바 font-size가 그대로 남는다).
      ⚠️ line-height:1 필수 — 바에서 상속받은 line-height를 그대로 두면 상자가 글자보다 커져 글자가 위로 쏠린다. */
-  .dash-stat{color:var(--g500);display:inline-flex;align-items:center;gap:var(--ds-gap);white-space:nowrap;line-height:1}
+  .dash-stat{color:var(--g500);display:inline-flex;align-items:baseline;gap:var(--ds-gap);white-space:nowrap;line-height:1}
   .dash-stat i{font-style:normal;font-size:var(--ds-lab);font-weight:600;color:var(--g500);line-height:1}
   .dash-stat b{font-size:var(--ds-num);color:var(--green700);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.2px;line-height:1}
   .dash-stat b + i{margin-left:calc(var(--ds-unit) - var(--ds-gap))}   /* 숫자 바로 뒤 단위는 더 바짝 */
@@ -125,7 +125,8 @@
   /* 탭 이동·놓고 안착만 미끄러진다. 끄는 중엔 클래스가 없어 left 전환 0 = 손가락 그대로 따라온다. */
   .wa.anim .thumb,.wa.anim .pill{transition:left .34s var(--ease), transform .16s var(--ease), box-shadow .18s, border-color .18s}
   .wa:focus-visible{outline:2px solid var(--green600);outline-offset:3px;border-radius:8px}
-  .dash-filters{display:flex;gap:6px;margin-left:auto}
+  /* align-items 필수 — 없으면 stretch라 높이 고정인 슬라이더(.wa 18px)가 **위로 붙는다**(유성 09-02) */
+  .dash-filters{display:flex;gap:6px;margin-left:auto;align-items:center}
   .prov-link-btn{padding:3px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid var(--g200);background:#fff;color:#666;transition:all .15s;white-space:nowrap}
   .prov-link-btn:hover{background:#f8fbf9;border-color:var(--green600);color:var(--green700)}
 
@@ -736,10 +737,14 @@
     /* 요일·시간 드롭다운을 아이콘으로 줄인다(유성 픽) — 라벨 글자를 지우고 축은 라인 아이콘이 말한다(§3.5).
        ⚠️ width:auto면 브라우저가 가장 긴 option에 맞춰 벌리므로 고정 폭. */
     .dashboard .dash-filters select{
-      width:50px;max-width:none;min-width:0;flex-shrink:0;padding:4px 14px 4px 20px;
+      width:62px;max-width:none;min-width:0;flex-shrink:0;padding:4px 14px 4px 20px;
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
       background-repeat:no-repeat,no-repeat;background-position:left 4px center,right 3px center;
     }
+    /* '전체'는 글자를 안 그린다 — 28px 칸에 '전체 요일'(39px)이 안 들어가 잘려 보였다(유성 09-02).
+       고르면 '월'·'14시'는 온전히 들어간다. 펼친 목록은 네이티브 UI라 이 색을 안 탄다. */
+    .dashboard .dash-filters select.allsel{color:transparent}
+    .dashboard .dash-filters select.allsel option{color:#333}
     .dashboard .dash-filters select#filterTime{
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
     }
@@ -749,9 +754,13 @@
     #schedSheet .blk{left:0;right:0;padding:5px 3px 3px}
     #schedSheet .blk.tight{padding:2px 3px 1px}
     #schedSheet .blk.open{padding:9px 10px 10px 11px}
-    /* 📊는 필터 뒤로 밀어 「선생님·배정·대기·마크」가 드롭다운과 한 줄에 오게 (유성 09-02) */
-    #dashLink{order:5}
-    .wa{width:130px}
+    /* 📊·필터를 고정폭으로 두고 드롭다운이 남는 폭을 먹으면 셋이 한 줄에 들어간다(유성 09-02
+       "드롭다운 칸을 줄여서 선생님/배정/대기/마크를 1열에"). 실측 360px에서 드롭다운 121px. */
+    #dashLink{flex-shrink:0}
+    #providerSelect{flex:1 1 0;min-width:0;max-width:none}
+    /* 대시보드 띠는 한 줄이 정원 — 오른쪽으로 밀지 않는다(유성 "70과 날짜 사이 여백이 너무 많고") */
+    .dash-filters{margin-left:0}
+    .wa{width:102px}
     .wa .pill{font-size:9.5px;padding:2px 7px}
     .controls{padding:6px 8px;gap:4px}
     .logo,.divider{display:none}
@@ -1284,7 +1293,7 @@ function initMap() {
   // ══ 대기 기간 슬라이더 부팅 ══
   // 기본값 = **최근 3개월**(유성 2026-08-31). 저장하지 않으므로 새로고침하면 늘 여기로 돌아온다.
   waV = WA_STOPS[2].v;
-  _waBind(); _waPlace(); _waLayout();
+  _waBind(); _waPlace(); _waLayout(); _dashSelMark();
   // 화면이 480px 경계를 넘나들면 슬라이더 자리(상단 바 ↔ 둘째 줄)와 둘째 줄 축약을 다시 잡는다.
   var _waRz = null;
   function _waOnResize(){
@@ -1514,7 +1523,7 @@ document.getElementById('providerSelect').addEventListener('change', function() 
 
 function loadAllProviders(keepView) {
   infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
-  if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; }
+  if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; _dashSelMark(); }
   document.getElementById('provLinkBtn').style.display='none';
   var key='__ALL__|'+currentService;
   var done=function(data){
@@ -1551,7 +1560,7 @@ function updateProviderCounts(assigned) {
 
 function loadMapData(name, keepView) {
   infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
-  if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; }
+  if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; _dashSelMark(); }
   document.getElementById('provLinkBtn').style.display='inline-block';
   var key=name+'|'+currentService;
   var done=function(data, noFit){
@@ -1707,7 +1716,15 @@ function getFilteredWaiting() {
   return currentData.waiting.filter(function(c) { return matchesTimeFilter(c.times, day, hour); });
 }
 
-function applyFilters() { renderMarkers(); updateDashboard(); }
+/* '전체'면 글자를 안 그린다(CSS .allsel) — 좁은 폰 28px 칸에 '전체 요일'이 안 들어가 잘렸다.
+   값을 바꾸는 곳이 여러 군데(초기화·유지복원)라 **여기 한 곳**이 아니라 함수로 뽑아 다 부른다. */
+function _dashSelMark(){
+  ['filterDay','filterTime'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.classList.toggle('allsel', !el.value);
+  });
+}
+
+function applyFilters() { _dashSelMark(); renderMarkers(); updateDashboard(); }
 // currentData가 갈리면 기준 시각표(_waEff)도 다시 만들어야 한다 — 안 하면 옛 서비스의 행 번호로 자른다
 function _waInvalidate(){ _waEff = null; }
 
@@ -1903,6 +1920,7 @@ function _waPlace(){
   }
   _waLayout();
 }
+
 
 /* 모바일 둘째 줄이 한 줄에 안 들어가면 '배정'을 뺀다(V2→V3, 유성 2026-08-31).
    고정 브레이크포인트가 아니라 **실측**이다 — 필요 폭은 기기·폰트에 따라 몇 px 달라져서
