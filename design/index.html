@@ -804,6 +804,23 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <button class="btn shk" id="shkBtn" disabled>퇴근</button>
   </div>
 
+  <h3 class="sec">값이 바뀌어도 컨트롤은 안 움직인다 <span class="oldref">§4.9 · 2026-09-02 유성</span></h3>
+  <p class="desc">지도 대시보드 띠에서 대기 슬라이더를 맨 왼쪽으로 끌면 <b>버벅이면서 슬라이더가 커졌다</b>(유성 실기기). 원인은 <code>대기 280 중 70</code> → <code>대기 280</code>으로 <b>글자가 줄면서 생긴 폭 차이</b>가 드롭다운 이동(−30px)과 슬라이더 폭 증가(+30px)로 번진 것. 그게 드래그 내내 매 프레임 일어났다. 유성: <b>"드롭다운이나 슬라이더의 크기나 위치가 막 변경되면 유저는 불편함을 느낌."</b><br>
+  ⇒ 살아 움직이는 값이 컨트롤과 <b>같은 줄</b>에 있으면 <b>가장 긴 형태의 폭을 미리 깔아 둔다</b>(<code>min-width</code>). 값이 짧아져도 칸은 그대로, <b>글자만</b> 바뀐다. 손이 닿아 있는 컨트롤이 손 밑에서 움직이는 건 가장 나쁜 레이아웃 이동이다. ⚠️재는 시점은 <b>그 줄이 보이게 된 뒤</b>(숨김 상태면 0이 나온다). <b>아래 슬라이더를 끌어 보세요 — 바닥을 끄면 오른쪽 것들이 같이 움직입니다</b> ↓</p>
+  <div class="demo" style="max-width:380px">
+    <div style="display:flex;align-items:center;gap:6px;background:#fafaf7;border:1px solid var(--g100);border-radius:10px;padding:6px 8px">
+      <span id="lsStat" style="display:inline-flex;align-items:baseline;gap:3px;white-space:nowrap;color:var(--g500);font-size:10.5px;font-weight:600"></span>
+      <span style="flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px">
+        <span id="lsSel" style="flex-shrink:0;font-size:10.5px;font-weight:600;color:var(--g700);background:#fff;border:1px solid var(--g200);border-radius:6px;padding:4px 8px">요일 ▾</span>
+        <input id="lsRange" type="range" min="0" max="100" value="35" style="flex:1 1 0;min-width:0;accent-color:#ef7006">
+      </span>
+    </div>
+    <label style="display:flex;align-items:center;gap:7px;margin-top:11px;font-size:13px;color:var(--g700);cursor:pointer">
+      <input type="checkbox" id="lsPin" checked style="accent-color:var(--green600);width:16px;height:16px"> 가장 긴 형태로 바닥 깔기(<code>min-width</code>)
+    </label>
+    <div id="lsRead" style="margin-top:8px;font-size:12px;color:var(--g500)"></div>
+  </div>
+
   <h3 class="sec">넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드 <span class="oldref">§4.13-6 · 2026-07-29 확정</span></h3>
   <p class="desc">하단 고정 CTA 위에 스크롤 목록이 앉는 화면은 ⓐ <b>스크롤바를 숨긴다</b>(<code>scrollbar-width:none</code> + <code>::-webkit-scrollbar{width:0}</code>) — 미관만이 아니라, 막대가 <b>생기는 순간 콘텐츠 폭이 줄어 행 안의 우측 칩이 옆으로 튀기</b> 때문(유성 적발, 08 반출납). ⓑ 대신 아래쪽 ~28px를 <b>투명도 그라데이션</b>으로 옅어지게(<code>mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent)</code>) → "아래에 더 있다"를 가리지 않고 알림. ⚠️ <b>딤(어둡게)이 아니라 투명도</b>(유성: "어둡게 하자는 건 아니고"). <b>아래 목록을 스크롤해 보세요</b> ↓</p>
   <div class="demo" style="max-width:360px">
@@ -1255,6 +1272,35 @@ if(solo) solo.addEventListener('click',()=>solo.classList.toggle('solo'));
   var st = document.createElement('style'); st.textContent = '@keyframes kpShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}'; document.head.appendChild(st);
   forgot.onclick = function () { titleSet('여기서 문자 인증(OTP)으로 넘어가요 (데모)', false); setTimeout(function () { titleSet('비밀번호를 눌러주세요', false); }, 1400); };
   build(); armForgot();
+})();
+
+/* §4.9 레이아웃 안정 데모 (2026-09-02) — 바닥을 끄면 글자 폭 변화가 옆 컨트롤로 번지는 걸 눈으로 본다 */
+(function(){
+  var stat=document.getElementById('lsStat'), rng=document.getElementById('lsRange'),
+      pin=document.getElementById('lsPin'), sel=document.getElementById('lsSel'), read=document.getElementById('lsRead');
+  if(!stat||!rng) return;
+  var MIN=0;
+  function widest(){
+    var probe=stat.cloneNode(false); probe.removeAttribute('id');
+    probe.style.position='absolute'; probe.style.visibility='hidden'; probe.style.minWidth='0';
+    probe.innerHTML=body(280); stat.parentNode.appendChild(probe);
+    var w=probe.getBoundingClientRect().width; probe.parentNode.removeChild(probe);
+    if(w>0) MIN=Math.ceil(w);
+  }
+  function body(live){
+    return live===null ? '대기 <b style="font-size:12px;color:var(--green700)">280</b>'
+      : '대기 <b style="font-size:12px;color:var(--g700)">280</b> 중 <b style="font-size:12px;color:var(--green700)">'+live+'</b>';
+  }
+  function draw(){
+    var v=+rng.value, live = v===0 ? null : Math.round(280*(1-v/100)) || 1;
+    stat.innerHTML=body(live);
+    stat.style.minWidth = pin.checked && MIN ? MIN+'px' : '';
+    var s1=Math.round(sel.getBoundingClientRect().left), s2=Math.round(rng.getBoundingClientRect().width);
+    read.textContent='드롭다운 x '+s1+'px · 슬라이더 폭 '+s2+'px' + (pin.checked?'  (끌어도 안 변합니다)':'  ← 끌어 보세요, 둘 다 움직입니다');
+  }
+  widest(); draw();
+  rng.addEventListener('input', draw); pin.addEventListener('change', draw);
+  window.addEventListener('resize', function(){ widest(); draw(); });
 })();
 </script>
 </body>
