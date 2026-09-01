@@ -14,6 +14,42 @@
      06 doGet은 ALLOWALL 적용됨(contact.html과 동일). GAS /exec 직접주소도 그대로 작동(이미 퍼진 링크 안 막음). */
   .apply-frame{display:block;width:100%;height:100vh;height:100svh;border:0;background:#3a8a5f;}
 </style>
+<script>
+// 유입버킷 브릿지 — 측정 전용, 화면·URL 무변경 (2026-09-02, 유성 확정 ⓑ "옛 페이지에 브릿지만").
+// 왜: 이 옛 주소로 폼을 연 제출은 06 시트 X열 '유입버킷'이 embed-nosrc(부모가 src를 안 보냄)로 비어 있었다 —
+//     브릿지는 kr contact.html에만 있었고 이 페이지는 iframe뿐이었다(08-31 실측).
+// 무엇: 폼(06 Apply.html)이 window.top으로 보내는 ready·step 메시지에 e.source로 {tfParent:1, src:'legacy-<리퍼러 버킷>'} 회신.
+//     버킷 규칙 = think-factory js/analytics.js tfSrcBucket의 리퍼러 부분을 그대로 복제(이 페이지는 최상위라 document.referrer가 진짜 출처).
+//     vh는 보내지 않는다(보내면 폼 세로중앙 --pvh가 바뀜 — 대면 변화 0 조건). step에도 회신 = ready를 놓쳐도 제출 전에 다시(세션당 ≤41회, 폼 쪽은 멱등 저장).
+//     GAS는 이중 iframe이라 contentWindow로는 못 보내고 e.source 회신만 가능(contact.html과 같은 구조).
+// 되돌리기 = 이 <script> 블록 삭제. 결합·값 사전 = 부모 레포 scripts/06_신청배정/CLAUDE.md 📥 절.
+(function () {
+  function bucket() {
+    try {
+      var r = document.referrer; if (!r) return 'direct';
+      var h = new URL(r).hostname;
+      if (h === location.hostname) return 'site';
+      if (/blog\.naver\.com$/.test(h)) return 'blog-naver';
+      if (/search\.naver\.com$/.test(h)) return 'search-naver';
+      if (/naver\.com$/.test(h)) return 'naver';
+      if (/google\./.test(h)) return 'search-google';
+      if (/daum\.net$|bing\.com$|yahoo\./.test(h)) return 'search-other';
+      if (/instagram\.com$|facebook\.com$|fb\.com$|threads\.net$/.test(h)) return 'sns';
+      if (/chatgpt\.com$|openai\.com$|perplexity\.ai$|gemini\.google\.com$|copilot\.microsoft\.com$/.test(h)) return 'ai';
+      return 'other';
+    } catch (e) { return 'other'; }
+  }
+  var SRC = 'legacy-' + bucket();   // 최장 'legacy-search-google' 20자 — 06 _srcBucket_ 상한 32·허용문자 [A-Za-z0-9:_.-] 안
+  // GAS 폼 출처만 — 호스트네임 정확/접미 매칭(부분문자열 'google'은 google.attacker.com도 통과해 위험). contact.html okGasOrigin과 동일.
+  function okGasOrigin(o) { try { var h = new URL(o).hostname; return h === 'script.google.com' || h.endsWith('.googleusercontent.com'); } catch (e) { return false; } }
+  window.addEventListener('message', function (e) {
+    if (!okGasOrigin(e.origin)) return;
+    var d = e.data; if (!d || d.tfApply !== 1) return;
+    if (d.type !== 'ready' && d.type !== 'step') return;
+    try { e.source.postMessage({ tfParent: 1, src: SRC }, '*'); } catch (err) {}
+  });
+})();
+</script>
 </head>
 <body>
 <iframe class="apply-frame" title="오감쑥쑥 바우처 신청폼"
