@@ -1689,6 +1689,28 @@ function loadStaffMap(keepView){
   }).catch(function(e){ showLoading(false); showToast('로드 실패: '+e.message); });
 }
 
+/* ══ 대기 칸의 폭을 미리 깔아 둔다 (유성 09-02 실기기 적발) ══
+   슬라이더를 끌면 이 칸 글자가 '대기 280 중 70' ↔ '대기 280'으로 바뀐다. 폭까지 같이 변하면
+   그 차이가 **드롭다운 이동 + 슬라이더 폭 변화**로 번져 드래그가 버벅인다(슬라이더가 flex라 남는 폭을 먹는다).
+   ⇒ 나올 수 있는 가장 긴 형태('중'이 있고 두 수가 같은 자릿수)를 미리 재서 min-width로 깔면 **글자만** 바뀐다.
+   자릿수를 정하는 `base`는 요일/시간 필터가 바꾸는 값이지 슬라이더가 바꾸는 값이 아니라, 드래그 중엔 고정이다. */
+var _dwSig = '', _dwMin = 0;
+function _dwReserve(dw, base, narrow){
+  var sig = base + '|' + (narrow ? 1 : 0);
+  if (sig !== _dwSig){
+    var probe = document.createElement('span');
+    probe.className = dw.className;   // 같은 글자 크기·굵기라야 폭이 맞는다(id는 안 복제 — 중복 id 금지)
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;min-width:0';
+    probe.innerHTML = '<i>대기</i><b class="den">' + base + '</b><i>' + (narrow ? '중' : '명 중')
+                    + '</i><b>' + base + '</b>' + (narrow ? '' : '<i>명</i>');
+    dw.parentNode.appendChild(probe);
+    var w = probe.getBoundingClientRect().width;
+    probe.parentNode.removeChild(probe);
+    if (w > 0){ _dwMin = Math.ceil(w); _dwSig = sig; }   // 띠가 숨겨져 0이 나오면 캐시하지 않는다
+  }
+  if (_dwMin) dw.style.minWidth = _dwMin + 'px';
+}
+
 // ══ 대시보드 ══
 function updateDashboard() {
   if (!currentData) return;
@@ -1708,6 +1730,8 @@ function updateDashboard() {
       : '<i>대기</i><b class="den">' + base.length + '</b><i>' + (narrow ? '중' : '명 중') + '</i><b>' + live + '</b>' + unit;
   }
   document.getElementById('dashboard').classList.add('show');
+  // 띠가 보이게 된 **뒤에** 잰다 — 숨김 상태에서 재면 0이 나와 바닥을 못 깐다(08-31·09-02와 같은 함정)
+  if (dw) _dwReserve(dw, base.length, narrow);
   if (typeof _waLayout === 'function') _waLayout();   // 띠가 열린 그 자리에서(폰=슬라이더가 이 안에 있다)
   _fitDashbar();
 }
@@ -1951,11 +1975,19 @@ function _barWraps(bar){
   });
   return bar.getBoundingClientRect().height > padY + maxH + 1;
 }
+var _fdSig = '';
 function _fitDashbar(){
   var bar = document.getElementById('dashboard');
-  if (!bar || !bar.classList.contains('show')) return;
+  if (!bar || !bar.classList.contains('show')){ _fdSig = ''; return; }
   var asg = bar.querySelector('.ds-asg'), tot = bar.querySelector('.ds-total');
   if (!asg || !tot) return;
+  /* 이 함수는 '보이게 → 재고 → 숨긴다'라 **강제 레이아웃**을 한 번 일으킨다.
+     슬라이더를 끄는 동안 매 프레임 불리는데(rAF → updateDashboard → 여기), 폭을 정하는 값이 그대로면
+     판정도 그대로다. 그 경우 건너뛰어 드래그 중 강제 레이아웃을 0으로 만든다(유성 09-02 '버벅임').
+     ⚠️ 폭에 영향을 주는 값을 다 넣어야 한다 — 화면 폭·대기칸 바닥폭·나머지 두 수의 자릿수. */
+  var sig = window.innerWidth + '|' + _dwMin + '|' + tot.textContent + '|' + asg.textContent;
+  if (sig === _fdSig) return;
+  _fdSig = sig;
   if (window.innerWidth > 480){ asg.style.display = ''; tot.style.display = ''; return; }
   tot.style.display = 'none';        // 폰에선 '전체'를 늘 뺀다(V2 확정)
   asg.style.display = '';
