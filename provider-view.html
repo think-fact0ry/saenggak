@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>내 배정 아동 지도</title>
 <meta property="og:title" content="수업 일정 지도 — 생각공작소">
-<meta property="og:description" content="오감쑥쑥 선생님 전용 지도 · 수업 일정·이동 경로 확인">
+<meta property="og:description" content="오감쑥쑥 선생님 전용 지도 — 수업 일정과 이동 경로 확인">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://think-fact0ry.github.io/saenggak/android-icon-192x192.png">
 <!-- ═ 파비콘 ═ -->
@@ -433,7 +433,7 @@ function buildChildIW(items,hLat,hLng){
     var curDay=c.confirmedDay||'',curOrder=c.confirmedTime||'';
     h+='<div class="iw-tbl">';
     h+=iwRow('pin','주소',esc(c.address));
-    if(curDay)h+=iwRow('clock','확정','<b>'+esc(curDay)+(curOrder?' · '+esc(curOrder)+'번째':'')+'</b>');
+    if(curDay)h+=iwRow('clock','확정','<b>'+esc(curDay)+(curOrder?' / '+esc(curOrder)+'번째':'')+'</b>');
     if(c.times)h+=iwRow('cal','희망',iwSegs(c.times)+earlyBadge(c.notes));
     if(c.notes)h+=iwRow('note','참고',esc(c.notes),'dim');
     if(c.phone)h+=iwRow('phone','전화','<a href="tel:'+esc(c.phone)+'">'+esc(fmtPhone(c.phone))+'</a>');

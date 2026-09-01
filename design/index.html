@@ -835,6 +835,44 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     </div>
   </div>
 
+  <h3 class="sec">그린 그라디언트로 "더 있다"를 말한다 — 범위 = 스크롤되는 곳 전부 <span class="oldref">§4.13-6 · 2026-09-02 확정</span></h3>
+  <p class="desc">유성 2026-09-02: <b>"스크롤 UI는 절대 넣지마 / 그린 그라디언트로 스크롤인 것처럼 보이게 해야해. <u>이것도 매번 말한다.</u> 없으면 유저가 스크롤이 되는건지 모르잖아."</b>
+     옛 범위가 "목록 + 하단 CTA"로 잠겨 시트·모달·드롭다운이 빠져 있었다 → <b>스크롤바를 숨기는 곳은 예외 없이</b> 같이 켠다.
+     <b>켜는 규칙 = 맨 위 → 아래만 / 중간 → 위아래 둘 다 / 맨 끝 → 위만.</b>
+     처음 지시는 "동시에 넣지 마"였으나 <b>유성이 실측을 지시</b>해 확인하니 관행이 달랐다 —
+     shadcn/ui를 직접 스크롤시키니 중간에서 둘 다 켜고, Apple HIG도 <i>"more content in that direction"</i>으로 방향별 독립 신호라 말한다. ⇒ 관행을 따른다.
+     <b>아래 목록을 굴려 보세요</b> ↓</p>
+  <div class="demo" style="max-width:360px">
+    <div id="sfDemo" style="position:relative;border:1px solid var(--g200);border-radius:11px;overflow:hidden;background:#fff">
+      <div id="sfBody" style="height:150px;overflow-y:auto;scrollbar-width:none;padding:6px 10px"></div>
+    </div>
+    <div id="sfState" style="margin-top:8px;font-size:11.5px;color:var(--g600);font-weight:700"></div>
+  </div>
+  <style>
+    #sfBody::-webkit-scrollbar{width:0;height:0}
+    #sfDemo::before,#sfDemo::after{content:"";position:absolute;left:1px;right:1px;height:34px;
+      pointer-events:none;opacity:0;transition:opacity .18s;z-index:2}
+    #sfDemo::before{top:0;background:linear-gradient(to top,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+                               linear-gradient(to top,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%)}
+    #sfDemo::after{bottom:0;background:linear-gradient(to bottom,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+                                 linear-gradient(to bottom,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%)}
+    #sfDemo.moreTop::before{opacity:1}
+    #sfDemo.more::after{opacity:1}
+  </style>
+  <script>
+  (function(){
+    var bd=document.getElementById("sfBody"), host=document.getElementById("sfDemo"), st=document.getElementById("sfState");
+    var names=["팥빙수의 전설","메모리체스","커다란 크리스마스 트리","수박 수영장","개구리 밸런스 게임","공룡 발굴 놀이","무지개 블록","숲속 동물원","바닷속 탐험","우주선 조립"];
+    bd.innerHTML=names.map(function(n){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-bottom:1px solid var(--g100)"><span>'+n+'</span><span style="font-size:12px;color:var(--g500)">대여 가능</span></div>';}).join("");
+    function sync(){
+      var over=bd.scrollHeight-bd.clientHeight, can=over>6;
+      var t=can&&bd.scrollTop>6, b=can&&over-bd.scrollTop>6;
+      host.classList.toggle("moreTop",t); host.classList.toggle("more",b);
+      st.textContent=(bd.scrollTop<=6?"맨 위":over-bd.scrollTop<=6?"맨 끝":"중간")+" — 위 "+(t?"켬":"끔")+" / 아래 "+(b?"켬":"끔");
+    }
+    bd.addEventListener("scroll",sync,{passive:true}); sync();
+  })();
+  </script>
   <h3 class="sec">다중 선택 그리드 = 드래그 + 이름 일괄토글 · 완료신호 안티패턴 <span class="oldref">§4.9</span> <span class="rk">📱 실기기</span></h3>
   <p class="desc">여러 칸 격자(요일×시간)는 <b>드래그로 쓸어 선택</b>(when2meet·구글캘린더식 — 켜진 칸서 시작하면 지우기) + <b>요일·시간 이름 탭 = 그 줄 일괄토글</b>(스태거 팝)로 "많이 고르기"의 노동을 없앤다(터치 드래그=<code>touch-action:none</code>+<code>touchmove</code> preventDefault). 이름 탭은 어포던스 없이 숨겨도(잠수함) 되지만 발견성 0이라 <b>주 수단(드래그)은 보이게</b>. ⚠️ <b>완료신호 안티패턴</b>: 더 많이 하길 원하는 자리엔 카운터·게이지·"충분해요"를 두지 말 것 — <b>완료감은 멈추게 한다</b>(빈 곳이 보여야 더 채움). 답은 압박이 아니라 '쉬움'. 표시는 12h·저장 value는 24h(§2.1-8). <b>실물 데모 = 06 시간표 라이브</b>(인터랙티브 드래그는 여기 재구현 대신 라이브·Artifact 참조 = §1.5 YAGNI). (2026-07-06 유성)</p>
 
