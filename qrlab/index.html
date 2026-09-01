@@ -403,9 +403,9 @@ const Cam = {
      전부 안 되면 기본으로 되돌린다. 카메라 둘을 동시에 못 여는 기기가 많아 **기본을 세운 뒤** 후보를 연다(qrlab C2와 같은 순서).
      remember=true면 고른 deviceId를 localStorage에 기억해 다음부턴 바로 연다(추가 왕복 0) — 기억한 id가 죽었으면
      (권한 재설정·기기 초기화) 지우고 기본부터. 저장소는 최상위 사이트별이라 옛 라벨 경로·/q 경로에서 한 번씩 고른다.
-     ⚠️ 실증은 한 대뿐 — 유성 S936N도 기본 camera 2가 AF 미적용이라 camera 0으로 바뀔 텐데 그 폰의 camera 0 실측은
-        없다(qrlab ?cams=1 12초로 확인 가능). 초점 능력이 있는 망원 카메라가 후보로 잡히면 가까운 라벨이 오히려
-        흐릴 수 있다 — 미검증(후보는 열거 순서대로 최대 3대). */
+     실증 2대(09-02 qrlab): 현아 S942N = 기본 0독 → camera 0 40/45 · 유성 S936N = 규칙 발동(camera 2 manual → camera 0) 96%·
+        최장 끊김 264ms·멈춤안 되감김 0(09-01 camera 2는 90%·옛 방식 되감김 7). 소장님 A125N은 기본이 AF라 미발동 99%.
+        초점 능력이 있는 망원 카메라가 후보로 잡히면 가까운 라벨이 오히려 흐릴 수 있다 — 미검증(후보는 열거 순서대로 최대 3대). */
   af_(track){                                   // true=연속 AF 있음 · false=없음 · null=모름(iOS 등)
     try{
       const caps = track && track.getCapabilities ? track.getCapabilities() : null;
