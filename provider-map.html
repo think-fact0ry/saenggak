@@ -313,6 +313,10 @@
      680px 근거: 옆에 붙이려면 12+344+8+140=504px 필요 → 폰 360~430은 전부 넘치고 태블릿 744는 240px 남는다.
      (431~743 구간엔 우리 기기가 하나도 없어 그 사이 아무 값이나 된다 — 680은 지도가 176px 남는 선)
      ⛔스크롤바 금지(유성 08-15 시트 규칙 그대로) ⛔'맞음' 뱃지 금지 — 모름·안 맞음만 단다(유성 09-01) */
+  /* C안(유성 09-01) — 모달이 열리면 시트가 **그만큼 자리를 내준다**. 시트+모달이 합쳐서 지금 시트가
+     쓰던 82%를 나눠 쓰므로 **지도에 남는 띠는 그대로**고, 격자는 시트 안에서 스크롤된다(원래도 스크롤).
+     이게 없으면 격자가 넓은 교사(26명 중 13명)에서 아이폰 SE는 4명조차 못 넣는다(실측 22곳 중 19곳). */
+  #schedSheet.withcand{max-height:calc(82% - var(--cand-reserve, 0px))}
   #candSheet{position:absolute;right:0;bottom:100%;margin-bottom:8px;width:100%;
              display:none;flex-direction:column;background:#fff;border-radius:14px;
              box-shadow:var(--sh-up);overflow:hidden}
@@ -5343,21 +5347,28 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     }).join('') + '</div>';
   }
 
-  /** 높이 = 기본으로 보여줄 인원이 정한다(작은 폰 4명·큰 폰 6명, 유성 09-01. 2/3 규칙은 철회됨).
-      ⚠️ 시트 높이는 내용이 정해서 렌더 전엔 모른다 → offsetHeight로 잰다(transform 영향 없음). */
+  /** 높이 = A+C (유성 확정 2026-09-01. 옛 "작은 폰 4명·큰 폰 6명" 기기 규칙은 이걸로 대체됐다 —
+      실측에서 기기 크기가 아니라 **그 교사의 격자 시간폭**이 진짜 축이었다)
+      **A** 후보 수가 행 수를 정한다 — 4명 이하면 2행, 5명 이상이면 3행(상한). 실측상 자리 12곳 중 10곳이
+           후보 4명 이하라 대개 2행으로 끝나고 지도를 그만큼 더 돌려준다. 8행은 안 만든다
+           (6명→8명으로 늘려도 덮는 자리가 하나도 안 늘어났다: 11/12 → 11/12).
+      **C** 시트가 `모달 높이 + 8px`만큼 자리를 내준다 — 시트+모달이 합쳐서 지금 시트가 쓰던 82%를
+           나눠 쓴다. 그래서 **지도에 남는 띠는 모달을 열기 전과 같고**, 어떤 격자·어떤 폰에서도 안 밀린다. */
   function candFit(){
-    var el = document.getElementById('candSheet');
-    if (!el.classList.contains('on') || window.innerWidth >= 680) { el.style.height=''; return; }
-    var mapH = document.getElementById('map').clientHeight;
-    var sheetH = document.getElementById('schedSheet').offsetHeight;
-    var avail = mapH - sheetH - 8;                              // 시트 위로 남은 지도
-    var h = candH((avail - candH(3) >= CAND_MAPMIN) ? 3 : 2);
-    /* 🔴 남은 공간을 절대 넘지 않는다. 예전 `Math.max(candH(1), avail)`는 주석과 반대로 **72px 하한을
-       강제**해, 격자가 넓은 교사(실측: 권선화 9~21시 = 672px)를 작은 폰에서 열면 모달이 지도 위쪽
-       경계를 넘었다. 상단 바가 z-index 49~50이고 모달은 시트(z-index 8) 안이라 '덮는' 게 아니라
-       **헤더째 가려졌다**. 실측 375×667 · 그 교사: avail 42px < 72px = 30px가 대시보드 바 뒤로. */
-    if (h > avail) h = Math.max(CAND_HD, avail);                // 헤더 24px만 지키고 나머지는 avail이 정한다
+    var el = document.getElementById('candSheet'), sheet = document.getElementById('schedSheet');
+    function plain(){ sheet.classList.remove('withcand'); sheet.style.removeProperty('--cand-reserve');
+                      el.style.height = ''; }
+    if (!el.classList.contains('on') || window.innerWidth >= 680) { plain(); return; }
+    var n = CAND.list ? CAND.list.filter(function(o){ return _waAlive(o.c); }).length : 0;
+    var h = candH(n <= 4 ? 2 : 3);
+    sheet.style.setProperty('--cand-reserve', (h + 8) + 'px');
+    sheet.classList.add('withcand');
     el.style.height = h + 'px';
+    /* 마지막 방어 — 시트가 내용에 못 미쳐 짧을 땐 위가 오히려 넉넉하지만, 계산이 어긋나도
+       상단 바 뒤로는 절대 밀리지 않게 한 번 더 자른다(헤더 높이는 지킨다). */
+    var avail = document.getElementById('map').clientHeight - sheet.offsetHeight - 8;
+    if (h > avail) el.style.height = Math.max(CAND_HD, avail) + 'px';
+    syncFade();   // 시트 높이가 바뀌었으니 격자 하단 그라데이션을 다시 판정한다
   }
   function candFade(){
     var el = document.getElementById('candSheet'), bd = document.getElementById('candBody');
@@ -5437,7 +5448,9 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   };
   window.candClose = function(){ CAND.key=null; CAND.g=null; CAND.list=null; _candSig='';
     document.getElementById('candBody').__sig = null;   // 위와 같은 이유 — 닫을 때도 캐시를 버린다
-    document.getElementById('candSheet').classList.remove('on'); };
+    document.getElementById('candSheet').classList.remove('on');
+    candFit();   // 시트가 내줬던 자리를 돌려받는다(C안) — 이걸 빼면 시트가 짧은 채로 남는다
+  };
   // 폰 회전·창 크기 변경 = 옆/위와 행 수가 같이 바뀐다(PC 분기에선 inline height를 지운다)
   window.addEventListener('resize', function(){ if (CAND.key) { candFit(); candFade(); } });
 
