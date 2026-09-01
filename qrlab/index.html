@@ -29,6 +29,7 @@
    근거 = 현아 폰 C2 실측: camera 0(continuous AF) 45틱 40독 vs 기본 camera 2(초점 manual) 153틱 0독.
    B1 은 이제 앱과 같이 "기본 카메라에 자동초점이 없으면 다른 후면 카메라"로 연다. 리포트 [카메라]에 어느 쪽을
    열었는지 적는다. 기억(localStorage)은 쓰지 않는다 — 리포트가 매번 기본 카메라의 초점 능력도 보여 줘야 해서.
+   + 09-02 판정 0 「카메라 선택」(어느 길로 결론 났는지 · 못 바꿨으면 왜) — 실패 리포트 한 장으로 다음 행동이 나오게.
 
   아무것도 서버로 보내지 않는다. 전부 이 폰 안에서 끝난다.
 -->
@@ -392,7 +393,7 @@ function renderBench(){
 const CAM_KEY = 'tf_camId';   // 앱과 같은 이름 — 여기선 remember=false 라 실제로 읽고 쓰진 않는다
 const Cam = {
   stream:null, det:null, on:false, roi:null, roiKey:'', alt:false, canvas:null, ctx:null,
-  camLabel:'', camDefault:'', camDefaultFocus:'', camSwapped:false,
+  camLabel:'', camDefault:'', camDefaultFocus:'', camSwapped:false, camNote:'', camAF:'',
   /* ── 카메라 고르기 (2026-09-02 @125) ──
      브라우저가 기본으로 주는 후면 카메라에 **자동초점이 없으면** 다른 후면 카메라로 바꿔 연다.
      실측(09-01 qrlab v2, 현아 S942N): 기본 camera 2 = 초점 manual뿐·거리를 바꿔도 선명도 44~48 → 153틱 0독.
@@ -405,7 +406,9 @@ const Cam = {
      (권한 재설정·기기 초기화) 지우고 기본부터. 저장소는 최상위 사이트별이라 옛 라벨 경로·/q 경로에서 한 번씩 고른다.
      실증 2대(09-02 qrlab): 현아 S942N = 기본 0독 → camera 0 40/45 · 유성 S936N = 규칙 발동(camera 2 manual → camera 0) 96%·
         최장 끊김 264ms·멈춤안 되감김 0(09-01 camera 2는 90%·옛 방식 되감김 7). 소장님 A125N은 기본이 AF라 미발동 99%.
-        초점 능력이 있는 망원 카메라가 후보로 잡히면 가까운 라벨이 오히려 흐릴 수 있다 — 미검증(후보는 열거 순서대로 최대 3대). */
+        초점 능력이 있는 망원 카메라가 후보로 잡히면 가까운 라벨이 오히려 흐릴 수 있다 — 미검증(후보는 열거 순서대로 최대 3대).
+     camNote/camAF = 어느 길로 결론 났는지(기억·기본 AF·능력 미공개·후보 없음·교체·후보 실패→기본 / AF✓✗?). ?t=1 배지와 qrlab
+        리포트가 이걸 보여 주므로 **못 읽었을 때의 캡처·리포트 한 장으로 원인이 갈린다**(09-02 유성: "안 찼으면 또 확인해 달라 할 거냐"). */
   af_(track){                                   // true=연속 AF 있음 · false=없음 · null=모름(iOS 등)
     try{
       const caps = track && track.getCapabilities ? track.getCapabilities() : null;
@@ -418,29 +421,31 @@ const Cam = {
     const stopAll = s => { try{ s.getTracks().forEach(t => t.stop()); }catch(e){} };
     const label = s => { const t = s.getVideoTracks()[0]; return t ? (t.label || '') : ''; };
     const focus = t => { try{ return ((t.getCapabilities && t.getCapabilities().focusMode) || []).join('/') || '조절 불가'; }catch(e){ return '?'; } };
-    this.camSwapped = false; this.camDefault = ''; this.camDefaultFocus = '';
+    const afMark = s => { const a = this.af_(s.getVideoTracks()[0]); return a === true ? 'AF✓' : a === false ? 'AF✗' : 'AF?'; };
+    this.camSwapped = false; this.camDefault = ''; this.camDefaultFocus = ''; this.camNote = ''; this.camAF = '';
     let id = null;
     if (remember){ try{ id = localStorage.getItem(CAM_KEY); }catch(e){} }
     if (id){
-      try{ const s = await gum({ deviceId:{ exact:id } }); this.camSwapped = true; this.camLabel = label(s); return s; }
+      try{ const s = await gum({ deviceId:{ exact:id } }); this.camSwapped = true; this.camLabel = label(s); this.camNote = '기억'; this.camAF = afMark(s); return s; }
       catch(e){ try{ localStorage.removeItem(CAM_KEY); }catch(e2){} }   // 죽은 id → 기본부터 다시
     }
     const def = await gum({ facingMode:{ ideal:'environment' } });         // 실패는 호출자에게(nocam)
     const tr = def.getVideoTracks()[0];
-    this.camDefault = tr ? (tr.label || '') : ''; this.camDefaultFocus = tr ? focus(tr) : ''; this.camLabel = this.camDefault;
-    if (this.af_(tr) !== false) return def;                                 // AF 있음·모름 → 그대로
+    this.camDefault = tr ? (tr.label || '') : ''; this.camDefaultFocus = tr ? focus(tr) : ''; this.camLabel = this.camDefault; this.camAF = afMark(def);
+    const a0 = this.af_(tr);
+    if (a0 !== false){ this.camNote = a0 === true ? '기본 AF' : '능력 미공개'; return def; }   // AF 있음·모름 → 그대로
     let devs = [];
     try{ devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput'); }catch(e){}
     let cur = ''; try{ cur = (tr.getSettings && tr.getSettings().deviceId) || ''; }catch(e){}
     const others = devs.filter(d => d.deviceId && d.deviceId !== cur && /back|rear|environment|후면/i.test(d.label || '')).slice(0, 3);
-    if (!others.length) return def;                                         // 바꿀 카메라가 없다 — 기본을 끄지 않는다
+    if (!others.length){ this.camNote = '후보 없음(' + devs.length + '대)'; return def; }   // 바꿀 카메라가 없다 — 기본을 끄지 않는다
     stopAll(def);
     for (const d of others){
       let s = null;
       try{ s = await gum({ deviceId:{ exact:d.deviceId } }); }catch(e){ continue; }
       if (this.af_(s.getVideoTracks()[0]) === true){
         if (remember){ try{ localStorage.setItem(CAM_KEY, d.deviceId); }catch(e){} }
-        this.camSwapped = true; this.camLabel = label(s);
+        this.camSwapped = true; this.camLabel = label(s); this.camNote = '교체'; this.camAF = 'AF✓';
         return s;
       }
       stopAll(s);
@@ -448,7 +453,7 @@ const Cam = {
     let back;                                                                // 후보가 다 안 되면 기본으로 되돌린다
     try{ back = await gum({ facingMode:{ ideal:'environment' } }); }
     catch(e){ await new Promise(r => setTimeout(r, 350)); back = await gum({ facingMode:{ ideal:'environment' } }); }   // 방금 끈 카메라가 아직 안 풀렸을 수 있다 — 한 번만 더 (그래도 안 되면 nocam)
-    this.camLabel = label(back);
+    this.camLabel = label(back); this.camNote = '후보 실패→기본'; this.camAF = afMark(back);
     return back;
   },
   async start(video){
@@ -463,7 +468,7 @@ const Cam = {
     await video.play().catch(()=>{});
     const tr = this.stream.getVideoTracks()[0];
     R.cam.track = tr ? tr.label : '';
-    R.cam.pick = { swapped:this.camSwapped, def:this.camDefault, defFocus:this.camDefaultFocus, to:this.camLabel };
+    R.cam.pick = { swapped:this.camSwapped, def:this.camDefault, defFocus:this.camDefaultFocus, to:this.camLabel, note:this.camNote, af:this.camAF };
     try{ R.cam.settings = tr.getSettings ? tr.getSettings() : null; }catch(e){}
     try{ R.cam.caps = tr.getCapabilities ? tr.getCapabilities() : null; }catch(e){ R.cam.caps = null; }
     /* 연속 자동초점 — 앱과 같은 순서(열린 뒤 따로, 실패는 무시) */
@@ -857,6 +862,15 @@ function analyse(){
 
   if (!R.cam.opened){ add('un', '카메라를 못 열었어요', R.cam.err || '권한이나 기기 문제일 수 있어요.'); return; }
 
+  /* 0. 카메라 선택 — 앱 @125 규칙이 이 폰에서 어느 길로 갔나. 실패 리포트만 받아도 다음 행동이 나오게(09-02). */
+  const pk = R.cam.pick || {};
+  if (pk.swapped) add('ok', '자동초점 카메라로 바꿔 열었어요', '기본 ' + (pk.def || '?') + '(초점 ' + (pk.defFocus || '?') + ') → ' + (pk.to || '?') + '. 앱도 같은 규칙으로 열어요.');
+  else if (pk.note === '기본 AF') add('ok', '기본 카메라에 자동초점이 있어요', (pk.to || '?') + ' 그대로 써요 — 바꿀 이유가 없어요.');
+  else if (pk.note === '능력 미공개') add('un', '이 브라우저는 초점 능력을 안 알려줘요', '기본 카메라 그대로 열었어요(아이폰이 보통 이래요). 초점은 아래 선명도 판정으로만 가려요.');
+  else if (/후보 없음/.test(pk.note || '')) add('no', '자동초점 없는 기본 카메라인데 바꿀 후면 카메라를 못 찾았어요', pk.note + ' — 카메라 목록: ' + ((R.cam.cameras || []).join(' / ') || '(없음)') + '. 이름에 back/rear가 없으면 후보로 안 잡혀요.');
+  else if (pk.note === '후보 실패→기본') add('no', '다른 후면 카메라를 쓰지 못해 기본으로 돌아왔어요', '후보가 안 열렸거나 자동초점이 없었어요 — 아래 [다른 후면 카메라 실측]이 있으면 그걸 보세요.');
+  else add('un', '카메라 선택 기록이 없어요', pk.note || '');
+
   /* 1. 스트림 해상도 — **긴 변**으로 판정한다. 세로 폰은 1920x1080 요청이 1080x1920 으로
      돌아오는데(회전만 다르고 화소는 같다) width 만 보면 정상 스트림을 "낮다"고 오판한다
      (2026-09-01 정정 — 3대 리포트 전부가 이 오표기를 달고 왔다). */
@@ -974,7 +988,8 @@ function buildReport(){
     const pk = R.cam.pick || {};
     L.push('  카메라 선택 ' + (pk.swapped
       ? '브라우저 기본 ' + (pk.def || '?') + '(초점 ' + (pk.defFocus || '?') + ')에 자동초점이 없어 → ' + (pk.to || '?') + '로 교체(앱 @125 규칙)'
-      : '브라우저 기본 그대로(자동초점 ' + (/continuous/.test(pk.defFocus || '') ? '있음' : '능력 미공개') + ')'));
+      : (pk.note === '후보 실패→기본' ? '기본으로 복귀 — 후보를 못 열었거나 자동초점이 없었어요' : '브라우저 기본 그대로 — ' + (pk.note || '?')))
+      + ' · ' + (pk.af || ''));
     L.push('  카메라 목록 ' + ((R.cam.cameras || []).length) + '개' + ((R.cam.cameras || []).length ? ' — ' + R.cam.cameras.join(' / ') : ''));
     const cp = R.cam.caps || {};
     L.push('  초점 ' + ((cp.focusMode || []).join('/') || '조절 불가') + (R.cam.focusApplied ? ' · continuous 적용됨' : ' · continuous 미적용') +
