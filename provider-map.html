@@ -1495,16 +1495,46 @@ function loadMapData(name, keepView) {
   if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; }
   document.getElementById('provLinkBtn').style.display='inline-block';
   var key=name+'|'+currentService;
-  var done=function(data){
+  var done=function(data, noFit){
     if (data.error) { showToast(data.error); return; }
     _svcCache[key]=data;
     currentData = data; currentData.allProviders = null; _waInvalidate();
     _renderCurrent();                 // ⚠️ 렌더 복제 금지 — 위 loadAllProviders 주석 참조
-    if(!keepView) fitBounds();
+    if(!keepView && !noFit) fitBounds();
   };
   if(_svcCache[key]){ done(_svcCache[key]); return; }   // 캐시 즉시
-  showLoading(true);
-  fetchGAS('mapdata', {provider:name, service: currentService}).then(function(data){ showLoading(false); done(data); }).catch(function(e) { showLoading(false); showToast('데이터 로드 실패: '+e.message); });
+
+  /* ⚡ 먼저 그리고, 서버로 확정한다 (유성 2026-09-01. 실측: 왕복 3,519~4,584ms · 렌더 111ms = 왕복이 97%)
+     부팅이 이미 받아 둔 **전체 응답**에서 이 교사 화면을 만들 수 있다. 2026-09-01 라이브 대조로
+     `provider`·`assigned`·`waiting`이 서버 개별 응답과 **필드·값·개수 완전 일치** 확인(개별에만 있는 항목 0).
+     ⛔ 왕복을 **없애지는 않는다** — 서버 응답이 오면 그게 최종이다. 그래서 나빠지는 경우가 없다:
+        전체 응답이 없거나(쓰기 후 캐시가 지워지면 같이 지워진다) 파생이 안 되면 지금과 똑같이 로딩만 돈다.
+     ⛔ 쓰기가 서버에 안 닿은 동안(`_writesInFlight`)엔 파생을 건너뛴다 — 낙관 반영(배정취소·거절)은
+        `currentData`의 배열을 갈아끼우지 전체 응답 원본을 안 고쳐서, 그때 파생하면 **취소한 아이가 되살아 보인다**.
+     ⛔ 전체 응답 객체를 그대로 넘기면 안 된다 — `done`이 `allProviders`를 **제자리에서 null로** 지워
+        소스를 스스로 부순다. 반드시 새 객체로 감싼다. */
+  var painted = false, _snap = _svcCache['__ALL__|'+currentService];
+  if (_snap && _writesInFlight === 0 && _snap.allProviders) {
+    var _p = null;
+    _snap.allProviders.forEach(function(x){ if (x.name === name) _p = x; });
+    if (_p) {
+      done({ provider:_p,
+             assigned:(_snap.assigned||[]).filter(function(c){ return c.assignedTo === name; }),
+             waiting:_snap.waiting || [], allProviders:null, service:_snap.service });
+      painted = true;
+    }
+  }
+
+  if (!painted) showLoading(true);
+  fetchGAS('mapdata', {provider:name, service: currentService}).then(function(data){
+    if (!painted) { showLoading(false); done(data); return; }
+    // 파생과 서버가 같으면 다시 그리지 않는다(렌더 111ms + 깜빡임 절약). 다르면 서버가 이긴다.
+    if (!data.error && _renderSig(data) === _lastRenderSig) { _svcCache[key]=data; return; }
+    done(data, true);
+  }).catch(function(e) {
+    if (!painted) showLoading(false);
+    showToast('데이터 로드 실패: '+e.message + (painted ? ' (화면은 직전 데이터로 보여 주는 중)' : ''));
+  });
 }
 
 // ══ 3모드 부팅 + UI 전환 ══
@@ -3062,12 +3092,21 @@ function _optimisticUnassign(row) {
   var prevA = currentData.assigned, prevW = currentData.waiting || [];
   var c = prevA[idx];
   currentData.assigned = prevA.slice(0, idx).concat(prevA.slice(idx + 1));
-  currentData.waiting = prevW.concat([{
-    row: Number(row), name: c.name, lat: c.lat, lng: c.lng, address: c.address,
+  /* 🔴 서버 waiting 리터럴과 **키·순서·값이 바이트로 같아야** 한다 — `_renderSig`가 통짜 JSON 비교라
+        하나만 어긋나면 "재렌더 생략"이 영영 안 걸리고 마커 294개가 매번 다시 만들어진다.
+        ① `dob` 누락(2026-08-26 서버에 추가될 때 여기만 안 따라옴)
+        ② 배열 끝에 concat → 서버는 **행 번호 오름차순**이라 위치가 어긋남
+        둘 다 2026-09-01에 맞췄다. 서버 순서 = Code.js getMapData가 formData를 행 순으로 한 번 훑는 것. */
+  var _nw = {
+    row: Number(row), name: c.name, dob: c.dob, lat: c.lat, lng: c.lng, address: c.address,
     times: c.times, phone: c.phone, notes: c.notes, voucher: c.voucher,
     status: '대기', sigungu: c.sigungu || '', bname: c.bname || '',
     addr1: c.addr1 || '', timestamp: c.timestamp, marked: !!c.marked   // 마크는 배정취소가 지우지 않음(직교)
-  }]);
+  };
+  var _wa = prevW.slice(), _at = _wa.length;
+  for (var _i = 0; _i < _wa.length; _i++) { if (Number(_wa[_i].row) > Number(row)) { _at = _i; break; } }
+  _wa.splice(_at, 0, _nw);
+  currentData.waiting = _wa;
   _renderCurrent();
   return function undo() {
     currentData.assigned = prevA; currentData.waiting = prevW;
