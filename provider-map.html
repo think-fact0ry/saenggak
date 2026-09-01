@@ -228,7 +228,11 @@
   #schedSheet{position:absolute;right:12px;bottom:0;width:min(344px,72%);max-height:82%;z-index:8;
               display:none;flex-direction:column;background:#fff;border-radius:20px 20px 0 0;
               box-shadow:var(--sh-up);transform:translateY(100%);
-              transition:transform .32s cubic-bezier(.22,.7,.25,1)}
+              /* max-height도 같이 전환한다 — 후보 모달이 열릴 때 시트가 **툭 줄지 않고 부드럽게** 낮아진다
+                 (유성 09-01 "줄어들 때 인터렉션 부드럽게"). 아동 블록은 하나도 안 사라진다:
+                 격자는 원래 크기 그대로고 `.sbd`가 스크롤될 뿐이라 글자가 눌리거나 삐져나오지 않는다. */
+              transition:transform .32s cubic-bezier(.22,.7,.25,1),
+                         max-height .32s cubic-bezier(.22,.7,.25,1)}
   #schedSheet.on{display:flex;transform:translateY(0)}
   #schedSheet .grab{padding:10px 0 6px;cursor:grab;flex:none;touch-action:none}
   #schedSheet .grab:active{cursor:grabbing}
@@ -267,7 +271,7 @@
   #schedSheet .ghead .dh{flex:1;text-align:center;font-size:11.5px;font-weight:700;color:var(--g600)}
   #schedSheet .gbody{display:flex;position:relative}
   #schedSheet .axis{flex:none;position:relative}
-  #schedSheet .axis span{position:absolute;right:6px;transform:translateY(-50%);font-size:9.5px;color:var(--g500);
+  #schedSheet .axis span{position:absolute;right:6px;transform:translateY(-50%);font-size:11.5px;color:var(--g500);
              font-weight:600;font-variant-numeric:tabular-nums}
   #schedSheet .hr{position:absolute;left:0;right:0;height:1px;background:#f1f4f7}
   #schedSheet .lane{flex:1;position:relative;min-width:0}
@@ -275,9 +279,9 @@
   /* 블록 = A 채움(유성 확정)·라운딩 0. 평소 그림자 0(§3.6-2 depth) — hover·펼침만 */
   #schedSheet .blk{position:absolute;left:1px;right:1px;overflow:hidden;cursor:pointer;border-radius:0;
        color:var(--g900);padding:5px 6px 3px;transition:box-shadow .16s}
-  #schedSheet .blk .nm{font-size:11.5px;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #schedSheet .blk .nm{font-size:12px;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* ⚠️ nowrap 필수 — 6열(토요일)에서 시각 줄이 두 줄로 접혀 칸을 넘쳤다(프리뷰 실측 tm 9.3→18.7px) */
-  #schedSheet .blk .tm{font-size:9px;line-height:1.35;font-variant-numeric:tabular-nums;opacity:.78;
+  #schedSheet .blk .tm{font-size:10px;line-height:1.35;font-variant-numeric:tabular-nums;opacity:.78;
            white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #schedSheet .blk.tight{padding:2px 6px 1px}
   #schedSheet .blk.tight .nm{font-size:11px;line-height:1.12}
@@ -306,6 +310,14 @@
   #schedSheet .free:hover .f1{color:var(--green700)}
   #schedSheet .free.on{border-style:solid;border-color:var(--green600);background:var(--green100)}
   #schedSheet .free.on .f1{color:var(--green700)}
+  /* 앞·뒤 자리(R3) = **투명 히트영역**. 유성 2026-08-26 "시각적으로는 점선 박스로 보이지 않아도 돼" —
+     하루의 시작·끝 여백은 늘 있어서 점선을 그리면 격자가 온통 점선이 된다. 손이 닿을 때만 드러낸다. */
+  #schedSheet .free.edge{border-color:transparent;background:transparent}
+  #schedSheet .free.edge .f1{opacity:0;transition:opacity .15s}
+  #schedSheet .free.edge:hover{border-color:var(--green600);background:#f6fbf8}
+  #schedSheet .free.edge:hover .f1{opacity:1}
+  #schedSheet .free.edge.on{border-color:var(--green600);background:var(--green100)}
+  #schedSheet .free.edge.on .f1{opacity:1}
 
   /* ════ 빈 자리 후보 모달 (2026-09-01 유성 확정) ════════════════════════════════
      #schedSheet의 **자식**이다 — 폭·열림/접힘·translateY 전환을 공짜로 그대로 따라간다.
@@ -319,7 +331,8 @@
   #schedSheet.withcand{max-height:calc(82% - var(--cand-reserve, 0px))}
   #candSheet{position:absolute;right:0;bottom:100%;margin-bottom:8px;width:100%;
              display:none;flex-direction:column;background:#fff;border-radius:14px;
-             box-shadow:var(--sh-up);overflow:hidden}
+             box-shadow:var(--sh-up);overflow:hidden;
+             transition:height .32s cubic-bezier(.22,.7,.25,1)}   /* 시트와 같은 곡선으로 같이 움직인다 */
   #candSheet.on{display:flex}
   #candSheet .chd{height:24px;flex:none;padding:0 10px;border-bottom:1px solid var(--g100);
                   display:flex;align-items:center;justify-content:space-between;gap:6px}
@@ -350,9 +363,10 @@
                  font-size:8.5px;color:var(--g500);margin-top:1px;padding-left:17px;white-space:nowrap}
   #candSheet .c2 > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
   #candSheet .ctb{flex:none;font-weight:700;padding:0 4px;border-radius:4px;white-space:nowrap}
+  #candSheet .ctb .pre{font-style:normal}
   #candSheet .ctb.no{background:var(--warn-weak-bg);color:var(--warn-weak-fg)}
   #candSheet .ctb.unk{background:var(--g100);color:var(--g600)}
-  #candSheet .cc.dim{opacity:.62}
+  #candSheet .cc.dim{opacity:.36}
   #candSheet .cmsg{padding:12px 10px;text-align:center;font-size:10.5px;line-height:1.5;color:var(--g500)}
   #candSheet .cmsg.warn{color:var(--warn-weak-fg)}
   /* 넘칠 때만 뜨는 하단 그라데이션 — 시트(#schedSheet::after)와 같은 공식, 높이만 46→26 */
@@ -365,10 +379,13 @@
     /* 폭 140 — 115에선 '08-26 + 시간 안 맞음'이 한 줄에 안 들어가 두 줄로 접혔다(실측).
        필요 최소 = 접수일 27 + 4 + 뱃지 59 + 들여쓰기 17 + 카드패딩 14 + 바디패딩 16 = 137 */
     /* 높이 2/3는 **PC·태블릿만** 남은 규칙이다(폰의 2/3는 유성 09-01에 철회, 대신 기본 4/6명) */
-    #candSheet{bottom:auto;top:0;right:100%;width:140px;height:66.6%;
+    #candSheet{bottom:auto;top:0;right:100%;width:115px;height:66.6%;
                margin-bottom:0;margin-right:8px;border-radius:14px;box-shadow:var(--sh-left)}
     #candSheet .cg{grid-template-columns:1fr}
-    #candSheet .chd .lg{display:none}   /* 140px엔 '부터 1시간 1분'이 안 들어간다(실측) — 시간은 격자 빈칸의 '+57분'이 바로 옆에서 말한다 */
+    #candSheet .chd .lg{display:none}   /* 115px엔 '부터 1시간 1분'이 안 들어간다(실측) — 시간은 격자 빈칸의 '+57분'이 바로 옆에서 말한다 */
+    /* 뱃지도 줄인다 (유성 확정 09-01) — 115px에서 「08-26 + 시간 안 맞음」은 접수일이 「0…」으로 잘렸다.
+       「안 맞음」·「모름」으로 줄이면 잘림 0. ⚠️ 폰은 전체 문구를 그대로 쓴다(자리가 있다) = 화면마다 말이 다르다 */
+    #candSheet .ctb .pre{display:none}
   }
 
   .pcand{background:#fff;border:1.5px solid #d1d6db;border-radius:12px;padding:14px;margin-bottom:9px;cursor:pointer;word-break:keep-all}
@@ -5105,13 +5122,30 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     return out.sort(function(a,b){return a[0].s-b[0].s;});
   }
   /** 빈자리 = 이동시간 빼고 50분 이상만 (유성 확정) */
-  function gaps(vs,d){
+  /** 빈자리 = 이동시간 빼고 50분 이상만 (유성 확정)
+      🆕 2026-09-01 — **첫 아동 앞·마지막 아동 뒤도 자리다**(R3, 유성 확정). 경계는 **격자 전체**(BND).
+         이게 없으면 눌리는 자리가 164곳 중 23곳뿐이었다(사전계획 §10 위험1이 실측으로 실현).
+         앞·뒤 자리의 기준점은 **교사의 집**이고, 집 좌표는 26명 전원에게 있다(2026-09-01 실측) —
+         그래서 "앞뒤 주소를 몰라 못 찾는" 자리는 **아동과 아동 사이 구간에만** 생긴다.
+      ⛔ 시각적으로 점선 박스로 보이지 않아도 된다(유성 2026-08-26) → 투명 히트영역 + hover에서만 드러냄. */
+  function gaps(vs,d,b){
     var gs=groups(vs,d), out=[];
+    if(!gs.length) return out;
+    if(b){
+      var first=gs[0][0].s, hd=first-b.lo-MOVE_DEFAULT;
+      if(hd>=50) out.push({s:b.lo,e:first,min:hd,mv:MOVE_DEFAULT,edge:'head',nx:gs[0]});
+    }
     for(var i=0;i<gs.length-1;i++){
       var end=Math.max.apply(null,gs[i].map(function(u){return u.e;}));
       var nxt=gs[i+1][0].s, sl=nxt-end-MOVE_DEFAULT;
       // pv·nx = 앞뒤 기준점 그룹. 후보 반경을 어디서 재는지는 이 둘이 정한다(2026-09-01)
       if(sl>=50) out.push({s:end,e:nxt,min:sl,mv:MOVE_DEFAULT,pv:gs[i],nx:gs[i+1]});
+    }
+    if(b){
+      var lastG=gs[gs.length-1];
+      var last=Math.max.apply(null,lastG.map(function(u){return u.e;}));
+      var tl=b.hi-last-MOVE_DEFAULT;
+      if(tl>=50) out.push({s:last,e:b.hi,min:tl,mv:MOVE_DEFAULT,edge:'tail',pv:lastG});
     }
     return out;
   }
@@ -5143,12 +5177,13 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
 
     ds.forEach(function(d,di){
       h+='<div class="lane">';
-      gaps(vs,d).forEach(function(g){
+      gaps(vs,d,b).forEach(function(g){
         RL.push({free:1,d:d,g:g});
         var top=Y(g.s)+3, hgt=Y(g.e)-Y(g.s)-6;
         // ⛔"이동 N분 빼고" 문구는 안 쓴다(유성 08-16) — 값엔 이동 12분이 이미 빠져 있고 설명은 탭 토스트가 한다
-        h+='<div class="free'+(CAND.key===gkey(d,g)?' on':'')+'" style="top:'+top+'px;height:'+hgt
-          + 'px" onclick="scFx('+(RL.length-1)+')">'
+        // 앞·뒤 자리(edge)는 **투명**하게 둔다(유성 08-26) — hover·열림에서만 드러난다
+        h+='<div class="free'+(g.edge?' edge':'')+(CAND.key===gkey(d,g)?' on':'')
+          + '" style="top:'+top+'px;height:'+hgt+'px" onclick="scFx('+(RL.length-1)+')">'
           + '<span class="f1">+'+dur(g.min)+'</span></div>';
       });
       var GS=groups(vs,d);
@@ -5296,8 +5331,15 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   function sameSpot(c, a){ return Math.abs(c.lat-a.lat) < 1e-6 && Math.abs(c.lng-a.lng) < 1e-6; }
 
   /** 자리 하나 → 후보 배열(대기 기간은 아직 안 자른다 — 슬라이더가 실시간으로 자를 수 있게) */
+  /** 앞·뒤 자리(R3)의 반대쪽 기준점 = **교사의 집**. 하루의 시작은 집에서 출발하고 끝은 집으로 돌아간다.
+      집 좌표는 26명 전원에게 있다(2026-09-01 실측 · 없으면 서버 getMapData가 지오코딩으로 자가치유한다). */
+  function homeAnchor(){
+    var p = currentData && currentData.provider;
+    return (p && p.lat && p.lng) ? { lat:p.lat, lng:p.lng } : null;
+  }
   function candBuild(g, d){
-    var pv = anchor(g.pv,'end'), nx = anchor(g.nx,'start');
+    var pv = g.pv ? anchor(g.pv,'end')   : homeAnchor();
+    var nx = g.nx ? anchor(g.nx,'start') : homeAnchor();
     if (!pv && !nx) return null;                       // 앞뒤 둘 다 주소를 모른다
     var hrs = []; for (var h=0; h<24; h++) if (h*60 >= g.s && h*60 < g.e) hrs.push(h);
     var out = [];
@@ -5336,8 +5378,9 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     if (!list.length) return '<div class="cmsg">'+CAND_KM+'km 안에 대기 중인 아이가 없어요</div>';
     return '<div class="cg">' + list.map(function(o,i){
       var c = o.c;
-      var badge = o.v===2 ? '<span class="ctb no">시간 안 맞음</span>'
-                : o.v===1 ? '<span class="ctb unk">시간 모름</span>' : '';
+      // 「시간 」은 ≥680px에서 CSS가 숨긴다 — 폰은 전체 문구, PC 115px에선 「안 맞음」·「모름」(유성 09-01)
+      var badge = o.v===2 ? '<span class="ctb no"><i class="pre">시간 </i>안 맞음</span>'
+                : o.v===1 ? '<span class="ctb unk"><i class="pre">시간 </i>모름</span>' : '';
       // 시간이 안 맞거나 모르면 뱃지 + 흐리게 (유성 09-01). 앎만 선명하다
       return '<div class="cc enter'+(o.v?' dim':'')+'" onclick="candGo('+c.row+')">'
         + '<div class="c1"><span class="crk">'+(i+1)+'</span>'
@@ -5364,11 +5407,11 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     sheet.style.setProperty('--cand-reserve', (h + 8) + 'px');
     sheet.classList.add('withcand');
     el.style.height = h + 'px';
-    /* 마지막 방어 — 시트가 내용에 못 미쳐 짧을 땐 위가 오히려 넉넉하지만, 계산이 어긋나도
-       상단 바 뒤로는 절대 밀리지 않게 한 번 더 자른다(헤더 높이는 지킨다). */
-    var avail = document.getElementById('map').clientHeight - sheet.offsetHeight - 8;
-    if (h > avail) el.style.height = Math.max(CAND_HD, avail) + 'px';
+    /* ⛔여기서 시트를 **재지 않는다** — max-height가 전환 중이라 offsetHeight가 낡은 값을 준다.
+       잴 필요도 없다: 시트가 `82% − (h+8)`로 묶이므로 모달 자리는 항상 `0.18×화면높이 − 상단바 + h`,
+       즉 **h보다 최소 50px 크다**(667px 폰 기준). 어떤 격자·어떤 폰에서도 밀릴 수 없다. */
     syncFade();   // 시트 높이가 바뀌었으니 격자 하단 그라데이션을 다시 판정한다
+    setTimeout(syncFade, 340);   // 전환이 끝난 뒤 한 번 더 (넘침 판정이 최종 높이에서 정해지게)
   }
   function candFade(){
     var el = document.getElementById('candSheet'), bd = document.getElementById('candBody');
