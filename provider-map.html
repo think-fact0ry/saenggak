@@ -4911,6 +4911,11 @@ function planDim(on) {
   //    옛 코드는 아무것도 안 했다(2026-08-09 검증). 클래스 한 개로 CSS가 처리하게 바꾼다.
   //    배치안이 그린 이름표(.mlbl.plan)는 제외해야 한다 — 그건 지금 봐야 하는 것이다.
   document.body.classList.toggle('plan-review', !!on);
+  /* 🔴 끌 때 opacity를 **전 마커 1로** 되돌리면 대기 기간 슬라이더가 가라앉혀 둔 마커까지 선명해진다.
+        이미지(회색)와 zIndex(0)는 그대로 남아 "회색인데 진한" 어긋난 상태가 된다
+        (유성 2026-09-01 적발: "동선 껐다 켜면 숨겨진 마커 투명도가 없어지고 회색으로 바뀜").
+        ⇒ 흐림을 푸는 쪽이 슬라이더 상태를 **되살릴 책임**을 진다. planExit·schedRouteOff 둘 다 여기를 탄다. */
+  if (!on && typeof _waApplyCut === 'function') _waApplyCut();
 }
 
 /** @param {number} dx 같은 좌표에 여러 명일 때 가로로 벌리는 픽셀(양수=오른쪽) */
