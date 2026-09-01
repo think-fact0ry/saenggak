@@ -2201,10 +2201,32 @@ function markActBtn(row, marked) {
 }
 
 function buildHomeIW(p) {
+  /* 「이 선생님만 보기」 = 좌상단 드롭다운을 이 선생님으로 바꾼다 (유성 2026-09-01).
+     전체 보기에서 집 마커를 눌렀을 때 그 선생님으로 들어가는 길이 없어서 드롭다운까지 올라가야 했다.
+     ⛔이름은 안 쓴다 — 바로 위 제목이 이미 이름이다(§2.1 문구 중복).
+     자리는 **출발·도착 위**(유성) — 아래는 길찾기 묶음이고 이건 성격이 다른 이동이다. */
+  var _sel = document.getElementById('providerSelect');
+  var _can = _sel && isAdmin() && p.name && _sel.value !== p.name
+             && [].some.call(_sel.options, function(o){ return o.value === p.name; });
   return '<div class="iw"><div class="iw-nm">'+esc(p.name)+'<span class="iw-bdg tc">선생님</span></div>'
     +'<div class="iw-tbl">'+iwRow('pin','위치','집')+'</div>'
+    +(_can ? '<div class="iw-r2"><button class="iw-chip gw" onclick="pickProvider(\''+escQ(p.name)
+             +'\')">이 선생님만 보기</button></div>' : '')
     +routeBtns(p.name+' 집',p.lat,p.lng)+'</div>';
 }
+
+/** 드롭다운을 그 선생님으로 바꾼다 — 사람이 직접 고른 것과 **같은 경로**를 탄다(change 이벤트).
+    별도 로딩 함수를 부르면 planExit·경로 초기화 같은 부수 처리를 빠뜨린다(0-9 단일 경로). */
+window.pickProvider = function(name){
+  var sel = document.getElementById('providerSelect');
+  if (!sel) return;
+  if (![].some.call(sel.options, function(o){ return o.value === name; })) {
+    showToast(name + ' 선생님이 이 서비스 목록에 없어요'); return;
+  }
+  infoWindow.close();
+  sel.value = name;
+  sel.dispatchEvent(new Event('change', { bubbles: true }));
+};
 
 function buildGroupedAssignedIW(items, hLat, hLng) {
   var h='<div class="iw">';
