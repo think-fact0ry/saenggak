@@ -86,8 +86,9 @@
   #filterMark.active{background:#ef4444;border-color:#ef4444}  /* 마크 필터 = 빨강 */
 
   /* ══ 대시보드 바 ══ */
+  /* top = 컨트롤 바 실측 높이(--barh). 줄 수가 늘어도 안 겹친다(유성 09-02: 폰에서 3줄이 됐다) */
   .dashboard{
-    position:fixed;top:44px;left:0;right:0;z-index:49;
+    position:fixed;top:var(--barh,44px);left:0;right:0;z-index:49;
     background:rgba(250,250,247,.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
     border-bottom:1px solid rgba(0,0,0,.04);
     padding:var(--bar-pady) var(--bar-padx);display:none;align-items:center;gap:var(--bar-gap);flex-wrap:wrap;
@@ -158,7 +159,7 @@
   .sr-none{padding:12px;text-align:center;font-size:12px;color:#bbb}
 
   /* ══ 지도 ══ */
-  #map{position:fixed;top:76px;left:0;right:0;bottom:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  #map{position:fixed;top:calc(var(--barh,44px) + var(--dashh,32px));left:0;right:0;bottom:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
   /* ══ 범례 ══ */
   /* ══ 배치안 (2026-08-08) ══ */
@@ -249,6 +250,13 @@
     background:linear-gradient(to bottom,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
                linear-gradient(to bottom,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%)}
   #schedSheet.more::after{opacity:1}
+  /* 위쪽에도 같은 그라디언트 — 격자를 내렸을 때 "위에 더 있다"를 말한다(유성 2026-09-02).
+     방향만 뒤집은 같은 공식이고, `.shd` 바로 아래에 앉는다(--barh처럼 재지 않게 헤더 높이를 변수로). */
+  #schedSheet::before{content:'';position:absolute;left:1px;right:1px;top:var(--shd-h,62px);height:36px;
+    pointer-events:none;opacity:0;transition:opacity .18s;z-index:2;
+    background:linear-gradient(to top,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+               linear-gradient(to top,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%)}
+  #schedSheet.moreTop::before{opacity:1}
   #schedRouteBtn{border:1px solid var(--g200);border-radius:9px;background:#fff;color:var(--g700);
     font-family:inherit;font-size:11.5px;font-weight:700;padding:6px 10px;cursor:pointer;flex:none}
   #schedRouteBtn.on{background:var(--g900);color:#fff;border-color:var(--g900)}
@@ -681,7 +689,7 @@
     display:flex;align-items:center;justify-content:center;
   }
   .nl-panel{
-    position:fixed;right:0;top:76px;bottom:0;z-index:45;
+    position:fixed;right:0;top:calc(var(--barh,44px) + var(--dashh,32px));bottom:0;z-index:45;
     width:340px;background:rgba(255,255,255,.97);
     backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
     border-left:1px solid rgba(0,0,0,.08);
@@ -735,17 +743,25 @@
     .dashboard .dash-filters select#filterTime{
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
     }
+    /* 🔴 360px 폰에서 레인이 43px이라 글자칸이 29.4px밖에 안 됐다 — 3글자 이름(31px)이 거의 다 잘렸다
+       (실측 165개 중 161개). 좌우 여백만 줄이면 37.4px가 되어 잘림이 7개(4글자 이상)로 떨어진다.
+       세로는 안 건드린다 — 세로 넘침은 26명 265블록 전수 0이었다. */
+    #schedSheet .blk{left:0;right:0;padding:5px 3px 3px}
+    #schedSheet .blk.tight{padding:2px 3px 1px}
+    #schedSheet .blk.open{padding:9px 10px 10px 11px}
+    /* 📊는 필터 뒤로 밀어 「선생님·배정·대기·마크」가 드롭다운과 한 줄에 오게 (유성 09-02) */
+    #dashLink{order:5}
     .wa{width:130px}
     .wa .pill{font-size:9.5px;padding:2px 7px}
     .controls{padding:6px 8px;gap:4px}
     .logo,.divider{display:none}
     #providerSelect{max-width:none}
-    .dashboard{top:40px;padding:5px 8px;gap:6px}
-    #map{top:70px}
+    .dashboard{padding:5px 8px;gap:6px}
+
     .legend{left:6px;bottom:10px;gap:8px;font-size:10px;padding:6px 8px}
     .route-panel{left:6px;right:6px;transform:none;min-width:auto;bottom:44px}
     .nl-fab{bottom:calc(14px + env(safe-area-inset-bottom));right:12px}
-    .nl-panel{width:100vw;top:70px}
+    .nl-panel{width:100vw}
   }
 </style>
 </head>
@@ -1035,6 +1051,26 @@ var CONFIG = {
 };
 
 var map, markers = [], overlays = [], infoWindow;
+
+/* ── 상단 바 높이를 재서 아래 것들이 따라오게 (유성 2026-09-02) ─────────────────────────
+   컨트롤 바는 `flex-wrap`이라 폰 폭에 따라 2~3줄이 된다. 그런데 지도·대시보드·리스트가
+   **70/76px 하드코딩**이라, 360px 폰(실측 바 110px)에서 40px이 겹쳤다 —
+   신청폼 리스트의 ✕가 바 뒤로 들어가 못 닫는 것이 그 증상이었다.
+   ⚠️ 잴 수밖에 없다 — 줄 수는 폰트 로딩·글자 길이에 따라 달라져 CSS로는 못 안다. */
+function syncBarH(){
+  var c = document.querySelector('.controls'), d = document.querySelector('.dashboard');
+  if (c) document.documentElement.style.setProperty('--barh', Math.round(c.offsetHeight) + 'px');
+  var dv = d && getComputedStyle(d).display !== 'none' ? Math.round(d.offsetHeight) : 0;
+  document.documentElement.style.setProperty('--dashh', dv + 'px');
+}
+window.addEventListener('resize', syncBarH);
+if (window.ResizeObserver) {
+  var _ro = new ResizeObserver(syncBarH);
+  document.addEventListener('DOMContentLoaded', function(){
+    ['.controls', '.dashboard'].forEach(function(sel){ var el = document.querySelector(sel); if (el) _ro.observe(el); });
+    syncBarH();
+  });
+}
 
 /* ── 같은 곳을 다시 누르면 말풍선을 내린다 (유성 2026-09-01) ──────────────────────────
    말풍선이 아래 지도를 가려서, 위치를 확인한 뒤엔 걷어낼 길이 필요하다.
@@ -5357,6 +5393,9 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   function syncFade(){
     var sb=document.getElementById('schedBody'), sh=document.getElementById('schedSheet');
     sh.classList.toggle('more', sb.scrollHeight - sb.clientHeight - sb.scrollTop > 6);
+    // 위쪽도 같이 — 내렸을 때 "위에 더 있다"(유성 09-02). 그라디언트 자리는 헤더 아래라 높이를 재서 준다
+    sh.classList.toggle('moreTop', sb.scrollTop > 6);
+    sh.style.setProperty('--shd-h', Math.round(sb.offsetTop) + 'px');
   }
   function clashWhy(g){
     var ov=999;
