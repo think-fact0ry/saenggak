@@ -737,10 +737,13 @@
     /* 요일·시간 드롭다운을 아이콘으로 줄인다(유성 픽) — 라벨 글자를 지우고 축은 라인 아이콘이 말한다(§3.5).
        ⚠️ width:auto면 브라우저가 가장 긴 option에 맞춰 벌리므로 고정 폭. */
     .dashboard .dash-filters select{
-      width:62px;max-width:none;min-width:0;flex-shrink:0;padding:4px 14px 4px 20px;
+      max-width:none;min-width:0;flex-shrink:0;padding:4px 12px 4px 18px;
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-      background-repeat:no-repeat,no-repeat;background-position:left 4px center,right 3px center;
+      background-repeat:no-repeat,no-repeat;background-position:left 3px center,right 2px center;
     }
+    /* 폭은 고른 값이 정한다 — 요일은 '월'(9px), 시간은 '14시'(21px)가 최장 */
+    .dashboard .dash-filters select#filterDay{width:46px}
+    .dashboard .dash-filters select#filterTime{width:56px}
     /* '전체'는 글자를 안 그린다 — 28px 칸에 '전체 요일'(39px)이 안 들어가 잘려 보였다(유성 09-02).
        고르면 '월'·'14시'는 온전히 들어간다. 펼친 목록은 네이티브 UI라 이 색을 안 탄다. */
     .dashboard .dash-filters select.allsel{color:transparent}
@@ -759,8 +762,8 @@
     #dashLink{flex-shrink:0}
     #providerSelect{flex:1 1 0;min-width:0;max-width:none}
     /* 대시보드 띠는 한 줄이 정원 — 오른쪽으로 밀지 않는다(유성 "70과 날짜 사이 여백이 너무 많고") */
-    .dash-filters{margin-left:0}
-    .wa{width:102px}
+    .dash-filters{margin-left:0;flex:1 1 auto;min-width:0}
+    .wa{flex:1 1 0;width:auto;min-width:0;margin-left:6px}
     .wa .pill{font-size:9.5px;padding:2px 7px}
     .controls{padding:6px 8px;gap:4px}
     .logo,.divider{display:none}
@@ -1293,7 +1296,7 @@ function initMap() {
   // ══ 대기 기간 슬라이더 부팅 ══
   // 기본값 = **최근 3개월**(유성 2026-08-31). 저장하지 않으므로 새로고침하면 늘 여기로 돌아온다.
   waV = WA_STOPS[2].v;
-  _waBind(); _waPlace(); _waLayout(); _dashSelMark();
+  _waBind(); _waPlace(); _waWatch(); _waLayout(); _dashSelMark();
   // 화면이 480px 경계를 넘나들면 슬라이더 자리(상단 바 ↔ 둘째 줄)와 둘째 줄 축약을 다시 잡는다.
   var _waRz = null;
   function _waOnResize(){
@@ -1705,6 +1708,7 @@ function updateDashboard() {
       : '<i>대기</i><b class="den">' + base.length + '</b><i>' + (narrow ? '중' : '명 중') + '</i><b>' + live + '</b>' + unit;
   }
   document.getElementById('dashboard').classList.add('show');
+  if (typeof _waLayout === 'function') _waLayout();   // 띠가 열린 그 자리에서(폰=슬라이더가 이 안에 있다)
   _fitDashbar();
 }
 function hideDashboard() { document.getElementById('dashboard').classList.remove('show'); }
@@ -1793,6 +1797,16 @@ function _waAlive(c){
 var WA_INSET = 4, WA_THUMB_R = 9;
 function _waPosPx(el, v){ var w = el.clientWidth || 180; return WA_INSET + v * (w - 2 * WA_INSET); }
 function _waVFromPx(el, px){ var w = el.clientWidth || 180; return Math.max(0, Math.min(1, (px - WA_INSET) / (w - 2 * WA_INSET))); }
+var _waRo = null;
+function _waWatch(){
+  var el = document.getElementById('waitAge');
+  if (!el || !window.ResizeObserver) return;
+  if (_waRo) _waRo.disconnect();
+  // _waLayout은 자식의 left만 건드려 .wa 크기를 안 바꾼다 → 되먹임 루프 없음
+  _waRo = new ResizeObserver(function(){ _waLayout(); });
+  _waRo.observe(el);
+}
+
 function _waLayout(){
   // ⚠️ display:none을 이유로 빠져나가면 **보이게 된 뒤에 다시 부를 사람이 없다**(유성 08-31 적발).
   //    폭이 0일 때만 건너뛴다 — 그때만 계산이 망가지고, 폭이 생기는 순간 다시 불리면 정확해진다.
@@ -3474,8 +3488,7 @@ function setupLongPress(el) {
         var idx = parseInt(this.getAttribute('data-cidx'));
         var item = childResults[idx];
         if (!item || !item.lat || !item.lng) return;
-        map.setCenter(new kakao.maps.LatLng(item.lat, item.lng));
-        map.setLevel(3);
+        window.focusChild(item.lat, item.lng, item.type === 'assigned');
         var iwContent = item.type === 'assigned'
           ? buildGroupedAssignedIW([item.data], currentData.provider.lat, currentData.provider.lng)
           : buildGroupedWaitingIW([item.data], currentData.provider.lat, currentData.provider.lng);
@@ -3779,9 +3792,8 @@ function renderNewList() {
         }
         // zoom은 절대 건드리지 않음
       } else {
-        // 최신순: 점프 후 확대 (기존 동작)
-        map.setCenter(pos);
-        map.setLevel(3);
+        // 최신순: 점프 후 확대. 배정 아동이면 선생님 집까지 담아 축소한다(유성 09-02)
+        window.focusChild(item.lat, item.lng, item.statusType === 'assigned');
       }
 
       // 기존 마커 찾아서 인포윈도우 열기 — **고른 아이를 맨 위로**(유성 2026-08-31).
@@ -5658,6 +5670,26 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     _candCutT = setTimeout(function(){ candDraw(); }, 180);
   }
   window.candCut = candCut;
+  /* ══ 배정 아동은 선생님 집이 같이 보이게 (유성 2026-09-02, 프리뷰 승인) ══
+     상한을 두지 않는다 — 둘 다 들어올 때까지 지도가 알아서 축소한다.
+     지난 안에 '레벨 6까지만' 같은 상한을 붙였던 건 '밖으로 나가지 않는다'는 지시를 어긴 것이라 지웠다.
+     ① 좌우 여백으로 가로 span을 880px로 묶는다 — PC 지도가 1920px라 안 묶으면 1269px까지 벌어져
+        유성이 말한 1000×1000 상자를 넘는다(실측). 폰은 폭이 작아 여백이 최소값 30으로 떨어진다.
+     ② 너무 당겨지는 것만 막는다 — 아동이 선생님과 같은 건물이면 250m 시야까지 가므로 레벨 3이 하한.
+     ⛔ 둘을 잇는 선은 그리지 않는다(유성 09-02). */
+  function focusChild(lat, lng, assigned){
+    var pos = new kakao.maps.LatLng(lat, lng);
+    var h = assigned && currentData && currentData.provider;
+    if (!h || !h.lat || !h.lng){ map.setCenter(pos); map.setLevel(3); return; }
+    var b = new kakao.maps.LatLngBounds();
+    b.extend(pos); b.extend(new kakao.maps.LatLng(h.lat, h.lng));
+    var el = document.getElementById('map');
+    var side = Math.max(30, Math.round((((el && el.clientWidth) || 1920) - 880) / 2));
+    map.setBounds(b, 30, side, 30, side);
+    if (map.getLevel() < 3) map.setLevel(3);   // 같은 건물이어도 지금과 같은 레벨 3에서 멈춘다
+  }
+  window.focusChild = focusChild;
+
   /** 월 스케줄 아동 카드 → 지도 (유성 2026-09-01). 배정 아동이라 `assigned`에서 찾는다.
       ⚠️ `e.stopPropagation()`이 없으면 카드가 접힌다(블록 전체가 `scTap` 핸들러). */
   window.scGo = function(e, lat, lng, row){
@@ -5665,8 +5697,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     if (iwToggle('sched:'+row)) return;   // 같은 버튼 다시 누름 = 말풍선만 내린다(화면 고정)
     var c = null;
     ((currentData && currentData.assigned) || []).forEach(function(x){ if (Number(x.formRow)===Number(row)) c = x; });
-    map.setCenter(new kakao.maps.LatLng(lat, lng));
-    map.setLevel(3);
+    focusChild(lat, lng, true);   // 월 스케줄에서 들어오는 건 전부 배정 아동
     var h = currentData && currentData.provider;
     var iw = c ? buildGroupedAssignedIW([c], h&&h.lat, h&&h.lng)
                : '<div class="iw"><div class="iw-nm">이 서비스 탭에 행이 없는 아이예요</div></div>';
