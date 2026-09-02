@@ -30,8 +30,9 @@
     /* §3.1 정본 토큰(필요 칸만 복사). 2026-08-10 IW 병합부터 신규 CSS는 var() — 기존 raw hex는 손댈 때 점진 정렬 */
     --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g400:#b0b8c1; --g500:#8b95a1;
     --g600:#6b7684; --g700:#4e5968; --g800:#333d4b; --g900:#191f28;
-    --green100:#e9f8ee; --green600:#3a8a5f; --green700:#166841;
-    --red:#f04452; --warn-weak-bg:#fef4e2; --warn-weak-fg:#c07f00;
+    --green50:#f8fbf9; --green100:#e9f8ee; --green600:#3a8a5f; --green700:#166841;
+    --g300:#d1d6db; --dark:#525966;   /* §4.14 dark variant — 「시간 제안」 dark fill(유성 09-02) */
+    --red:#f04452; --warn-weak-bg:#fef4e2; --warn-weak-fg:#8a5a00;   /* fg 2026-09-02 정본 갱신(#c07f00 3.07→5.43, 유성 확정) */
     --danger:#D25357; --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;
     /* §3.4 그림자 정본 — 그린틴트 2겹, 토스 램프(.05/.10/.15 @ blur 4/10/20)가 상한.
        2026-08-15 신설 → 2026-08-16 전면 적용(유성 "남은 그림자 모두 원칙으로").
@@ -43,8 +44,12 @@
     --sh-left:-1px 0 3px rgba(25,31,40,.08), -8px 0 20px rgba(25,31,40,.10);
     --ease:cubic-bezier(.22,.85,.25,1);
     /* 지도 전용 색 — 지금까지 JS 상수(MC·SVC_COLOR)에만 있고 CSS 토큰이 없었다(유성 08-27 "그린을 왜 #으로 썼어").
-       SVG 문자열은 var()를 못 받으므로 JS 상수는 그대로 두고, CSS가 쓰는 값만 여기 올린다. */
+       SVG 문자열은 var()를 못 받으므로 JS 상수(MC·SVC_COLOR)는 그대로 두고, CSS가 쓰는 값만 여기 올린다.
+       상태색(성공·주의·위험)은 2026-09-02 §3.1 정본 토큰으로 교체(유성 픽 — 상세=CLAUDE.md 「🎨」). */
     --wait-f:#f59e0b; --wait-s:#d97706; --wait-s-dark:#b45309; --wait-mid:#fcd9a0;
+    /* 요일 팔레트 — §3.6-1 예외①(유성 확정 무지개). CSS .pd와 JS PLAN_DC가 **여기 하나**를 읽는다(2026-09-02 토큰화, 값 무변경).
+       ⚠️ 수요일 #16a34a는 옛 성공색과 같은 값이었지만 이제 분리 — 성공(green700)을 바꿔도 수요일은 안 바뀐다. */
+    --d-mon:#e11d48; --d-tue:#f97316; --d-wed:#16a34a; --d-thu:#2563eb; --d-fri:#7c3aed; --d-sat:#0891b2; --d-sun:#be185d;
     --ink-on-dark:#F9FBFA;   /* §3.5 — 어두운 면 위 흰 글씨는 순백 금지 */
     /* 기간 슬라이더로 가라앉힌 대기 마커 — 유성 확정 10% / 탈색 100% */
     --cutop:.10; --cutgray:1;
@@ -171,7 +176,7 @@
   .sr-name{font-weight:600;font-size:12.5px;color:#1a1a1a;min-width:50px}
   .sr-phone{font-size:11px;color:#888;flex:1}
   .sr-status{font-size:10px;padding:2px 6px;border-radius:8px;white-space:nowrap}
-  .sr-status.assigned{background:#dcfce7;color:#16a34a}
+  .sr-status.assigned{background:var(--green100);color:var(--green700)}
   .sr-status.waiting{background:#fef3c7;color:var(--wait-s)}
   .sr-none{padding:12px;text-align:center;font-size:12px;color:#bbb}
 
@@ -212,11 +217,11 @@
   .pd:active{transform:scale(.94)}
   .pd.on{color:#fff}
   .pd[data-d="all"].on{background:var(--g900);border-color:var(--g900)}
-  .pd[data-d="월"].on{background:#e11d48;border-color:#e11d48}
-  .pd[data-d="화"].on{background:#f97316;border-color:#f97316}
-  .pd[data-d="수"].on{background:#16a34a;border-color:#16a34a}
-  .pd[data-d="목"].on{background:#2563eb;border-color:#2563eb}
-  .pd[data-d="금"].on{background:#7c3aed;border-color:#7c3aed}
+  .pd[data-d="월"].on{background:var(--d-mon);border-color:var(--d-mon)}
+  .pd[data-d="화"].on{background:var(--d-tue);border-color:var(--d-tue)}
+  .pd[data-d="수"].on{background:var(--d-wed);border-color:var(--d-wed)}
+  .pd[data-d="목"].on{background:var(--d-thu);border-color:var(--d-thu)}
+  .pd[data-d="금"].on{background:var(--d-fri);border-color:var(--d-fri)}
   .pd.exit{width:auto;padding:0 11px;border-radius:15px;font-size:11.5px;color:var(--g700)}
   /* 논모달 바텀시트 — 아래 여백 없이 이어 붙임(유성). 핸들·드래그·순차등장은 docs/1 §4.3 */
   #planSheet{position:absolute;right:12px;bottom:0;width:min(340px,72%);max-height:78%;z-index:8;
@@ -435,11 +440,11 @@
   .pcand:active{transform:scale(.99)}
   .pcand.static{cursor:default}
   .pcand.static:active{transform:none}
-  .pcand.best{border-color:var(--green600);box-shadow:0 0 0 3px #eaf4ee}
+  .pcand.best{border-color:var(--green600);box-shadow:0 0 0 3px var(--green100)}
   .pcand h4{margin:0 0 3px;font-size:14px;letter-spacing:-.2px}
-  .pcand .tg{display:inline-block;font-size:11px;font-weight:700;color:#2d6b4a;background:#eaf4ee;
+  .pcand .tg{display:inline-block;font-size:11px;font-weight:700;color:var(--green700);background:var(--green100);
              border-radius:999px;padding:2px 8px;margin-bottom:9px}
-  .pcand .tg.w{color:#8a5a00;background:#fff7e6}
+  .pcand .tg.w{color:var(--warn-weak-fg);background:var(--warn-weak-bg)}
   .pm{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;border-bottom:1px solid var(--g100)}
   .pm:last-of-type{border-bottom:0}
   .pm b{font-variant-numeric:tabular-nums}
@@ -447,8 +452,8 @@
   .pm .muted{color:var(--g500);font-weight:400}
   .pseq{font-size:11.5px;color:var(--g500);margin-top:9px;line-height:1.5}
   .pwhy{font-size:11.5px;color:var(--g700);background:var(--g100);border-radius:9px;padding:9px 11px;margin-top:9px;line-height:1.55}
-  .pdrop{margin-top:9px;font-size:11.5px;color:#9a2d22;background:#fdeeec;border-radius:9px;padding:9px 11px}
-  .padj{margin-top:9px;font-size:11.5px;color:#7a5200;background:#fff7e6;border-radius:9px;padding:9px 11px;line-height:1.55}
+  .pdrop{margin-top:9px;font-size:11.5px;color:var(--danger-weak-fg);background:var(--danger-weak-bg);border-radius:9px;padding:9px 11px}
+  .padj{margin-top:9px;font-size:11.5px;color:var(--warn-weak-fg);background:var(--warn-weak-bg);border-radius:9px;padding:9px 11px;line-height:1.55}
   .pbtn{width:100%;margin-top:11px;border:0;border-radius:11px;background:var(--green700);color:#fff;
         font-size:13.5px;font-weight:700;padding:12px;font-family:inherit;cursor:pointer;letter-spacing:-.2px}
   .pbtn:active{transform:scale(.97)}
@@ -464,30 +469,32 @@
   .prow{display:flex;align-items:center;gap:7px;font-size:12.5px;padding:9px 2px;border-bottom:1px solid var(--g100)}
   .prow:last-child{border-bottom:0}
   .pst{flex:none;font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 7px}
-  .pst.ok{color:#2d6b4a;background:#eaf4ee}
-  .pst.hold{color:#8a5a00;background:#fff7e6}
-  .pst.out{color:#9a2d22;background:#fdeeec}
+  .pst.ok{color:var(--green700);background:var(--green100)}
+  .pst.hold{color:var(--warn-weak-fg);background:var(--warn-weak-bg)}
+  .pst.out{color:var(--danger-weak-fg);background:var(--danger-weak-bg)}
   .pst.no{color:var(--g700);background:var(--g100)}
-  /* 🔒 이미 확정 = 이 안이 만든 게 아니라 **이미 있는 것**. 새 배정(초록)과 색으로 갈라 놓는다 */
-  .pst.lock{color:#3d4a5c;background:#e8edf3}
-  .pst.clash{color:#fff;background:#9a2d22}
-  .pst.other{color:#5b4a8a;background:#efeaf7}
-  .pst.time{color:#1d5f8a;background:#e7f1f9}
+  /* 🔒 이미 확정 = 이 안이 만든 게 아니라 **이미 있는 것**. 새 배정(초록)과 색으로 갈라 놓는다.
+     2026-09-02 색 규칙(유성 픽): 색은 위험도만(초록=됨·주황=주의·빨강=문제·회색=중립), 상태는 글자.
+     확정=한 단 진한 회색 weak(g200/g800) / 불가·다른 선생님=회색 weak / 시간 제안=**dark fill**(회색 weak끼리 안 갈려서 — 유성 피드백) */
+  .pst.lock{color:var(--g800);background:var(--g200)}
+  .pst.clash{color:#fff;background:var(--danger-weak-fg)}   /* 소형 fill = weak-fg 채움(§4.15, --danger 채움은 4.11 미달) */
+  .pst.other{color:var(--g700);background:var(--g100)}   /* 옛 보라 = §3.6-1 상태 배지 보라 금지 위반 */
+  .pst.time{color:#fff;background:var(--dark)}
   /* 🗓️ 주간 표 — 이 화면의 1차 질문("이 선생님 주간이 어떻게 되나")에 한 줄 요약으로 답할 수 없다 */
   .pweek{margin:8px 0 2px;border-top:1px solid var(--g100)}
   .pwd{display:flex;align-items:center;gap:6px;padding:8px 0 4px}
   .pwdn{color:#fff;font-size:11px;font-weight:800;border-radius:6px;padding:2px 7px}
   .pwdm{color:var(--g500);font-size:10.5px}
   .pwv{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 0 4px 4px;border-left:2px solid var(--g100)}
-  .pwv.hot{border-left-color:#7aa8c9;background:#f5f9fc}     /* 시간만 제안 — 이미 우리 아이 */
-  .pwv.fresh{border-left-color:var(--green600);background:#f2faf5}   /* 처음 오는 아이 = 연락 대상 */
+  .pwv.hot{border-left-color:var(--g300);background:var(--g100)}     /* 시간만 제안 — 이미 우리 아이(옛 파랑은 아래 초록과 비슷해 유성 반려 09-02) */
+  .pwv.fresh{border-left-color:var(--green600);background:var(--green50)}   /* 처음 오는 아이 = 연락 대상 */
   .pwh{font-variant-numeric:tabular-nums;color:var(--g700);font-weight:700;min-width:42px}
   .pwg{font-size:10px;font-weight:700;border-radius:999px;padding:1px 6px;white-space:nowrap}
-  .pwg.lock{color:#3d4a5c;background:#e8edf3}
-  .pwg.time{color:#1d5f8a;background:#e7f1f9}
+  .pwg.lock{color:var(--g800);background:var(--g200)}
+  .pwg.time{color:#fff;background:var(--dark)}   /* dark fill — 확정(weak)·신규(초록 fill)와 셋 다 갈린다 */
   .pwg.new{color:#fff;background:var(--green700)}
   .pwn{font-weight:600;color:var(--g900)}
-  .pwx{font-size:10px;color:#8a5a00;background:#fff7e6;border-radius:999px;padding:1px 6px}
+  .pwx{font-size:10px;color:var(--warn-weak-fg);background:var(--warn-weak-bg);border-radius:999px;padding:1px 6px}
   .pwd2{margin-left:auto;color:var(--g500);font-size:10.5px}
   /* 로딩 뼈대 — 전체화면 오버레이 대신 시트 안에서 기다린다(유성: "로딩 화면 자체를 잠수함") */
   .pskel{height:74px;border-radius:12px;margin:9px 0;background:linear-gradient(100deg,var(--g100) 30%,#e9ecef 45%,var(--g100) 60%);background-size:280% 100%;animation:pskel 1.1s ease-in-out infinite}
@@ -496,8 +503,8 @@
   @media (prefers-reduced-motion:reduce){.pskel{animation:none}}
   .prow .why{color:var(--g500);font-size:11px;margin-left:auto;text-align:right;max-width:52%}
   .pnote{font-size:11.5px;color:var(--g700);background:var(--g100);border-radius:9px;padding:9px 11px;margin:9px 0;line-height:1.55}
-  .pnote.warn{color:#8a5a00;background:#fff7e6}
-  .pnote.bad{color:#9a2d22;background:#fdeeec}
+  .pnote.warn{color:var(--warn-weak-fg);background:var(--warn-weak-bg)}
+  .pnote.bad{color:var(--danger-weak-fg);background:var(--danger-weak-bg)}
   /* 조율 한 건씩 (유성 #84 "한건씩 진행") */
   .pqhd{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--g500);margin-bottom:8px}
   .pqhd b{color:var(--g900)}
@@ -505,8 +512,8 @@
   .pqcard h4{margin:0 0 3px;font-size:14px;letter-spacing:-.2px}
   .pqcard h4 a{color:var(--green700);text-decoration:none;font-size:12.5px;font-weight:600;margin-left:5px}
   .pqmeta{font-size:11.5px;color:var(--g500);line-height:1.6;margin-bottom:9px}
-  .pqmeta .cost{color:#9a2d22}
-  .pqmeta .gain{color:#2d6b4a}
+  .pqmeta .cost{color:var(--danger-weak-fg)}
+  .pqmeta .gain{color:var(--green700)}
   .pqs{font-size:12px;color:var(--g900);background:var(--g100);border-radius:9px;padding:10px 11px;line-height:1.62;margin-bottom:9px}
   .pqb{display:flex;gap:4px;flex-wrap:wrap}
   /* keep-all 없으면 CJK가 어절 중간에서 끊긴다("반/영"). 주액션은 항상 풀폭 첫 줄 —
@@ -693,7 +700,7 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .toast{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:60;background:#842029;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:var(--sh2);display:none}
   .toast.show{display:block;animation:fadeIn .3s}
-  .toast.success{background:#16a34a}
+  .toast.success{background:var(--green700)}
   @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
   /* ══ 신규 아동 리스트 사이드 패널 (PC·태블릿) ══ */
@@ -748,9 +755,9 @@
   .nl-item-row1{display:flex;align-items:center;gap:6px;margin-bottom:2px}
   .nl-item-name{font-weight:700;font-size:13px;color:#1a1a1a}
   .nl-item-badge{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600;flex-shrink:0}
-  .nl-item-badge.assigned{background:#dcfce7;color:#16a34a}
+  .nl-item-badge.assigned{background:var(--green100);color:var(--green700)}
   .nl-item-badge.waiting{background:#fef3c7;color:var(--wait-s)}
-  .nl-item-badge.absent{background:#fff3cd;color:#856404}
+  .nl-item-badge.absent{background:var(--warn-weak-bg);color:var(--warn-weak-fg)}
   .nl-item-badge.mark{background:#fee2e2;color:#dc2626}   /* 마크(shortlist) — 지도 빨강 북마크와 결 맞춤 */
   .nl-item-date{color:#bbb;font-size:10px;margin-left:auto;flex-shrink:0}
   .nl-item-row2{font-size:11px;color:#888;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -879,14 +886,14 @@
            white-space:nowrap;font-size:9.5px;font-weight:700;line-height:1;padding:3px 5px;border-radius:5px;
            background:#f2f4f6;color:#6b7684;border:1px solid #e5e8eb}
   .asg-slot.on .asg-occ{background:#fff;border-color:#3a8a5f;color:#166841}
-  .asg-unk{font-size:12px;color:#8a5a00;background:#fff7e6;border-radius:9px;padding:8px 10px;margin-top:10px;line-height:1.5}
+  .asg-unk{font-size:12px;color:var(--warn-weak-fg);background:var(--warn-weak-bg);border-radius:9px;padding:8px 10px;margin-top:10px;line-height:1.5}
   /* ── 겹침 다이얼로그(§4.4 결) ── */
   #cgModal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:20px}
   #cgModal.show{display:flex}
   .cg-card{width:100%;max-width:340px;background:#fff;border-radius:20px;padding:22px 20px 16px}
   .cg-t{font-size:16.5px;font-weight:800;letter-spacing:-.3px;line-height:1.4;word-break:keep-all}
   .cg-s{font-size:13px;color:#6b7684;margin-top:9px;line-height:1.6;word-break:keep-all}
-  .cg-warn{font-size:12.5px;color:#8a5a00;background:#fff7e6;border-radius:10px;padding:9px 11px;margin-top:11px;line-height:1.5}
+  .cg-warn{font-size:12.5px;color:var(--warn-weak-fg);background:var(--warn-weak-bg);border-radius:10px;padding:9px 11px;margin-top:11px;line-height:1.5}
   .cg-btns{display:flex;gap:7px;margin-top:16px}
   .cg-btns.col{flex-direction:column}
   .cg-b{flex:1;font-family:inherit;border:none;cursor:pointer;border-radius:12px;padding:13px 0;font-size:14px;
@@ -900,7 +907,7 @@
              appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b95a1' stroke-width='2' fill='none'/%3E%3C/svg%3E");
              background-repeat:no-repeat;background-position:right 14px center}
   .asg-prov:focus{border-color:#3a8a5f}
-  .asg-note{font-size:12.5px;color:#8a5a00;background:#fff7e6;border-radius:10px;padding:9px 11px;margin-top:12px;
+  .asg-note{font-size:12.5px;color:var(--warn-weak-fg);background:var(--warn-weak-bg);border-radius:10px;padding:9px 11px;margin-top:12px;
             line-height:1.5;word-break:keep-all}
 </style>
 <div id="asgModal">
@@ -2890,7 +2897,7 @@ function _cgSend(req, resolve, force){
         }).join(', ');
         showToast(prov + ' / ' + d + ' ' + time
           + (res.mode === 'time' ? ' 시간 기록 완료!' : ' 배정 완료!')
-          + (res.sibling ? ' (형제 합반)' : '') + (extra ? '  ·  ' + extra : ''), true);
+          + (res.sibling ? ' (형제 합반)' : '') + (extra ? ', ' + extra : ''), true);
         if (res.logged === false) showToast('⚠️ 시트엔 기록됐지만 로그 남기기에 실패했어요: ' + (res.logError || ''));
       } else {
         // 🔴 서버가 **쓰고 나서 다시 읽은 결과**를 그대로 보여준다. 어디에 썼는지·무엇이 읽혔는지를
@@ -2942,7 +2949,7 @@ function _cgOpen(cf, req){
 
   // 왜 그렇게 아는지를 같이 말한다 — 근거를 숨기면 담당자가 화면을 못 믿는다
   var src = v.src === 'recon'
-    ? '결제 이력 기준 · 최근 8주 ' + (v.sessions || 0) + '회'
+    ? '결제 이력 기준, 최근 8주 ' + (v.sessions || 0) + '회'
       + (v.lastDaysAgo != null ? ' (마지막 ' + v.lastDaysAgo + '일 전)' : '')
     : '시트에 확정된 시간';
   var sub = v.time + '~' + v.endTime + ' / ' + src;
@@ -2986,7 +2993,7 @@ function _cgStep2(cf, req){
     askAssignSchedule(v.row, req.provider, v.name, vc && vc.times);
     _asgCtx.victimFor = { req: req, victim: v };
     document.getElementById('asgTitle').textContent = v.name + ' 아동을 옮길 시간';
-    document.getElementById('asgSub').textContent = req.provider + ' 선생님 · ' + (vc ? currentService : '');
+    document.getElementById('asgSub').textContent = req.provider + ' 선생님 / ' + (vc ? currentService : '');
     document.getElementById('asgOk').textContent = '이 시간으로 옮기고 배정';
     asgToggleMore(true);
   }));
@@ -3979,7 +3986,13 @@ var planDayF = 'all';   // 요일 필터
 var planLines = [];     // 동선 폴리라인
 var planMarkers = [];   // 요일 마커
 var planLabels = [];    // 요일 마커 이름표
-var PLAN_DC = { '월':'#e11d48','화':'#f97316','수':'#16a34a','목':'#2563eb','금':'#7c3aed','토':'#0891b2','일':'#be185d' };
+// 요일 팔레트 = :root --d-* **단일 소스**(2026-09-02). 인라인 style·SVG·폴리라인엔 해석된 hex가 필요하므로 부팅 때 계산값을 읽는다.
+//   :root는 <head> <style>에 있고 이 스크립트는 body 끝이라 항상 먼저 파싱돼 있다. 빈 값이면 조용히 투명이 되지 않게 경고.
+var PLAN_DC = (function(){
+  var cs = getComputedStyle(document.documentElement), m = { '월':'--d-mon','화':'--d-tue','수':'--d-wed','목':'--d-thu','금':'--d-fri','토':'--d-sat','일':'--d-sun' }, o = {};
+  for (var d in m) { o[d] = (cs.getPropertyValue(m[d]) || '').trim(); if (!o[d]) console.warn('PLAN_DC: :root ' + m[d] + ' 없음'); }
+  return o;
+})();
 
 // ── 시트 안 세 화면 ─────────────────────────────────────────────
 // 'plans' 후보안 / 'roster' 마크 전원 상태 / 'adj' 조율 한 건씩
@@ -4157,12 +4170,12 @@ function planRenderSheet() {
   document.getElementById('planTitle').textContent = '배치안';
   document.getElementById('planSub').textContent =
     (PLAN.provider ? PLAN.provider.name : '')
-    + ' · 마크 ' + ((PLAN.summary && PLAN.summary.requested != null)
+    + ', 마크 ' + ((PLAN.summary && PLAN.summary.requested != null)
                      ? PLAN.summary.requested
                      : (PLAN.diagnostics ? PLAN.diagnostics.totalChildren : 0)) + '명'
-    + (PLAN.exact ? ' · 최적 보장' : ' · 추정')
-    + (PLAN.reconUsed ? ' · 기존 수업 ' + PLAN.reconUsed + '건 반영' : ' · 기존 수업 확인 안 됨')
-    + ' · ' + _planAgeLabel();
+    + (PLAN.exact ? ', 최적 보장' : ', 추정')
+    + (PLAN.reconUsed ? ', 기존 수업 ' + PLAN.reconUsed + '건 반영' : ', 기존 수업 확인 안 됨')
+    + ', ' + _planAgeLabel();
 
   // 세그먼트 — 세 화면 어디에도 "숨겨진 아이"가 없다는 걸 숫자로 보인다
   var sm = PLAN.summary || {};
@@ -4197,7 +4210,7 @@ function _planAgeLabel() {
   var mins = Math.floor((new Date().getTime() - planCalcAt) / 60000);
   if (mins < 1) return '방금 계산';
   if (mins < 60) return mins + '분 전 계산';
-  return Math.floor(mins / 60) + '시간 전 계산 · 다시 뽑기 권장';
+  return Math.floor(mins / 60) + '시간 전 계산, 다시 뽑기 권장';
 }
 
 function planTabTo(t) { planTab = t; planRenderSheet(); }
@@ -4232,7 +4245,7 @@ function _planWeekHtml(p) {
   var h = '<div class="pweek">';
   (p.days || []).forEach(function(d) {
     h += '<div class="pwd"><span class="pwdn" style="background:' + (PLAN_DC[d.day] || '#666') + '">' + esc(d.day) + '</span>'
-       + '<span class="pwdm">이동 ' + d.moveMin + '분 · 주차 ' + d.parks + '회'
+       + '<span class="pwdm">이동 ' + d.moveMin + '분, 주차 ' + d.parks + '회'
        + (d.idleMin > 0 ? ', 빈 시간 ' + d.idleMin + '분' : '') + '</span></div>';
     (d.visits || []).forEach(function(v) {
       // 🔴 아이콘만 두면 무슨 뜻인지 모른다(유성: *"기존에 이미 확정된 아동은 누구이며,
@@ -4298,11 +4311,11 @@ function _planViewPlans() {
       //    가지고 있는지도 확인이 안되고, 새로 추가할 아동이 누구인지도 시각적으로 명확하지 않다"*).
       //    한 줄 요약(`pseq`)은 7명만 돼도 읽을 수 없다.
       + (sel ? _planWeekHtml(p) : '<div class="pseq">' + esc(p.days.map(function(d) {
-            return d.day + ' ' + d.visits.length + '명'; }).join(' · ')) + '</div>')
+            return d.day + ' ' + d.visits.length + '명'; }).join(', ')) + '</div>')
       // 주행시간은 추정치다 — 서버가 estimated로 알려주는 사실을 화면이 삼키면 담당자는 실측으로 읽는다
       + (PLAN.estimated ? '<div class="pseq">이동·여유는 추정치예요</div>' : '')
       + (p.unplaced && p.unplaced.length
-          ? '<div class="pdrop">' + esc(p.unplaced.map(function(u){ return u.name + '(' + u.reason + ')'; }).join(' · ')) + '</div>' : '')
+          ? '<div class="pdrop">' + esc(p.unplaced.map(function(u){ return u.name + '(' + u.reason + ')'; }).join(', ')) + '</div>' : '')
       + (p.infeasibleDays > 0
           ? '<div class="pdrop"><b>이 안은 이동시간이 부족해요</b> — 다음 수업에 제때 못 갑니다</div>' : '')
       // 🔴 **제안 시각을 실제 시각인 척 쓰면 안 된다.** 시간 기록이 없는 아이의 시각은 엔진이 만든
@@ -4314,7 +4327,7 @@ function _planViewPlans() {
       + (sel && !p.infeasibleDays && nNew > 0
           ? '<button class="pbtn" onclick="event.stopPropagation();planCommit()">'
             + (nFresh ? '새로 ' + nFresh + '명 배정' : '')
-            + (nFresh && nTime ? ' · ' : '')
+            + (nFresh && nTime ? ', ' : '')
             + (nTime ? '시간 ' + nTime + '명 기록' : '') + '</button>' : '')
       + (sel && !p.infeasibleDays && nNew === 0
           ? '<div class="pnote">이 주는 <b>이미 다 정해져</b> 있어요 — 새로 정할 게 없어요.</div>' : '')
@@ -4364,12 +4377,12 @@ function _planViewRoster() {
   //    마크는 "더 넣어볼 후보"일 뿐이고 계산 대상은 Q열이 정한다).
   h += '<div class="pnote">' + esc(PLAN.provider ? PLAN.provider.name : '') + ' 선생님 주간 <b>'
     + (sm.weekly != null ? sm.weekly : roster.length) + '명</b>'
-    + ((sm.fixed || 0)         ? ' · 🔒 확정 ' + sm.fixed + '명' : '')
-    + ((sm.needsTime || 0)     ? ' · ⏱ 시간 정하기 ' + sm.needsTime + '명' : '')
-    + ((sm.newlyPlaced || 0)   ? ' · 🆕 새로 ' + sm.newlyPlaced + '명' : '')
-    + ((sm.crowdedOut || 0)    ? ' · 밀림 ' + sm.crowdedOut + '명' : '')
-    + ((sm.impossible || 0)    ? ' · 불가 ' + sm.impossible + '명' : '')
-    + ((sm.otherProvider || 0) ? ' · 다른 선생님 ' + sm.otherProvider + '명' : '')
+    + ((sm.fixed || 0)         ? ', 🔒 확정 ' + sm.fixed + '명' : '')
+    + ((sm.needsTime || 0)     ? ', ⏱ 시간 정하기 ' + sm.needsTime + '명' : '')
+    + ((sm.newlyPlaced || 0)   ? ', 🆕 새로 ' + sm.newlyPlaced + '명' : '')
+    + ((sm.crowdedOut || 0)    ? ', 밀림 ' + sm.crowdedOut + '명' : '')
+    + ((sm.impossible || 0)    ? ', 불가 ' + sm.impossible + '명' : '')
+    + ((sm.otherProvider || 0) ? ', 다른 선생님 ' + sm.otherProvider + '명' : '')
     + '<br><span style="color:#8b95a1">마크 ' + (sm.requested || 0) + '명은 <b>후보</b>예요 — 이 선생님 아이는 마크와 상관없이 다 들어옵니다.'
     + ((sm.needsTime || 0) ? '<br>「시간 정하기」는 <b>배정은 됐는데 요일·시각이 시트에 없는</b> 아이예요. 확정하면 채워집니다.' : '')
     + ((sm.crowdedOut || 0) ? '<br>「밀림」은 <b>넣을 수 있는데</b> 이 안에서 빠진 거예요 — 조율하거나 다른 안을 보세요.' : '')
@@ -4381,8 +4394,8 @@ function _planViewRoster() {
     h += '<div class="pnote warn"><b>시트에 적힌 시각과 실제가 달라요 ' + sm.mismatches.length + '명</b><br>'
       + sm.mismatches.map(function(m) {
           return esc(m.name) + ' — 시트 <b>' + esc(m.mismatch.sheetDay + ' ' + m.mismatch.sheetTime) + '</b>'
-            + ' · 실제(최근 8주) <b>' + esc(m.mismatch.realDay + ' ' + m.mismatch.realTime) + '</b>'
-            + ' <a href="javascript:void(0)" style="color:#166841;font-weight:700" onclick="planSetTime(' + m.row + ')">시트 맞추기 →</a>';
+            + ', 실제(최근 8주) <b>' + esc(m.mismatch.realDay + ' ' + m.mismatch.realTime) + '</b>'
+            + ' <a href="javascript:void(0)" style="color:var(--green700);font-weight:700" onclick="planSetTime(' + m.row + ')">시트 맞추기 →</a>';
         }).join('<br>')
       + '<br><span style="color:#8b95a1">배치안은 <b>실제</b>를 씁니다 — 선생님이 시간을 옮긴 것이 시트에 안 반영된 거예요.</span></div>';
   }
@@ -4403,7 +4416,7 @@ function _planViewRoster() {
     h += '<div class="pnote warn">목록에서 빠진 것 — '
       + ((sm.droppedDuplicates || 0) ? '중복 신청 ' + sm.droppedDuplicates + '건 병합' : '')
       + ((sm.skippedRows && sm.skippedRows.length)
-          ? ((sm.droppedDuplicates ? ' · ' : '') + '시트에 없는 행 ' + sm.skippedRows.join(',')) : '')
+          ? ((sm.droppedDuplicates ? ', ' : '') + '시트에 없는 행 ' + sm.skippedRows.join(',')) : '')
       + '</div>';
   }
 
@@ -4415,7 +4428,7 @@ function _planViewRoster() {
     var why = hasWhen ? ((r.day || '') + ' ' + (r.time || '')) : (r.reason || '');
     h += '<div class="prow"><span class="pst ' + st.c + '">' + st.t + '</span>'
       + '<b>' + esc(r.name) + '</b>'
-      + (r.anchorCount > 1 ? '<span style="color:#8b95a1;font-size:11px">단지 ' + r.anchorCount + '건</span>' : '')
+      + (r.anchorCount > 1 ? '<span style="color:var(--g500);font-size:11px">단지 ' + r.anchorCount + '건</span>' : '')
       + '<span class="why">' + esc(why) + '</span></div>';
     if (r.holdReasons && r.holdReasons.length) {
       h += '<div class="plog">보류 권고 — ' + esc(r.holdReasons.join(' / '))
@@ -4429,19 +4442,19 @@ function _planViewRoster() {
       var w = r.reconWhy;
       h += '<div class="plog">' + (r.timeSource === 'recon' ? '결제 이력 기준' : '⚠️ 확실하지 않아요')
         + ' — ' + w.sessions + '회 / ' + w.spanDays + '일'
-        + (w.shift ? ' · <b>최근에 시간이 바뀌는 중</b>' : '')
+        + (w.shift ? ', <b>최근에 시간이 바뀌는 중</b>' : '')
         + (r.timeSource === 'recon-low'
-            ? (w.sessions < 4 ? ' · 회기가 적어요' : (w.spanDays < 21 ? ' · 기간이 짧아요' : '')) : '')
+            ? (w.sessions < 4 ? ', 회기가 적어요' : (w.spanDays < 21 ? ', 기간이 짧아요' : '')) : '')
         + '</div>';
     }
     // ⏱ 시간 기록이 없는 아이 = **실제 수업 시각을 아는 사람은 유성뿐**이다. 엔진 제안을 그대로
     //    확정하면 틀린 시각이 박히므로, 그 자리에서 직접 지정할 길을 준다(기존 배정 다이얼로그 재사용).
     if (r.status === 'needs-time') {
       h += '<div class="plog">시트에 요일·시각이 없어 <b>' + esc((r.day || '') + ' ' + (r.time || '')) + '</b>로 제안했어요.'
-        + ' 실제와 다르면 <a href="javascript:void(0)" style="color:#166841;font-weight:700" onclick="planSetTime(' + r.row + ')">직접 지정 →</a></div>';
+        + ' 실제와 다르면 <a href="javascript:void(0)" style="color:var(--green700);font-weight:700" onclick="planSetTime(' + r.row + ')">직접 지정 →</a></div>';
     }
     if (r.status === 'impossible' || r.status === 'crowded-out') {
-      h += '<div class="plog"><a href="javascript:void(0)" style="color:#166841" onclick="planForChild(' + r.row + ',\'' + escQ(r.name) + '\')">이 아이를 맡을 다른 선생님 찾기 →</a></div>';
+      h += '<div class="plog"><a href="javascript:void(0)" style="color:var(--green700)" onclick="planForChild(' + r.row + ',\'' + escQ(r.name) + '\')">이 아이를 맡을 다른 선생님 찾기 →</a></div>';
     }
   });
 
@@ -4449,7 +4462,7 @@ function _planViewRoster() {
   (PLAN.anchorWarnings || []).forEach(function(w) { h += '<div class="pnote warn">' + esc(w) + '</div>'; });
   if (PLAN.duplicatesDropped && PLAN.duplicatesDropped.length) {
     h += '<div class="pnote warn"><b>중복 신청 ' + PLAN.duplicatesDropped.length + '건을 하나로 묶었어요</b><br>'
-      + esc(PLAN.duplicatesDropped.map(function(d){ return d.name + '(' + d.row + '행)'; }).join(' · ')) + '</div>';
+      + esc(PLAN.duplicatesDropped.map(function(d){ return d.name + '(' + d.row + '행)'; }).join(', ')) + '</div>';
   }
   if (PLAN.availWidened && PLAN.availWidened.length) {
     h += '<div class="pnote warn">시트의 가용시간보다 <b>' + esc(PLAN.availWidened.join('/')) + '요일</b>에 실제로 수업한 기록이 있어 '
@@ -4626,7 +4639,7 @@ function planAdjAnswer(kind, who) {
     planQ.shift();
     if (kind === 'agree') {
       planQDone.push({ a: a, kind: 'agree', label: '동의' });
-      planQLog.unshift('✅ ' + targets.map(function(t){ return '<b>' + esc(t.name) + '</b> ' + esc(t.to); }).join(' · ')
+      planQLog.unshift('✅ ' + targets.map(function(t){ return '<b>' + esc(t.name) + '</b> ' + esc(t.to); }).join(', ')
         + ' 희망시간에 추가했어요 → 배치안 다시 계산');
     } else {
       planQDone.push({ a: a, kind: 'decline', label: '거절', by: targets[0].name });
@@ -4644,7 +4657,7 @@ function planAdjUndo(i) {
               : _planAsksOf(d.a).filter(function(k){ return !d.by || k.name === d.by; });
   _planAdjWrite(d.kind === 'agree' ? 'adjust' : 'decline', d.a, targets, true, function(res) {
     planQDone.splice(i, 1);
-    planQLog.unshift('↩️ <b>' + esc(targets.map(function(t){return t.name;}).join(' · ')) + '</b> 기록을 되돌렸어요');
+    planQLog.unshift('↩️ <b>' + esc(targets.map(function(t){return t.name;}).join('/')) + '</b> 기록을 되돌렸어요');
     _planApplyRefresh(res, null);
   });
 }
@@ -4694,17 +4707,17 @@ function _planAdjWrite(action, a, targets, undo, ok) {
   chain.then(function() {
       showLoading(false);
       if (!okd.length) {   // 하나도 못 썼다 = 진짜 실패. 큐를 건드리지 않는다
-        showToast('기록하지 못했어요: ' + failed.join(' · '));
+        showToast('기록하지 못했어요: ' + failed.join('/'));
         planRenderSheet();
         return;
       }
       planDirty = true;
       _invalidateServiceCache();
       if (failed.length) {
-        planQLog.unshift('⚠️ <b>' + esc(okd.join('/')) + '</b>만 기록됐어요 — ' + esc(failed.join(' · ')) + ' 은(는) 기록하지 못했어요');
+        planQLog.unshift('⚠️ <b>' + esc(okd.join('/')) + '</b>만 기록됐어요 — ' + esc(failed.join('/')) + ' 은(는) 기록하지 못했어요');
         showToast('일부만 기록됐어요 — 처리 내역에서 확인해 주세요');
       }
-      if (noops.length) planQLog.unshift('ℹ️ ' + esc(noops.join(' · ')) + ' 은(는) 이미 그렇게 돼 있어 새로 기록할 게 없었어요');
+      if (noops.length) planQLog.unshift('ℹ️ ' + esc(noops.join('/')) + ' 은(는) 이미 그렇게 돼 있어 새로 기록할 게 없었어요');
       // 전부 noop이면 서버가 새 배치안을 안 보냈다 → 스스로 다시 계산한다(안 그러면 화면이 낡은 채로 남는다)
       if (!last) { _planRefetch(ok); return; }
       ok(last);
@@ -4781,7 +4794,7 @@ function _planAdjDone(hidden) {
   }
 
   h += '<div class="pnote' + (agreed ? '' : ' bad') + '"><b>조율 끝 — 처리 ' + planQDone.length + '건</b><br>'
-    + '동의 ' + agreed + '건 · 거절 ' + declined + '건'
+    + '동의 ' + agreed + '건, 거절 ' + declined + '건'
     + (agreed ? '<br>배치안을 다시 계산했어요. 「안」에서 확인하고 확정해 주세요.' : '') + '</div>';
 
   // 유성 2026-08-08: 전부 거절이면 **한계를 명시**해야 한다 — 아니면 담당자는 계속 방법을 찾는다
@@ -4895,7 +4908,7 @@ function planBriefShot() {
   g.fillStyle = '#191f28'; g.font = '700 21px ' + FF;
   g.fillText(name, PAD, 46);
   g.fillStyle = '#4e5968'; g.font = '400 13px ' + FF;   // 카톡으로 나가는 이미지 — g500(3.04)은 13px에서 미달
-  g.fillText('주간 스케줄 · 총 ' + p.placed + '명', PAD, 70);
+  g.fillText('주간 스케줄 총 ' + p.placed + '명', PAD, 70);
 
   var y = HEAD;
   rows.forEach(function(r) {
@@ -4989,7 +5002,7 @@ function _planViewForChild() {
   }
   if ((r.rejected || []).length) {
     h += '<div class="pnote">넣을 수 없던 선생님<br><span style="color:#8b95a1">'
-      + esc(r.rejected.map(function(x){ return x.provider + '(' + (x.reason || '') + ')'; }).join(' · '))
+      + esc(r.rejected.map(function(x){ return x.provider + '(' + (x.reason || '') + ')'; }).join(', '))
       + '</span></div>';
   }
   // 이 모드는 기존 아동 좌표를 안 읽는다 = 왕복비용이 하한이다. 단정하지 않는다
@@ -5259,7 +5272,7 @@ function planCommit() {
     return '· ' + x.day + ' ' + x.time + '  ' + (it.name || '') + (it.isNew ? '  (새로 배정)' : '  (시간 정하기)');
   });
   var nNewC = picks.filter(function(x){ var it = infoOf[x.row + '|' + x.day + '|' + x.time] || {}; return it.isNew; }).length;
-  if (!confirm(PLAN.provider.name + ' 선생님 — 새로 배정 ' + nNewC + '명 · 시간 정하기 ' + (picks.length - nNewC) + '명\n\n'
+  if (!confirm(PLAN.provider.name + ' 선생님 — 새로 배정 ' + nNewC + '명, 시간 정하기 ' + (picks.length - nNewC) + '명\n\n'
       + lines.join('\n') + '\n\n진행할까요?')) return;
 
   showLoading(true);
@@ -5273,10 +5286,10 @@ function planCommit() {
       if ((res.failed || []).length) {
         showToast('⚠️ ' + res.failed.length + '건이 시트에 기록되지 않았어요 — '
           + res.failed.map(function(f){ return f.row + '행(되읽음 ' + f.readback.join(',') + ')'; }).join(' / ')
-          + ' · 시트를 직접 확인해 주세요');
+          + '. 시트를 직접 확인해 주세요');
         if (window.console) console.log('[commit 부분 실패]', JSON.stringify(res.failed));
       } else {
-        showToast((nC ? nC + '명 배정' : '') + (nC && nT ? ' · ' : '') + (nT ? nT + '명 시간 확정' : '') + ' 완료!', true);
+        showToast((nC ? nC + '명 배정' : '') + (nC && nT ? ', ' : '') + (nT ? nT + '명 시간 확정' : '') + ' 완료!', true);
       }
       planExit();
       _afterWrite(res);
@@ -5401,7 +5414,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
       u.mem.sort(function(a,b){return a.s-b.s;});
       u.s=Math.min.apply(null,u.mem.map(function(x){return x.s;}));
       u.e=Math.max.apply(null,u.mem.map(function(x){return x.e;}));
-      u.nm=u.mem.map(function(x){return x.n;}).join(' · ');
+      u.nm=u.mem.map(function(x){return x.n;}).join('/');   // 같은 칸 = 형제 합반 → '/'(유성 08-08)
     });
     return out.sort(function(a,b){return a.s-b.s;});
   }
@@ -5455,8 +5468,8 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     RL = [];
     var unk = (OCC.unknown && OCC.unknown[SCHED.prov]) || [];
     document.getElementById('schedTitle').textContent = SCHED.prov + ' 선생님';
-    document.getElementById('schedSub').innerHTML = vs.length + '명 · ' + hh(b.lo) + '~' + hh(b.hi)
-      + (unk.length ? ' · <span class="sunk" onclick="schedUnknown()">시간 미상 ' + unk.length + '명</span>' : '');
+    document.getElementById('schedSub').innerHTML = vs.length + '명, ' + hh(b.lo) + '~' + hh(b.hi)
+      + (unk.length ? ', <span class="sunk" onclick="schedUnknown()">시간 미상 ' + unk.length + '명</span>' : '');
 
     if (!vs.length && !unk.length){
       body.innerHTML = '<div class="pnote">최근 8주 결제 기록도, 계획(S·T)도 없어요</div>';
@@ -5507,8 +5520,8 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
           h+='<div class="det">'+g.map(function(x){
                return '<div class="drow"><span class="dl" style="width:auto;min-width:30px">'+esc(x.nm)+'</span>'
                  +'<span class="dv">'+hh(x.s)+'~'+hh(x.e)+(x.sib?' 합반':'')
-                 +' · '+(x.mem[0].ses||0)+'회'
-                 +(x.mem[0].iqr>=SHAKE_MIN?' · ±'+x.mem[0].iqr+'분':'')+'</span></div>'; }).join('')
+                 +', '+(x.mem[0].ses||0)+'회'
+                 +(x.mem[0].iqr>=SHAKE_MIN?', ±'+x.mem[0].iqr+'분':'')+'</span></div>'; }).join('')
             + '<div class="memo">'+clashWhy(g)+'</div></div>';
         } else if(u.sib){
           h+=u.mem.map(function(x){return '<div class="nm">'+esc(x.n)+'</div>';}).join('')
@@ -5571,12 +5584,12 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
         : '없음'+fixBtn(v,id,'정하기'))
       + '</span></div>';
     if(!st) h+='<div class="drow"><span class="dl">기록</span><span class="dv">'
-      + v.d+' '+hh(v.s)+' 추정 · '+(v.ses||0)+'회 / '+(v.span||0)+'일'
-      + (v.iqr>=SHAKE_MIN?'<br><span style="color:#8a5a00">회차마다 ±'+v.iqr+'분 흔들려요</span>':'')
+      + v.d+' '+hh(v.s)+' 추정, '+(v.ses||0)+'회 / '+(v.span||0)+'일'
+      + (v.iqr>=SHAKE_MIN?'<br><span style="color:var(--warn-weak-fg)">회차마다 ±'+v.iqr+'분 흔들려요</span>':'')
       // 연속 4회+ 새 슬롯 = 바뀐 쪽이 1차 추정(유성 08-15) — 옛 값은 참고로만. 1회짜리 옛 슬롯은 이상치라 말 안 한다
-      + (v.was && (v.was.n||0)>=2 ?'<br><span style="color:#8a5a00">'+(v.was.run||4)+'회 연속 바뀌었어요 · 이전엔 '
+      + (v.was && (v.was.n||0)>=2 ?'<br><span style="color:var(--warn-weak-fg)">'+(v.was.run||4)+'회 연속 바뀌었어요, 이전엔 '
                +v.was.d+' '+hh(v.was.s)+'('+v.was.n+'회)</span>':'')
-      + (v.shift?'<br><span style="color:#8a5a00">최근 결제는 '+v.shift.d+' '+hh(v.shift.s)
+      + (v.shift?'<br><span style="color:var(--warn-weak-fg)">최근 결제는 '+v.shift.d+' '+hh(v.shift.s)
                +' — 바뀌는 중(아직 4회 안 됨)</span>':'')
       + '</span></div>';
     h+='<div class="drow"><span class="dl">희망</span><span class="dv">'+(v.want?esc(v.want):'-')+'</span></div>';
@@ -5589,8 +5602,8 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     h+='<div class="drow"><span class="dl">주소</span><span class="dv">'+(a.ad?esc(a.ad):'-')+'</span></div>';
     u.mem.forEach(function(x,mi){
       h+='<div class="drow"><span class="dl">기록</span><span class="dv">'+esc(x.n)+' '+x.d+' '+hh(x.s)
-        + (x.src==='recon'?' 추정 · '+(x.ses||0)+'회':'')
-        + (x.iqr>=SHAKE_MIN?' · ±'+x.iqr+'분':'')
+        + (x.src==='recon'?' 추정, '+(x.ses||0)+'회':'')
+        + (x.iqr>=SHAKE_MIN?', ±'+x.iqr+'분':'')
         + fixBtn(x,id,'시간',mi)+'</span></div>'; });
     h+='<div class="drow"><span class="dl">전화</span><span class="dv">'+(a.tel?esc(a.tel):'-')+'</span></div>';
     h+='<div class="memo">성이 같고 시각이 5분 안이라 형제로 봤어요 — 60분 합반</div>';
