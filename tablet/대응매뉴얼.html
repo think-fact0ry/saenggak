@@ -136,6 +136,11 @@
   .doc li::marker{color:var(--g500);}
   .doc hr{display:none;}
   .doc a{color:var(--green700);text-decoration:underline;}
+  /* 본문 안 상호참조 태그 — 눌러 다른 항목으로 점프(돌아오기 = 하단 «이전 위치로») */
+  .doc a[href^="#"]{display:inline-block;text-decoration:none;font-size:13.5px;font-weight:700;
+    color:var(--green700);background:var(--green100);border-radius:99px;padding:3px 11px;margin:0 1px;line-height:1.5;}
+  .doc a[href^="#"]:active{background:var(--green200);}
+  .doc a[href^="#"].dead{color:var(--g600);background:var(--g100);}
 
   /* 소분류(블록 앵커: 증상/상황 예시·대응 절차·문자 양식·메모·자주 묻는 질문·예시) = 초록 강조 + 좌측 바 */
   .doc p.lbl{font-size:15px;font-weight:800;letter-spacing:-.2px;color:var(--green700);
@@ -189,6 +194,17 @@
     padding:10px 16px;border-radius:var(--r-sm);opacity:0;pointer-events:none;z-index:200;
     box-shadow:0 6px 20px rgba(0,0,0,.18);transition:opacity .18s,transform .18s;}
   .copy-toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* 점프하면 뜨는 «이전 위치로» — scrim(55)보다 아래라 목차·검색을 열면 자동으로 가려진다 */
+  .back-toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));
+    transform:translateX(-50%) translateY(10px);display:flex;align-items:center;gap:2px;
+    background:var(--g900);border-radius:99px;padding:4px 4px 4px 6px;z-index:50;
+    box-shadow:0 6px 20px rgba(0,0,0,.22);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;}
+  .back-toast.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+  .back-toast button{font-family:inherit;border:0;background:transparent;color:#F9FBFA;cursor:pointer;}
+  .back-toast .bt-go{font-size:13.5px;font-weight:700;padding:8px 12px;border-radius:99px;}
+  .back-toast .bt-go:active{background:rgba(255,255,255,.14);}
+  .back-toast .bt-x{font-size:17px;line-height:1;color:var(--g500);padding:8px 11px 9px;border-radius:99px;}
+  body.hasback .copy-toast{bottom:calc(80px + env(safe-area-inset-bottom));}
 
   /* 표 — 화면 폭에 맞춰 줄바꿈(가로 스크롤 X) */
   .tbl{border:1px solid var(--g200);border-radius:var(--r-md);overflow:hidden;margin:11px 0;}
@@ -402,6 +418,7 @@ function render(md){
   styleLabels(doc);
   addCopyButtons(doc);
   buildToc(doc);
+  linkifyAnchors(doc);   // buildToc 뒤여야 한다 — sections[]가 있어야 앵커를 풀 수 있다
   buildChips();
   setupScrollSpy();
 }
@@ -435,9 +452,10 @@ function fallbackCopy(text){
   }catch(e){ return false; }
 }
 var _copyToastT=null;
-function showCopyToast(){
+function showCopyToast(msg){
   var t=document.getElementById('copyToast');
-  if(!t){ t=document.createElement('div'); t.id='copyToast'; t.className='copy-toast'; t.textContent='복사되었어요'; document.body.appendChild(t); }
+  if(!t){ t=document.createElement('div'); t.id='copyToast'; t.className='copy-toast'; document.body.appendChild(t); }
+  t.textContent = (typeof msg==='string' && msg) ? msg : '복사되었어요';
   t.classList.add('on'); clearTimeout(_copyToastT);
   _copyToastT=setTimeout(function(){ t.classList.remove('on'); }, 1400);
 }
@@ -520,10 +538,65 @@ function buildToc(doc){
   });
 }
 
+// ── 점프 이력 + «이전 위치로» (유성 2026-09-03: 태그를 눌러 넘어가면 읽던 자리로 돌아오기 어렵다) ──
+var jumpStack=[];
+function _scrollY(){ return window.pageYOffset || document.documentElement.scrollTop || 0; }
+function backToastEl(){
+  var t=document.getElementById('backToast');
+  if(!t){
+    t=document.createElement('div'); t.id='backToast'; t.className='back-toast';
+    t.innerHTML='<button type="button" class="bt-go">↑ 이전 위치로</button><button type="button" class="bt-x" aria-label="닫기">×</button>';
+    t.querySelector('.bt-go').addEventListener('click', goBackJump);
+    t.querySelector('.bt-x').addEventListener('click', function(){ jumpStack=[]; showBackToast(false); });
+    document.body.appendChild(t);
+  }
+  return t;
+}
+function showBackToast(on){
+  backToastEl().classList.toggle('on', !!on);
+  document.body.classList.toggle('hasback', !!on);
+}
+function goBackJump(){
+  var y=jumpStack.pop();
+  if(y===undefined){ showBackToast(false); return; }
+  window.scrollTo({ top:y, behavior:'smooth' });
+  showBackToast(jumpStack.length>0);
+}
+
 function jumpTo(id){
+  var y=_scrollY();
+  // 같은 자리에서 연달아 누르면 같은 값이 쌓이지 않게
+  if(!(jumpStack.length && Math.abs(jumpStack[jumpStack.length-1]-y)<4)) jumpStack.push(y);
   closeSearch(); toggleToc(false);
   var el=document.getElementById(id);
   if(el) setTimeout(function(){ el.scrollIntoView({ behavior:'smooth', block:'start' }); }, 60);
+  showBackToast(true);
+}
+
+// 본문 안 [텍스트](#앵커) 태그를 실제 항목으로 연결한다.
+// ⚠️ buildToc가 제목 id를 sec-N으로 덮어쓰기 때문에, md의 #슬러그 링크는 지금까지 전부 죽어 있었다(눌러도 아무 일이 없었음).
+var _SLUG_RE=null;
+try{ _SLUG_RE=new RegExp('[^\\p{L}\\p{N}\\s-]','gu'); }catch(e){ _SLUG_RE=/[^0-9a-z가-힣ㄱ-ㅎㅏ-ㅣ\s-]/g; }
+function _slug(s){
+  return String(s).toLowerCase().replace(_SLUG_RE,'').trim().replace(/\s+/g,'-').replace(/^-+|-+$/g,'');
+}
+function linkifyAnchors(doc){
+  var bySlug={};
+  sections.forEach(function(s){ bySlug[_slug(s.headEl.textContent)]=s.id; });
+  doc.querySelectorAll('a[href^="#"]').forEach(function(a){
+    var raw=a.getAttribute('href').slice(1);
+    try{ raw=decodeURIComponent(raw); }catch(e){}
+    var id=bySlug[_slug(raw)];
+    if(!id){   // 슬러그가 안 맞으면 태그 글자로 제목을 찾아본다
+      var txt=_slug(a.textContent);
+      if(txt) for(var k in bySlug){ if(k.indexOf(txt)>=0 || txt.indexOf(k)>=0){ id=bySlug[k]; break; } }
+    }
+    if(!id) a.classList.add('dead');
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      if(id) jumpTo(id); else showCopyToast('연결된 항목을 찾지 못했어요');
+    });
+  });
 }
 
 // ── 검색 패널 ──
