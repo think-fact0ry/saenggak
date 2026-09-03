@@ -272,6 +272,31 @@
   #schedSheet .shd h3{font-size:15px;font-weight:700;letter-spacing:-.2px;margin:0}
   #schedSheet .shd .sub{font-size:11.5px;color:var(--g500);margin-top:2px}
   #schedSheet .shd .sunk{color:var(--warn-weak-fg);font-weight:700;cursor:pointer;text-decoration:underline}
+  /* ── 서비스 세그 = 헤더 우측 상단 (유성 2026-09-03) ──
+     "한 행을 전부 차지하게 하지 말고" → fit-content·오른쪽 정렬, 좁으면 아랫줄로 내려간다.
+     "숫자도 없애고" → 집계 없음.  "완전 원형의 세그필" → radius 999.
+     margin-right = 헤더 padding(16) − 격자 padding(12) → 세그 오른끝이 아래 격자 오른끝과 맞는다. */
+  #schedSheet .shd{flex-wrap:wrap}
+  #schedSheet .shd .shdr{display:flex;align-items:flex-start;gap:8px;flex:none;margin-left:auto}
+  #schedSheet .svcseg{display:inline-flex;flex:none;margin-right:-4px;position:relative;isolation:isolate;
+           background:var(--g100);border-radius:999px;padding:3px;gap:2px}
+  /* 미끄러지는 필 한 장 (§4.5 2026-07-28 "딱 딱 바뀌면 인지를 못해").
+     ⚠️ ::before{left:0}의 기준은 트랙 **왼쪽 끝**이다(CDP getBoxModel 실측 09-03: border 왼 = padding 왼).
+        레퍼런스 initSegSlide처럼 --sx에서 트랙 padding을 빼면 필이 딱 그만큼 왼쪽으로 밀린다. */
+  #schedSheet .svcseg::before{content:'';position:absolute;z-index:0;top:3px;bottom:3px;left:0;
+           width:var(--sw,0);transform:translateX(var(--sx,0));opacity:0;
+           background:#fff;border-radius:999px;box-shadow:0 1px 4px rgba(0,0,0,.10);
+           transition:transform .32s cubic-bezier(.22,.85,.25,1),width .32s cubic-bezier(.22,.85,.25,1),opacity .18s}
+  #schedSheet .svcseg.slide::before{opacity:1}
+  #schedSheet .svcseg button{position:relative;z-index:1;border:0;background:none;font-family:inherit;
+           font-size:11px;font-weight:700;color:var(--g700);cursor:pointer;padding:4px 9px;
+           border-radius:999px;white-space:nowrap;line-height:1.15;transition:color .22s}
+  #schedSheet .svcseg button.on{color:var(--g900)}
+  #schedSheet .svcseg button.all{width:21px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+  #schedSheet .svcseg button.all svg{width:14px;height:14px;display:block}
+  /* 「전체」 = 흰 필 + 초록 새싹 (유성 09-03 — 그린 채움은 "과하다"). §4.5 솔리드 초록 금지를 지킨다 */
+  #schedSheet .svcseg button.all.on{color:var(--green600)}
+  #schedSheet .svcseg:not(.slide) button.on{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.10)}   /* 폭을 못 잰 순간의 폴백 */
   /* ⛔스크롤바 제거 — 대신 하단 green700 반투명 그라데이션 2겹(아래가 진하게), 넘칠 때만 (유성 08-15) */
   #schedSheet .sbd{padding:0 12px 16px;overflow:auto;flex:1;scrollbar-width:none}
   #schedSheet .sbd::-webkit-scrollbar{width:0;height:0}
@@ -314,7 +339,7 @@
   #schedSheet .lane + .lane{box-shadow:inset 1px 0 0 #f1f4f7}
   /* 블록 = A 채움(유성 확정)·라운딩 0. 평소 그림자 0(§3.6-2 depth) — hover·펼침만 */
   #schedSheet .blk{position:absolute;left:1px;right:1px;overflow:hidden;cursor:pointer;border-radius:0;
-       color:var(--g900);padding:5px 6px 3px;transition:box-shadow .16s}
+       color:var(--g900);padding:5px 6px 3px;transition:box-shadow .16s,opacity .18s,filter .18s}
   #schedSheet .blk .nm{font-size:12px;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* ⚠️ nowrap 필수 — 6열(토요일)에서 시각 줄이 두 줄로 접혀 칸을 넘쳤다(프리뷰 실측 tm 9.3→18.7px) */
   #schedSheet .blk .tm{font-size:10px;line-height:1.35;font-variant-numeric:tabular-nums;opacity:.78;
@@ -322,6 +347,20 @@
   #schedSheet .blk.tight{padding:2px 6px 1px}
   #schedSheet .blk.tight .nm{font-size:11px;line-height:1.12}
   #schedSheet .blk.tight .tm{font-size:8.5px;line-height:1.1}
+  /* ── 서비스 태그 = 블록 우상단 고정, 오감은 무표기 (유성 2026-09-03) ──
+     "span으로 걸지말고, 우측 상단 고정" — 이름 앞에 붙이면 이름과 헷갈린다.
+     태그가 있는 블록만 이름을 좁힌다(오감은 6열·270px에서 한 글자가 아쉽다). */
+  #schedSheet .blk .st{position:absolute;top:3px;right:3px;z-index:1;font-size:8.5px;font-weight:800;
+           line-height:1;padding:2px 3px;border-radius:3px;letter-spacing:-.2px;
+           background:rgba(25,31,40,.72);color:#fff}
+  #schedSheet .blk.tight .st{top:1px;right:2px;font-size:8px;padding:1px 2px}
+  #schedSheet .blk .st ~ .nm{padding-right:24px}
+  #schedSheet .blk.tight .st ~ .nm{padding-right:22px}
+  /* 펼치면 우상단은 「지도에서 보기」 자리다 — 태그는 뺀다(유성 09-03 "2번은 별로야 없애") */
+  #schedSheet .blk.open .st{display:none}
+  /* 서비스 필터 — 고른 서비스만 또렷하게. 마커 필터와 같은 "화면 상태" 층이라 교사가 바뀌면 리셋 */
+  #schedSheet[data-f]:not([data-f=""]) .blk:not(.hit){opacity:.22;filter:grayscale(1)}
+  #schedSheet[data-f]:not([data-f=""]) .blk.hit{box-shadow:var(--sh1);z-index:3}
   #schedSheet .blk:hover{z-index:5;box-shadow:var(--sh1)}
   /* 겹침 = 색이 유일하게 '뜻'인 자리. ⛔접힌 상태엔 좌측바 없음(유성 08-15) */
   #schedSheet .blk.clash{background:var(--danger-weak-bg)!important;color:var(--danger-weak-fg)!important}
@@ -1041,7 +1080,11 @@
   <div class="grab" id="schedGrab"><div class="bar"></div></div>
   <div class="shd">
     <div style="min-width:0"><h3 id="schedTitle"></h3><div class="sub" id="schedSub"></div></div>
-    <button id="schedRouteBtn" onclick="schedRouteToggle()">동선</button>
+    <!-- 우측 컨트롤 한 묶음 — 좁아지면 둘이 **같이** 아랫줄로 내려간다(따로 두면 동선만 밀려 헤더가 어긋난다) -->
+    <div class="shdr">
+      <button id="schedRouteBtn" onclick="schedRouteToggle()">동선</button>
+      <div class="svcseg" id="schedSeg"></div>
+    </div>
   </div>
   <div class="sbd" id="schedBody"></div>
   <!-- 빈 자리 후보 — 시트의 자식이라 폭·열림·접힘을 그대로 따라간다(2026-09-01) -->
@@ -5348,6 +5391,18 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     .replace(/^[가-힣]+구\s*/,'').replace(/\s+/g,' ').trim().slice(0,18); }
 
   /** 점유표 + assigned 조인 → 렌더 행. 8주 넘게 결제 없는 추정 아이는 조용히 뺀다(유성 08-13 ⑧) */
+  /* ── 서비스 구분 (유성 2026-09-03) ──────────────────────────────────────
+     라벨은 **두 글자**로 통일한다(유성: "아청심이 세글자니까 아청으로").
+     세그 칸과 블록 태그가 **같은 함수**를 쓴다 — 두 벌이면 태그는 '일반'인데 세그는 '재가'가 되어
+     고른 칸과 또렷해지는 블록이 안 맞는 것처럼 보인다(0-9).
+     ⛔ 오감은 무표기 — 기본값이라 다 붙이면 이름 자리만 좁아진다(유성 09-03). */
+  var SVC_ORDER = ['오감', '아청심', '성인', '정신토탈', '비바우처재가', '비바우처기관'];
+  function svcLabel(s){
+    return s === '아청심' ? '아청' : s === '정신토탈' ? '정신'
+         : s === '비바우처재가' ? '재가' : s === '비바우처기관' ? '기관' : s;
+  }
+  function svcTag(s){ return (!s || s === '오감') ? '' : svcLabel(s); }
+
   function rows(){
     var prov = SCHED.prov;
     var slots = (OCC.map && OCC.map[prov]) || [];
@@ -5366,7 +5421,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     slots.forEach(function(s){
       if (s.src === 'recon' && s.last != null && s.last > LIVE_DAYS) return;
       var c = join(s.n, s.dob);
-      out.push({ d:s.d, s:s.s, e:s.e, m:(s.e-s.s), n:s.n, dob:s.dob, src:s.src,
+      out.push({ d:s.d, s:s.s, e:s.e, m:(s.e-s.s), n:s.n, dob:s.dob, src:s.src, svc:s.svc||'',
                  ses:s.ses||0, conf:s.conf, last:s.last, span:s.span||0, iqr:s.iqr||0,
                  was:s.was||null, shift:s.shift||null, plan:s.plan||null,
                  dong:(c&&c.bname)||'', ad:(c?short(c.addr1||c.address):''), tel:(c&&c.phone)||'',
@@ -5459,6 +5514,66 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     return out;
   }
 
+  /* 새싹 아이콘 — 라인 SVG(§3.5 "버튼·툴 아이콘은 이모지 금지"). 줄기 + 잎 둘 */
+  var SPROUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '<path d="M12 20.5V12"/><path d="M12 12C8 12 5 9.5 5 5.8 9 5.8 12 8.3 12 12Z"/>'
+    + '<path d="M12 12c0-4.3 3.2-7 7.2-7 0 4.3-3.2 7-7.2 7Z"/></svg>';
+
+  /* 세그 = 「전체(새싹)」 + 그 교사에게 **실제로 있는** 서비스만.
+     한 종류뿐이면 아예 안 띄운다 — 고를 게 없는 필터는 자리만 먹는다(대부분의 오감 전담 교사가 여기) */
+  function schedSegBuild(vs){
+    var seg = document.getElementById('schedSeg');
+    if (!seg) return;
+    var present = SVC_ORDER.filter(function(s){
+      return vs.some(function(v){ return v.svc === s; });
+    });
+    if (present.length < 2){ seg.style.display = 'none'; seg.innerHTML = ''; schedFilter(''); return; }
+    seg.style.display = '';
+    var cur = document.getElementById('schedSheet').getAttribute('data-f') || '';
+    if (cur && present.indexOf(cur) < 0) cur = '';   // 교사를 바꿔 그 서비스가 없어졌으면 전체로
+    seg.innerHTML = '<button class="all' + (cur ? '' : ' on') + '" data-s="" title="전체" aria-label="전체">' + SPROUT + '</button>'
+      + present.map(function(s){
+          return '<button' + (s === cur ? ' class="on"' : '') + ' data-s="' + esc(s) + '">' + esc(svcLabel(s)) + '</button>';
+        }).join('');
+    seg.onclick = function(e){
+      var b = e.target.closest('button'); if (!b) return;
+      var want = b.getAttribute('data-s');
+      if (want && want === document.getElementById('schedSheet').getAttribute('data-f')) want = '';   // 같은 걸 또 누르면 전체로
+      schedFilter(want);
+      seg.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-s') === want); });
+      requestAnimationFrame(schedSegSync);
+    };
+    schedFilter(cur);
+    requestAnimationFrame(schedSegSync);
+  }
+
+  /* 고른 서비스만 또렷하게. 겹침 블록은 그 자리 아이 중 하나라도 맞으면 살린다 */
+  function schedFilter(svc){
+    var sheet = document.getElementById('schedSheet');
+    if (!sheet) return;
+    sheet.setAttribute('data-f', svc || '');
+    sheet.querySelectorAll('.blk').forEach(function(b){
+      var list = (b.getAttribute('data-svc') || '').split(',');
+      b.classList.toggle('hit', !!svc && list.indexOf(svc) >= 0);
+    });
+  }
+
+  /* §4.5 미끄러지는 필.
+     ⚠️ `::before{left:0}`의 기준은 트랙 **왼쪽 끝**이라 트랙 padding을 빼면 안 된다
+        (레퍼런스 initSegSlide는 빼고 있고, 그래서 필이 딱 padding만큼 왼쪽으로 밀린다 — CDP 실측 09-03). */
+  function schedSegSync(){
+    var seg = document.getElementById('schedSeg');
+    if (!seg || !seg.offsetWidth) return;
+    var on = seg.querySelector('button.on');
+    var w = on ? on.getBoundingClientRect().width : 0;
+    if (!w){ seg.classList.remove('slide'); return; }
+    var sr = seg.getBoundingClientRect(), br = on.getBoundingClientRect();
+    seg.style.setProperty('--sw', w + 'px');
+    seg.style.setProperty('--sx', (br.left - sr.left) + 'px');
+    seg.classList.add('slide');
+  }
+
   function paint(){
     var body = document.getElementById('schedBody');
     var vs = rows();
@@ -5474,6 +5589,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     if (!vs.length && !unk.length){
       body.innerHTML = '<div class="pnote">최근 8주 결제 기록도, 계획(S·T)도 없어요</div>';
       candClose();   // 격자가 없으면 자리도 없다 — 열려 있던 후보 모달을 남기지 않는다
+      schedSegBuild([]);   // 격자가 없으면 고를 서비스도 없다
       return;
     }
     var h='<div class="ghead" style="padding-left:'+aw+'px">'
@@ -5511,8 +5627,13 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
         else if(!many) sty+='background:'+p[0]+';';
         var lines = many ? 1 : u.mem.length;
         var tight = !op && bh < (lines*14+13+8);   // 축소 임계는 이름 줄 수가 정한다(형제 합반=두 줄)
+        // 서비스 = 겹침이면 그 자리 아이들 전부(필터가 하나라도 맞으면 또렷해진다), 아니면 그 아이 것
+        var svcs = many ? g.map(function(x){ return x.mem[0].svc || ''; }).filter(function(x,i,a){ return x && a.indexOf(x)===i; })
+                        : (v.svc ? [v.svc] : []);
+        var tagTxt = many ? '' : svcTag(v.svc);   // 겹침 블록은 '겹침'이 이미 이름 자리를 쓴다
         h+='<div class="blk'+(many?' clash':'')+(op?' open':'')+(tight?' tight':'')
-          + '" style="'+sty+'" onclick="scTap('+id+')">';
+          + '" data-svc="'+esc(svcs.join(','))+'" style="'+sty+'" onclick="scTap('+id+')">'
+          + (tagTxt ? '<span class="st">'+esc(tagTxt)+'</span>' : '');
         if(many && !op){
           h+='<div class="nm">겹침</div><div class="tm">'+hh(s0)+'</div>';
         } else if(many && op){
@@ -5540,6 +5661,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     h+='</div>';
     // ⛔격자 아래 요약 텍스트는 쓰지 않는다 (유성 08-15)
     body.innerHTML=h;
+    schedSegBuild(vs);   // 격자를 다시 그렸으니 세그·필터도 다시 건다(.hit은 DOM과 함께 날아간다)
     // 펼친 카드가 격자 밖으로 나가면 재보고 끌어당긴다 — 높이는 렌더 전엔 모른다(프리뷰 실측 15px 초과)
     var opEl=body.querySelector('.blk.open');
     if(opEl){
