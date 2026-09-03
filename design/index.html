@@ -1205,7 +1205,7 @@ function playDone(){
       if(!w){ seg.classList.remove('slide'); return; }
       const sr=seg.getBoundingClientRect(), br=on.getBoundingClientRect();
       const pad=parseFloat(getComputedStyle(seg).paddingLeft)||0;
-      seg.style.setProperty('--sw', w+'px'); seg.style.setProperty('--sx',(br.left-sr.left-pad)+'px');
+      seg.style.setProperty('--sw', w+'px'); seg.style.setProperty('--sx',(br.left-sr.left)+'px');
       seg.classList.add('slide'); };
     new ResizeObserver(sync).observe(seg);
     seg.addEventListener('click',()=>requestAnimationFrame(sync));
