@@ -39,6 +39,12 @@
   /* 타입 스케일 — §3.2 (큰 제목 clamp 유동 / 본문 고정) */
   --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
+  /* 스크롤 그라디언트 — §4.13-6 A안. 스크롤바를 숨기는 곳에 "더 있다"를 말하는 그린 2겹.
+     2026-09-05 정본 승격(유성) — 그전엔 provider-map·09가 각자 :root에 복붙한 이중 진실이었다. 값은 지도 원본 그대로 */
+  --sf-bot:linear-gradient(to bottom,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+           linear-gradient(to bottom,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%);
+  --sf-top:linear-gradient(to top,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+           linear-gradient(to top,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%);
   /* TOKENS:END */
 }
 
@@ -562,7 +568,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
       <div style="margin-top:9px;font-size:11.5px;color:var(--g600)">안내문이 긁히고 그 위에서 커서가 I빔으로 바뀐다</div>
     </div>
   </div>
-  <p class="note">⚠️ <code>-webkit-touch-callout:none</code>은 길게 눌러 뜨는 iOS 복사 메뉴까지 막는다 — 옮겨 적을 값에서는 <code>default</code>로 되돌릴 것. 적용=09(2026-09-05), 나머지 대면 표면은 손댈 때 점진(3-G).</p>
+  <p class="note">⚠️ <code>-webkit-touch-callout:none</code>은 길게 눌러 뜨는 iOS 복사 메뉴까지 막는다 — 옮겨 적을 값에서는 <code>default</code>로 되돌릴 것. 적용=학부모 폼 4종(09·06 Apply·06 legacy·14·16, 2026-09-05) + 태블릿 PWA 7종·사진업로드·근태(그전부터). 나머지는 손댈 때 점진(3-G).</p>
 
   <h3 class="sec">PC 폰 목업 <span class="oldref">§3.8 신규</span></h3>
   <p class="desc">폰 폭 앱을 PC 넓은 창에서 열 때(hover+fine 포인터) 남는 여백을 <b>폰 베젤</b>로 흡수 — 여백 19(상·좌·우, 아래 0=창 바닥에서 올라온 모양)·반경 40(상단만)·베젤 <code>--g200</code>·그림자 램프 상한·squircle 동일 지수. 폰·태블릿에선 목업 없음. 적용=근태·09·14·16·photos·app(전파 1차 완료 2026-07-25 — 06=임베드 자동높이라 비대상, tablet 허브=제외. 현황 정본=docs/1 §3.8).</p>
@@ -899,7 +905,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     bd.addEventListener("scroll",sync,{passive:true}); sync();
   })();
   </script>
-  <p class="note">🔴 <b>2026-09-05 범위 보강 — "스크롤되는 곳"에는 <u>창 스크롤</u>(문서 전체)도 들어간다</b> (유성이 09 신청폼을 개발자도구 갤럭시 S8로 보다 적발: <i>"스크롤 UI가 있는 걸 지금 알았어"</i>). 위 규칙을 요소 스크롤러로만 읽어 <b>한 화면 전체가 스크롤되는 폼</b>이 통째로 빠져 있었다(09 실측 = 360×740에서 13px·360×640에서 113px·아이 4명이면 768px 넘침). ⇒ <code>html,body{scrollbar-width:none}</code>로 막대를 없애고 띠는 <code>position:fixed</code>로 뷰포트 위·아래에. PC 폰 목업이 켜지면 앱 루트의 <code>transform</code>이 containing block이라 그대로 폰 안에 갇힌다(좌표 분기 불요). ⚠️ 한 화면에 <b>스크롤 주체가 둘</b>일 수 있으니(폰=창 / PC 목업=화면 내부) 스크롤러를 못 박지 말고 실제로 넘치는 쪽을 고를 것. ⚠️ 재판정 MutationObserver를 <b>띠 클래스를 붙이는 그 요소에 걸면 자기 토글이 자기를 깨운다</b> — 감시는 내용이 바뀌는 자식에.</p>
+  <p class="note">🔴 <b>2026-09-05 범위 보강 — "스크롤되는 곳"에는 <u>창 스크롤</u>(문서 전체)도 들어간다</b> (유성이 09 신청폼을 개발자도구 갤럭시 S8로 보다 적발: <i>"스크롤 UI가 있는 걸 지금 알았어"</i>). 위 규칙을 요소 스크롤러로만 읽어 <b>한 화면 전체가 스크롤되는 폼</b>이 통째로 빠져 있었다(09 실측 = 360×740에서 13px·360×640에서 113px·아이 4명이면 768px 넘침). ⇒ <code>html,body{scrollbar-width:none}</code>로 막대를 없애고 띠는 <code>position:fixed</code>로 뷰포트 위·아래에. PC 폰 목업이 켜지면 앱 루트의 <code>transform</code>이 containing block이라 그대로 폰 안에 갇힌다(좌표 분기 불요). ⚠️ 한 화면에 <b>스크롤 주체가 둘</b>일 수 있으니(폰=창 / PC 목업=화면 내부) 스크롤러를 못 박지 말고 실제로 넘치는 쪽을 고를 것. ⚠️ 재판정 MutationObserver를 <b>띠 클래스를 붙이는 그 요소에 걸면 자기 토글이 자기를 깨운다</b> — 감시는 내용이 바뀌는 자식에.<br><b>적용(09-05)</b> = 09·14·16 학부모 폼(창 스크롤 첫 사례) + 지도 5곳. <b>06 Apply는 비대상</b> — contact 임베드가 iframe 높이를 콘텐츠에 맞춰 폼 문서가 안 넘친다(라이브 실측 360×640: 폼 0px / 부모 kr 1038px). <b>--sf-top/--sf-bot은 §3.1 정본으로 승격</b>(지도도 토큰동기 마커 편입 — 편입 전 드리프트 0·새 토큰 참조 0 실측).</p>
   <h3 class="sec">다중 선택 그리드 = 드래그 + 이름 일괄토글 · 완료신호 안티패턴 <span class="oldref">§4.9</span> <span class="rk">📱 실기기</span></h3>
   <p class="desc">여러 칸 격자(요일×시간)는 <b>드래그로 쓸어 선택</b>(when2meet·구글캘린더식 — 켜진 칸서 시작하면 지우기) + <b>요일·시간 이름 탭 = 그 줄 일괄토글</b>(스태거 팝)로 "많이 고르기"의 노동을 없앤다(터치 드래그=<code>touch-action:none</code>+<code>touchmove</code> preventDefault). 이름 탭은 어포던스 없이 숨겨도(잠수함) 되지만 발견성 0이라 <b>주 수단(드래그)은 보이게</b>. ⚠️ <b>완료신호 안티패턴</b>: 더 많이 하길 원하는 자리엔 카운터·게이지·"충분해요"를 두지 말 것 — <b>완료감은 멈추게 한다</b>(빈 곳이 보여야 더 채움). 답은 압박이 아니라 '쉬움'. 표시는 12h·저장 value는 24h(§2.1-8). <b>실물 데모 = 06 시간표 라이브</b>(인터랙티브 드래그는 여기 재구현 대신 라이브·Artifact 참조 = §1.5 YAGNI). (2026-07-06 유성)</p>
 
