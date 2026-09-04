@@ -23,8 +23,12 @@
 <meta name="msapplication-TileColor" content="#ffffff">
 <meta name="msapplication-TileImage" content="/saenggak/ms-icon-144x144.png">
 <meta name="theme-color" content="#ffffff">
+<!-- Pretendard = 정본 CDN(다른 132파일과 같은 줄). ⚠️구글 폰트엔 Pretendard가 없다 —
+     옛 `@import fonts.googleapis.com/css2?family=Pretendard`는 **HTTP 400**을 받아 한 번도 로드된 적이 없고,
+     그래서 이 화면은 기기마다 다른 폰트로 그려졌다(Pretendard 로컬 설치 PC=79.84px / 맑은고딕 PC=93.88px,
+     '권선화 선생님' 15/700 실측 2026-09-04). 같은 결함을 09-02에 dashboard.html에서 이미 고쳤고 여기 둘이 남아 있었다. -->
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
   :root{
     /* §3.1 정본 토큰(필요 칸만 복사). 2026-08-10 IW 병합부터 신규 CSS는 var() — 기존 raw hex는 손댈 때 점진 정렬 */
@@ -738,8 +742,19 @@
   .ld-spinner{width:32px;height:32px;border:3px solid var(--g200);border-top-color:var(--green600);border-radius:50%;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .toast{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:60;background:#842029;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:var(--sh2);display:none}
-  .toast.show{display:block;animation:fadeIn .3s}
+  .toast.show{display:flex;align-items:center;justify-content:center;gap:8px;animation:fadeIn .3s}
   .toast.success{background:var(--green700)}
+  /* §5.5 성공 토스트 = 텍스트 왼쪽에 원+체크. 에러·안내는 아이콘 없음(아이콘이 곧 "잘 됐다"는 신호).
+     ⚠️ 근태 레퍼런스는 **중립 g800 배경 + 초록 원 + 흰 체크**인데, 여기 성공 토스트는
+        유성 09-02 확정대로 **green700 채움**이라 초록 원을 얹으면 배경에 녹아 사라진다
+        (면 대비 실측 2026-09-04: 초록 원 on green700 = **1.61** ❌).
+        ⇒ 색 채움 위에서는 **반전**한다 — 흰 원 + 초록 체크(원 6.79 ✅ · 체크 6.79 ✅,
+        근태의 원 2.61보다 오히려 또렷하다). 유성 확정색을 되돌리지 않고 §5.5를 지키는 길. */
+  .toast .tk{display:none;width:18px;height:18px;border-radius:50%;background:#fff;flex:none;
+             align-items:center;justify-content:center}
+  .toast.success .tk{display:inline-flex}
+  .toast .tk svg{width:11px;height:11px;fill:none;stroke:var(--green700);stroke-width:3;
+                 stroke-linecap:round;stroke-linejoin:round}
   @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
   /* ══ 신규 아동 리스트 사이드 패널 (PC·태블릿) ══ */
@@ -4011,7 +4026,16 @@ function nlMapMoveHandler() {
 // ══ 유틸 ══
 function showLoading(v){document.getElementById('loading').classList.toggle('show',v)}
 var _tt;
-function showToast(m,ok){var e=document.getElementById('toast');e.textContent=m;e.className='toast show'+(ok?' success':'');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show')},3000)}
+/* ok=true → §5.5 성공 아이콘(흰 원 + 초록 체크. 색 채움 위 반전 — CSS `.toast .tk` 주석 참조).
+   ⚠️ 메시지는 반드시 **textContent**로 넣는다 — 서버 오류 문자열이 그대로 들어오는 호출부가 여럿이라
+      innerHTML로 바꾸면 그 순간 주입 경로가 된다(근태 toast()와 같은 골격: 뼈대만 innerHTML, 글자는 textContent). */
+function showToast(m,ok){
+  var e=document.getElementById('toast');
+  e.innerHTML='<span class="tk"><svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg></span><span></span>';
+  e.lastChild.textContent=m;
+  e.className='toast show'+(ok?' success':'');
+  clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show')},3000);
+}
 </script>
 
 <script>
