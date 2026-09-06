@@ -23,11 +23,24 @@
 <meta name="msapplication-TileColor" content="#ffffff">
 <meta name="msapplication-TileImage" content="/saenggak/ms-icon-144x144.png">
 <meta name="theme-color" content="#ffffff">
+<!-- 로딩(교사 저사양 폰, 유성 09-06 "너무 오래 걸려") — 외부 출처 4곳 핸드셰이크를 미리. 비용 0. -->
+<link rel="preconnect" href="https://dapi.kakao.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<!-- Kakao SDK를 여기서 먼저 내려받기 시작한다(async·autoload=false라 실행은 initMap 훅이 정한다).
+     옛날엔 body 끝에서 주입해 393KB 파싱이 끝나야 SDK 다운로드가 시작됐다(직렬). 키는 JavaScript 키(공개, 도메인 제한) — 단일 소스=여기, CONFIG가 이 변수를 참조. -->
+<script>var KAKAO_JS_KEY='90fa3176ac77c6fc1ae5a165b9f0662c';window._pf=[];(function(){var s=document.createElement('script');s.id='kakaoSdk';s.async=true;
+s.src='https://dapi.kakao.com/v2/maps/sdk.js?appkey='+KAKAO_JS_KEY+'&libraries=services&autoload=false';
+s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performance.now()])};s.onerror=function(){window._kakaoSdkErr=true};document.head.appendChild(s)})();</script>
 <!-- Pretendard = 정본 CDN(다른 132파일과 같은 줄). ⚠️구글 폰트엔 Pretendard가 없다 —
      옛 `@import fonts.googleapis.com/css2?family=Pretendard`는 **HTTP 400**을 받아 한 번도 로드된 적이 없고,
      그래서 이 화면은 기기마다 다른 폰트로 그려졌다(Pretendard 로컬 설치 PC=79.84px / 맑은고딕 PC=93.88px,
-     '권선화 선생님' 15/700 실측 2026-09-04). 같은 결함을 09-02에 dashboard.html에서 이미 고쳤고 여기 둘이 남아 있었다. -->
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+     '권선화 선생님' 15/700 실측 2026-09-04). 같은 결함을 09-02에 dashboard.html에서 이미 고쳤고 여기 둘이 남아 있었다.
+     🔴 09-06 실측: static 판은 **굵기당 ~780KB woff2**이고 이 화면은 400~800 5굵기를 써 첫 방문 ~3.9MB(09-04 수리로 처음 실제 로드되기 시작).
+     → variable dynamic-subset(CSS 53KB + 쓰는 글자 범위 조각 ~35KB씩, 한 파일이 전 굵기)로. 같은 서체·같은 이름(Pretendard Variable)이라 렌더 동일.
+     ⚠️ docs/1 §3.1의 "한 줄"은 static을 가리킨다 — 정본 갱신·132파일 전파 여부는 유성 결정(09-06 표면화). -->
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   :root{
@@ -94,7 +107,7 @@
     /* 스크롤 그라디언트 --sf-top/--sf-bot = 2026-09-05 정본(§3.1)으로 승격 → 위 마커 블록이 받아온다(여기 복붙 금지) */
   }
   html,body{height:100%;overflow:hidden}
-  body{font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;color:#1a1a1a;background:#f0ebe4}
+  body{font-family:'Pretendard Variable','Pretendard','Noto Sans KR','Malgun Gothic',sans-serif   /* variable dynamic-subset CSS의 이름은 'Pretendard Variable'이다(09-06 실측) — 'Pretendard'만 쓰면 조용히 폴백(09-04 부류). 뒤의 Pretendard=로컬 설치 폴백 */;color:#1a1a1a;background:#f0ebe4}
 
   /* ══ 상단 컨트롤 ══ */
   .controls{
@@ -168,8 +181,16 @@
   .wa:focus-visible{outline:2px solid var(--green600);outline-offset:3px;border-radius:8px}
   /* align-items 필수 — 없으면 stretch라 높이 고정인 슬라이더(.wa 18px)가 **위로 붙는다**(유성 09-02) */
   .dash-filters{display:flex;gap:6px;margin-left:auto;align-items:center}
-  .prov-link-btn{padding:3px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid var(--g200);background:#fff;color:#666;transition:all .15s;white-space:nowrap}
-  .prov-link-btn:hover{background:#f8fbf9;border-color:var(--green600);color:var(--green700)}
+  /* 선생님 지도 링크 = 둘째 띠 **밖** 좌상단 칩(유성 09-06). 띠 안에 두면 폰(≤480)에서 슬라이더(flex:1)와 같은 줄이라
+     버튼 폭만큼 슬라이더가 줄었다(§4.9 '손 밑의 컨트롤이 움직인다'). 자리는 바 아래(--barh+--dashh, 하드코딩 금지).
+     행정 + 교사 선택일 때만(.on). 배치안 검토 중엔 요일 버튼(#planDays)이 같은 자리라 숨긴다. 아이콘=라인 SVG(§3.5, 옛 📎 이모지 폐기). */
+  .prov-link-chip{position:fixed;left:12px;top:calc(var(--barh,44px) + var(--dashh,32px) + 8px);z-index:41;display:none;
+    align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border:0;border-radius:999px;background:#fff;color:var(--g800);
+    font-family:inherit;font-size:12px;font-weight:600;line-height:1;white-space:nowrap;cursor:pointer;box-shadow:var(--sh-fab);transition:transform .12s}
+  .prov-link-chip.on{display:inline-flex}
+  .prov-link-chip svg{width:15px;height:15px;color:var(--green700);flex:none}
+  .prov-link-chip:active{transform:scale(.96)}
+  body.plan-review .prov-link-chip{display:none}
 
   /* ══ 검색 ══ */
   .search-wrap{position:relative;flex:1;max-width:200px}
@@ -499,7 +520,6 @@
     #candSheet{bottom:auto;top:0;right:100%;width:115px;height:66.6%;
                margin-bottom:0;margin-right:8px;border-radius:14px;box-shadow:var(--sh-left)}
     #candSheet .cg{grid-template-columns:1fr}
-    #candSheet .chd .lg{display:none}   /* 115px엔 '부터 1시간 1분'이 안 들어간다(실측) — 시간은 격자 빈칸의 '+57분'이 바로 옆에서 말한다 */
     /* 뱃지도 줄인다 (유성 확정 09-01) — 115px에서 「08-26 + 시간 안 맞음」은 접수일이 「0…」으로 잘렸다.
        「안 맞음」·「모름」으로 줄이면 잘림 0. ⚠️ 폰은 전체 문구를 그대로 쓴다(자리가 있다) = 화면마다 말이 다르다 */
     #candSheet .ctb .pre{display:none}
@@ -1079,7 +1099,6 @@
   <span class="dash-stat ds-total"><i>전체</i><b id="dashTotal">0</b></span>
   <span class="dash-stat ds-asg"><i>배정</i><b id="dashAssigned">0</b></span>
   <span class="dash-stat ds-wait" id="dashWait"><i>대기</i><b>0</b><i>명</i></span>
-  <button class="prov-link-btn" id="provLinkBtn" onclick="copyProviderLink()" style="display:none">📎 선생님 지도 링크</button>
   <div class="dash-filters">
     <select id="filterDay" onchange="applyFilters()">
       <option value="">전체 요일</option>
@@ -1173,6 +1192,8 @@
   <div class="nl-list" id="nlList"></div>
 </div>
 
+<!-- 선생님 지도 링크 — 둘째 띠 아래 좌상단 칩(행정·교사 선택 시). 옛 자리(.dashboard 안)는 폰 슬라이더를 밀어냈다(유성 09-06) -->
+<button class="prov-link-chip" id="provLinkBtn" onclick="copyProviderLink()" title="선생님 지도 링크 복사"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>선생님 지도 링크</button>
 <div class="loading-overlay" id="loading"><div class="ld-spinner"></div></div>
 <div class="toast" id="toast"></div>
 
@@ -1182,8 +1203,26 @@
 // ─────────────────────────────────────────────
 var CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec',
-  KAKAO_JS_KEY: '90fa3176ac77c6fc1ae5a165b9f0662c'
+  KAKAO_JS_KEY: KAKAO_JS_KEY   // head 인라인 스크립트가 정본(SDK를 파싱 전에 띄우려고 거기 정의). 여기 리터럴을 다시 쓰지 말 것.
 };
+
+// ── 부팅 계측(?perf=1) — 어느 구간이 긴지 화면 좌하단에 표로. 평소엔 배열에 쌓기만(비용 0에 가깝다). 유성 09-06 로딩 라운드
+var _PERF_ON = /[?&]perf=1/.test(location.search);
+function _perf(label){ try { window._pf.push([label, performance.now()]); if (_PERF_ON) _perfDraw(); } catch(e){} }
+function _perfDraw(){
+  var box = document.getElementById('perfBox');
+  if (!box) { box = document.createElement('pre'); box.id = 'perfBox';
+    box.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99;margin:0;padding:8px 10px;background:rgba(25,31,40,.86);color:#fff;font:11px/1.4 monospace;border-radius:8px;pointer-events:none;white-space:pre';
+    document.body.appendChild(box); }
+  var fonts = 0, fontN = 0, res = performance.getEntriesByType ? performance.getEntriesByType('resource') : [];
+  res.forEach(function(r){ if (/\.woff2?/.test(r.name)) { fontN++; fonts += (r.transferSize || 0); } });
+  var html = (performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null);
+  var lines = window._pf.map(function(p){ return (Math.round(p[1]) + 'ms').padStart(8) + '  ' + p[0]; });
+  if (html) lines.unshift((Math.round(html.responseEnd) + 'ms').padStart(8) + '  HTML 도착(' + Math.round((html.transferSize||0)/1024) + 'KB)');
+  lines.push('폰트 ' + fontN + '개 ' + Math.round(fonts/1024) + 'KB' + (document.fonts && document.fonts.status === 'loaded' ? ' (완료)' : ' (로딩 중)'));
+  box.textContent = lines.join('\n');
+}
+if (_PERF_ON && document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ _perf('폰트 완료'); });
 
 var map, markers = [], overlays = [], infoWindow;
 
@@ -1203,7 +1242,7 @@ if (window.ResizeObserver) {
   var _ro = new ResizeObserver(syncBarH);
   document.addEventListener('DOMContentLoaded', function(){
     ['.controls', '.dashboard'].forEach(function(sel){ var el = document.querySelector(sel); if (el) _ro.observe(el); });
-    syncBarH();
+    syncBarH(); _perf('HTML 파싱 끝');
   });
 }
 
@@ -1221,12 +1260,13 @@ function iwToggle(key){
 }
 var currentData = null;
 var michuholCenter = null;   // 미추홀 센터(주안로 128) 좌표 — 지오코딩 1회로 채워 시작 중심에 사용
-// 4개 센터(빨간 테두리 흰 원 마커로 표시). 주소→좌표 1회 변환. ⚠️ 서구·연수·남동(행복마음) 주소 받으면 addr 채울 것
+// 4개 센터(빨간 테두리 흰 원 마커로 표시). 좌표 = 카카오 지오코딩 결과를 **상수로 박음**(2026-09-06 라이브 실측값 — 주소가 고정인데
+// 매 부팅마다 외부 호출 4회를 하고 있었다. 저사양 폰 로딩 라운드). lat/lng가 없는 항목만 지오코딩한다(주소가 바뀌면 lat/lng를 지우면 자가 복구).
 var CENTERS = [
-  { name:'미추홀 센터', addr:'인천 미추홀구 주안로 128', isMichuhol:true },
-  { name:'서해구 센터', addr:'인천 서해구 봉오대로 270' },  // 서해구=옛 서구(2026-07-01 개명). 카카오 지오코딩 실측 완료(2026-08-17): 신·구 표기 모두 OK·동일 좌표, 정식 반환 주소도 서해구
-  { name:'연수 센터',   addr:'인천 연수구 함박뫼로84번길 2' },
-  { name:'남동 센터(행복마음)', addr:'인천 남동구 소래로669번길 47' },
+  { name:'미추홀 센터', addr:'인천 미추홀구 주안로 128', lat:37.4635698973712, lng:126.683828041565, isMichuhol:true },
+  { name:'서해구 센터', addr:'인천 서해구 봉오대로 270', lat:37.5239167403055, lng:126.680236578352 },  // 서해구=옛 서구(2026-07-01 개명). 카카오 지오코딩 실측 완료(2026-08-17): 신·구 표기 모두 OK·동일 좌표, 정식 반환 주소도 서해구
+  { name:'연수 센터',   addr:'인천 연수구 함박뫼로84번길 2', lat:37.4230718232193, lng:126.676284017506 },
+  { name:'남동 센터(행복마음)', addr:'인천 남동구 소래로669번길 47', lat:37.4498690028326, lng:126.73172295466 },
 ];
 var centerPoints = [];   // [{name, pos}] — 지오코딩 완료분
 var showAssigned = true, showWaiting = true, showHome = true, showMark = false;   // 마크 = 매칭 shortlist 토글(기본 OFF, 행정만)
@@ -1396,8 +1436,9 @@ function initMap() {
   placesService = new kakao.maps.services.Places();
   geocoder = new kakao.maps.services.Geocoder();
 
-  // 4개 센터 좌표 — 주소→좌표 1회 변환(지도/데이터 로드와 병렬, 빠름). 미추홀은 시작 중심에도 사용
+  // 4개 센터 좌표 — 상수가 있으면 그대로(외부 호출 0), 없는 항목만 주소→좌표 변환. 미추홀은 시작 중심에도 사용
   CENTERS.forEach(function(c){
+    if (c.lat && c.lng) { var p0 = new kakao.maps.LatLng(c.lat, c.lng); centerPoints.push({ name:c.name, pos:p0 }); if (c.isMichuhol) michuholCenter = p0; return; }
     if (!c.addr) return;
     geocoder.addressSearch(c.addr, function(res, status){
       if (status === kakao.maps.services.Status.OK && res[0]) {
@@ -1607,7 +1648,9 @@ function fetchGAS(action, params) {
   var tries = WRITE[action] ? 1 : 3;
   var asked = 0;                                    // 토큰 재입력 횟수 (무한루프 차단: 최대 2)
   function attempt(){
+    if (!isWrite) _perf('GAS ' + action + ' 요청');
     return _getJson(_gasUrl(action, params), tries, isWrite ? 0 : 12000).then(function(data){
+      if (!isWrite) _perf('GAS ' + action + ' 응답');
       // 토큰 없음/틀림 → 입력 받아 재시도. 2회차부터 빈칸+명시 메시지로 "확인만 눌러 같은 틀린 값 재저장" 루프 차단
       if (data && data.error === 'Unauthorized' && asked < 2) {
         asked++;
@@ -1660,7 +1703,7 @@ document.getElementById('providerSelect').addEventListener('change', function() 
 function loadAllProviders(keepView) {
   infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
   if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; _dashSelMark(); }
-  document.getElementById('provLinkBtn').style.display='none';
+  document.getElementById('provLinkBtn').classList.remove('on');
   var key='__ALL__|'+currentService;
   var done=function(data){
     if (data.error) { showToast(data.error); return; }
@@ -1697,7 +1740,7 @@ function updateProviderCounts(assigned) {
 function loadMapData(name, keepView) {
   infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
   if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; _dashSelMark(); }
-  document.getElementById('provLinkBtn').style.display='inline-block';
+  document.getElementById('provLinkBtn').classList.toggle('on', isAdmin());
   var key=name+'|'+currentService;
   var done=function(data, noFit){
     if (data.error) { showToast(data.error); return; }
@@ -1868,7 +1911,7 @@ function updateDashboard() {
   if (typeof _waLayout === 'function') _waLayout();   // 띠가 열린 그 자리에서(폰=슬라이더가 이 안에 있다)
   _fitDashbar();
 }
-function hideDashboard() { document.getElementById('dashboard').classList.remove('show'); }
+function hideDashboard() { document.getElementById('dashboard').classList.remove('show'); document.getElementById('provLinkBtn').classList.remove('on'); }   // 띠가 내려가면 링크 칩도(선택 해제·비행정)
 
 function getFilteredWaiting() {
   if (!currentData) return [];
@@ -2192,7 +2235,9 @@ function groupByCoord(items) {
 // ══ 마커 렌더링 ══
 function clearMarkers() { markers.forEach(function(m){m.setMap(null)}); markers=[]; overlays.forEach(function(o){o.setMap(null)}); overlays=[]; }
 
+var _rmFirst = true;
 function renderMarkers() {
+  if (_rmFirst) { _rmFirst = false; _perf('첫 마커 그리기'); }
   clearMarkers();
   _copyData = [];
   if (!currentData) return;
@@ -4065,7 +4110,13 @@ function showToast(m,ok){
 </script>
 
 <script>
-(function(){var s=document.createElement('script');s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+CONFIG.KAKAO_JS_KEY+'&libraries=services&autoload=false';s.onload=function(){kakao.maps.load(initMap)};s.onerror=function(){showToast('카카오맵 SDK 로드 실패')};document.head.appendChild(s)})();
+// SDK는 <head>에서 async로 이미 내려받는 중이다(09-06 로딩). 여기선 도착 여부만 보고 initMap을 건다.
+// 도착 전이면 load 이벤트, 이미 도착했으면 즉시 — 같은 동기 블록 안이라 둘 사이에 이벤트가 끼어들 수 없다.
+(function(){var s=document.getElementById('kakaoSdk');function go(){_perf('initMap 시작');kakao.maps.load(initMap)}
+  function bad(){showToast('카카오맵 SDK 로드 실패')}
+  if(window._kakaoSdkErr){bad();return}
+  if(window._kakaoSdkReady||(window.kakao&&kakao.maps)){go();return}
+  if(!s){bad();return} s.addEventListener('load',go);s.addEventListener('error',bad)})();
 
 // ══════════════════════════════════════════════════════════════
 //  배치안 (2026-08-08) — 마크한 아동을 그 교사의 한 주에 어떻게 배치할지
@@ -5911,11 +5962,10 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     var el = document.getElementById('candSheet');
     if (!CAND.key) { el.classList.remove('on'); return; }
     var live = CAND.list ? CAND.list.filter(function(o){ return _waAlive(o.c); }) : null;
-    // 구 탭 토스트 문구를 그대로 흡수했다(2026-09-01) — 토스트와 헤더가 같은 말을 하면 §2.1 중복.
-    // 폰 실측: 가장 긴 '월 14:30부터 1시간 27분 (이동 12분 뺀 값)'=184px < 360px폰 제목칸 194px.
-    // ≥680px에선 .lg가 숨어 '월 14:30'만 — 시간은 격자 빈칸의 '+57분'이 바로 옆에서 말한다.
-    document.getElementById('candTitle').innerHTML = CAND.g.d + ' ' + hh(CAND.g.s)
-      + '<span class="lg">부터 ' + dur(CAND.g.min) + ' (이동 ' + CAND.g.mv + '분 뺀 값)</span>';
+    // 헤더 = 「수 14:51 ~ 17:31」— 끝 시각은 다음 아동의 시작(앞자리=첫 아동 시작, 뒷자리=격자 끝). 유성 09-06 확정
+    // (08-31 픽 '16:30 ~ 17:43'과 같은 형식; 옛 '부터 N시간 (이동 12분 뺀 값)' 문구는 폐기 — 격자 빈칸의 '+57분'은
+    // 이동 12분을 뺀 값 그대로라(08-16 유성) 헤더 구간과 12분 차이가 나는 게 정상이다. 두 값을 억지로 맞추지 말 것).
+    document.getElementById('candTitle').textContent = CAND.g.d + ' ' + hh(CAND.g.s) + ' ~ ' + hh(CAND.g.e);
     document.getElementById('candN').textContent = live ? ('근처 ' + live.length + '명') : '';
     // 내용이 그대로면 다시 그리지 않는다 — 아동 블록을 탭할 때마다 카드가 다시 튀어오르고
     // 스크롤 위치가 처음으로 돌아가는 걸 막는다.
