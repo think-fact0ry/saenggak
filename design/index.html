@@ -836,6 +836,21 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <button class="btn shk" id="shkBtn" disabled>퇴근</button>
   </div>
 
+  <h3 class="sec">비활성 1차 CTA는 숨기지 않는다 <span class="oldref">§4.9 · 2026-09-06 유성</span></h3>
+  <p class="desc">16 조기피드백은 <code>#nextBtn{display:none}</code>으로 <b>참여하기를 통째로 감췄다가</b> 이름·생년월일이 유효해지면 나타나게 해 뒀다. 유성이 14와 나란히 열고 <b>"처음 시작하기 버튼이 초기 모니터링에는 없는데"</b>로 적발. <b>안 보이는 버튼은 '지금 못 누른다'가 아니라 '그런 버튼이 없다'로 읽힌다</b> — 다음 행동 자체가 화면에서 사라지고, shake도 발동할 대상이 없어 같이 죽는다.<br>
+  ⇒ <b>그 화면의 1차 CTA는 아직 못 눌러도 자리를 지킨다</b>(연초록 <code>--p-disabled</code>+흰 글자, 탭하면 shake). <b>§4.17(취소 불가면 칩을 안 그린다)과의 경계 = "그게 이 화면의 다음 행동인가"</b> — 다음 행동이면 지키고, 지금 실행 불가능한 <i>보조</i> 액션이면 안 그린다. <b>아래 두 안을 토글해 보세요</b> ↓</p>
+  <div class="demo" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="hideDemoA" style="flex:1;font-size:13px;padding:9px">❌ 옛 방식(숨김)</button>
+      <button class="btn" id="hideDemoB" style="flex:1;font-size:13px;padding:9px">✅ 지금(비활성+shake)</button>
+    </div>
+    <div id="hideStage" style="border:1px dashed var(--g300);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:132px">
+      <div style="font-size:12.5px;font-weight:600;color:var(--g600)">아동 이름</div>
+      <div style="border-bottom:2px solid var(--g200);height:26px"></div>
+      <div id="hideSlot" style="min-height:52px;display:flex;align-items:flex-end"></div>
+    </div>
+  </div>
+
   <h3 class="sec">값이 바뀌어도 컨트롤은 안 움직인다 <span class="oldref">§4.9 · 2026-09-02 유성</span></h3>
   <p class="desc">지도 대시보드 띠에서 대기 슬라이더를 맨 왼쪽으로 끌면 <b>버벅이면서 슬라이더가 커졌다</b>(유성 실기기). 원인은 <code>대기 280 중 70</code> → <code>대기 280</code>으로 <b>글자가 줄면서 생긴 폭 차이</b>가 드롭다운 이동(−30px)과 슬라이더 폭 증가(+30px)로 번진 것. 그게 드래그 내내 매 프레임 일어났다. 유성: <b>"드롭다운이나 슬라이더의 크기나 위치가 막 변경되면 유저는 불편함을 느낌."</b><br>
   ⇒ 살아 움직이는 값이 컨트롤과 <b>같은 줄</b>에 있으면 <b>가장 긴 형태의 폭을 미리 깔아 둔다</b>(<code>min-width</code>). 값이 짧아져도 칸은 그대로, <b>글자만</b> 바뀐다. 손이 닿아 있는 컨트롤이 손 밑에서 움직이는 건 가장 나쁜 레이아웃 이동이다. ⚠️재는 시점은 <b>그 줄이 보이게 된 뒤</b>(숨김 상태면 0이 나온다). <b>아래 슬라이더를 끌어 보세요 — 바닥을 끄면 오른쪽 것들이 같이 움직입니다</b> ↓</p>
@@ -1208,6 +1223,22 @@ function playDone(){
 (function(){ const b=document.getElementById('shkBtn'), t=document.getElementById('shkToast');
   b.parentElement.addEventListener('pointerdown',()=>{ b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
     t.classList.add('on'); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('on'),2600); }); // 22차: shake+이유 토스트 한 세트
+})();
+
+// ── §4.9 비활성 1차 CTA는 숨기지 않는다 (2026-09-06, 14·16 게이트) ──
+(function(){ const slot=document.getElementById('hideSlot'), a=document.getElementById('hideDemoA'), b=document.getElementById('hideDemoB');
+  function paint(mode){
+    slot.innerHTML='';
+    if(mode==='hide'){ const p=document.createElement('div');
+      p.style.cssText='font-size:12.5px;color:var(--g500);font-style:italic'; p.textContent='(버튼이 아예 없음 — 뭘 해야 진행되는지 화면이 말하지 않는다)';
+      slot.appendChild(p); return; }
+    const btn=document.createElement('button'); btn.className='btn shk'; btn.disabled=true; btn.textContent='참여하기'; btn.style.width='100%';
+    slot.appendChild(btn);
+    slot.onpointerdown=function(e){ const r=btn.getBoundingClientRect();
+      if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom) return;
+      btn.classList.remove('go'); void btn.offsetWidth; btn.classList.add('go'); };
+  }
+  a.onclick=()=>paint('hide'); b.onclick=()=>paint('off'); paint('off');
 })();
 
 // ── §4.11 더블백 종료 안내(2초 알약) 데모 — 값은 실앱(문서리더·근태·허브)과 동일 ──
