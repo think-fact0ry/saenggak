@@ -254,7 +254,7 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
   #planFab:active{transform:scale(.97)}
   #planFab.circle{width:48px;height:48px;font-size:12.5px}
   /* 월 스케줄 시트(폭 344) 왼쪽 10px. ⚠️ID 셀렉터라야 기본 right(ID 규칙)를 이긴다 — 프리뷰서 실측한 함정 */
-  #planFab.beside{right:calc(12px + min(344px,72%) + 10px)}
+  #planFab.beside{right:calc(12px + min(var(--sched-w,344px),72%) + 10px)}   /* 시트 폭 변수를 따라간다(토요일 교사 400) */
   #planFab .full,#schedPill .full{transition:opacity .18s ease}
   #planFab .mini,#schedPill .mini{position:absolute;opacity:0;transition:opacity .18s ease}
   #planFab.circle .full,#schedPill.circle .full{opacity:0}
@@ -307,7 +307,8 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
   /* ══ 월 스케줄 (2026-08-16 — 프리뷰 06_월스케줄_확정안 6라운드 정식 병합. 확정 이력=docs/4 §7) ══
      골격=#planSheet 복제(§4.3) · 격자=A 채움·56px/시간 고정·라운딩 0·동네색(시트 안 순서·bname).
      ⛔접힌 블록엔 '추정'·±N분 금지 / 빈자리에 "이동 N분 빼고" 금지 / 격자 아래 요약 텍스트 금지 (유성 08-15·16) */
-  #schedSheet{position:absolute;right:12px;bottom:0;width:min(344px,72%);max-height:82%;z-index:8;
+  /* 폭 344 기본, **토요일 교사만 400**(유성 09-06 — 6열에선 1자 태그로도 이름이 잘려서). --sched-w는 paint()가 요일 수로 정한다(폰은 72%가 이겨 무변경) */
+  #schedSheet{position:absolute;right:12px;bottom:0;width:min(var(--sched-w,344px),72%);max-height:82%;z-index:8;
               display:none;flex-direction:column;background:#fff;border-radius:20px 20px 0 0;
               box-shadow:var(--sh-up);transform:translateY(100%);
               /* max-height도 같이 전환한다 — 후보 모달이 열릴 때 시트가 **툭 줄지 않고 부드럽게** 낮아진다
@@ -405,8 +406,12 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
            line-height:1;padding:2px 3px;border-radius:3px;letter-spacing:-.2px;
            background:rgba(25,31,40,.72);color:#fff}
   #schedSheet .blk.tight .st{top:1px;right:2px;font-size:8px;padding:1px 2px}
-  #schedSheet .blk .st ~ .nm{padding-right:24px}
-  #schedSheet .blk.tight .st ~ .nm{padding-right:22px}
+  #schedSheet .blk .st ~ .nm{padding-right:13px}       /* 1자 태그(09-06 픽 B) — 2자 시절 24px가 이름을 1자로 만들었다 */
+  #schedSheet .blk.tight .st ~ .nm{padding-right:12px}
+  /* 태그 자동 제거(유성 09-06 '이름에 …가 붙기 직전까지만 뱃지, 안 되는 자리는 뱃지 자체를 붙이지 말 것') —
+     paint() 뒤 실측: 태그 때문에 이름이 잘리면 .notag. 태그 없이도 잘리는 이름(4자)은 태그를 남긴다(4자 잘림 OK 확정). 서비스는 펼친 카드 '서비스' 행이 말한다 */
+  #schedSheet .blk.notag .st{display:none}
+  #schedSheet .blk.notag .st ~ .nm{padding-right:0}
   /* 펼치면 우상단은 「지도에서 보기」 자리다 — 태그는 뺀다(유성 09-03 "2번은 별로야 없애") */
   #schedSheet .blk.open .st{display:none}
   /* 서비스 필터 — 고른 서비스만 또렷하게. 마커 필터와 같은 "화면 상태" 층이라 교사가 바뀌면 리셋 */
@@ -1067,7 +1072,7 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
 <!-- ════ 컨트롤 ════ -->
 <div class="controls">
   <div class="logo">오감쑥쑥 <span>지도</span></div>
-  <a id="dashLink" href="dashboard.html" style="font-size:10px;color:#999;text-decoration:none;border:1px solid #ddd;padding:3px 8px;border-radius:4px">📊</a>
+  <a id="dashLink" href="dashboard.html" title="대시보드" style="display:inline-flex;align-items:center;color:var(--g600);text-decoration:none;border:1px solid var(--g200);padding:4px 7px;border-radius:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 17v-6"/><path d="M12 17V6"/><path d="M18 17v-9"/></svg></a>   <!-- 옛 📊 이모지 → 라인 SVG(§3.5, 유성 09-06) -->
   <button id="staffLoginBtn" onclick="staffLogin()" style="display:none;font-size:11px;color:#166841;background:#fff;border:1px solid #e5e8eb;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">👤 제공인력 로그인</button>
   <button id="adminKeyBtn" onclick="adminKeyLogin()" style="display:none;font-size:11px;color:#166841;background:#fff;border:1px solid #e5e8eb;padding:3px 10px;border-radius:4px;cursor:pointer;font-weight:600">🔑 행정</button>
   <span id="staffWhoami" style="display:none;font-size:11px;color:#166841;background:#e9f8ee;border:1px solid #e5e8eb;padding:3px 10px;border-radius:4px">👤 <b>제공인력</b></span>
@@ -5532,7 +5537,8 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     return s === '아청심' ? '아청' : s === '정신토탈' ? '정신'
          : s === '비바우처재가' ? '재가' : s === '비바우처기관' ? '기관' : s;
   }
-  function svcTag(s){ return (!s || s === '오감') ? '' : svcLabel(s); }
+  /** 블록 태그 = **한 글자**(아·성·정·재·기 — 유성 09-06 픽 B). 세그 칸은 두 글자(svcLabel) 그대로 — 둘이 같은 어휘의 앞글자라 어긋나지 않는다 */
+  function svcTag(s){ return (!s || s === '오감') ? '' : svcLabel(s).charAt(0); }
 
   function rows(){
     var prov = SCHED.prov;
@@ -5710,6 +5716,8 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     var vs = rows();
     assignColors(vs);
     var ds = DAYS(vs), b = BND(vs, ds), H = (b.hi-b.lo)/60*PPH, aw = 26;
+    // 토요일 교사(6열)만 시트 400px — 유성 09-06. 폰은 min(…,72%)가 이겨 그대로 270
+    document.documentElement.style.setProperty('--sched-w', ds.length >= 6 ? '400px' : '344px');
     function Y(m){ return (m-b.lo)/60*PPH; }
     RL = [];
     var unk = (OCC.unknown && OCC.unknown[SCHED.prov]) || [];
@@ -5792,6 +5800,13 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     h+='</div>';
     // ⛔격자 아래 요약 텍스트는 쓰지 않는다 (유성 08-15)
     body.innerHTML=h;
+    // 태그 자동 제거(유성 09-06) — 렌더로 잰다(계산 아님): 태그가 이름에 …를 만들면 뺀다, 태그를 빼도 잘리면(4자 이름) 태그를 되살린다
+    body.querySelectorAll('.blk:not(.open) .st').forEach(function(st){
+      var bk = st.parentNode, nm = bk.querySelector('.nm'); if (!nm) return;
+      if (nm.scrollWidth <= nm.clientWidth) return;
+      bk.classList.add('notag');
+      if (nm.scrollWidth > nm.clientWidth) bk.classList.remove('notag');
+    });
     schedSegBuild(vs);   // 격자를 다시 그렸으니 세그·필터도 다시 건다(.hit은 DOM과 함께 날아간다)
     // 펼친 카드가 격자 밖으로 나가면 재보고 끌어당긴다 — 높이는 렌더 전엔 모른다(프리뷰 실측 15px 초과)
     var opEl=body.querySelector('.blk.open');
@@ -5830,6 +5845,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   function detail(v,id){
     var st = v.src==='st';
     var h=goMapBtn(v)+'<div class="det">';
+    h+='<div class="drow"><span class="dl">서비스</span><span class="dv">'+(v.svc?esc(v.svc):'모름')+'</span></div>';   // 태그가 빠진 블록(폰)은 여기서만 서비스를 본다(유성 09-06). 빈 값=모름≠오감
     h+='<div class="drow"><span class="dl">주소</span><span class="dv">'+(v.ad?esc(v.ad):'-')+'</span></div>';
     h+='<div class="drow"><span class="dl">계획</span><span class="dv">'
       + (st? v.d+' '+hh(v.s)+fixBtn(v,id,'고치기')
@@ -5859,6 +5875,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   function detailSib(u,id){
     var a=u.mem[0];
     var h=goMapBtn(a)+'<div class="det">';   // 형제는 같은 집이라 첫 아이 좌표로 보낸다
+    h+='<div class="drow"><span class="dl">서비스</span><span class="dv">'+(a.svc?esc(a.svc):'모름')+'</span></div>';
     h+='<div class="drow"><span class="dl">주소</span><span class="dv">'+(a.ad?esc(a.ad):'-')+'</span></div>';
     u.mem.forEach(function(x,mi){
       h+='<div class="drow"><span class="dl">기록</span><span class="dv">'+esc(x.n)+' '+x.d+' '+hh(x.s)
