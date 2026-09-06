@@ -437,6 +437,13 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
   #schedSheet .lnk{background:none;border:0;padding:0;margin-left:6px;font-family:inherit;font-size:10.5px;font-weight:700;
        color:var(--green700);text-decoration:underline;cursor:pointer}
   #schedSheet .memo{margin-top:7px;color:var(--g600);font-size:10px;line-height:1.5}
+  /* 종결 = 펼친 카드 맨 아래 [중도포기][계약종료] (유성 09-06 '정보 하단에 버튼 두 개'). 07 서류철 H열에 적고 이 배정을 푼다.
+     파괴적이라 danger-weak(§4.14) — 카드 1차 액션이 아니니 fill은 안 쓴다. 눌리면 §4.4 중앙 확인창. */
+  #schedSheet .tmrow{display:flex;gap:6px;margin-top:9px;padding-top:8px;border-top:1px solid var(--g100)}
+  #schedSheet .tmrow button{flex:1;height:28px;border:0;border-radius:8px;background:var(--danger-weak-bg);color:var(--danger-weak-fg);
+     font-family:inherit;font-size:10.5px;font-weight:700;cursor:pointer;transition:transform .12s}
+  #schedSheet .tmrow button:active{transform:scale(.96)}
+  #schedSheet .tmrow .who{flex:none;align-self:center;font-size:10px;color:var(--g600);font-weight:600;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* 빈자리 — 시간 한 줄만(유성 08-16 "이동 12분 빼고 안 써도 돼") · --g500(비텍스트 3:1 하한) */
   #schedSheet .free{position:absolute;left:3px;right:3px;border:1px dashed var(--g200);border-radius:3px;
         display:flex;align-items:center;justify-content:center;
@@ -1643,7 +1650,7 @@ var _writesInFlight = 0;
 function fetchGAS(action, params) {
   // 쓰기 액션은 재시도 금지: mutation은 echo 리다이렉트 실패 전에 이미 커밋됨.
   // assign엔 "이미 배정됨" 가드가 있어 재시도 시 성공을 오류로 오인, status/unassign은 감사로그 중복. → 단발.
-  var WRITE = { assign:1, status:1, unassign:1, saveschedule:1, mark:1, commit:1, adjust:1, decline:1 };
+  var WRITE = { assign:1, status:1, unassign:1, saveschedule:1, mark:1, commit:1, adjust:1, decline:1, terminate:1 };
   var isWrite = !!WRITE[action];
   var tries = WRITE[action] ? 1 : 3;
   var asked = 0;                                    // 토큰 재입력 횟수 (무한루프 차단: 최대 2)
@@ -2811,6 +2818,8 @@ var OCC = { map: {}, unknown: {} };
 function loadOccupancy() {
   return fetchGAS('occupancy').then(function(r) {
     if (r && r.occupancy) { OCC.map = r.occupancy; OCC.unknown = r.unknown || {}; }
+    // 07 종결로 서버가 뺀 아이들(2026-09-06) — 실측용. 행정 콘솔에서 OCC.term으로 본다('초록 마커인데 종결인 아동 N명')
+    if (r && r.term) { OCC.term = r.term; if (r.term.n) console.info('[종결 숨김] ' + r.term.n + '명', r.term.list); if (r.term.error) console.warn('[종결] 07 서류철 읽기 실패 — 아무도 안 숨김:', r.term.error); }
     schedRefresh();   // 월 스케줄 시트가 이미 떠 있으면(점유표가 늦게 도착) 격자를 채운다
   }).catch(function() { /* 실패해도 배정은 되어야 한다 — 배지만 안 뜬다 */ });
 }
@@ -3472,6 +3481,27 @@ function _optimisticUnassign(row) {
   return function undo() {
     currentData.assigned = prevA; currentData.waiting = prevW;
     _renderCurrent();
+  };
+}
+
+// 종결의 결과도 결정적이다(Q=''·R='종결'·S/T='' — 대기로 안 돌아간다). 격자(OCC)와 지도(assigned)에서 먼저 뺀다.
+// 반환값 = 되돌리기 함수. OCC에서 못 찾아도 assigned만 빼고 진행(격자는 loadOccupancy가 확정한다).
+function _optimisticTerminate(prov, name, dob, row) {
+  var prevOcc = (OCC.map && OCC.map[prov]) ? OCC.map[prov].slice() : null;
+  if (prevOcc) {
+    OCC.map[prov] = prevOcc.filter(function(o){ return !(o.n === name && (!dob || !o.dob || o.dob === dob)); });
+    schedRefresh();
+  }
+  var prevA = currentData && currentData.assigned ? currentData.assigned : null, removed = false;
+  if (prevA) {
+    var next = prevA.filter(function(c){ return Number(c.formRow) !== Number(row); });
+    removed = next.length !== prevA.length;
+    if (removed) { currentData.assigned = next; _renderCurrent(); }
+  }
+  if (!prevOcc && !removed) return null;
+  return function undo(){
+    if (prevOcc) { OCC.map[prov] = prevOcc; schedRefresh(); }
+    if (removed) { currentData.assigned = prevA; _renderCurrent(); }
   };
 }
 
@@ -5817,7 +5847,14 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
       + '</span></div>';
     h+='<div class="drow"><span class="dl">희망</span><span class="dv">'+(v.want?esc(v.want):'-')+'</span></div>';
     h+='<div class="drow"><span class="dl">전화</span><span class="dv">'+(v.tel?esc(v.tel):'-')+'</span></div>';
+    h+=termRow(v,id,0,'');
     return h+'</div>';
+  }
+  /** 종결 버튼 줄 — 07 서류철 H열 + 06 R='종결'(종결.js). 06 행이 없는 아이(대장에만)는 눌렀을 때 토스트로 한계를 말한다(모름≠안됨) */
+  function termRow(v,id,mi,who){
+    return '<div class="tmrow">'+(who?'<span class="who">'+esc(who)+'</span>':'')
+      +'<button onclick="scTerm(event,'+id+','+(mi||0)+',\'중도포기\')">중도포기</button>'
+      +'<button onclick="scTerm(event,'+id+','+(mi||0)+',\'계약종료\')">계약종료</button></div>';
   }
   function detailSib(u,id){
     var a=u.mem[0];
@@ -5830,6 +5867,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
         + fixBtn(x,id,'시간',mi)+'</span></div>'; });
     h+='<div class="drow"><span class="dl">전화</span><span class="dv">'+(a.tel?esc(a.tel):'-')+'</span></div>';
     h+='<div class="memo">성이 같고 시각이 5분 안이라 형제로 봤어요 — 60분 합반</div>';
+    u.mem.forEach(function(x,mi){ h+=termRow(x,id,mi,x.n); });   // 형제는 한 명만 그만둘 수 있다 — 아이마다 한 줄
     return h+'</div>';
   }
   /** 시간 바꾸기 = 기존 배정 다이얼로그(setChildTime) 재사용 — Q·R·S·T 정본 경로는 하나(0-9) */
@@ -6101,6 +6139,24 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     var v = RL[i].g[0].mem[mi||0];
     if (v.row) { setChildTime(v.row); return; }
     showToast('이 서비스 탭 신청폼에 행이 없는 아이라 여기서는 바꿀 수 없어요'); };
+  /* 종결(2026-09-06 유성) — 확인창(§4.4, 파괴적=danger) → 낙관 반영(격자에서 블록 제거·지도 assigned에서 제거) →
+     서버 terminate(07 H열 + 06 Q·S·T 비움 + R='종결' + 로그) → 실패면 원상복구. 배정취소(doUnassign)와 같은 3단.
+     ⚠️ 대기로 되돌리지 않는다 — 서버도 waiting에 안 담으므로 낙관 객체와 서버 응답이 일치(_renderSig). */
+  window.scTerm = function(e,i,mi,kind){ e.stopPropagation();
+    var v = RL[i].g[0].mem[mi||0], prov = SCHED.prov;
+    if (!v.row) { showToast('이 서비스 탭 신청폼에 행이 없는 아이라 여기서는 종결할 수 없어요'); return; }
+    iwConfirm(v.n + ' — ' + kind + '로 처리할까요?', '서류철 종결에 적고 ' + (prov||'') + ' 선생님 배정을 풀어요. 다시 신청하면 대기로 돌아와요.', kind + ' 처리', true, function(){
+      SCHED.open = null;
+      var undo = _optimisticTerminate(prov, v.n, v.dob, v.row);
+      if (!undo) showLoading(true);
+      fetchGAS('terminate', { row: v.row, kind: kind, service: currentService, ctx: _ctxKeyName(), name: v.n }).then(function(res){
+        showLoading(false);
+        if (!res || res.error) { if (undo) undo(); showToast((res && res.error) || '처리 실패'); if (res && res.stale) { _invalidateServiceCache(); reloadCurrent(true); } return; }
+        showToast(v.n + ' ' + kind + ' 처리됨', true);
+        _afterWrite(res);
+        loadOccupancy();   // 서버 점유표(07 종결 필터 반영)로 격자를 확정한다
+      }).catch(function(err){ showLoading(false); if (undo) undo(); showToast('처리 실패: ' + err.message); });
+    }); };
   window.schedUnknown = function(){
     var unk = (OCC.unknown && OCC.unknown[SCHED.prov]) || [];
     showToast('시간 미상(결제 기록 부족): ' + unk.join(', ')); };

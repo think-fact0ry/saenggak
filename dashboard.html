@@ -69,6 +69,7 @@
   .sb-waiting{background:var(--wait-f)}
   .sb-absent{background:#fb923c}
   .sb-rejected{background:#ef4444}
+  .sb-term{background:var(--g600)}             /* 종결(다니다 끝남, 2026-09-06) — 거절(타 센터로 감)과 다른 칸·중립색 */
   .sb-nocoord{background:var(--g300)}          /* 좌표가 없어 지도에 못 뜨는 행 — 숨기지 않고 보여준다 */
 
   /* ══ 대기 기간 슬라이더 — provider-map.html의 확정 컴포넌트를 그대로 옮겨 온 것 ══
@@ -140,7 +141,7 @@
     <div class="sum-card"><div class="sum-num" id="sTotal">-</div><div class="sum-label">전체 신청</div></div>
     <div class="sum-card"><div class="sum-num" id="sAssigned">-</div><div class="sum-label">배정 완료</div></div>
     <div class="sum-card"><div class="sum-num warn" id="sWaiting">-</div><div class="sum-label">대기</div></div>
-    <div class="sum-card"><div class="sum-num bad" id="sExcluded">-</div><div class="sum-label">부재/거절</div></div>
+    <div class="sum-card"><div class="sum-num bad" id="sExcluded">-</div><div class="sum-label">부재/거절/종결</div></div>
   </div>
 
   <!-- 배정률 바 -->
@@ -397,14 +398,15 @@ function paint() {
   var waitingAll = data.waiting || 0;
   var absent = data.absent || 0;            // 부재2만
   var rejected = data.rejected || 0;
+  var terminated = data.terminated || 0;    // 종결 — 서버(getDashboardData)가 같은 이름으로 준다. 옛 서버면 0
   var noCoord = data.noCoord || 0;
   var waiting = (data.waitingRows && data.waitingRows.length) ? _waLiveCount() : waitingAll;
-  var total = assigned + waiting + absent + rejected + noCoord;
+  var total = assigned + waiting + absent + rejected + terminated + noCoord;   // 합=전체 불변(종결 포함)
 
   document.getElementById('sTotal').textContent = total;
   document.getElementById('sAssigned').textContent = assigned;
   document.getElementById('sWaiting').textContent = waiting;
-  document.getElementById('sExcluded').textContent = absent + rejected;
+  document.getElementById('sExcluded').textContent = absent + rejected + terminated;
 
   // 띠 — 자르지 않았으면 `대기 274명`, 자르면 `대기 274명 중 58명`(모수는 강조색 아님)
   var dw = document.getElementById('dashWait');
@@ -426,6 +428,7 @@ function paint() {
       ['sb-waiting',  waiting,  '대기 '   + waiting],
       ['sb-absent',   absent,   '부재2 '  + absent],
       ['sb-rejected', rejected, '거절 '   + rejected],
+      ['sb-term',     terminated, '종결 ' + terminated],
       ['sb-nocoord',  noCoord,  '지도 밖 '+ noCoord]
     ]);
   }
