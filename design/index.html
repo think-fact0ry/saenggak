@@ -161,8 +161,13 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 /* §4.9+§5.5 데모용 토스트 — 하단 버튼 위 12px(gap)에 서고, 자리는 늘 잡아둬 뜰 때 레이아웃이 안 튄다 */
 .pvtoast{align-self:center;background:var(--g800);color:#fff;font-size:13.5px;font-weight:600;border-radius:12px;padding:12px 18px;white-space:pre-line;line-height:1.5;text-align:center;opacity:0;transition:opacity .25s;pointer-events:none}
 .pvtoast.on{opacity:1}
-.shk.go{animation:shake .4s}
-@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+/* §4.9 shake 표준 = 최대 3px 감쇠 · .28s (유성 2026-09-06 "shake 세기가 너무 쎄" — 옛 6px/.4s는 폐기).
+   비교용 약/표준/옛 3종은 아래 '세기' 데모에서만 쓴다. */
+.shk.go{animation:shakeX .28s cubic-bezier(.36,.07,.19,.97)}
+@keyframes shakeX{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(1px)}}
+.shk.go.amp2{animation-name:shakeA2} .shk.go.amp5{animation-name:shakeA5;animation-duration:.4s}
+@keyframes shakeA2{20%{transform:translateX(-2px)}40%{transform:translateX(2px)}60%{transform:translateX(-1px)}80%{transform:translateX(1px)}}
+@keyframes shakeA5{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
 
 /* 선택 컨트롤 (§4.9, 2026-07-03~04 확정) — 옵션카드=면 문법(테두리 0) / 탭·세그=흰-필 */
 .optc{display:flex;gap:10px}
@@ -836,6 +841,19 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <button class="btn shk" id="shkBtn" disabled>퇴근</button>
   </div>
 
+  <h3 class="sec">shake 세기 = 최대 3px 감쇠 · .28s <span class="oldref">§4.9 · 2026-09-06 유성</span></h3>
+  <p class="desc">유성이 14·16 게이트 실기기 확인에서 <b>"shake 세기가 너무 쎄"</b> — 옛 값(최대 <b>5px</b>·.4s, 프리뷰는 <b>6px</b>)은 폐기. §4.9는 처음부터 <b>"좌우로 <u>살짝</u> 흔들림"</b>이라고 적혀 있었는데 <b>진폭 표준값이 없어</b> 표면마다 3·4·5·6·7·8px로 갈렸다(이름도 <code>shakeX</code>/<code>gshake</code>/<code>shake</code>/<code>kpShake</code>/<code>tfshake</code> 5가지).<br>
+  ⇒ <b>표준 = 최대 3px에서 시작해 1px로 잦아드는 감쇠형, .28s.</b> 감쇠가 중요하다 — 같은 진폭으로 왕복하면 '고장 난 것'처럼 보이고, 잦아들면 '거절당했다'로 읽힌다. <b>세 세기를 눌러 비교해 보세요</b> ↓</p>
+  <div class="demo" style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="ampA" style="flex:1;min-width:96px;font-size:13px;padding:9px">약 2px</button>
+      <button class="btn" id="ampB" style="flex:1;min-width:96px;font-size:13px;padding:9px">표준 3px ✅</button>
+      <button class="btn" id="ampC" style="flex:1;min-width:96px;font-size:13px;padding:9px">옛 5px ❌</button>
+    </div>
+    <button class="btn shk" id="ampTarget" disabled>참여하기</button>
+    <div id="ampNote" style="font-size:12.5px;color:var(--g600);text-align:center">표준 3px — 지금 14·16에 나가 있는 값</div>
+  </div>
+
   <h3 class="sec">비활성 1차 CTA는 숨기지 않는다 <span class="oldref">§4.9 · 2026-09-06 유성</span></h3>
   <p class="desc">16 조기피드백은 <code>#nextBtn{display:none}</code>으로 <b>참여하기를 통째로 감췄다가</b> 이름·생년월일이 유효해지면 나타나게 해 뒀다. 유성이 14와 나란히 열고 <b>"처음 시작하기 버튼이 초기 모니터링에는 없는데"</b>로 적발. <b>안 보이는 버튼은 '지금 못 누른다'가 아니라 '그런 버튼이 없다'로 읽힌다</b> — 다음 행동 자체가 화면에서 사라지고, shake도 발동할 대상이 없어 같이 죽는다.<br>
   ⇒ <b>그 화면의 1차 CTA는 아직 못 눌러도 자리를 지킨다</b>(연초록 <code>--p-disabled</code>+흰 글자, 탭하면 shake). <b>§4.17(취소 불가면 칩을 안 그린다)과의 경계 = "그게 이 화면의 다음 행동인가"</b> — 다음 행동이면 지키고, 지금 실행 불가능한 <i>보조</i> 액션이면 안 그린다. <b>아래 두 안을 토글해 보세요</b> ↓</p>
@@ -1223,6 +1241,17 @@ function playDone(){
 (function(){ const b=document.getElementById('shkBtn'), t=document.getElementById('shkToast');
   b.parentElement.addEventListener('pointerdown',()=>{ b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
     t.classList.add('on'); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('on'),2600); }); // 22차: shake+이유 토스트 한 세트
+})();
+
+// ── §4.9 shake 세기 비교 (2026-09-06 유성 "너무 쎄") — 눌러서 몸으로 고르는 자리 ──
+(function(){ const t=document.getElementById('ampTarget'), note=document.getElementById('ampNote');
+  const M={ ampA:['amp2','약 2px — 더 줄이면 못 느낄 수 있다'],
+            ampB:['',    '표준 3px — 지금 14·16에 나가 있는 값'],
+            ampC:['amp5','옛 5px ·.4s — 유성이 "너무 쎄"라고 한 값'] };
+  Object.keys(M).forEach(function(id){ document.getElementById(id).onclick=function(){
+    t.classList.remove('go','amp2','amp5'); void t.offsetWidth;
+    if(M[id][0]) t.classList.add(M[id][0]);
+    t.classList.add('go'); note.textContent=M[id][1]; }; });
 })();
 
 // ── §4.9 비활성 1차 CTA는 숨기지 않는다 (2026-09-06, 14·16 게이트) ──
