@@ -169,6 +169,15 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 @keyframes shakeA2{20%{transform:translateX(-2px)}40%{transform:translateX(2px)}60%{transform:translateX(-1px)}80%{transform:translateX(1px)}}
 @keyframes shakeA5{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
 
+/* 눈금 슬라이더 = 즉시 추종 + 놓으면 스냅 (§4.9, 2026-09-07 유성 — 14 반기 모니터링) */
+.slD{position:relative;height:28px;margin:6px 0;cursor:pointer;touch-action:pan-y;outline:none}
+.slD .t{position:absolute;left:0;right:0;top:11px;height:6px;background:var(--g200);border-radius:99px}
+.slD .rail{position:absolute;left:0;right:24px;top:0;bottom:0}   /* 엄지 지름만큼 짧은 레일 = JS 측정 0 */
+.slD .th{position:absolute;top:2px;left:calc(var(--r,0) * 100%);width:24px;height:24px;border-radius:50%;background:#fff;
+  border:5px solid var(--green600);box-shadow:0 1px 4px rgba(0,0,0,.2);
+  transition:left .3s cubic-bezier(.22,.85,.25,1),box-shadow .2s}
+.slD.drag{cursor:grabbing}
+.slD.drag .th{transition:box-shadow .2s;box-shadow:0 2px 8px rgba(0,0,0,.24)}   /* 드래그 중엔 전환 끔 = 손가락에 붙음 */
 /* 선택 컨트롤 (§4.9, 2026-07-03~04 확정) — 옵션카드=면 문법(테두리 0) / 탭·세그=흰-필 */
 .optc{display:flex;gap:10px}
 .optc button{flex:1;max-width:150px;padding:14px;border:1.5px solid transparent;border-radius:var(--r-md);background:var(--g100);color:var(--g600);font-weight:600;font-size:15px;font-family:inherit;cursor:pointer;transition:.12s}
@@ -886,6 +895,19 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div id="lsRead" style="margin-top:8px;font-size:12px;color:var(--g500)"></div>
   </div>
 
+  <h3 class="sec">눈금 슬라이더 = 손가락 즉시 추종 + 놓으면 눈금 스냅 <span class="oldref">§4.9 · 2026-09-07 유성</span></h3>
+  <p class="desc">유성(14 반기 모니터링 0~8 척도): <b>"슬라이더 드래그시 부드럽게 인터렉션 되지 않음"</b>. 원인은 네이티브 <code>input[type=range]</code>가 <code>step=1</code>에서 값을 먼저 반올림해 <b>엄지를 그 값 자리로 순간이동</b>시키는 것 — 412px 폰에서 80px을 끄는 동안 엄지가 설 수 있는 자리가 <b>3곳뿐</b>(한 칸 <b>39.5px 점프</b>, 실측). 덤으로 네이티브는 <code>touch-action:auto</code>라 폰에서 세로 성분이 섞이면 <b>드래그를 스크롤에 뺏긴다</b>.<br>
+  ⇒ 위 <b>양극 7점 세그의 ⓑ와 같은 규칙</b>을 그릇만 바꿔 적용: <b>드래그 중엔 손가락을 즉시 따라오고(전환 끔), 놓으면 가까운 눈금으로 <code>.3s cubic-bezier(.22,.85,.25,1)</code> 스냅</b>. ⓐ 컨테이너가 포인터를 다 받고(<code>setPointerCapture</code>) 자식은 장식 ⓑ <b>커밋은 놓을 때만</b> — 누름·이동은 미리보기라 <code>pointercancel</code>(스크롤에 뺏김)이면 만지기 전 값으로 되돌아간다 ⓒ <code>touch-action:pan-y</code>로 세로 스크롤은 브라우저에 남긴다 ⓓ 위치는 <b>측정 없이</b> <code>left:calc(var(--r) * 100%)</code>(레일을 엄지 지름만큼 짧게) — 리사이즈·회전·목업 전환·숨김 상태 초기 렌더가 자동으로 맞는다. <b>둘 다 끌어 보세요 — 위가 옛 네이티브, 아래가 새 문법</b> ↓</p>
+  <div class="demo" style="max-width:360px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:600;color:var(--g700)">옛 네이티브 <code>input[type=range]</code></span><span id="slOldV" style="font-size:15px;font-weight:700;color:var(--g500)">4</span></div>
+    <input id="slOld" type="range" min="0" max="8" step="1" value="4" style="width:100%;accent-color:var(--g500);height:28px;margin:6px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:18px"><span style="font-size:13px;font-weight:600;color:var(--g700)">새 문법(14 <code>.sl</code>)</span><span id="slNewV" style="font-size:15px;font-weight:700;color:var(--green600)">4</span></div>
+    <div class="slD" id="slNew" style="--r:.5" tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="8" aria-valuenow="4" aria-label="데모 척도">
+      <div class="t"></div><div class="rail"><div class="th"></div></div>
+    </div>
+    <div id="slRead" style="margin-top:10px;font-size:12px;color:var(--g500)"></div>
+  </div>
+
   <h3 class="sec">넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드 <span class="oldref">§4.13-6 · 2026-07-29 확정</span></h3>
   <p class="desc">하단 고정 CTA 위에 스크롤 목록이 앉는 화면은 ⓐ <b>스크롤바를 숨긴다</b>(<code>scrollbar-width:none</code> + <code>::-webkit-scrollbar{width:0}</code>) — 미관만이 아니라, 막대가 <b>생기는 순간 콘텐츠 폭이 줄어 행 안의 우측 칩이 옆으로 튀기</b> 때문(유성 적발, 08 반출납). ⓑ 대신 아래쪽 ~28px를 <b>투명도 그라데이션</b>으로 옅어지게(<code>mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent)</code>) → "아래에 더 있다"를 가리지 않고 알림. ⚠️ <b>딤(어둡게)이 아니라 투명도</b>(유성: "어둡게 하자는 건 아니고"). <b>아래 목록을 스크롤해 보세요</b> ↓</p>
   <div class="demo" style="max-width:360px">
@@ -1278,6 +1300,29 @@ function playDone(){
 // ── §5.2 전면 로더 (최종 제출) 데모 ──
 (function(){ const btn=document.getElementById('ovlBtn'), o=document.getElementById('pvOvl'); if(!btn||!o) return;
   btn.addEventListener('click',()=>{ o.classList.add('show'); setTimeout(()=>o.classList.remove('show'),1800); });
+})();
+
+// ── §4.9 눈금 슬라이더 = 즉시 추종 + 놓으면 스냅 (2026-09-07, 14 .sl과 같은 코드) ──
+(function(){
+  const sl=document.getElementById('slNew'), th=sl&&sl.querySelector('.th'), out=document.getElementById('slNewV'), read=document.getElementById('slRead');
+  const old=document.getElementById('slOld'), oldV=document.getElementById('slOldV');
+  if(!sl||!old) return;
+  const MAX=8, TH=24; let v=4, dragging=false, seen=new Set();
+  const paint=r=>sl.style.setProperty('--r', r);
+  const ratio=x=>{ const rc=sl.getBoundingClientRect(), span=rc.width-TH; return span<=0?0:Math.max(0,Math.min(1,(x-rc.left-TH/2)/span)); };
+  const show=n=>{ out.textContent=n; };
+  const follow=e=>{ const r=ratio(e.clientX); paint(r); show(Math.round(r*MAX));
+    seen.add(Math.round(parseFloat(getComputedStyle(th).left))); read.textContent='드래그하는 동안 엄지가 선 자리 '+seen.size+'곳 (네이티브는 최대 9곳)'; };
+  sl.addEventListener('pointerdown',e=>{ if(e.button) return; dragging=true; sl.classList.add('drag');
+    try{ sl.setPointerCapture(e.pointerId); }catch(_){} seen.clear(); follow(e); });
+  sl.addEventListener('pointermove',e=>{ if(dragging) follow(e); });
+  const end=e=>{ if(!dragging) return; dragging=false; sl.classList.remove('drag');   // .drag를 먼저 빼야 아래 paint가 스냅으로 간다
+    v=Math.round(ratio(e.clientX)*MAX); paint(v/MAX); show(v); sl.setAttribute('aria-valuenow',v); };
+  sl.addEventListener('pointerup',end);
+  sl.addEventListener('pointercancel',()=>{ if(!dragging) return; dragging=false; sl.classList.remove('drag'); paint(v/MAX); show(v); });   // 취소 = 만지기 전 값
+  sl.addEventListener('keydown',e=>{ const d=(e.key==='ArrowRight'||e.key==='ArrowUp')?1:(e.key==='ArrowLeft'||e.key==='ArrowDown')?-1:0;
+    if(!d) return; e.preventDefault(); v=Math.max(0,Math.min(MAX,v+d)); paint(v/MAX); show(v); sl.setAttribute('aria-valuenow',v); });
+  old.addEventListener('input',()=>{ oldV.textContent=old.value; });
 })();
 
 // ── §4.9 선택 컨트롤 (옵션카드 면 문법 · 세그 흰-필) ──
