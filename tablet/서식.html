@@ -9,7 +9,7 @@
 (function(){ try{ var s=JSON.parse(localStorage.getItem('tf_staff_v1')||'null'); if(!(s&&s.session)) location.replace('상담일지.html?from=hub'); }catch(e){} })();
 </script>
 <title>서식함 · 생각공작소</title>
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
   :root{
@@ -50,7 +50,7 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}   /* 롱프레스→구글검색 차단(ex9) */
   input,textarea{-webkit-user-select:text;user-select:text;}
-  body{font-family:'Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;}
+  body{font-family:'Pretendard Variable','Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;}
   .wrap{max-width:720px;margin:0 auto;padding:14px 22px 120px;}
 
   .top{display:flex;align-items:center;gap:6px;}
