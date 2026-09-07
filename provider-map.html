@@ -442,6 +442,10 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
   #schedSheet .lnk{background:none;border:0;padding:0;margin-left:6px;font-family:inherit;font-size:10.5px;font-weight:700;
        color:var(--green700);text-decoration:underline;cursor:pointer}
   #schedSheet .memo{margin-top:7px;color:var(--g600);font-size:10px;line-height:1.5}
+  /* 마지막 결제 N일 전 — 색은 위험도만(09-02 규칙): 정상 g600 / 주의 warn / 위험 danger */
+  #schedSheet .lp{color:var(--g600);font-weight:600}
+  #schedSheet .lp.warn{color:var(--warn-weak-fg)}
+  #schedSheet .lp.danger{color:var(--danger-weak-fg);font-weight:700}
   /* 종결 = 펼친 카드 맨 아래 [중도포기][계약종료] (유성 09-06 '정보 하단에 버튼 두 개'). 07 서류철 H열에 적고 이 배정을 푼다.
      파괴적이라 danger-weak(§4.14) — 카드 1차 액션이 아니니 fill은 안 쓴다. 눌리면 §4.4 중앙 확인창. */
   #schedSheet .tmrow{display:flex;gap:6px;margin-top:9px;padding-top:8px;border-top:1px solid var(--g100)}
@@ -1541,7 +1545,7 @@ var PLATFORM_URL = 'https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVz
 var STAFF_SESS_KEY = 'tf_staff_v1';   // 태블릿 앱과 공유 — 앱서 로그인했으면 PC 지도서도 자동 인식
 function getStaffSess(){ try{ return JSON.parse(localStorage.getItem(STAFF_SESS_KEY) || 'null'); }catch(e){ return null; } }
 function setStaffSess(s){ try{ localStorage.setItem(STAFF_SESS_KEY, JSON.stringify(s)); }catch(e){} }
-function clearStaffSess(){ try{ localStorage.removeItem(STAFF_SESS_KEY); }catch(e){} }
+function clearStaffSess(){ try{ localStorage.removeItem(STAFF_SESS_KEY); }catch(e){} if (typeof _mcClear === 'function') _mcClear(); }   // 로그아웃·만료 = 저장분(배정 아동 실명)도 같이
 function getDeviceId(){
   var s = getStaffSess(); if (s && s.device) return s.device;
   var d = localStorage.getItem('tf_device');
@@ -1652,6 +1656,27 @@ function _promptTokenShared(msg, blank){
 // 나중 조작을 되돌려 보이게 할 수 있다(응답1은 조작2를 모른다) → 마지막 응답만 화면을 확정하게 한다.
 var _writesInFlight = 0;
 
+/* ⚡ 로딩 2단계 ⓑ — 저장분 먼저 그리고, 서버로 확정한다 (유성 2026-09-07 GO — 09-06 폰 실측: 남은 4.5초 중 4.1초가 GAS 왕복)
+   부팅 때 직전 응답(행정 __ALL__ mapdata·providers 목록 / 제공인력 staffmap)을 기기 localStorage에 두고, 다음 부팅에서
+   그것부터 그린다(첫 마커 ~0.3초). 서버 응답이 오면 그게 최종 — 같으면 안 다시 그리고(_renderSig), 다르면 갈아끼운다.
+   ⛔ 왕복을 없애지 않는다(09-01 교사 전환과 같은 설계) → 나빠지는 경우가 없다. 저장이 없으면 옛 로딩 그대로.
+   대가(유성 인지·GO): 기기 저장소에 배정 아동 실명·주소가 하루 남는다 / 첫 그림이 최대 하루 낡을 수 있다(4초 뒤 서버가 이긴다).
+   ⛔ 쓰기가 진행 중(_writesInFlight)이면 저장분을 안 쓴다(낙관 반영 전 상태를 되살릴 수 있다). 세션 만료(auth)·로그아웃엔 전부 지운다.
+   키 = 종류|모드|서비스(|staffId). 값 = 최신 1건. 전체가 1.5MB를 넘으면 통째로 비운다(localStorage 한도 방어). */
+var MAPCACHE_KEY = 'saenggak_map_cache_v1', MAPCACHE_TTL = 24 * 3600 * 1000;
+function _mcKey(kind, extra){ return kind + '|' + MODE + '|' + currentService + (extra ? '|' + extra : ''); }
+function _mcAll(){ try { return JSON.parse(localStorage.getItem(MAPCACHE_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function _mcGet(key){ var e = _mcAll()[key]; if (!e || !e.d || (Date.now() - (e.t || 0)) > MAPCACHE_TTL) return null; return e.d; }
+function _mcPut(key, d){
+  try {
+    var all = _mcAll(); all[key] = { t: Date.now(), d: d };
+    var str = JSON.stringify(all);
+    if (str.length > 1500000) { all = {}; all[key] = { t: Date.now(), d: d }; str = JSON.stringify(all); }
+    localStorage.setItem(MAPCACHE_KEY, str);
+  } catch (e) { /* 용량·사생활 모드 — 저장 없이 옛 동작 */ }
+}
+function _mcClear(){ try { localStorage.removeItem(MAPCACHE_KEY); } catch (e) {} }
+
 function fetchGAS(action, params) {
   // 쓰기 액션은 재시도 금지: mutation은 echo 리다이렉트 실패 전에 이미 커밋됨.
   // assign엔 "이미 배정됨" 가드가 있어 재시도 시 성공을 오류로 오인, status/unassign은 감사로그 중복. → 단발.
@@ -1689,19 +1714,30 @@ function fetchGAS(action, params) {
 var providerList = [];
 function loadProviders() {
   showLoading(true);
+  var lk = _mcKey('providers'), savedList = _mcGet(lk);
+  if (savedList) _fillProviderSelect(savedList);   // ⓑ 저장분으로 드롭다운 먼저 — 서버 목록이 오면 다시 채운다
   loadAllProviders();   // mapdata(마커)를 즉시 병렬 로드 — providers(목록)와 독립이라 순차 2왕복→동시 1왕복으로 단축
   fetchGAS('providers').then(function(list) {
+    if (!list || list.error) { showToast((list && list.error) || '목록 로드 실패'); return; }
     list.sort(function(a, b){ return String(a.name||'').localeCompare(String(b.name||''), 'ko'); }); // ㄱㄴㄷ 순
-    providerList = list;
-    var sel = document.getElementById('providerSelect');
-    var optAll = document.createElement('option');
-    optAll.value = '__ALL__'; optAll.textContent = '— 전체 제공인력 —';
-    sel.appendChild(optAll);
-    list.forEach(function(p) { var o=document.createElement('option'); o.value=p.name; o.textContent=p.name; sel.appendChild(o); });
-    sel.value = '__ALL__';
+    _mcPut(lk, list);
+    _fillProviderSelect(list);
     // mapdata가 먼저 왔다면: 드롭다운 카운트 + 마커 재렌더(배정추천은 providerList가 있어야 IW에 들어감)
     if (currentData) { updateProviderCounts(currentData.assigned); renderMarkers(); }
   }).catch(function(e) { showToast('목록 로드 실패: '+e.message); });
+}
+// 드롭다운 채우기 — 저장분·서버 목록이 같은 함수를 쓴다(두 번 채워도 중복 없이, 고른 값은 유지)
+function _fillProviderSelect(list) {
+  providerList = list;
+  var sel = document.getElementById('providerSelect'), cur = sel.value;
+  for (var i = sel.options.length - 1; i >= 0; i--) if (sel.options[i].value) sel.remove(i);   // 빈 placeholder만 남긴다
+  var optAll = document.createElement('option');
+  optAll.value = '__ALL__'; optAll.textContent = '— 전체 제공인력 —';
+  sel.appendChild(optAll);
+  list.forEach(function(p) { var o=document.createElement('option'); o.value=p.name; o.textContent=p.name; sel.appendChild(o); });
+  var keep = false; list.forEach(function(p){ if (p.name === cur) keep = true; });
+  sel.value = keep ? cur : '__ALL__';
+  if (currentData && sel.value === '__ALL__') updateProviderCounts(currentData.assigned);
 }
 
 // ══ 데이터 로드 ══
@@ -1717,7 +1753,7 @@ function loadAllProviders(keepView) {
   if(!keepView){ document.getElementById('filterDay').value=''; document.getElementById('filterTime').value=''; _dashSelMark(); }
   document.getElementById('provLinkBtn').classList.remove('on');
   var key='__ALL__|'+currentService;
-  var done=function(data){
+  var done=function(data, noFit){
     if (data.error) { showToast(data.error); return; }
     _svcCache[key]=data;
     currentData = data; _waInvalidate();
@@ -1725,11 +1761,19 @@ function loadAllProviders(keepView) {
     //    추가됐는데 이 경로는 복제본이라 빠졌고 → **제공인력을 골라도 「후보안 뽑기」가 영영 안 떴다**
     //    (유성 지적). 켜지는 유일한 길이 `planExit()`이라 "검정 버튼을 눌렀다 나와야 보이는" 증상이 났다.
     _renderCurrent();
-    if(!keepView) fitBounds();
+    if(!keepView && !noFit) fitBounds();
   };
   if(_svcCache[key]){ done(_svcCache[key]); return; }   // 캐시 즉시 (로딩 없음)
-  showLoading(true);
-  fetchGAS('mapdata', {provider: '__ALL__', service: currentService}).then(function(data){ showLoading(false); done(data); }).catch(function(e) { showLoading(false); showToast('로드 실패: '+e.message); });
+  // ⓑ 저장분 먼저(부팅·서비스 전환). 쓰기 진행 중엔 안 쓴다 — 헬퍼 주석 참조
+  var painted = false, mk = _mcKey('all'), saved = (_writesInFlight === 0) ? _mcGet(mk) : null;
+  if (saved) { done(saved); painted = true; showLoading(false); _perf('저장분 마커 그리기'); }
+  if (!painted) showLoading(true);
+  fetchGAS('mapdata', {provider: '__ALL__', service: currentService}).then(function(data){
+    if (!painted) showLoading(false);
+    if (!data.error) _mcPut(mk, data);
+    if (painted && !data.error && _renderSig(data) === _lastRenderSig) { _svcCache[key]=data; return; }   // 저장분과 같다 — 다시 안 그린다
+    done(data, painted);   // 다르면 서버가 이긴다(보던 위치는 유지)
+  }).catch(function(e) { if (!painted) showLoading(false); showToast('로드 실패: '+e.message + (painted ? ' (화면은 지난번 저장분)' : '')); });
 }
 
 function updateProviderCounts(assigned) {
@@ -1863,18 +1907,26 @@ function loadStaffMap(keepView){
   var s = getStaffSess();
   if (!s || !s.session){ MODE='basic'; applyModeUI(); loadBasicMap(keepView); return; }
   infoWindow.close(); routeFrom=null; routeTo=null; updateRoutePanel();
-  showLoading(true);
+  var paint = function(data, noFit){
+    if (!data.provider) data.provider = { name: s.name||'', lat:null, lng:null };
+    currentData = data; currentData.allProviders = null; _waInvalidate();
+    renderMarkers(); if (!keepView && !noFit) fitBounds();
+  };
+  // ⓑ 저장분 먼저(교사 저사양 폰이 이 경로 — 09-06 유성 피드백의 본체). 헬퍼 주석 참조
+  var painted = false, mk = _mcKey('staff', s.staffId), saved = _mcGet(mk);
+  if (saved) { paint(saved); painted = true; _perf('저장분 마커 그리기'); } else showLoading(true);
   fetchGAS('staffmap', { service: currentService, staffId: s.staffId, session: s.session }).then(function(data){
-    showLoading(false);
-    if (data && data.error === 'auth'){   // 세션 만료·회수(퇴사) → 기본지도로 강등 + 재로그인 유도
+    if (!painted) showLoading(false);
+    if (data && data.error === 'auth'){   // 세션 만료·회수(퇴사) → 기본지도로 강등 + 재로그인 유도 (저장분도 clearStaffSess가 지운다)
       clearStaffSess(); MODE='basic'; applyModeUI(); loadBasicMap();
       showToast('로그인이 만료됐어요. 다시 로그인해 주세요'); return;
     }
-    if (!data || data.error){ showToast((data && data.error) || '로드 실패'); return; }
+    if (!data || data.error){ showToast((data && data.error) || '로드 실패' + (painted ? ' (화면은 지난번 저장분)' : '')); return; }
+    _mcPut(mk, data);
     if (!data.provider) data.provider = { name: s.name||'', lat:null, lng:null };
-    currentData = data; currentData.allProviders = null; _waInvalidate();
-    renderMarkers(); if (!keepView) fitBounds();
-  }).catch(function(e){ showLoading(false); showToast('로드 실패: '+e.message); });
+    if (painted && _renderSig(data) === _renderSig(currentData)) return;   // 저장분과 같다 — 다시 안 그린다
+    paint(data, painted);
+  }).catch(function(e){ if (!painted) showLoading(false); showToast('로드 실패: '+e.message + (painted ? ' (화면은 지난번 저장분)' : '')); });
 }
 
 /* ══ 대기 칸의 폭을 미리 깔아 둔다 (유성 09-02 실기기 적발) ══
@@ -3449,6 +3501,7 @@ function _afterWrite(res) {
   var data = res.map;
   if (sel !== '__ALL__') data.allProviders = null;   // loadMapData와 동일 규칙
   _svcCache[sel + '|' + currentService] = data;
+  if (sel === '__ALL__') _mcPut(_mcKey('all'), data);   // ⓑ 저장분도 최신으로
   currentData = data; _waInvalidate();
   if (_renderSig(data) === _lastRenderSig) return;   // 낙관 반영과 동일 → 재렌더 생략
   _renderCurrent();
@@ -5860,6 +5913,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
                +v.was.d+' '+hh(v.was.s)+'('+v.was.n+'회)</span>':'')
       + (v.shift?'<br><span style="color:var(--warn-weak-fg)">최근 결제는 '+v.shift.d+' '+hh(v.shift.s)
                +' — 바뀌는 중(아직 4회 안 됨)</span>':'')
+      + lastPaid(v)
       + '</span></div>';
     h+='<div class="drow"><span class="dl">희망</span><span class="dv">'+(v.want?esc(v.want):'-')+'</span></div>';
     h+='<div class="drow"><span class="dl">전화</span><span class="dv">'+(v.tel?esc(v.tel):'-')+'</span></div>';
@@ -5872,6 +5926,13 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
       +'<button onclick="scTerm(event,'+id+','+(mi||0)+',\'중도포기\')">중도포기</button>'
       +'<button onclick="scTerm(event,'+id+','+(mi||0)+',\'계약종료\')">계약종료</button></div>';
   }
+  /** 마지막 결제 N일 전 — 기록 줄 뒤(유성 09-07 픽 A). 서류철에 종결이 안 적힌 아이도 결제가 끊긴 지 오래면 여기서 보인다.
+      14일까지 회색(정상)·28일까지 주의·그 뒤 위험+「그만둔 것 같아요」(오감 주 1회 기준 결제 2번 이상 빠짐). recon(대장)만 — st(계획)엔 결제가 없다. 접힌 블록엔 안 넣는다(08-16 규칙) */
+  function lastPaid(v){
+    if (!v || v.src!=='recon' || v.last==null) return '';
+    var n = v.last, cls = n<=14 ? '' : (n<=28 ? ' warn' : ' danger');
+    return '<br><span class="lp'+cls+'">마지막 결제 '+n+'일 전'+(n>28?' — 그만둔 것 같아요':'')+'</span>';
+  }
   function detailSib(u,id){
     var a=u.mem[0];
     var h=goMapBtn(a)+'<div class="det">';   // 형제는 같은 집이라 첫 아이 좌표로 보낸다
@@ -5881,7 +5942,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
       h+='<div class="drow"><span class="dl">기록</span><span class="dv">'+esc(x.n)+' '+x.d+' '+hh(x.s)
         + (x.src==='recon'?' 추정, '+(x.ses||0)+'회':'')
         + (x.iqr>=SHAKE_MIN?', ±'+x.iqr+'분':'')
-        + fixBtn(x,id,'시간',mi)+'</span></div>'; });
+        + fixBtn(x,id,'시간',mi)+lastPaid(x)+'</span></div>'; });
     h+='<div class="drow"><span class="dl">전화</span><span class="dv">'+(a.tel?esc(a.tel):'-')+'</span></div>';
     h+='<div class="memo">성이 같고 시각이 5분 안이라 형제로 봤어요 — 60분 합반</div>';
     u.mem.forEach(function(x,mi){ h+=termRow(x,id,mi,x.n); });   // 형제는 한 명만 그만둘 수 있다 — 아이마다 한 줄
