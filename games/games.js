@@ -224,7 +224,14 @@
   function pick(g, ph) {
     if (busyKey[g.k]) { toast("사진을 넣고 있어요. 잠깐만요"); return; }
     curPick = { g: g, ph: ph };
-    $("fileIn").click();
+    $("pickTitle").textContent = g.n + " 사진을 어떻게 넣을까요?";
+    $("pickDim").classList.add("on");
+  }
+  function bindPick() {   // 고르기 창은 버튼을 누른 그 손짓 안에서 열어야 한다(브라우저가 막지 않게)
+    var close = function () { $("pickDim").classList.remove("on"); };
+    $("pickCam").onclick = function () { close(); $("fileCam").click(); };
+    $("pickAlbum").onclick = function () { close(); $("fileIn").click(); };
+    $("pickDim").addEventListener("click", function (e) { if (e.target === $("pickDim")) { close(); curPick = null; } });
   }
   function decodeImage(file) {   // EXIF 회전 = createImageBitmap 우선(tablet/사진업로드 실코드)
     if (window.createImageBitmap) {
@@ -337,8 +344,9 @@
   warmGas();
   bindFind();
   if (ADMIN) {
-    bindGate(); bindDialog();
+    bindGate(); bindDialog(); bindPick();
     $("fileIn").addEventListener("change", onFile);
+    $("fileCam").addEventListener("change", onFile);
     [].forEach.call(document.querySelectorAll("#seg button"), function (b) {
       b.addEventListener("click", function () {
         onlyNoPhoto = b.getAttribute("data-f") === "nophoto";

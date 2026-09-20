@@ -9,7 +9,7 @@
 <title>보드게임 사진 넣기 — 생각공작소</title>
 <link rel="icon" href="/saenggak/android-icon-192x192.png">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="games.css?v=1">
+<link rel="stylesheet" href="games.css?v=2">
 </head>
 <body data-mode="admin">
 <div id="wrap">
@@ -37,12 +37,18 @@
   </div>
 
 </div>
+<!-- 안드로이드 크롬은 accept=image/* 만 주면 앨범 창만 띄운다(카메라 선택지 없음, 2026-09-21 유성 실기기) → 두 입력을 따로 두고 우리가 묻는다 -->
 <input type="file" id="fileIn" accept="image/*" hidden>
+<input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+<div class="dim" id="pickDim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+  <h2 id="pickTitle"></h2>
+  <div class="row"><button type="button" class="no" id="pickAlbum">앨범에서 고르기</button><button type="button" class="go" id="pickCam">사진 찍기</button></div>
+</div></div>
 <div class="dim" id="dim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
   <h2 id="dlgTitle"></h2>
   <div class="row"><button type="button" class="no" id="dlgNo">닫기</button><button type="button" class="yes" id="dlgYes">빼기</button></div>
 </div></div>
 <div class="toast" id="toast"><span class="tk"><svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg></span><span class="tx"></span></div>
-<script src="games.js?v=1"></script>
+<script src="games.js?v=2"></script>
 </body>
 </html>

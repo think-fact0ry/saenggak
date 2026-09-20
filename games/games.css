@@ -140,6 +140,7 @@ button.ph:active{transform:scale(.98);}
 .dlg button:active{transform:scale(.97);}
 .dlg .no{background:var(--g100); color:var(--dark);}
 .dlg .yes{background:var(--danger); color:#fff;}
+.dlg .go{background:var(--green); color:#fff;}
 
 .toast{position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); display:flex; align-items:center; gap:8px; background:#222; color:#fff; font-size:14px; padding:12px 18px; border-radius:12px; max-width:90%; white-space:pre-line; opacity:0; transition:opacity .2s,transform .2s; pointer-events:none; z-index:1300; line-height:1.5;}
 .toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
