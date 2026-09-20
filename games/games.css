@@ -1,0 +1,148 @@
+/* 보드게임 목록(23) — 선생님 목록(index.html)과 관리자 사진 등록(admin.html)이 같이 쓴다. 정본 원칙 = docs/1_원칙_디자인UX.md */
+:root{
+    /* TOKENS:START — §3.1 정본 토큰. 직접 편집 금지: docs/1 §3.1 고치고 node 디자인프리뷰/토큰동기.js */
+
+  /* 회색 — §3.1 정본(중립 회색 스케일). 필요한 칸만 골라 써도 되나 이름·값은 이대로 */
+  --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db;
+  --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
+  --g800:#333d4b; --g900:#191f28;
+  /* 초록 — §3.1 OKLCH 스케일(회색 명도 사다리 고정, green600=브랜드 #3a8a5f 앵커).
+     밝은 50~400 = 토스 weak 실측 기반 재보정(2026-07-04 유성 #e9f8ee 확정 — ex43 실측 C.021·브랜드 H157,
+     100→500 수렴 가중 1/.85/.62/.40/.20으로 이음새 없음. 옛 A안 채도부스트 값 폐기) */
+  --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
+  --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
+  --green:var(--green600); --green-dark:var(--green700); --green-bg:var(--green100);  /* 별칭(기존 코드 호환) */
+  /* 시맨틱 */
+  --red:#f04452;           /* 에러·경고 상태(폼 오류·OTP 오류·알림) */
+  --warn:#f5a623;          /* 주의 신호(비오류) — 근태 지각 색 등(유성 확정 2026-07-14). red=오류/warn=주의 구분 */
+  --warn-weak-bg:#fef4e2; --warn-weak-fg:#8a5a00;   /* warn weak(연주황 채움+진한 갈색주황 폰트 — danger-weak 결). ⚠️fg는 2026-09-02 #c07f00→#8a5a00(유성 확정): 옛 값은 이 bg 위 대비 3.07(본문 4.5 미달, 정본에 실측 이력 없었음) → 5.43. 측정=WCAG 2.x 상대휘도 node 계산 2026-09-02 */
+  --ink-on-dark:#F9FBFA;   /* 어두운 배경 흰 글씨(§3.5 line125) */
+  /* 버튼·뱃지 시맨틱 (§4.14 버튼 체계 — 유성 2026-07-02) */
+  --dark:#525966;          /* dark variant(중립 짙은 회색 버튼/뱃지) + 흰 폰트 */
+  --danger:#D25357;        /* danger variant(파괴적 액션 버튼/뱃지) + 흰 폰트. ※--red(#f04452)와 구분: red=상태알림, danger=버튼 */
+  --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;   /* danger weak(연빨강 채움+진한빨강 폰트) */
+  --p-disabled:#b7e0c8; --dark-disabled:#c8ccd0; --danger-disabled:#f2cdce;   /* disabled = variant 흐린 버전+흰폰트(회색 아님) */
+  /* 라운드 — §3.3 */
+  --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
+  /* 타입 스케일 — §3.2 (큰 제목 clamp 유동 / 본문 고정) */
+  --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
+  --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
+  /* 스크롤 그라디언트 — §4.13-6 A안. 스크롤바를 숨기는 곳에 "더 있다"를 말하는 그린 2겹.
+     2026-09-05 정본 승격(유성) — 그전엔 provider-map·09가 각자 :root에 복붙한 이중 진실이었다. 값은 지도 원본 그대로 */
+  --sf-bot:linear-gradient(to bottom,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+           linear-gradient(to bottom,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%);
+  --sf-top:linear-gradient(to top,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+           linear-gradient(to top,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%);
+  /* TOKENS:END */
+}
+
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; min-height:100%; background:#fff;}
+/* 창 스크롤 막대는 숨기고(§4.13-6) 위·아래 초록 띠로 "더 있다"를 알린다 — 막대만 감추면 스크롤되는 줄 모른다 */
+html,body{scrollbar-width:none;}
+html::-webkit-scrollbar,body::-webkit-scrollbar{width:0; height:0;}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; color:var(--g900); font-size:var(--fs-body); line-height:1.5; word-break:keep-all; overscroll-behavior-y:none; user-select:none; -webkit-user-select:none;}
+input{user-select:text; -webkit-user-select:text;}
+
+#wrap{max-width:960px; margin:0 auto; padding:20px 22px calc(60px + env(safe-area-inset-bottom));}
+#wrap::before,#wrap::after{content:""; position:fixed; left:0; right:0; height:32px; z-index:40; pointer-events:none; opacity:0; transition:opacity .18s;}
+#wrap::before{top:0; background:var(--sf-top);}
+#wrap::after{bottom:0; background:var(--sf-bot);}
+#wrap.moreTop::before{opacity:1;}
+#wrap.more::after{opacity:1;}
+
+.screen{display:none;}
+.screen.active{display:block;}
+
+.head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin:8px 0 18px;}
+h1{font-size:var(--fs-h1); font-weight:700; letter-spacing:-.5px; line-height:1.35; margin:0;}
+/* §4.12 역할 표시(weak 뱃지, 테두리 없음) */
+.role{flex:none; margin-top:6px; font-size:var(--fs-caption); font-weight:700; color:var(--g700); background:var(--g100); border-radius:999px; padding:4px 11px;}
+
+/* 찾기 — 큰 채움 입력(§4.1 채움박스 문법: g100, 포커스하면 흰 바탕과 그린) */
+.find{position:relative; margin:0 0 10px;}
+.find input{width:100%; border:none; outline:none; font:inherit; font-size:17px; font-weight:500; color:var(--g900); background:var(--g100); border-radius:var(--r-md); padding:15px 44px 15px 46px; caret-color:var(--green);}
+.find input::placeholder{color:var(--g500);}
+.find input:focus{background:#fff; box-shadow:inset 0 0 0 2px var(--green);}
+.find .ic{position:absolute; left:16px; top:50%; width:20px; height:20px; margin-top:-10px; color:var(--g500); pointer-events:none;}
+.find .ic svg,.clr svg,.cam svg,.rm svg,.noph svg{width:100%; height:100%; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round;}
+.find .ic svg{stroke-width:2;}
+.clr{position:absolute; right:14px; top:50%; width:15px; height:15px; margin-top:-11.5px; padding:4px; box-sizing:content-box; background-clip:content-box; border:none; border-radius:50%; background-color:var(--g400); color:#fff; cursor:pointer; display:none;}
+.clr svg{stroke-width:3.4;}
+.find.has-val .clr{display:block;}
+
+.bar{display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:34px; margin:0 0 14px;}
+.cnt{font-size:var(--fs-sm); font-weight:600; color:var(--g600); font-variant-numeric:tabular-nums;}
+/* 세그(§4.9 선택상태 = 회색 트랙 위 흰 필) */
+.seg{display:inline-flex; background:var(--g100); border-radius:999px; padding:3px;}
+.seg button{border:none; background:none; font:inherit; font-size:var(--fs-sm); font-weight:600; color:var(--g600); padding:6px 13px; border-radius:999px; cursor:pointer; transition:transform .1s;}
+.seg button:active{transform:scale(.96);}
+.seg button.on{background:#fff; color:var(--g900); box-shadow:0 1px 3px rgba(25,31,40,.10);}
+
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:22px 12px;}
+.gc{min-width:0;}
+/* 사진 틀 = 정사각, 상자를 자르지 않고 통째로(contain). 긴 상자와 정사각 상자를 같은 틀에 담는다 */
+.ph{position:relative; display:block; width:100%; aspect-ratio:1; border:none; padding:0; font:inherit; background:var(--g100); border-radius:var(--r-md); overflow:hidden;}
+.ph img{position:absolute; left:7%; top:7%; width:86%; height:86%; object-fit:contain; display:block;}
+.noph{position:absolute; left:50%; top:50%; width:34%; height:34%; transform:translate(-50%,-50%); color:var(--g300);}
+.noph svg{stroke-width:1.6;}
+.nm{font-size:var(--fs-body); font-weight:700; letter-spacing:-.2px; line-height:1.4; margin:9px 2px 0; overflow-wrap:anywhere;}
+.meta{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:4px 2px 0; font-size:var(--fs-caption); font-weight:500; color:var(--g600); min-height:18px;}
+.bdg{font-size:var(--fs-caption); font-weight:700; color:var(--g700); background:var(--g100); border-radius:999px; padding:2px 9px;}
+
+/* 관리자: 사진 틀이 곧 버튼 */
+button.ph{cursor:pointer; transition:transform .1s;}
+button.ph:active{transform:scale(.98);}
+.cam{position:absolute; right:7px; bottom:7px; width:32px; height:32px; padding:7px; border-radius:50%; background:rgba(25,31,40,.62); color:#fff; pointer-events:none;}
+.cam svg{stroke-width:2;}
+.phbox{position:relative;}
+.rm{position:absolute; top:7px; right:7px; width:26px; height:26px; padding:8px; border:none; border-radius:50%; background:rgba(25,31,40,.62); color:#fff; cursor:pointer; z-index:2;}
+.rm svg{stroke-width:3;}
+.busy{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.78); font-size:var(--fs-sm); font-weight:700; color:var(--green-dark); z-index:3;}
+
+.sk{animation:skp 1.2s ease-in-out infinite;}
+.sk .nm{height:15px; width:70%; border-radius:6px; background:var(--g100);}
+@keyframes skp{0%,100%{opacity:1} 50%{opacity:.5}}
+
+.empty,.errbox{grid-column:1/-1; padding:48px 10px; text-align:center;}
+.empty p,.errbox p{font-size:var(--fs-body); color:var(--g600); margin:0 0 18px; line-height:1.7;}
+
+.btn,.retry-btn{font:inherit; font-weight:700; color:#fff; background:var(--green); border:none; border-radius:var(--r-md); cursor:pointer; position:relative; overflow:hidden; transition:background .2s,transform .1s; letter-spacing:-.3px;}
+.retry-btn{font-size:var(--fs-body); padding:13px 26px;}
+.btn{width:100%; font-size:16px; padding:16px;}
+.btn:active,.retry-btn:active{background:var(--green-dark); transform:scale(.97);}
+.btn:disabled{background:var(--p-disabled); cursor:default; transform:none;}
+.btn:disabled:has(.ld-dots){background:var(--green);}
+.btn .bl{position:relative; z-index:1;}
+.rip{position:absolute; z-index:0; width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%; background:rgba(0,0,0,.20); pointer-events:none; transform:scale(0);}
+.rip.go{transform:scale(var(--rs,16)); opacity:0; transition:transform .46s ease-out,opacity .46s ease-out;}
+.ld-dots{display:inline-flex; gap:3px; margin-left:7px; vertical-align:middle;}
+.ld-dots i{width:4px; height:4px; border-radius:50%; background:currentColor; animation:ldb .9s infinite ease-in-out;}
+.ld-dots i:nth-child(2){animation-delay:.16s;} .ld-dots i:nth-child(3){animation-delay:.32s;}
+@keyframes ldb{0%,80%,100%{transform:translateY(0); opacity:.45;} 40%{transform:translateY(-4px); opacity:1;}}
+@keyframes shakeX{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(1px)}}
+.shake{animation:shakeX .28s cubic-bezier(.36,.07,.19,.97);}
+
+/* 관리자 문(내부 도구 — §1.1 면제, 문구 규칙만 적용) */
+#s-gate .gatebox{max-width:420px; margin:12vh auto 0;}
+#s-gate h1{margin-bottom:22px;}
+#s-gate h1.err{color:var(--red);}
+.pin{width:100%; border:none; outline:none; font:inherit; font-size:20px; font-weight:600; letter-spacing:6px; color:var(--g900); background:var(--g100); border-radius:var(--r-md); padding:16px 18px; caret-color:var(--green); margin-bottom:12px;}
+.pin:focus{background:#fff; box-shadow:inset 0 0 0 2px var(--green);}
+
+/* 센터 다이얼로그(§4.4) */
+.dim{position:fixed; inset:0; z-index:1000; background:rgba(25,31,40,.45); display:none; align-items:center; justify-content:center; padding:24px;}
+.dim.on{display:flex;}
+.dlg{width:100%; max-width:320px; background:#fff; border-radius:var(--r-lg); padding:24px 20px 16px;}
+.dlg h2{font-size:var(--fs-title); font-weight:700; margin:0 0 18px; line-height:1.45;}
+.dlg .row{display:flex; gap:8px;}
+.dlg button{flex:1; border:none; font:inherit; font-size:var(--fs-body); font-weight:700; border-radius:var(--r-md); padding:13px; cursor:pointer; transition:transform .1s;}
+.dlg button:active{transform:scale(.97);}
+.dlg .no{background:var(--g100); color:var(--dark);}
+.dlg .yes{background:var(--danger); color:#fff;}
+
+.toast{position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); display:flex; align-items:center; gap:8px; background:#222; color:#fff; font-size:14px; padding:12px 18px; border-radius:12px; max-width:90%; white-space:pre-line; opacity:0; transition:opacity .2s,transform .2s; pointer-events:none; z-index:1300; line-height:1.5;}
+.toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
+.toast .tk{display:none; flex:none; width:18px; height:18px; border-radius:50%; background:var(--green); align-items:center; justify-content:center;}
+.toast.okk .tk{display:flex;}
+.toast .tk svg{width:10px; height:10px; fill:none; stroke:#fff; stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round;}
