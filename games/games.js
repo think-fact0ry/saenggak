@@ -48,7 +48,7 @@
     return wait(obj.action === "games" ? 500 : 900).then(function () {
       if (obj.action === "games") return { ok: true, games: JSON.parse(JSON.stringify(demoGames)) };
       if (obj.action === "admin_check") return obj.pin === "1234" ? { ok: true } : { ok: false, error: "bad_pin" };
-      if (obj.action === "photo_set") return { ok: true, p: "data:image/jpeg;base64," + obj.img };
+      if (obj.action === "photo_set") { window.__tfSent = obj.img; return { ok: true, p: "" }; }   // 하니스가 "무엇을 보냈나"를 본다
       if (obj.action === "photo_del") return { ok: true };
       return { ok: false, error: "unknown_action" };
     });
@@ -257,6 +257,37 @@
     cx.drawImage(src, 0, 0, cw, ch);
     return cv.toDataURL("image/jpeg", q).split(",")[1];
   }
+  /* 보낼 그림 = 원본(유성 2026-09-21: 이 화면은 "어떤 사진이 어떤 게임인지" 맞추는 중간 지점이고, Drive 폴더가 원본 창고다 — 홈페이지 등 뒤의 쓰임은 거기서 꺼내 파생본을 만든다).
+     JPEG면 메타정보(촬영 위치 등)만 떼고 그림 바이트는 그대로(jpegmeta.js, 화질 손실 0). JPEG가 아니거나, 떼기에 실패하거나, 떼어 낸 것이 안 열리거나, 서버 상한을 넘으면 캔버스로 다시 그린다(이 길도 메타정보는 안 남는다). */
+  var FULL_B64_MAX = 15500000;   // 서버 MAX_IMG_B64(16,000,000)보다 조금 아래
+  function readBytes(file) {
+    return new Promise(function (res, rej) {
+      var fr = new FileReader();
+      fr.onload = function () { res(new Uint8Array(fr.result)); };
+      fr.onerror = function () { rej(new Error("read")); };
+      fr.readAsArrayBuffer(file);
+    });
+  }
+  function b64OfBytes(u8) {
+    var s = "", CH = 0x8000;
+    for (var i = 0; i < u8.length; i += CH) s += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
+    return btoa(s);
+  }
+  function dimOf(src) { return (src.width || src.naturalWidth) + "x" + (src.height || src.naturalHeight); }
+  function originalB64(file, bm) {
+    var redraw = function () { return toJpeg(bm, 4096, 0.92); };
+    if (!window.TFJpegMeta) return Promise.resolve(redraw());
+    return readBytes(file).then(function (u8) {
+      var r = window.TFJpegMeta.strip(u8);
+      if (!r) return redraw();
+      return decodeImage(new Blob([r.bytes], { type: "image/jpeg" })).then(function (chk) {   // 떼어 낸 파일이 실제로 같은 그림으로 열리는지 보고 나서 보낸다
+        var same = dimOf(chk) === dimOf(bm); if (chk.close) chk.close();
+        if (!same) return redraw();
+        var b64 = b64OfBytes(r.bytes);
+        return b64.length > FULL_B64_MAX ? redraw() : b64;
+      });
+    }).catch(redraw);
+  }
   function onFile(e) {
     var f = e.target.files && e.target.files[0]; e.target.value = "";
     var cur = curPick; curPick = null;
@@ -265,8 +296,11 @@
     busyKey[g.k] = true;
     var ov = document.createElement("span"); ov.className = "busy"; ov.innerHTML = dotsHTML("넣고 있어요"); ph.appendChild(ov);
     decodeImage(f).then(function (bm) {
-      var b64 = toJpeg(bm, 1200, 0.82); if (bm.close) bm.close();
-      return post({ action: "photo_set", pin: pin(), key: g.k, img: b64 }).then(function (d) { return { d: d, b64: b64 }; });
+      var small = toJpeg(bm, 600, 0.8);   // 이 칸에 바로 보여 줄 작은 사본(원본을 화면에 들고 있으면 수십 장째에 폰 메모리가 찬다)
+      return originalB64(f, bm).then(function (b64) {
+        if (bm.close) bm.close();
+        return post({ action: "photo_set", pin: pin(), key: g.k, img: b64 }).then(function (d) { return { d: d, b64: small }; });
+      });
     }).then(function (r) {
       var d = r.d;
       if (d && d.ok) {
