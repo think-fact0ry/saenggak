@@ -137,7 +137,7 @@
   }
 
   function card(g) {
-    var el = document.createElement("div"); el.className = "gc";
+    var el = document.createElement("div"); el.className = "gc"; el.dataset.k = g.k;
     var box = document.createElement("div"); box.className = "phbox";
     var ph = document.createElement(ADMIN ? "button" : "div"); ph.className = "ph";
     if (ADMIN) {
@@ -147,6 +147,7 @@
       ph.addEventListener("click", function () { pick(g, ph); });
     }
     setPhoto(ph, g);
+    if (ADMIN && busyKey[g.k] === "up") { var ov = document.createElement("span"); ov.className = "busy"; ov.innerHTML = dotsHTML("넣고 있어요"); ph.appendChild(ov); }   // 올리는 중에 찾기를 바꿔 칸이 새로 그려져도 "넣고 있어요"가 남는다
     box.appendChild(ph);
     if (ADMIN && (g.p || localPhoto[g.k])) {
       var rm = document.createElement("button"); rm.type = "button"; rm.className = "rm"; rm.setAttribute("aria-label", g.n + " 사진 빼기"); rm.innerHTML = IC.x;
@@ -274,10 +275,10 @@
     return btoa(s);
   }
   function dimOf(src) { return (src.width || src.naturalWidth) + "x" + (src.height || src.naturalHeight); }
-  function originalB64(file, bm) {
+  function originalB64(u8, bm) {
     var redraw = function () { return toJpeg(bm, 4096, 0.92); };
     if (!window.TFJpegMeta) return Promise.resolve(redraw());
-    return readBytes(file).then(function (u8) {
+    return Promise.resolve().then(function () {
       var r = window.TFJpegMeta.strip(u8);
       if (!r) return redraw();
       return decodeImage(new Blob([r.bytes], { type: "image/jpeg" })).then(function (chk) {   // 떼어 낸 파일이 실제로 같은 그림으로 열리는지 보고 나서 보낸다
@@ -292,26 +293,29 @@
     var f = e.target.files && e.target.files[0]; e.target.value = "";
     var cur = curPick; curPick = null;
     if (!f || !cur) return;
-    var g = cur.g, ph = cur.ph;
-    busyKey[g.k] = true;
-    var ov = document.createElement("span"); ov.className = "busy"; ov.innerHTML = dotsHTML("넣고 있어요"); ph.appendChild(ov);
-    decodeImage(f).then(function (bm) {
-      var small = toJpeg(bm, 600, 0.8);   // 이 칸에 바로 보여 줄 작은 사본(원본을 화면에 들고 있으면 수십 장째에 폰 메모리가 찬다)
-      return originalB64(f, bm).then(function (b64) {
-        if (bm.close) bm.close();
-        return post({ action: "photo_set", pin: pin(), key: g.k, img: b64 }).then(function (d) { return { d: d, b64: small }; });
+    var g = cur.g;
+    busyKey[g.k] = "up";   // "up" = 올리는 중(칸에 「넣고 있어요」). 빼는 중은 true — 표시 없이 누름만 막는다
+    rerenderCard(g);   // 칸에 "넣고 있어요"(card()가 busyKey를 보고 얹는다)
+    /* 🔴 올리는 동안 찾기를 바꾸면 render()가 칸을 전부 새로 만든다. 예전엔 고르던 순간의 칸(ph)을 붙잡고 있다가 끝나고 그 칸을 바꾸려다
+       터져서(떨어진 칸이라 parentNode 없음) "넣지 못했어요"가 떴다 — 서버 저장·미리보기는 이미 끝난 뒤였다(2026-09-22 유성 적발, Drive 41 = 탭 41로 전부 저장 확인).
+       ⇒ 칸은 끝난 시점에 키로 다시 찾고, 서버가 ok라고 한 뒤의 화면 갱신 오류는 실패로 알리지 않는다.
+       파일은 고르자마자 한 번만 읽고 그 뒤로는 메모리의 바이트만 쓴다. 예전엔 디코드 뒤에 한 번 더 읽어서, 그 사이 원본을 지우면 조용히 다시 그린 사본(화질 손실)이 올라갈 수 있었다. */
+    readBytes(f).catch(function () { throw new Error("decode"); }).then(function (u8) {
+      return decodeImage(new Blob([u8], { type: f.type || "image/jpeg" })).then(function (bm) {
+        var small = toJpeg(bm, 600, 0.8);   // 이 칸에 바로 보여 줄 작은 사본(원본을 화면에 들고 있으면 수십 장째에 폰 메모리가 찬다)
+        return originalB64(u8, bm).then(function (b64) {
+          if (bm.close) bm.close();
+          return post({ action: "photo_set", pin: pin(), key: g.k, img: b64 }).then(function (d) { return { d: d, b64: small }; });
+        });
       });
     }).then(function (r) {
       var d = r.d;
-      if (d && d.ok) {
-        g.p = DEMO ? "" : d.p; localPhoto[g.k] = "data:image/jpeg;base64," + r.b64;   // 방금 찍은 사진을 바로 보여 준다(Drive를 기다리지 않는다)
-        saveCache(); rerenderCard(g, ph); toast("사진을 넣었어요", true);
-        return;
-      }
-      failPhoto(d && d.error);
+      if (!(d && d.ok)) { failPhoto(d && d.error); return; }
+      g.p = DEMO ? "" : d.p; localPhoto[g.k] = "data:image/jpeg;base64," + r.b64;   // 방금 찍은 사진을 바로 보여 준다(Drive를 기다리지 않는다)
+      saveCache(); toast("사진을 넣었어요", true);
     }).catch(function (err) {
       failPhoto(err && err.message === "decode" ? "decode" : "net");
-    }).then(function () { delete busyKey[g.k]; if (ov.parentNode) ov.remove(); });
+    }).then(function () { delete busyKey[g.k]; try { rerenderCard(g); count(0); } catch (e) {} });
   }
   function failPhoto(code) {
     if (code === "bad_pin" || code === "locked" || code === "nopin") { try { sessionStorage.removeItem(PIN_KEY); } catch (e) {} gateMsg(code); show("s-gate"); return; }
@@ -320,9 +324,11 @@
       : code === "not_ready" ? "사진 폴더가 아직 준비되지 않았어요\n설정을 먼저 마쳐 주세요"
       : "사진을 넣지 못했어요\n잠시 후 다시 해 주세요");
   }
-  function rerenderCard(g, ph) {
-    var old = ph.closest(".gc"); if (!old) return;
-    old.parentNode.replaceChild(card(g), old); count(0);
+  function rerenderCard(g) {   // 지금 화면에 있는 그 게임의 칸을 키로 찾아 바꾼다(찾기로 가려져 있으면 할 일 없음 — 다음 render가 새 상태로 그린다)
+    var cards = $("grid").querySelectorAll(".gc");
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].dataset.k === g.k) { cards[i].parentNode.replaceChild(card(g), cards[i]); return; }
+    }
   }
   function saveCache() {
     if (DEMO) return;
