@@ -1,0 +1,49 @@
+/* 보드게임 교사 설문(23) — games.css의 토큰과 목록 틀을 그대로 쓰고 설문 화면만 여기에 더한다. 정본 원칙 = docs/1_원칙_디자인UX.md */
+
+/* 이름 고르기 = 값 선택 컨트롤(§4.9 면 문법: 중립 채움, 테두리 0). 누르면 바로 목록으로 넘어간다 */
+.names{display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:10px;}
+.nmb{border:none; background:var(--g100); color:var(--g800); font:inherit; font-size:16px; font-weight:600; letter-spacing:-.2px; padding:17px 8px; border-radius:var(--r-md); cursor:pointer; transition:transform .1s;}
+.nmb:active{transform:scale(.96);}
+
+/* 목록 머리의 이름 뱃지가 곧 「이름 바꾸기」 버튼(§4.15 weak, 테두리 0) */
+.who{border:none; cursor:pointer; font:inherit; font-size:var(--fs-caption); font-weight:700; color:var(--g700); background:var(--g100); transition:transform .1s;}
+.who:active{transform:scale(.96);}
+.who:empty{display:none;}
+
+/* 카드 상태 — 답한 것은 사진 위 초록 원과 흰 체크(§4.9 카드 선택 체크와 같은 언어), 안 해본 것은 사진을 옅게 + 회색 뱃지 */
+.gc .ph{cursor:pointer; transition:transform .1s;}
+.gc .ph:active{transform:scale(.98);}
+.mark{position:absolute; top:7px; right:7px; width:24px; height:24px; border-radius:50%; background:var(--green); display:none; align-items:center; justify-content:center; z-index:2;}
+.mark svg{width:13px; height:13px; fill:none; stroke:#fff; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round;}
+.gc.done .mark{display:flex;}
+.gc.skip .ph img,.gc.skip .noph{opacity:.45;}
+.bdg.first{color:var(--green-dark); background:var(--green-bg);}   /* 「먼저」 = 모두가 답하는 5종(weak primary 뱃지) */
+.bdg.wait{color:var(--danger-weak-fg); background:var(--danger-weak-bg);}   /* 아직 서버에 못 적은 답 */
+
+/* 게임 화면(§4.13-7 페이지 한 벌: ← + 제목 + 질문 + 풀폭 CTA). 텍스트 칸이 있어 바텀시트가 아니라 화면이다(§4.3-4) */
+.back{display:flex; align-items:center; justify-content:flex-start; width:40px; height:40px; margin:0 0 4px -6px; border-radius:var(--r-md); border:none; background:#fff; color:var(--g700); cursor:pointer;}
+.back svg{width:24px; height:24px; display:block;}
+.ghead{display:flex; align-items:center; gap:14px; margin:6px 0 16px;}
+.gph{flex:none; width:84px; aspect-ratio:1;}
+#s-game h1{flex:1; min-width:0;}
+.skipbtn{width:100%; border:none; font:inherit; font-size:var(--fs-body); font-weight:700; color:var(--dark); background:var(--g100); border-radius:var(--r-md); padding:14px; cursor:pointer; transition:transform .1s;}   /* §4.14 weak-dark = 탈출(안 해봄)은 보조 액션 */
+.skipbtn:active{transform:scale(.97);}
+
+.q{margin:26px 0 0;}
+.qt{font-size:16px; font-weight:500; color:var(--g700); margin:0 0 12px; line-height:1.5;}   /* 16 /feedback .qt 결(초록 번호 + 문장 + 핵심어 볼드) */
+.qt .num{color:var(--green); font-weight:800; margin-right:5px;}
+.qt .qk{font-weight:700; color:var(--g900);}
+.optl{font-size:12.5px; font-weight:500; color:var(--g300); margin-left:6px;}   /* 「선택」 꼬리 = g300(§4.1-13 의도된 예외) */
+.opts{display:flex; gap:8px;}
+.opt{flex:1; border:none; background:var(--g100); color:var(--g700); border-radius:11px; padding:14px 10px; font:inherit; font-size:15px; font-weight:500; cursor:pointer; transition:transform .1s,background .15s,color .15s;}   /* §4.9 면 문법 */
+.opt:active{transform:scale(.96);}
+.opt.on{background:var(--green500); color:var(--ink-on-dark); font-weight:600;}   /* 설문 선택지 선택 = green500 채움 + 흰 글자(§4.9 2026-07-05 확정, 14 .opt.on) */
+.opt.neg.on{background:var(--g200); color:var(--g900);}   /* 부정 응답은 초록 축하 대신 회색(16 .opt.neg.on) */
+.q.err .opts{animation:shakeX .28s cubic-bezier(.36,.07,.19,.97);}
+.q.err .qt{color:var(--red);}
+
+.ta{width:100%; font:inherit; font-size:16px; line-height:1.6; color:var(--g900); border:1px solid var(--g200); border-radius:12px; background:var(--g50); padding:14px; min-height:92px; resize:none; outline:none; overflow:hidden; transition:border-color .15s,background .15s; user-select:text; -webkit-user-select:text;}   /* §4.1-12 생각을 적는 칸 = 16 .ta 결, 예시 없음 */
+.ta:focus{border-color:var(--green); background:#fff;}
+.btn.save{margin-top:32px;}   /* 마지막 칸 → CTA 32px 이상(§4.13-7) */
+
+@media (prefers-reduced-motion:reduce){ .q.err .opts{animation:none;} }
