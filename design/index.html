@@ -909,6 +909,12 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <p class="desc">키보드가 뜨면 액션 버튼이 그 바로 위에 붙는다. 아래는 개념 목업.</p>
   <div class="demo doc"><div class="kbmock"><div class="body">입력 화면…</div><div class="fbtn">다음</div><div class="kb">⌨ 키보드</div></div>
     </div>
+  <!-- 2026-09-26 유성, 22 추천서 폼 실기기 · 경위 = docs/1 §4.1-5 -->
+  <p class="desc">필수 칸이 비어 있으면 버튼은 제자리에서 연초록. 키보드 위로 올리지 않고, 누르면 흔들린 뒤 빠진 칸을 알린다.</p>
+  <div class="demo" id="gateDemo" style="display:flex;flex-direction:column;gap:12px">
+    <div class="pvtoast" id="gateToast">주민등록번호 13자리를 모두 적어주세요.</div>
+    <button class="btn shk" id="gateBtn" style="background:var(--p-disabled)">다음</button>
+  </div>
 
   <!-- 2026-07-26 · 경위·전문 = docs/1 §4.2-10 -->
   <h3 class="sec" id="sec28"><span class="ref">§4.2-10</span>OTP 인증번호 6칸</h3>
@@ -1513,6 +1519,12 @@ function playDone(){
 (function(){ const b=document.getElementById('shkBtn'), t=document.getElementById('shkToast');
   b.parentElement.addEventListener('pointerdown',()=>{ b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
     t.classList.add('on'); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('on'),2600); }); // 22차: shake+이유 토스트 한 세트
+})();
+
+// §4.1-5 게이팅 버튼 — 눌리긴 하고(disabled 속성 없음) 흔들린 뒤 이유 토스트
+(function(){ const b=document.getElementById('gateBtn'), t=document.getElementById('gateToast'); if(!b) return;
+  b.addEventListener('click',()=>{ b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+    t.classList.add('on'); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('on'),2600); });
 })();
 
 // ── §4.9 shake 세기 비교 (2026-09-06 유성 "너무 쎄") — 눌러서 몸으로 고르는 자리 ──
