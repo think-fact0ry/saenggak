@@ -522,7 +522,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec2"><i>§1.8</i><span>디자인 검토·제안 = 프리뷰 html로</span></a>
     <a href="#sec3"><i>§2.1</i><span>보이스 &amp; 톤</span></a>
     <a href="#sec4"><i>§2.1 예외</i><span>기본값을 의도적으로 어길 때</span></a>
-    <a href="#sec52"><i>§2.1-10</i><span>아이 이름에 붙는 조사 = 성 떼고 받침으로</span></a>
+    <a href="#sec52"><i>§2.1-10</i><span>아이를 부를 때 = 인사는 성명, 질문은 「아이」</span></a>
     <a href="#sec5"><i>§2.2</i><span>정보 밀도는 맥락에 맞춘다</span></a>
     <a href="#sec6"><i>§2.2-4</i><span>반복 실무자 화면 = 미니멀 + 보조설명은 ? 시트</span></a>
     <a href="#sec7"><i>§2.2-5</i><span>조작법은 텍스트가 아니라 어포던스로</span></a>
@@ -614,15 +614,15 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   </div>
   <p class="note">철자 — <code>되어요</code>가 아니라 <code>돼요</code>.</p>
 
-  <!-- 2026-09-06 · 경위·전문 = docs/1 §2.1-10 -->
-  <h3 class="sec" id="sec52"><span class="ref">§2.1-10</span>아이 이름에 붙는 조사 = 성 떼고 받침으로</h3>
-  <p class="desc">「아이의」로 얼버무리지 않는다. 성을 떼고 마지막 글자에 받침이 있으면 <b>이</b>를 끼운다. 이름을 쳐 보세요 ↓</p>
+  <!-- 2026-09-06 신설 → 2026-09-25 개정(성 떼기 폐기) · 경위·전문 = docs/1 §2.1-10 -->
+  <h3 class="sec" id="sec52"><span class="ref">§2.1-10</span>아이를 부를 때 = 인사는 성명, 질문은 「아이」</h3>
+  <p class="desc">성을 떼지 않는다(남궁, 제갈에서 틀린다). 인사와 버튼은 성명 그대로, 폼 질문은 「아이」. 이름을 쳐 보세요 ↓</p>
   <div class="demo">
     <div class="tfield" style="margin-bottom:0">
       <label for="josaIn">아이 이름</label>
       <div class="tin-wrap"><input id="josaIn" placeholder="김하린"></div>
     </div>
-    <div class="josa-out" id="josaOut">김하린 → <b>하린이의</b> 평소 모습을 적어주세요 · 호칭 <b>하린이</b></div>
+    <div class="josa-out" id="josaOut">안녕하세요, <b>김하린</b> 보호자님<br><b>아이의</b> 평소 모습을 적어주세요</div>
   </div>
 
   <h3 class="sec" id="sec5"><span class="ref">§2.2</span>정보 밀도는 맥락에 맞춘다</h3>
@@ -1738,20 +1738,12 @@ if(solo) solo.addEventListener('click',()=>solo.classList.toggle('solo'));
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') set(false); });
 })();
 
-// ── §2.1-10 이름 조사 (22 접수 폼 givenName/hasBatchim/nameUi 복제 — 값 임의 변경 금지) ──
+// ── §2.1-10 아이 부르기 (22 접수 폼 fullName·알림톡 sdNameFull_와 같은 규칙) ──
 (function(){
   var inp=document.getElementById('josaIn'), out=document.getElementById('josaOut'); if(!inp||!out) return;
-  var SUR2=['남궁','제갈','황보','사공','선우','독고','서문','동방','어금','망절','소봉','등정','강전','장곡','무본'];
-  function givenName(full){ full=(full||'').trim().replace(/\s+/g,''); if(!full) return '';
-    if(full.length<=2) return full.slice(-1);
-    if(full.length>=4){ for(var i=0;i<SUR2.length;i++){ if(full.indexOf(SUR2[i])===0) return full.slice(2); } }
-    return full.slice(1); }
-  function hasBatchim(ch){ var c=ch.charCodeAt(0); if(c<0xAC00||c>0xD7A3) return false; return (c-0xAC00)%28!==0; }
   function paint(){
-    var full=inp.value.trim()||'김하린', g=givenName(full);
-    if(!g){ out.textContent='이름을 적어 주세요'; return; }
-    var b=hasBatchim(g.charAt(g.length-1));
-    out.innerHTML=full+' → <b>'+g+(b?'이의':'의')+'</b> 평소 모습을 적어주세요 · 호칭 <b>'+g+(b?'이':'')+'</b>';
+    var full=(inp.value||'').trim().replace(/\s+/g,'')||'김하린';
+    out.innerHTML='안녕하세요, <b>'+full.replace(/</g,'&lt;')+'</b> 보호자님<br><b>아이의</b> 평소 모습을 적어주세요';
   }
   inp.addEventListener('input',paint); paint();
 })();
