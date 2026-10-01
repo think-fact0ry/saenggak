@@ -50,14 +50,14 @@
   } else {
     try { key = localStorage.getItem(KEY_STORE) || ''; } catch (e) {}
   }
-  if (!key) { msg('업무표에 있는 링크로 한 번 열어주세요.'); return; }
+  if (!key) { msg('이 컴퓨터에서는 처음이라 열 수 없어요. 대표님께 받은 링크로 한 번만 열어주세요. 그 다음부터는 이 주소로 바로 열려요.'); return; }
 
   function load() {
     fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify({ action: 'send', k: key }) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.ok) {
-          if (d.error === 'key') { try { localStorage.removeItem(KEY_STORE); } catch (e) {} msg('링크가 바뀌었어요. 업무표에 있는 링크로 다시 열어주세요.'); }
+          if (d.error === 'key') { try { localStorage.removeItem(KEY_STORE); } catch (e) {} msg('링크가 바뀌었어요. 대표님께 새 링크를 받아 한 번만 열어주세요.'); }
           else msg('불러오지 못했어요.', true);
           return;
         }
