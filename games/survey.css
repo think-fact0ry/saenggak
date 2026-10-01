@@ -29,6 +29,9 @@ body{overflow:hidden;}
 .sv-cnt{font-size:var(--fs-sm); font-weight:600; color:var(--g500); font-variant-numeric:tabular-nums;}
 .sv-who{border:0; background:var(--g100); color:var(--g700); font:inherit; font-size:var(--fs-caption); font-weight:600; border-radius:999px; padding:5px 12px; cursor:pointer; transition:transform .1s;}
 .sv-who:active{transform:scale(.96);}
+/* 고르기 화면: 이름 뱃지가 윗줄을 따로 차지하지 않게 제목 오른쪽 위에 얹는다(유성 10-01 「제목을 위로 붙여」) */
+.sv-pick .sv-top{position:relative; height:calc(20px + env(safe-area-inset-top)); padding:0;}
+.sv-pick .sv-who{position:absolute; right:16px; top:calc(23px + env(safe-area-inset-top)); z-index:1;}
 .sv-ttl{flex-shrink:0; padding:6px 22px 0;}
 .sv-ttl h1{margin:0; font-size:22px; font-weight:700; letter-spacing:-.5px; line-height:1.36; text-wrap:balance;}
 .sv-body{flex:1; overflow:auto; padding:16px 18px 18px; scrollbar-width:none; overscroll-behavior:contain;}
