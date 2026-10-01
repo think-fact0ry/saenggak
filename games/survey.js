@@ -80,11 +80,11 @@
 
   /* ── 공통 UI ── */
   var toastT;
-  function toast(msg, ok) {
+  function toast(msg, ok, ms) {
     var t = document.getElementById("toast");
     t.querySelector(".tx").textContent = msg;
     t.classList.toggle("okk", !!ok); t.classList.add("on");
-    clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("on"); }, 2600);
+    clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("on"); }, ms || 2600);
   }
   function shake(el) { el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
   function bump(el) { el.classList.remove("sv-bump"); void el.offsetWidth; el.classList.add("sv-bump"); }
@@ -118,10 +118,19 @@
     pg.classList.remove("off-r", "off-l");
     old.classList.add(dir < 0 ? "off-r" : "off-l"); setTimeout(function () { old.remove(); }, 380);
   }
-  history.replaceState({ sv: 0 }, ""); history.pushState({ sv: 1 }, "");
+  /* 뒤로(스와이프·하드웨어) = docs/1 §4.11. 가드 칸은 늘 1칸: 화면에 _back이 있으면 그 화면의 ← 와 같은 한 단계 + 가드 다시 쌓기.
+     맨 처음 화면(이름 선택, 열쇠 없음)에서는 더블백 종료(§4.11-4): 첫 뒤로 = 기존 토스트로 「한 번 더 뒤로 가면 나가요.」 2초, 가드는 다시 쌓지 않는다
+     → 그 2초 안의 두 번째 뒤로는 아래가 비어 브라우저가 받아 나간다. 2초가 지나거나 그 사이 화면을 만지면 가드를 다시 쌓는다 */
+  var exitArmed = false, exitT = null;
+  function pushGuard() { history.pushState({ sv: 1 }, ""); }
+  function disarmExit() { if (!exitArmed) return; exitArmed = false; clearTimeout(exitT); pushGuard(); }
+  history.replaceState({ sv: 0 }, ""); pushGuard();
   window.addEventListener("popstate", function () {
-    if (curPg && curPg._back) { curPg._back(); history.pushState({ sv: 1 }, ""); }
+    if (curPg && curPg._back) { curPg._back(); pushGuard(); return; }
+    exitArmed = true; toast("한 번 더 뒤로 가면 나가요.", true, 2000);
+    clearTimeout(exitT); exitT = setTimeout(disarmExit, 2000);
   });
+  document.addEventListener("pointerdown", disarmExit, true);
 
   /* ── 상태 ── */
   var games = [], name = "", ans = {}, picked = [], rateI = 0, editFromReview = false, picksDue = false, touched = {};
@@ -217,7 +226,6 @@
         box.querySelector("button").onclick = function () { location.reload(); };
       });
     }
-    if (name) pg._back = function () { toPick(1); };
     show(pg, dir);
   }
   function loadNames() {
@@ -284,10 +292,11 @@
 
   /* ── 1 해 본 게임 고르기 ── */
   function toPick(dir) {
-    var pg = h("div", "sv-pg sv-pick");
-    pg.innerHTML = '<div class="sv-top"><span></span><button class="sv-who" type="button" aria-label="이름 바꾸기"></button></div><div class="sv-ttl"><h1>아이들과 해 본 게임을<br>모두 눌러 주세요</h1></div><div class="sv-body"></div><div class="sv-cta">' + btnHTML("") + '</div>';
+    var pg = h("div", "sv-pg");
+    pg.innerHTML = '<div class="sv-top"><button class="sv-ico back" type="button" aria-label="이름 선택으로">' + IC.back + '</button><button class="sv-who" type="button" aria-label="이름 바꾸기"></button></div><div class="sv-ttl"><h1>아이들과 해 본 게임을<br>모두 눌러 주세요</h1></div><div class="sv-body"></div><div class="sv-cta">' + btnHTML("") + '</div>';
     pg.querySelector(".sv-who").textContent = name;
     pg.querySelector(".sv-who").onclick = function () { toNames(-1); };
+    pg.querySelector(".back").onclick = pg._back = function () { toNames(-1); };
     var body = pg.querySelector(".sv-body"), btn = pg.querySelector(".btn");
     var paintBtn = function () { var n = order().length; setBtn(btn, n ? n + "개 골랐어요" : "해 본 게임을 눌러 주세요", !n); };
     var draw = function () {
