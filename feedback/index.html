@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>선생님별 피드백 안내</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!--
+  24_피드백전달 현아쌤 화면 (2026-10-01). 이 파일엔 데이터가 없다 — 아이 이름·부모 글은 GAS(24 doPost)가
+  열쇠를 확인한 뒤에만 준다. 열쇠는 주소 # 뒤(서버로 안 감) → 이 브라우저에 저장 → 다음부턴 짧은 주소로 열린다.
+  카드 문구 정본 = scripts/24_피드백전달/Code.js _fbCards_ (여기서 다시 만들지 않는다).
+-->
+<style>
+:root{--bg:#f6f7f6;--card:#fff;--ink:#1d2321;--sub:#5d6662;--line:#e3e7e5;--g:#3a8a5f;--chat:#b2c7da;--bub:#fef01b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,"Malgun Gothic",system-ui,sans-serif;line-height:1.6;word-break:keep-all}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 16px 80px}h1{font-size:24px;margin:0 0 6px}
+.sub{color:var(--sub);font-size:15px;margin:0 0 6px}.cnt{font-size:15px;font-weight:700;color:var(--g);margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.tc{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:opacity .2s}
+.tc.sent{opacity:.45}
+.th{display:flex;gap:8px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}.th b{font-size:16px}
+.cp{margin-left:auto;border:0;background:var(--g);color:#fff;border-radius:99px;padding:6px 16px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.tc.sent .cp{background:var(--sub)}
+.undo{border:0;background:none;color:var(--sub);font:inherit;font-size:13px;cursor:pointer;text-decoration:underline;display:none}.tc.sent .undo{display:inline}
+.chat{background:var(--chat);padding:14px;flex:1}
+.bub{background:var(--bub);color:#111;border-radius:12px;padding:10px 12px;white-space:pre-wrap;font-size:14px;max-width:296px;margin-left:auto;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+.sk{height:220px;border-radius:16px;background:linear-gradient(90deg,#eceeed 25%,#f6f7f6 50%,#eceeed 75%);background-size:200% 100%;animation:sk 1.4s linear infinite}
+@keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
+.retry{margin-top:10px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 16px;font:inherit;cursor:pointer}
+</style></head><body><div class="wrap" id="app">
+<h1>선생님별 피드백 안내</h1>
+<p class="sub">불러오는 중이에요…</p>
+<div class="grid"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+</div>
+<script>
+(function () {
+  var GAS_EXEC = 'https://script.google.com/macros/s/AKfycbxghXYOeG6o5iiOMIYgLTqy9GSbyxwfkFt3uC9V0mrKX3wwXo4RpasY99KNPrNXQOhs6Q/exec';
+  var KEY_STORE = 'fb-key';
+  var app = document.getElementById('app');
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function msg(t, retry) { app.innerHTML = '<h1>선생님별 피드백 안내</h1><p class="sub">' + t + '</p>' + (retry ? '<button class="retry" id="retry">다시 불러오기</button>' : ''); }
+
+  // 열쇠: 주소 # 뒤 → 저장 → 주소창에서 지움
+  var key = '';
+  var h = location.hash.replace(/^#/, '');
+  if (/^[0-9a-f]{32}$/.test(h)) {
+    key = h;
+    try { localStorage.setItem(KEY_STORE, key); } catch (e) {}
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  } else {
+    try { key = localStorage.getItem(KEY_STORE) || ''; } catch (e) {}
+  }
+  if (!key) { msg('업무표에 있는 링크로 한 번 열어주세요.'); return; }
+
+  function load() {
+    fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify({ action: 'send', k: key }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ok) {
+          if (d.error === 'key') { try { localStorage.removeItem(KEY_STORE); } catch (e) {} msg('링크가 바뀌었어요. 업무표에 있는 링크로 다시 열어주세요.'); }
+          else msg('불러오지 못했어요.', true);
+          return;
+        }
+        render(d);
+      })
+      .catch(function () { msg('불러오지 못했어요. 인터넷 연결을 확인해주세요.', true); });
+  }
+
+  function render(d) {
+    var cards = d.cards || [];
+    if (!cards.length) { msg('이번 달 보낼 피드백이 없어요.'); return; }
+    var K = 'fb-sent-' + d.month, st = {};
+    try { st = JSON.parse(localStorage.getItem(K) || '{}'); } catch (e) {}
+    app.innerHTML = '<h1>선생님별 피드백 안내</h1>' +
+      '<p class="sub">선생님마다 <b>복사</b>를 누르고, 사무실 카톡 1:1 대화방에 붙여넣어 보내주세요.</p>' +
+      '<p class="cnt" id="cnt"></p><div class="grid">' +
+      cards.map(function (c, i) {
+        return '<div class="tc' + (st[c.teacher] ? ' sent' : '') + '" id="c' + i + '"><div class="th"><b>' + esc(c.teacher) + ' 선생님</b>' +
+          '<button class="undo" data-u="' + i + '">되돌리기</button><button class="cp" data-i="' + i + '">' + (st[c.teacher] ? '복사됨' : '복사') + '</button></div>' +
+          '<div class="chat"><div class="bub">' + esc(c.text) + '</div></div></div>';
+      }).join('') + '</div>';
+    function count() { var n = cards.filter(function (c) { return st[c.teacher]; }).length; document.getElementById('cnt').textContent = n + ' / ' + cards.length + '명 복사함'; }
+    count();
+    app.onclick = function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var i = b.dataset.i != null ? +b.dataset.i : +b.dataset.u, c = cards[i]; if (!c) return;
+      var card = document.getElementById('c' + i);
+      if (b.dataset.i != null) { copy(c.text); st[c.teacher] = 1; card.classList.add('sent'); card.querySelector('.cp').textContent = '복사됨'; }
+      else { delete st[c.teacher]; card.classList.remove('sent'); card.querySelector('.cp').textContent = '복사'; }
+      try { localStorage.setItem(K, JSON.stringify(st)); } catch (err) {}
+      count();
+    };
+  }
+
+  function fallbackCopy(t) { var a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (e) {} a.remove(); }
+  function copy(t) { try { navigator.clipboard.writeText(t).catch(function () { fallbackCopy(t); }); } catch (e) { fallbackCopy(t); } }
+
+  document.addEventListener('click', function (e) { if (e.target && e.target.id === 'retry') { msg('불러오는 중이에요…'); load(); } });
+  load();
+})();
+</script>
+</body></html>
