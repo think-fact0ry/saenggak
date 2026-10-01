@@ -224,7 +224,7 @@
   /* ── 1 해 본 게임 고르기 ── */
   function toPick(dir) {
     var pg = h("div", "sv-pg");
-    pg.innerHTML = '<div class="sv-top"><span></span><button class="sv-who" type="button" aria-label="이름 바꾸기"></button></div><div class="sv-ttl"><h1>아이들과 해 본 게임을 모두 눌러 주세요</h1><p>안 해 본 게임은 그냥 두면 돼요</p></div><div class="sv-body"><div class="sv-grid"></div></div><div class="sv-cta">' + btnHTML("") + '</div>';
+    pg.innerHTML = '<div class="sv-top"><span></span><button class="sv-who" type="button" aria-label="이름 바꾸기"></button></div><div class="sv-ttl"><h1>아이들과 해 본 게임을<br>모두 눌러 주세요</h1></div><div class="sv-body"><div class="sv-grid"></div></div><div class="sv-cta">' + btnHTML("") + '</div>';
     pg.querySelector(".sv-who").textContent = name;
     pg.querySelector(".sv-who").onclick = function () { toNames(-1); };
     var grid = pg.querySelector(".sv-grid"), btn = pg.querySelector(".btn");
