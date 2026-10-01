@@ -112,6 +112,7 @@
   var curPg = null;
   function show(pg, dir) {
     var old = curPg; curPg = pg;
+    scrollFade(pg);
     if (!old || !dir) { if (old) old.remove(); app.appendChild(pg); return; }   // 첫 화면은 미끄러지지 않는다
     pg.classList.add(dir < 0 ? "off-l" : "off-r"); app.appendChild(pg);
     void pg.offsetWidth;   // rAF는 뒤에 있는 탭에서 멈춘다 → 강제 리플로우로 시작점을 확정
@@ -125,6 +126,35 @@
   function pushGuard() { history.pushState({ sv: 1 }, ""); }
   function disarmExit() { if (!exitArmed) return; exitArmed = false; clearTimeout(exitT); pushGuard(); }
   history.replaceState({ sv: 0 }, ""); pushGuard();
+
+  /* 스크롤 그라데이션(docs/1 §4.13-6 A안): 막대는 숨기고, 맨 위 = 아래 띠만 / 중간 = 위아래 / 맨 끝 = 위 띠만, 안 넘치면 둘 다 끔.
+     띠는 화면(.sv-pg)의 ::before/::after — 위치는 그 화면 .sv-body의 실제 offsetTop·높이를 변수로 넘긴다(매직 px 금지).
+     다시 재는 때 = 스크롤 + 크기 변화(ResizeObserver, 키보드 포함) + 내용 변화(MutationObserver — 띠 클래스를 붙이는 화면이 아니라 body에 건다) */
+  function scrollFade(pg) {
+    var body = pg.querySelector(".sv-body"); if (!body) return;
+    var paint = function () {
+      var over = body.scrollHeight - body.clientHeight, y = body.scrollTop;
+      pg.style.setProperty("--sf-t", body.offsetTop + "px"); pg.style.setProperty("--sf-h", body.clientHeight + "px");
+      pg.classList.toggle("sv-more", over > 6 && y < over - 6);
+      pg.classList.toggle("sv-moreTop", over > 6 && y > 6);
+    };
+    body.addEventListener("scroll", paint, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(paint).observe(body);
+    if (window.MutationObserver) new MutationObserver(function () { requestAnimationFrame(paint); }).observe(body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+    requestAnimationFrame(paint);
+  }
+
+  /* 키보드(§4.1-5): viewport meta interactive-widget=resizes-content라 키보드가 뜨면 앱 높이가 줄어 하단 버튼이 저절로 키보드 위에 앉는다.
+     떠 있는 동안만 버튼을 좌우 여백·라운드 없이 꽉 채운다(.sv-kb). 키보드 판정 = 창 높이가 가장 컸던 때보다 120px 넘게 줄었나
+     (입력 칸 포커스로 판정하지 않는다 — 안드로이드는 뒤로 제스처로 키보드만 닫으면 포커스가 남는다) */
+  var tallest = window.innerHeight;
+  function kbCheck() {
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    if (h > tallest) tallest = h;
+    document.body.classList.toggle("sv-kb", tallest - h > 120);
+  }
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", kbCheck);
+  window.addEventListener("resize", kbCheck);
   window.addEventListener("popstate", function () {
     if (curPg && curPg._back) { curPg._back(); pushGuard(); return; }
     exitArmed = true; toast("한 번 더 뒤로 가면 나가요.", true, 2000);
@@ -411,8 +441,10 @@
       setAns(k, { forgot: true, c: d.c, memo: saved.memo || "" }); leave();
     };
     ta.oninput = function () { autoGrow(ta); setBtn(nb, "다음", !ok()); };
+    nb.addEventListener("pointerdown", function (e) { if (document.activeElement === ta) e.preventDefault(); });   // 키보드 위 버튼을 누르는 순간 칸이 blur되면 버튼이 제자리로 튀어 누름이 빠진다
     nb.onclick = function () {
       if (busy) return;
+      if (ok()) ta.blur();
       if (!ok()) { shake(nb); if (!d.c) { clab.classList.add("err"); shake(cnt); } else ta.focus(); return; }
       commit();
     };
@@ -511,8 +543,9 @@
   }
   function toMemo(dir) {
     var pg = h("div", "sv-pg");
-    pg.innerHTML = topHTML("") + '<div class="sv-ttl"><h1>더 남기고 싶은 말이 있으면<br>적어 주세요</h1></div><div class="sv-body"></div><div class="sv-cta">' + btnHTML("제출하기") + '</div>';
-    var body = pg.querySelector(".sv-body"), fields = [];
+    // 제출하기는 하단 고정이 아니라 목록 맨 아래(유성 10-01 「맨 밑으로 내려야 나오게」, 글을 쓸 때 키보드 위로 붙지 않게)
+    pg.innerHTML = topHTML("") + '<div class="sv-ttl"><h1>더 남기고 싶은 말이 있으면<br>적어 주세요</h1></div><div class="sv-body sv-memo"><div class="sv-mlist"></div><div class="sv-endcta">' + btnHTML("제출하기") + '</div></div>';
+    var body = pg.querySelector(".sv-mlist"), fields = [];
     var field = function (k, tx) {
       var a = ans[k], t = h("textarea", "sv-ta short"); t.rows = 2; t.maxLength = 500; t.placeholder = "여기에 적어 주세요"; t.value = a.memo || "";
       t.oninput = function () { autoGrow(t); saveMemoLater(k, t.value); };
@@ -543,7 +576,7 @@
   function finish(dir) {
     var list = scored(order());
     var pg = h("div", "sv-pg");
-    pg.innerHTML = '<div class="sv-done"><div class="sv-ring">' + IC.chk + '</div><h1>감사해요 ☺️</h1><p>남겨 주신 답으로<br>아이들에게 더 맞는 게임을 남길게요</p><p class="sv-wait" hidden></p></div><div class="sv-cta"><button class="sv-link" type="button">처음부터 다시 보기</button></div>';
+    pg.innerHTML = '<div class="sv-done"><div class="sv-ring">' + IC.chk + '</div><h1>감사해요 ☺️</h1><p>남겨 주신 답으로 아이들에게<br>더 좋은 게임을 남길게요</p><p class="sv-wait" hidden></p></div><div class="sv-cta"><button class="sv-link" type="button">처음부터 다시 보기</button></div>';
     var waitEl = pg.querySelector(".sv-wait");
     var paintWait = function () { var n = pending().length; waitEl.hidden = !n; waitEl.textContent = n ? "아직 보내지 못한 답이 " + n + "개 있어요. 인터넷이 되는 곳에서 이 화면을 다시 열어 주세요" : ""; };
     pg.querySelector(".sv-link").onclick = function () { toPick(-1); };

@@ -20,6 +20,11 @@ body{overflow:hidden;}
 .sv-pg{position:absolute; inset:0; display:flex; flex-direction:column; background:#fff; transition:transform .36s cubic-bezier(.22,.85,.25,1),opacity .36s;}
 .sv-pg.off-r{transform:translateX(100%);}
 .sv-pg.off-l{transform:translateX(-30%); opacity:0;}
+/* 스크롤 그라데이션(§4.13-6) — 위치는 JS가 .sv-body 실측으로 넘긴다 */
+.sv-pg::before,.sv-pg::after{content:""; position:absolute; left:0; right:0; height:32px; z-index:5; pointer-events:none; opacity:0; transition:opacity .18s;}
+.sv-pg::before{top:var(--sf-t,0px); background:var(--sf-top);}
+.sv-pg::after{top:calc(var(--sf-t,0px) + var(--sf-h,0px) - 32px); background:var(--sf-bot);}
+.sv-pg.sv-moreTop::before,.sv-pg.sv-more::after{opacity:1;}
 .sv-pg [hidden]{display:none!important;}
 .sv-top{flex-shrink:0; height:calc(56px + env(safe-area-inset-top)); padding:calc(12px + env(safe-area-inset-top)) 14px 0; display:flex; align-items:center; justify-content:space-between;}
 .sv-ico{width:40px; height:40px; border:0; background:none; display:grid; place-items:center; color:var(--g700); border-radius:999px; cursor:pointer; transition:transform .08s;}
@@ -37,6 +42,9 @@ body{overflow:hidden;}
 /* 못 누르는 버튼 = 회색 weak(유성 10-01 이 설문 확정). docs/1 §4.14-3 원칙은 흐린 초록 — 이 설문만 다르다 */
 .sv-cta .btn[aria-disabled="true"]{background:var(--g100); color:var(--g400);}
 .sv-cta .btn[aria-disabled="true"]:active{background:var(--g100);}
+/* 키보드가 떠 있는 동안 하단 버튼 = 키보드 위에 꽉 차게(§4.1-5 ⓐ), 따라올 때 전환 없음(ⓑ) */
+.sv-kb .sv-cta{padding:0;}
+.sv-kb .sv-cta .btn{border-radius:0; padding:19px; transition:none;}
 .sv-link{align-self:center; border:0; background:none; font:inherit; color:var(--g600); font-size:var(--fs-body); font-weight:500; padding:8px; cursor:pointer; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--g400); transition:transform .12s;}
 .sv-link:active{transform:scale(.93);}
 .sv-bar{flex-shrink:0; height:4px; background:var(--g100); border-radius:999px; margin:0 22px; overflow:hidden;}
@@ -150,7 +158,9 @@ body{overflow:hidden;}
 .sv-mini:active{transform:scale(.94);}
 .sv-mini .sv-pic{border-radius:var(--r-sm); box-shadow:var(--sh-btn);}
 
-/* 6 남긴 글 */
+/* 6 남긴 글 — 제출하기는 목록 맨 아래 */
+.sv-memo{display:flex; flex-direction:column;}
+.sv-endcta{margin-top:auto; padding-top:24px; padding-bottom:env(safe-area-inset-bottom);}
 .sv-mrow{display:flex; gap:14px; padding:14px 0; border-top:1px solid var(--g100); align-items:flex-start;}
 .sv-mrow:first-child{border-top:0; padding-top:0;}
 .sv-mrow > .sv-pic{width:84px; flex-shrink:0; border-radius:var(--r-sm);}
