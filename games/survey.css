@@ -1,12 +1,13 @@
-/* 보드게임 교사 설문 2판(23, 2026-10-01 유성 재설계) — games.css의 토큰·토스트·.btn 위에 설문 화면만 더한다. 클래스는 sv- 접두(games.css와 안 겹치게).
-   흐름: 이름 → 해 본 게임 고르기 → 고른 게임만 한 장씩 5단 → 고칠 게임 → 먼저 권할 3 → 안 가져갈 3 → 끝. 정본 원칙 = docs/1_원칙_디자인UX.md
-   검토 판 = prototype/23_보드게임설문_A2~A5판_프리뷰.html(유성 픽: A, 나안 색 기울기, 채움+원 체크, → 화살표, 고칠 게임 가안) */
+/* 보드게임 교사 설문 3판(23, 2026-10-01 유성 A7 확정) — games.css의 토큰·토스트·.btn 위에 설문 화면만 더한다. 클래스는 sv- 접두(games.css와 안 겹치게).
+   흐름: 이름 → 해 본 게임 고르기 → 고른 게임만 한 장씩(횟수 + 아이 반응) → 고칠 게임 → 형제 → 권하기 → 남긴 글 → 끝. 정본 원칙 = docs/1_원칙_디자인UX.md
+   검토 판 = prototype/23_보드게임설문_A7판_프리뷰.html. 굵기 사다리(§3.2) = 700 제목 / 600 고른 값, 1차 버튼 / 500 누를 수 있는 글자 / 400 설명 */
 :root{
   /* 고른 답 채움(§4.9 설문 선택지 = 채움 + 흰 글자의 위계판). 흰 글자 대비 6.79 / 5.22 / 4.62 / 4.66 / 6.89 */
   --fill-p2:#166841; --fill-p1:#2e7a52; --fill-z:#6b7684; --fill-n1:#8a6f5c; --fill-n2:#6e5544;
   /* 고르기 전 바탕 — 부정 쪽은 오류색(빨강)을 피한 옅은 흙색 */
   --warm50:#fbf8f6; --warm100:#f5efea; --warm600:#8a6f5c;
-  --sh-opt:0 2px 8px rgba(0,0,0,.07);
+  /* 누를 수 있는 흰 버튼 = 그림자 두 겹(가까운 선 + 넓고 옅은 퍼짐) */
+  --sh-btn:0 1px 2px rgba(25,31,40,.08),0 3px 10px rgba(25,31,40,.07);
 }
 body{overflow:hidden;}
 #sv{position:fixed; inset:0; margin:0 auto; max-width:520px; background:#fff; overflow:hidden; transform:translateZ(0);}
@@ -19,21 +20,23 @@ body{overflow:hidden;}
 .sv-pg{position:absolute; inset:0; display:flex; flex-direction:column; background:#fff; transition:transform .36s cubic-bezier(.22,.85,.25,1),opacity .36s;}
 .sv-pg.off-r{transform:translateX(100%);}
 .sv-pg.off-l{transform:translateX(-30%); opacity:0;}
+.sv-pg [hidden]{display:none!important;}
 .sv-top{flex-shrink:0; height:calc(56px + env(safe-area-inset-top)); padding:calc(12px + env(safe-area-inset-top)) 14px 0; display:flex; align-items:center; justify-content:space-between;}
-.sv-ico{width:40px; height:40px; border:0; background:none; display:grid; place-items:center; color:var(--g700); border-radius:999px; cursor:pointer;}
+.sv-ico{width:40px; height:40px; border:0; background:none; display:grid; place-items:center; color:var(--g700); border-radius:999px; cursor:pointer; transition:transform .08s;}
+.sv-ico:active{transform:scale(.9);}
 .sv-ico svg{width:24px; height:24px;}
 .sv-ico[disabled]{visibility:hidden;}
-.sv-cnt{font-size:var(--fs-sm); font-weight:700; color:var(--g500); font-variant-numeric:tabular-nums;}
-.sv-who{border:0; background:var(--g100); color:var(--g700); font:inherit; font-size:var(--fs-caption); font-weight:700; border-radius:999px; padding:5px 12px; cursor:pointer; transition:transform .1s;}
+.sv-cnt{font-size:var(--fs-sm); font-weight:600; color:var(--g500); font-variant-numeric:tabular-nums;}
+.sv-who{border:0; background:var(--g100); color:var(--g700); font:inherit; font-size:var(--fs-caption); font-weight:600; border-radius:999px; padding:5px 12px; cursor:pointer; transition:transform .1s;}
 .sv-who:active{transform:scale(.96);}
 .sv-ttl{flex-shrink:0; padding:6px 22px 0;}
 .sv-ttl h1{margin:0; font-size:22px; font-weight:700; letter-spacing:-.5px; line-height:1.36; text-wrap:balance;}
-.sv-ttl p{margin:6px 0 0; color:var(--g500); font-size:var(--fs-body);}
 .sv-body{flex:1; overflow:auto; padding:16px 18px 18px; scrollbar-width:none; overscroll-behavior:contain;}
 .sv-body::-webkit-scrollbar{display:none;}
 .sv-cta{flex-shrink:0; padding:10px 18px calc(18px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:6px;}
 .sv-cta .btn[aria-disabled="true"]{background:var(--p-disabled);}
-.sv-link{border:0; background:none; font:inherit; color:var(--g600); font-size:var(--fs-body); font-weight:600; padding:8px; cursor:pointer;}
+.sv-link{align-self:center; border:0; background:none; font:inherit; color:var(--g600); font-size:var(--fs-body); font-weight:500; padding:8px; cursor:pointer; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--g400); transition:transform .12s;}
+.sv-link:active{transform:scale(.93);}
 .sv-bar{flex-shrink:0; height:4px; background:var(--g100); border-radius:999px; margin:0 22px; overflow:hidden;}
 .sv-bar i{display:block; height:100%; background:var(--green); border-radius:999px; transition:width .3s;}
 
@@ -43,92 +46,124 @@ body{overflow:hidden;}
 
 /* 이름 */
 .sv-names{display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:10px;}
-.sv-nm{border:0; background:var(--g100); color:var(--g800); font:inherit; font-size:16px; font-weight:600; padding:17px 8px; border-radius:var(--r-md); cursor:pointer; transition:transform .1s;}
+.sv-nm{border:0; background:var(--g100); color:var(--g800); font:inherit; font-size:16px; font-weight:500; padding:17px 8px; border-radius:var(--r-md); cursor:pointer; transition:transform .1s;}
 .sv-nm:active{transform:scale(.96);}
 .sv-msg{padding:48px 10px; text-align:center; color:var(--g600); line-height:1.7;}
 
-/* 1 고르기 — 누르면 얕게 눌림 → 초록 테두리가 그려지고 → 체크 원이 튀어나오며 체크가 그어진다(06 상담신청 체크팝 결) */
-.sv-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px 10px;}
-.sv-tile{position:relative; border:0; background:none; padding:0; font:inherit; display:flex; flex-direction:column; gap:6px; text-align:center; cursor:pointer; transition:transform .08s;}
+/* 격자(고르기, 형제, 권하기) — 누르면 얕게 눌림 → 초록 테두리 → 체크 원이 튀어나오며 체크가 그어진다 */
+.sv-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px 10px;}
+.sv-tile{position:relative; border:0; background:none; padding:0; font:inherit; display:flex; flex-direction:column; gap:7px; text-align:center; cursor:pointer; transition:transform .08s;}
 .sv-tile:active{transform:scale(.96);}
 .sv-tile .sv-pic::after{content:""; position:absolute; inset:0; border-radius:inherit; box-shadow:inset 0 0 0 0 var(--green); transition:box-shadow .2s cubic-bezier(.22,.85,.25,1);}
 .sv-tile.on .sv-pic::after{box-shadow:inset 0 0 0 3px var(--green);}
-.sv-tile .t{font-size:13px; color:var(--g700); line-height:1.3; min-height:2.6em; overflow-wrap:anywhere; transition:color .15s;}
-.sv-tile.on .t{color:var(--green-dark); font-weight:700;}
+.sv-tile .t{font-size:15.5px; font-weight:500; color:var(--g800); line-height:1.28; letter-spacing:-.4px; min-height:2.56em; overflow-wrap:anywhere; transition:color .15s;}
+.sv-tile.on .t{color:var(--green-dark); font-weight:600;}
 .sv-badge{position:absolute; top:6px; right:6px; z-index:2; width:28px; height:28px; border-radius:50%; background:var(--green); display:grid; place-items:center; transform:scale(0); box-shadow:0 2px 6px rgba(22,104,65,.35);}
 .sv-badge svg,.sv-ck svg,.sv-ring svg{fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:22; stroke-dashoffset:22;}
 .sv-badge svg{width:16px; height:16px; stroke:#fff;}
 .sv-tile.on .sv-badge{animation:svpop .3s cubic-bezier(.34,1.56,.64,1) forwards;}
 .sv-tile.on .sv-badge svg{animation:svdraw .25s .12s ease forwards;}
 .sv-tile.out .sv-badge{animation:svout .18s ease forwards;}
-.sv-ord{position:absolute; top:6px; left:6px; z-index:2; min-width:28px; height:28px; padding:0 7px; border-radius:999px; background:var(--green); color:#fff; font-weight:800; font-size:14px; display:grid; place-items:center; transform:scale(0);}
-.sv-ord.no{background:var(--g700);}
-.sv-tile.on .sv-ord{animation:svpop .3s cubic-bezier(.34,1.56,.64,1) forwards;}
 @keyframes svpop{0%{transform:scale(0)}100%{transform:scale(1)}}
 @keyframes svdraw{to{stroke-dashoffset:0}}
 @keyframes svout{from{transform:scale(1)}to{transform:scale(0)}}
 @keyframes svbump{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
 .sv-bump{animation:svbump .28s ease;}
 
-/* 2 한 장 한 질문 — 사진부터 「잘 기억이 안 나요」까지 한 묶음, 세로 가운데 */
-.sv-rate .sv-body{display:flex; flex-direction:column;}
-.sv-stack{margin-block:auto;}
-.sv-rate .sv-pic{width:56%; max-width:240px; margin:0 auto;}
-.sv-gn{text-align:center; font-size:var(--fs-h3); font-weight:700; margin:10px 0 2px;}
-.sv-gq{text-align:center; color:var(--g500); margin:0 0 14px;}
-.sv-opts{display:flex; flex-direction:column; gap:8px;}
-.sv-opt{display:flex; align-items:center; justify-content:space-between; gap:10px; border:0; border-radius:var(--r-md); padding:14px 16px; font:inherit; font-size:var(--fs-title); font-weight:600; text-align:left; cursor:pointer; transition:background .18s,color .18s,box-shadow .18s,transform .08s;}
-.sv-opt:active{transform:scale(.97);}
+/* 2 한 장 — 제목 → 큰 사진(남는 높이를 채움, 게임 이름은 오른쪽 아래 흰 테두리 글자) → 몇 번 해 봤어요? → 아이 반응 → 잘 기억이 안 나요 */
+.sv-rate .sv-body{display:flex; flex-direction:column; padding-top:12px;}
+.sv-thumb{position:relative; flex:1 1 0; min-height:120px; border-radius:var(--r-md); overflow:hidden; background:var(--g50); transition:flex-basis .32s cubic-bezier(.22,.85,.25,1),min-height .32s cubic-bezier(.22,.85,.25,1);}
+.sv-thumb .sv-pic{position:absolute; inset:0; aspect-ratio:auto; background:none; border-radius:0;}
+.sv-thumb .sv-pic img{inset:8px; width:calc(100% - 16px); height:calc(100% - 16px);}
+.sv-thumb .nm{position:absolute; z-index:1; right:12px; bottom:9px; left:12px; text-align:right; font-size:22px; font-weight:700; letter-spacing:-.5px; line-height:1.22; color:var(--g900); -webkit-text-stroke:5px #fff; paint-order:stroke fill; pointer-events:none;}
+.sv-sec{flex-shrink:0; margin-top:20px;}
+.sv-qlab{font-size:14px; font-weight:600; color:var(--g600); margin:0 0 10px; transition:color .15s;}
+.sv-qlab.err{color:var(--red);}   /* §4.1-7 오류 = 라벨만 빨강(토스트 대신) */
+.sv-cnt2{display:grid; grid-template-columns:1fr 1fr; gap:10px; border-radius:var(--r-md);}
+.sv-cnt2 button{border:0; background:#fff; box-shadow:var(--sh-btn); border-radius:var(--r-sm); padding:12px; font:inherit; font-size:15px; font-weight:500; color:var(--g700); cursor:pointer; transition:background .15s,color .15s,transform .08s;}
+.sv-cnt2 button:active{transform:scale(.96);}
+.sv-cnt2 button.on{background:var(--dark); color:#fff; box-shadow:none; font-weight:600;}
+.sv-opts{display:flex; flex-direction:column; gap:10px;}
+.sv-opt{display:flex; align-items:center; justify-content:space-between; gap:10px; border:0; border-radius:var(--r-md); padding:12px 16px; font:inherit; font-size:16px; font-weight:500; text-align:left; cursor:pointer; transition:background .18s,color .18s,box-shadow .18s,transform .08s;}
+.sv-opt:active{transform:scale(.96);}
 .sv-opt.p2{--f:var(--fill-p2); background:var(--green-bg); color:var(--green-dark);}
 .sv-opt.p1{--f:var(--fill-p1); background:var(--green50); color:var(--green-dark); box-shadow:inset 0 0 0 1px var(--green200);}
 .sv-opt.z{--f:var(--fill-z); background:var(--g100); color:var(--g700);}
 .sv-opt.n1{--f:var(--fill-n1); background:var(--warm50); color:var(--warm600); box-shadow:inset 0 0 0 1px var(--warm100);}
 .sv-opt.n2{--f:var(--fill-n2); background:var(--warm100); color:var(--warm600);}
-.sv-ck{flex-shrink:0; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; box-shadow:inset 0 0 0 1.6px currentColor; opacity:.4; transition:opacity .18s,background .18s,box-shadow .18s;}
-.sv-ck svg{width:14px; height:14px;}
-.sv-opt.sel{background:var(--f); color:#fff; box-shadow:none;}
+.sv-ck{flex-shrink:0; width:22px; height:22px; border-radius:50%; display:grid; place-items:center; box-shadow:inset 0 0 0 1.6px currentColor; opacity:.4; transition:opacity .18s,background .18s,box-shadow .18s;}
+.sv-ck svg{width:13px; height:13px;}
+.sv-opt.sel{background:var(--f); color:#fff; box-shadow:none; font-weight:600;}
 .sv-opt.sel .sv-ck{background:#fff; box-shadow:none; opacity:1;}
 .sv-opt.sel .sv-ck svg{stroke:var(--f); stroke-dashoffset:0;}
 .sv-opt.sel.now .sv-ck{animation:svpop .3s cubic-bezier(.34,1.56,.64,1);}
 .sv-opt.sel.now .sv-ck svg{stroke-dashoffset:22; animation:svdraw .25s .12s ease forwards;}
-.sv-forgot{display:block; position:relative; overflow:hidden; margin:14px auto 0; border:0; background:none; font:inherit; color:var(--g600); font-size:var(--fs-body); padding:8px 12px; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--g400); border-radius:var(--r-sm); cursor:pointer;}
-.sv-forgot.sel{color:var(--g900); font-weight:700; text-decoration-color:var(--g700);}
+/* 잘 기억이 안 나요 — 가운데, 사라져도 자리는 그대로 */
+.sv-forgot{flex-shrink:0; align-self:center; position:relative; overflow:hidden; margin-top:12px; border:0; background:none; font:inherit; color:var(--g600); font-size:var(--fs-body); font-weight:500; padding:6px 8px; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--g400); border-radius:var(--r-sm); cursor:pointer; transition:transform .12s,opacity .15s;}
+.sv-forgot:active{transform:scale(.93);}
+.sv-forgot.gone{visibility:hidden; opacity:0;}
+.sv-forgot.sel{color:var(--g900); font-weight:600; text-decoration-color:var(--g700);}
 .sv-chk{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.6); opacity:0; pointer-events:none; transition:opacity .1s;}
 .confirming .sv-chk{opacity:1;}
 .sv-chk b{width:28px; height:28px; border-radius:50%; background:var(--g700); display:grid; place-items:center; transform:scale(0);}
 .confirming .sv-chk b{animation:svpop .3s cubic-bezier(.34,1.56,.64,1) forwards;}
 .sv-chk svg{width:15px; height:15px; fill:none; stroke:#fff; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:22; stroke-dashoffset:22;}
 .confirming .sv-chk svg{animation:svdraw .25s .12s ease forwards;}
+/* 이유 칸이 열리면: 사진은 고정 높이, 다른 칸과 「아이 반응」 소제목과 잘 기억이 안 나요는 접힘 */
+.memo-on .sv-thumb{flex:0 0 104px; min-height:104px;}
+.memo-on .sv-thumb .nm{font-size:19px;}
+.memo-on .ol{display:none;}
+.memo-on .sv-opt:not(.sel){display:none;}
+.memo-on .sv-forgot{display:none;}
+.sv-why{display:none; flex-shrink:0; margin-top:22px; flex-direction:column; gap:12px;}
+.memo-on .sv-why{display:flex; animation:svdown .34s cubic-bezier(.22,.85,.25,1);}
+@keyframes svdown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.sv-why .wq{display:flex; align-items:center; gap:6px; font-size:15px; font-weight:600; color:var(--g800);}
+.sv-why .wq svg{width:18px; height:18px; flex-shrink:0; color:var(--g500); animation:svnudge 1s ease-in-out 3;}
+@keyframes svnudge{50%{transform:translateY(3px)}}
+.sv-chips{display:flex; flex-wrap:wrap; gap:7px;}
+.sv-chip{border:0; background:#fff; box-shadow:var(--sh-btn); border-radius:999px; padding:8px 12px; font:inherit; font-size:14px; font-weight:500; color:var(--g700); cursor:pointer; transition:background .15s,color .15s,transform .08s;}
+.sv-chip:active{transform:scale(.96);}
+.sv-chips.neg .sv-chip.on{background:var(--danger-weak-fg); color:#fff; box-shadow:none; font-weight:600;}   /* 작은 글자 danger 채움(docs/1 §4.15, 흰 글자 5.44) */
+.sv-chips.pos .sv-chip.on{background:var(--green); color:#fff; box-shadow:none; font-weight:600;}
+/* 공책 칸 — 회색 바탕에 연한 줄(유성 A7: 메모장 같은 줄 3개, 바탕 회색 유지). 반복은 background-size로(§3.6 repeating-gradient 금지), 줄은 글과 같이 움직인다(local) */
+.sv-ta{display:block; width:100%; border:0; border-radius:var(--r-md); padding:10px 14px 12px; font:inherit; font-size:16px; line-height:28px; min-height:106px; resize:none; overflow:hidden; color:var(--g900);
+  background:linear-gradient(transparent 27px,var(--g300) 27px) 0 0/100% 28px repeat-y content-box local,var(--g100); transition:box-shadow .2s;}
+.sv-ta.short{min-height:78px;}
+.sv-ta::placeholder{color:var(--g400);}
+.sv-ta:focus{outline:none; box-shadow:inset 0 0 0 2px var(--green);}
+.sv-ta.glow{animation:svglow 1.4s ease-in-out 2;}
+@keyframes svglow{50%{box-shadow:inset 0 0 0 2px var(--green),0 0 0 5px rgba(58,138,95,.14)}}
 
-/* 3 고칠 게임 — 칸 이름 = 그 답의 채움 색 글자, 빈 칸은 안 보인다. 누르면 시트 */
+/* 3 고칠 게임 — 칸 이름 앞에 그 답의 색 점, 빈 칸은 안 보인다. 누르면 그 장으로 */
 .sv-lv{display:flex; flex-direction:column; gap:10px; padding:14px 0; border-top:1px solid var(--g100);}
 .sv-lv:first-child{border-top:0; padding-top:2px;}
-.sv-lvh{font-size:var(--fs-body); font-weight:700; color:var(--f);}
-.sv-lv.p2{--f:var(--fill-p2)} .sv-lv.p1{--f:var(--fill-p1)} .sv-lv.z{--f:var(--fill-z)} .sv-lv.n1{--f:var(--fill-n1)} .sv-lv.n2{--f:var(--fill-n2)} .sv-lv.fg{--f:var(--g600)}
+.sv-lvh,.sv-dot{display:flex; align-items:center; gap:7px;}
+.sv-lvh{font-size:var(--fs-body); font-weight:600; color:var(--f);}
+.sv-lvh::before,.sv-dot::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--f); flex-shrink:0;}
+.sv-lv.p2,.sv-dot.p2{--f:var(--fill-p2)} .sv-lv.p1,.sv-dot.p1{--f:var(--fill-p1)} .sv-lv.z,.sv-dot.z{--f:var(--fill-z)} .sv-lv.n1,.sv-dot.n1{--f:var(--fill-n1)} .sv-lv.n2,.sv-dot.n2{--f:var(--fill-n2)}
+.sv-lv.fg{--f:var(--g600)} .sv-dot.fg{--f:var(--g400)}
 .sv-lvg{display:flex; flex-wrap:wrap; gap:10px;}
-.sv-mini{width:72px; border:0; background:none; padding:0; font:inherit; display:flex; flex-direction:column; gap:5px; font-size:12px; color:var(--g700); text-align:center; line-height:1.25; cursor:pointer; transition:transform .08s;}
+.sv-mini{width:72px; border:0; background:none; padding:0; font:inherit; display:flex; flex-direction:column; gap:5px; font-size:12px; font-weight:500; color:var(--g700); text-align:center; line-height:1.25; cursor:pointer; transition:transform .08s;}
 .sv-mini:active{transform:scale(.94);}
-.sv-mini .sv-pic{border-radius:var(--r-sm); box-shadow:var(--sh-opt);}
-.sv-mini.moved .sv-pic{animation:svpop .34s cubic-bezier(.34,1.56,.64,1);}
-.sv-dim{position:absolute; inset:0; z-index:30; background:rgba(25,31,40,.6); opacity:0; pointer-events:none; transition:opacity .25s;}
-.sv-dim.on{opacity:1; pointer-events:auto;}
-.sv-sheet{position:absolute; left:8px; right:8px; bottom:calc(8px + env(safe-area-inset-bottom)); z-index:31; background:#fff; border-radius:24px; padding:10px 16px 18px; transform:translateY(115%); transition:transform .32s cubic-bezier(.22,.85,.25,1); display:flex; flex-direction:column; gap:10px;}
-.sv-sheet.on{transform:none;}
-.sv-sheet .hd{display:flex; flex-direction:column; align-items:center; gap:10px; padding-bottom:4px; cursor:grab; touch-action:none;}
-.sv-sheet .handle{width:40px; height:4px; border-radius:999px; background:var(--g200);}
-.sv-sheet .who{display:flex; align-items:center; gap:12px; align-self:stretch;}
-.sv-sheet .who .sv-pic{width:48px; border-radius:var(--r-sm);}
-.sv-sheet .who b{font-size:var(--fs-title);}
-.sv-sheet.on>*{animation:svitem .32s cubic-bezier(.22,.85,.25,1) both; will-change:transform,opacity;}
-.sv-sheet.on>*:nth-child(2){animation-delay:.05s;}
-@keyframes svitem{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.sv-mini .sv-pic{border-radius:var(--r-sm); box-shadow:var(--sh-btn);}
+
+/* 6 남긴 글 */
+.sv-mrow{display:flex; gap:14px; padding:14px 0; border-top:1px solid var(--g100); align-items:flex-start;}
+.sv-mrow:first-child{border-top:0; padding-top:0;}
+.sv-mrow > .sv-pic{width:84px; flex-shrink:0; border-radius:var(--r-sm);}
+.sv-mtx{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
+.sv-mtx b{font-size:16px; font-weight:600; letter-spacing:-.3px;}
+.sv-mtx .sv-dot{font-size:var(--fs-sm); font-weight:500; color:var(--g600);}
+.sv-add{align-self:flex-start; border:0; background:#fff; box-shadow:var(--sh-btn); border-radius:999px; padding:7px 14px; font:inherit; font-size:var(--fs-sm); font-weight:500; color:var(--g700); cursor:pointer; transition:transform .08s;}
+.sv-add:active{transform:scale(.96);}
 
 /* 끝 */
 .sv-done{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; text-align:center;}
 .sv-ring{width:72px; height:72px; border-radius:50%; background:var(--green); display:grid; place-items:center; animation:svpop .36s cubic-bezier(.34,1.56,.64,1);}
 .sv-ring svg{width:36px; height:36px; stroke:#fff; animation:svdraw .3s .2s ease forwards;}
-.sv-done h1{margin:0; font-size:22px; font-weight:700;}
+.sv-done h1{margin:0; font-size:24px; font-weight:700; letter-spacing:-.5px;}
 .sv-done p{margin:0; color:var(--g600);}
-.sv-wait{font-size:var(--fs-sm); color:var(--danger-weak-fg); font-weight:700;}
+.sv-wait{font-size:var(--fs-sm); color:var(--danger-weak-fg); font-weight:600;}
 
-@media (prefers-reduced-motion:reduce){ .sv-pg,.sv-sheet,.sv-dim{transition:none;} .sv-tile.on .sv-badge,.sv-tile.on .sv-ord{animation:none; transform:scale(1);} .sv-badge svg,.sv-ck svg,.sv-ring svg{animation:none!important; stroke-dashoffset:0;} }
+@media (prefers-reduced-motion:reduce){ .sv-pg{transition:none;} .sv-tile.on .sv-badge{animation:none; transform:scale(1);} .sv-badge svg,.sv-ck svg,.sv-ring svg{animation:none!important; stroke-dashoffset:0;} .sv-why,.sv-ta.glow,.sv-why .wq svg{animation:none!important;} }
