@@ -84,8 +84,8 @@
   .retry-btn{display:inline-block;margin-top:12px;padding:12px 26px;border:none;border-radius:var(--r-md);background:var(--green);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;position:relative;overflow:hidden;}   /* §4.5 경량 골격(F9) */
   .retry-btn:active{background:var(--green700);transform:scale(.97);}
   /* §5.4 스켈레톤 — 목차 로드=구조 미리보기(아이템과 같은 위치·크기 바). 점(§5.2)·전면 dim은 버튼 액션·짧은 대기용 */
-  .sk-b{background:var(--g200);border-radius:7px;animation:skp 1.2s ease-in-out infinite;}   /* 아이템 배경이 g100이라 바는 한 단계 진하게 */
-  @keyframes skp{0%,100%{opacity:1}50%{opacity:.5}}
+  .sk-b{background:var(--g200);border-radius:7px;background-image:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.7) 50%,rgba(255,255,255,0) 70%);background-size:300% 100%;background-repeat:no-repeat;animation:sksh 1.5s ease-in-out infinite;}   /* 아이템 배경이 g100이라 바는 한 단계 진하게 */
+  @keyframes sksh{0%{background-position:150% 0}70%,100%{background-position:-50% 0}}   /* 훑기(§5.4, 2026-10-01 깜빡임 skp 대체) — 배경색 위 흰 띠가 왼→오 */
   .item.skel{pointer-events:none;}
 
   /* 미리보기 */

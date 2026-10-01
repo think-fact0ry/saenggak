@@ -87,8 +87,8 @@
 
   .state{text-align:center;padding:48px 20px;color:var(--g500);font-size:14.5px;}
   /* §5.4 스켈레톤 — 내역 로드=구조 미리보기(제목바+행 바, 실제 표와 같은 자리). 옛 점 로딩(.ld-dots) 대체 */
-  .sk-b{background:var(--g100);border-radius:7px;animation:skp 1.2s ease-in-out infinite;}
-  @keyframes skp{0%,100%{opacity:1}50%{opacity:.5}}
+  .sk-b{background:var(--g100);border-radius:7px;background-image:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.7) 50%,rgba(255,255,255,0) 70%);background-size:300% 100%;background-repeat:no-repeat;animation:sksh 1.5s ease-in-out infinite;}
+  @keyframes sksh{0%{background-position:150% 0}70%,100%{background-position:-50% 0}}   /* 훑기(§5.4, 2026-10-01 깜빡임 skp 대체) — 배경색 위 흰 띠가 왼→오 */
   .sk-wrap{padding:18px 4px;}
 
   /* 다른 아동 경계 = 검정 구분선(같은 아동 내 월/서비스 전환은 기본 회색 간격) */

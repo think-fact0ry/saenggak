@@ -52,9 +52,45 @@
   });
 })();
 </script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!-- 폼이 오기 전(GAS 콜드스타트) 뼈대 + 훑기 + 기다림 문구·연결 끊김·다시 불러오기 (2026-10-01 유성 「옛 주소도 같이」). 옛 화면=로딩 표시 0(초록 빈 화면).
+     뼈대 CSS·마크업 = think-factory/contact.html .apply-skel 복사(원본=contact — 06 첫 화면 문구·치수가 바뀌면 둘 다, 0-9). 대기 로직 = kr의 /js/form-wait.js를 주소로 불러 씀(단일 원본). -->
+<style>
+  :root{ --g100:#f2f4f6; --g200:#e5e8eb; --green:#3a8a5f; }
+  .apply-skel{ position:fixed; inset:0; z-index:1; background:#f7f5f1; padding:0 16px; overflow:hidden; display:flex; flex-direction:column; justify-content:center; }   /* 06 .embed .intro.on = flex column center(min-height:--pvh)와 같은 자리 */
+  .apply-skel .sk-card{ background:#fff; border-radius:20px; padding:30px 24px; box-shadow:0 1px 4px rgba(0,0,0,.05); width:100%; max-width:508px; margin:0 auto; font-family:'Pretendard Variable','Pretendard',-apple-system,sans-serif; font-size:16px; line-height:1.6; letter-spacing:0; word-break:keep-all; color:transparent; -webkit-text-size-adjust:100%; }
+  .apply-skel .sk-t{ background:var(--g100); color:transparent; border-radius:6px; -webkit-box-decoration-break:clone; box-decoration-break:clone; position:relative; top:2px; }   /* 한글 글리프가 라인 하단에 붙어 막대가 위로 보임 — 시각 보정(relative라 조판 무영향) */
+  .apply-skel .sk-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .apply-skel .sk-chip{ display:inline-block; font-size:12px; font-weight:700; padding:5px 12px; border-radius:99px; background:var(--g100); }
+  .apply-skel .sk-tog{ flex-shrink:0; width:34px; height:34px; border-radius:99px; background:var(--g100); }
+  .apply-skel .sk-h1{ font-size:clamp(23px,3.4vw,30px); font-weight:700; letter-spacing:-.5px; line-height:1.35; margin:0 0 10px; }
+  .apply-skel .sk-sub{ font-size:13.5px; margin:0 0 22px; }
+  .apply-skel .sk-box{ background:var(--g100); border:1px solid transparent; border-radius:14px; padding:18px; margin-bottom:24px; }
+  .apply-skel .sk-box p{ font-size:14.5px; line-height:1.75; margin:0; }
+  .apply-skel .sk-box p+p{ margin-top:12px; }
+  .apply-skel .sk-box .sk-t{ background:#fff; opacity:.9; }
+  .apply-skel .sk-btn{ padding:17px; font-size:17px; font-weight:700; line-height:normal; text-align:center; border-radius:15px; background:var(--g100); }   /* button 기본 line-height=normal — 1.6 상속하면 7px 커짐(프로브 61vs54) */
+  .apply-skel .sk-g{ margin-top:12px; padding:14px; font-size:14px; font-weight:600; line-height:normal; text-align:center; }
+  @media (max-width:380px){ .apply-skel{ padding:0 12px; } .apply-skel .sk-card{ padding:24px 18px; } }   /* 06 ≤380 값 */
+  body.form-ready .apply-skel{ display:none; }
+</style>
+<script src="https://think-factory.kr/js/form-wait.js"></script>
 </head>
 <body>
+<div class="apply-skel" id="applySkel" aria-hidden="true">
+  <div class="sk-card">
+    <div class="sk-head"><span class="sk-chip">생각공작소</span><span class="sk-tog"></span></div>
+    <div class="sk-h1"><span class="sk-t">바우처 신청</span></div>
+    <p class="sk-sub"><span class="sk-t">적어주신 정보는 서비스 안내와 배정에만 써요.</span></p>
+    <div class="sk-box"><p><span class="sk-t">신청서를 접수하면, 스케줄을 확인해서 접수하신 순서대로 연락드려요.</span></p><p><span class="sk-t">평일 오후(3~6시)를 가장 많이 찾으세요.</span><br><span class="sk-t">요일·시간을 <b>최대한 많이</b> 골라주실수록 더 빨리 배정해드릴 수 있어요 😊</span></p></div>
+    <div class="sk-btn">신청하기</div>
+    <div class="sk-g"><span class="sk-t">이미 신청했나요? 내용 수정하기 →</span></div>
+  </div>
+</div>
 <iframe class="apply-frame" title="오감쑥쑥 바우처 신청폼"
   src="https://script.google.com/macros/s/AKfycbyDLm7VCcRNmPrK08waOFx3JHt9lvxP22coImDfK9xfWNheiS11My2xcJJrqrE6GVRPSw/exec"></iframe>
+<script>
+  if (window.tfFormWait) window.tfFormWait({ frame: document.querySelector('.apply-frame'), skel: document.getElementById('applySkel'), card: document.querySelector('#applySkel .sk-card'), obj: '신청서를' });
+</script>
 </body>
 </html>

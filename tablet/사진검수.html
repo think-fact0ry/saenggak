@@ -84,8 +84,8 @@
   .btn .bl,.ok-btn .bl{position:relative; z-index:1;}
   .rip{position:absolute; z-index:0; width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%; background:rgba(0,0,0,.20); pointer-events:none; transform:scale(0);}
   .rip.go{transform:scale(var(--rs,16)); opacity:0; transition:transform .46s ease-out, opacity .46s ease-out;}
-  .rcard.sk{height:220px; background:var(--g100); box-shadow:none; animation:skp 1.2s ease-in-out infinite;}
-  @keyframes skp{0%,100%{opacity:1} 50%{opacity:.5}}
+  .rcard.sk{height:220px; background:var(--g100); box-shadow:none; background-image:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.7) 50%,rgba(255,255,255,0) 70%);background-size:300% 100%;background-repeat:no-repeat;animation:sksh 1.5s ease-in-out infinite;}
+  @keyframes sksh{0%{background-position:150% 0}70%,100%{background-position:-50% 0}}   /* 훑기(§5.4, 2026-10-01 깜빡임 skp 대체) — 배경색 위 흰 띠가 왼→오 */
 
   .btn{width:100%; padding:16px; border:none; border-radius:var(--r-md); font:inherit; font-size:16px; font-weight:700; color:#fff; background:var(--green); cursor:pointer; transition:background .2s,transform .1s; position:relative; overflow:hidden; margin-top:8px;}
   .btn:active{background:var(--green-dark); transform:scale(.97);}
