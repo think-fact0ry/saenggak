@@ -100,6 +100,18 @@
     setTimeout(function () { rip.remove(); }, 480);
   }
   document.addEventListener("pointerdown", function (e) { var b = e.target.closest(".btn"); if (b && b.getAttribute("aria-disabled") !== "true") pressRipple(b, e); });
+  /* 끌기는 누름이 아니다(유성 10-02 「드래그를 내리면 첫 게임이 선택돼」). 마우스·펜은 같은 버튼 위에서 떼면 얼마를 끌었든 click이 나고,
+     터치도 조금(기기 기준 8~15px) 끈 것은 탭으로 읽힌다 → 누른 자리에서 8px 넘게 움직였다 뗀 직후의 click은 이 화면 전체에서 버린다.
+     코드가 부르는 .click()·키보드 누름은 pointerup이 없어 그대로 지나간다 */
+  var downAt = null, draggedAt = 0;
+  document.addEventListener("pointerdown", function (e) { downAt = { x: e.clientX, y: e.clientY }; draggedAt = 0; }, true);
+  document.addEventListener("pointerup", function (e) {
+    if (downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 8) draggedAt = Date.now();
+    downAt = null;
+  }, true);
+  document.addEventListener("click", function (e) {
+    if (draggedAt && Date.now() - draggedAt < 700) { draggedAt = 0; e.stopPropagation(); e.preventDefault(); }
+  }, true);
   function btnHTML(label) { return '<button class="btn" type="button"><span class="bl">' + label + '</span></button>'; }
   function setBtn(b, label, off) { b.querySelector(".bl").textContent = label; b.setAttribute("aria-disabled", off ? "true" : "false"); }
   function topHTML(cnt, fwdOn) {
@@ -275,9 +287,13 @@
       var srv = d.answers || {};
       Object.keys(srv).forEach(function (k) {
         if ((ans[k] && ans[k].p) || touched[k]) return;
+        var mine = ans[k];
+        if (mine && mine.skip && srv[k].skip) return;   // 둘 다 안 해봄 = 이 기기 것을 둔다(다시 고르면 되살릴 답 prev가 들어 있다)
+        // 이 기기에 답이 있는데 고른 목록에 없다 = 선생님이 고르기에서 뺀 게임(「N개 골랐어요」 전이라 서버엔 아직 답이 남아 있다) → 다시 고르지 않는다
+        var unpicked = !!mine && !mine.skip && (mine.v > 0 || mine.forgot) && picked.indexOf(k) < 0;
         ans[k] = srv[k];
         var on = !srv[k].skip && (srv[k].v > 0 || srv[k].forgot);
-        if (on && picked.indexOf(k) < 0) picked.push(k);
+        if (on && !unpicked && picked.indexOf(k) < 0) picked.push(k);
         if (srv[k].skip) picked = picked.filter(function (x) { return x !== k; });
       });
       saveStore(); pending().forEach(send); if (picksDue) sendPicks(0);
@@ -339,7 +355,12 @@
       var list = order();
       if (!list.length) { shake(btn); toast("아직 고른 게임이 없어요. 해 본 게임 사진을 눌러 주세요"); return; }
       // 고르기에서 뺀 게임 중 답이 있던 것 = 안 해봄으로
-      Object.keys(ans).forEach(function (k) { if (byK(k) && list.indexOf(k) < 0 && !ans[k].skip && (ans[k].v > 0 || ans[k].forgot)) setAns(k, { skip: true }); });
+      // 뺀 게임의 답은 이 기기에 들고 있는다(prev) → 잘못 뺐다가 다시 고르면 적어 둔 답과 글이 그대로 돌아온다. 서버엔 안 해봄만 간다
+      Object.keys(ans).forEach(function (k) {
+        var a = ans[k];
+        if (byK(k) && list.indexOf(k) < 0 && !a.skip && (a.v > 0 || a.forgot)) setAns(k, { skip: true, prev: a.forgot ? { forgot: true, c: a.c || "", memo: a.memo || "" } : { v: a.v, c: a.c || "", chips: (a.chips || []).slice(), memo: a.memo || "" } });
+      });
+      list.forEach(function (k) { var a = ans[k]; if (a && a.skip && a.prev) setAns(k, a.prev); });
       var far = farIndex(list);
       rateI = far >= list.length ? 0 : far;   // 다 답했으면(처음부터 다시 보기) 첫 장부터 — 고른 답이 그대로 보이고 → 로 넘길 수 있다
       editFromReview = false; toRate(1);
