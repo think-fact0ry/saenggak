@@ -461,8 +461,8 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .ag-ck svg{width:20px;height:20px;display:block}
 .ag-item.on .ag-ck{color:var(--green600)}                                    /* 체크 = 초록 ∨(박스 없음) */
 .ag-lab{flex:1;min-width:0;font-size:15px;color:var(--g700);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ag-req{color:var(--green600);font-weight:700;margin-right:5px}
-.ag-opt{color:var(--g400);font-weight:700;margin-right:5px}
+.ag-req{color:var(--green600);font-weight:700;margin-right:8px}
+.ag-opt{color:var(--g400);font-weight:700;margin-right:8px}
 .ag-chev{flex-shrink:0;background:none;border:none;padding:6px;cursor:pointer;color:var(--g300);display:flex;transition:transform .2s}
 .ag-chev svg{width:18px;height:18px;display:block}
 .ag-item.open .ag-chev{transform:rotate(180deg)}
@@ -968,8 +968,9 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <p class="note"><span class="ref sub">§4.3-7</span>순차 등장은 <b>항목까지</b> <code>will-change</code>로 레이어를 예약한다 — 시트만 하면 효과가 없다.</p>
   <div class="demo"><button class="btn" onclick="openSheet()">바텀시트 열기</button></div>
 
+  <!-- 2026-10-08 「필수」 뒤 8px · 경위 = docs/1 §4.16 -->
   <h3 class="sec" id="sec31"><span class="ref">§4.16</span>동의 바텀시트</h3>
-  <p class="desc">개별 항목은 박스 없이 체크만, '모두 동의'만 네모 체크박스. 버튼은 둘 — 동의하고 계속 / 다음에 하기. 동작 데모 ↓</p>
+  <p class="desc">개별 항목은 박스 없이 체크만, '모두 동의'만 네모 체크박스. 「필수」 뒤 8px. 버튼은 둘. 동작 데모 ↓</p>
   <div class="demo"><button class="btn" onclick="openAg()">동의 시트 열기</button></div>
 
   <h3 class="sec" id="sec32"><span class="ref">§4.4</span>센터 확인 다이얼로그</h3>
