@@ -36,6 +36,7 @@ body{overflow:hidden;}
 .sv-who:active{transform:scale(.96);}
 .sv-ttl{flex-shrink:0; padding:6px 22px 0;}
 .sv-ttl h1{margin:0; font-size:22px; font-weight:700; letter-spacing:-.5px; line-height:1.36; text-wrap:balance;}
+.sv-ttl p{margin:8px 0 0; font-size:var(--fs-body); font-weight:400; color:var(--g600); line-height:1.5; text-wrap:pretty;}
 .sv-body{flex:1; overflow:auto; padding:16px 18px 18px; scrollbar-width:none; overscroll-behavior:contain;}
 .sv-body::-webkit-scrollbar{display:none;}
 .sv-cta{flex-shrink:0; padding:10px 18px calc(18px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:6px;}
@@ -153,8 +154,9 @@ body{overflow:hidden;}
 .sv-lvh::before,.sv-dot::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--f); flex-shrink:0;}
 .sv-lv.p2,.sv-dot.p2{--f:var(--fill-p2)} .sv-lv.p1,.sv-dot.p1{--f:var(--fill-p1)} .sv-lv.z,.sv-dot.z{--f:var(--fill-z)} .sv-lv.n1,.sv-dot.n1{--f:var(--fill-n1)} .sv-lv.n2,.sv-dot.n2{--f:var(--fill-n2)}
 .sv-lv.fg{--f:var(--g600)} .sv-dot.fg{--f:var(--g400)}
-.sv-lvg{display:flex; flex-wrap:wrap; gap:10px;}
-.sv-mini{width:72px; border:0; background:none; padding:0; font:inherit; display:flex; flex-direction:column; gap:5px; font-size:12px; font-weight:500; color:var(--g700); text-align:center; line-height:1.25; cursor:pointer; transition:transform .08s;}
+/* 한 줄 4칸 고정, 칸 너비는 화면에 맞춰 늘고 준다(오른쪽 여백 없이 — 유성 10-08) */
+.sv-lvg{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px;}
+.sv-mini{min-width:0; border:0; background:none; padding:0; font:inherit; display:flex; flex-direction:column; gap:5px; font-size:12px; font-weight:500; color:var(--g700); text-align:center; line-height:1.25; cursor:pointer; transition:transform .08s;}
 .sv-mini:active{transform:scale(.94);}
 .sv-mini .sv-pic{border-radius:var(--r-sm); box-shadow:var(--sh-btn);}
 

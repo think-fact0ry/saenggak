@@ -478,10 +478,10 @@
     if (memoNeeded()) requestAnimationFrame(function () { autoGrow(ta); });
   }
 
-  /* ── 3 고칠 게임 ── 누르면 그 장으로 가서 고치고, 끝나면 이 화면으로 돌아온다 */
+  /* ── 3 답 바꾸기(「답을 바꾸고 싶은 게임이 있나요?」 — 10-08 소장님 「고칠」이 게임을 고치는 걸로 읽혀 뭘 누를지 몰라 다음을 누름) ── 누르면 그 장으로 가서 고치고, 끝나면 이 화면으로 돌아온다 */
   function toReview(dir) {
     var pg = h("div", "sv-pg");
-    pg.innerHTML = topHTML("") + '<div class="sv-ttl"><h1>고칠 게임이 있으면<br>눌러 주세요</h1></div><div class="sv-body"></div><div class="sv-cta">' + btnHTML("다음") + '</div>';
+    pg.innerHTML = topHTML("") + '<div class="sv-ttl"><h1>답을 바꾸고 싶은<br>게임이 있나요?</h1><p>바꿀 답이 있으면 그 게임을 눌러요.</p></div><div class="sv-body"></div><div class="sv-cta">' + btnHTML("다음") + '</div>';
     var body = pg.querySelector(".sv-body");
     var list = order();
     SCALE.concat([{ v: 0, t: FORGOT, c: "fg" }]).forEach(function (o) {
