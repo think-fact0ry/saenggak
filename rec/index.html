@@ -89,7 +89,16 @@ button{font:inherit}
 .pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));z-index:15;background:var(--g800);color:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .pill .spin{width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.35);border-top-color:#fff}
 .toast{position:fixed;left:14px;right:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--g800);color:#fff;border-radius:12px;padding:12px 14px;font-size:var(--fs-sm);white-space:pre-line}
-@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+/* §5.4 스켈레톤 = 실제 줄 마크업에 회색 바만, 훑기 하나, 누름 막음 */
+.sk{pointer-events:none;position:relative}
+.sk-b{display:block;border-radius:6px;background-color:var(--g100);background-image:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.75) 50%,rgba(255,255,255,0) 100%);background-size:60% 100%;background-repeat:no-repeat;background-position:-150% 0;animation:sksh 1.5s ease-in-out infinite}
+@keyframes sksh{0%{background-position:-150% 0}70%,100%{background-position:250% 0}}
+.skw{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;background:#fff;border-radius:999px;box-shadow:var(--sh1);padding:10px 16px;font-size:var(--fs-sm);color:var(--g700);text-align:center;white-space:pre-line;max-width:calc(100% - 48px);pointer-events:none}
+.skp{background:#fff;border-radius:6px;box-shadow:var(--sh1);aspect-ratio:210/297;padding:9% 8%;display:flex;flex-direction:column;gap:3.2%}
+.errb{text-align:center;color:var(--g600);padding:60px 24px;white-space:pre-line}
+.errb b{display:block;color:var(--g900);font-size:16px;margin-bottom:4px}
+.errb .btn{max-width:200px;margin:20px auto 0}
+@media (prefers-reduced-motion:reduce){.spin,.sk-b,.ib.busy svg{animation:none}}
 </style>
 </head>
 <body>
@@ -110,9 +119,34 @@ button{font:inherit}
     var a = [].slice.call(arguments, 1), body = { action: ACT[fn] };
     if (fn === 'mbRegister') { body.code = a[0]; body.ua = a[1]; }
     else if (fn !== 'mbRequestReg') { body.tok = a[0]; body.id = a[1]; }
-    return fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify(body) })
-      .then(function (r) { return r.json(); })
-      .then(function (o) { if (o && o.error) throw new Error(o.error); return o ? o.data : null; });
+    var once = function () {
+      return fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify(body) })
+        .then(function (r) { return r.text(); })
+        .then(function (t) {
+          var o; try { o = JSON.parse(t); } catch (x) { throw new Error('BAD_REPLY'); }   // 구글이 JSON 대신 HTML 화면을 줄 때가 있다(10-08 실측)
+          if (o && o.error) throw new Error(o.error); return o ? o.data : null;
+        });
+    };
+    if (!{ mbList: 1, mbDoc: 1, mbImages: 1 }[fn]) return once();   // 보내기·등록은 두 번 가면 안 된다 = 한 번만
+    // 읽기 = 4초 안에 안 오면 같은 요청을 하나 더 보내 먼저 온 것을 쓴다(HTML·끊김이면 바로 하나 더).
+    // 10-08 실측: 빈 요청도 구글 쪽에서 가끔 8~43초(빈 1줄 프로젝트도 같이 느림 = 22 코드 탓 아님), 바로 다음 요청은 대개 2초
+    //   → 실측 분포로 돌려 보면 10초 넘는 대기 9.8% → 1.6%
+    return new Promise(function (res, rej) {
+      var started = 0, inflight = 0, done = false, timer = 0;
+      var transient = function (x) { return x instanceof TypeError || String(x && x.message) === 'BAD_REPLY'; };
+      var go = function () {
+        started++; inflight++;
+        once().then(function (d) { inflight--; if (done) return; done = true; clearTimeout(timer); res(d); },
+          function (x) {
+            inflight--; if (done) return;
+            if (!transient(x)) { done = true; clearTimeout(timer); return rej(x); }
+            if (started < 2) { clearTimeout(timer); return go(); }
+            if (!inflight) { done = true; rej(x); }
+          });
+      };
+      go();
+      timer = setTimeout(function () { if (!done && started < 2) go(); }, 4000);
+    });
   }
   function needReg(e) { return /NEED_REG/.test(String(e && e.message || e)); }
   function toast(msg, ms) {
@@ -163,13 +197,22 @@ button{font:inherit}
   }
 
   // ── 목록 ──
+  function topList(busy) {
+    return '<div class="top"><span class="sp">추천서</span><button class="tl" data-go="sheet">시트</button><button class="ib' + (busy ? ' busy' : '') + '" data-go="reload" aria-label="새로고침"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button></div>';
+  }
+  // §5.4 — 실제 줄과 같은 마크업에 회색 바만. .sk = 누름 막음
+  function skelList() {
+    var row = '<div class="row"><div class="t"><span class="sk-b" style="width:34%;height:16px;margin:3px 0 8px"></span><span class="sk-b" style="width:64%;height:12px"></span></div><span class="sk-b" style="width:58px;height:23px;flex:none"></span></div>';
+    var grp = function (w, n) { return '<div class="grp"><span class="sk-b" style="width:' + w + 'px;height:13px"></span></div><div class="lc">' + new Array(n + 1).join(row) + '</div>'; };
+    return '<div class="sk">' + grp(52, 3) + grp(70, 2) + grp(64, 1) + '</div>';
+  }
   function renderList() {
-    view = 'list'; cur = null;
+    view = 'list'; cur = null; clearWait();
     var es = entries(), by = function (g) { return es.filter(function (e) { return e.g === g; }); };
     var row = function (e) { return '<div class="row' + (e.g === 'sent' ? ' past' : '') + (focusId && e.members.some(function (m) { return m.id === focusId; }) ? ' hl' : '') + '" data-id="' + esc(e.id) + '"><div class="t"><b>' + esc(e.name) + '</b>' + subOf(e) + '</div>' + chip(e) + '</div>'; };
     var grp = function (title, list, extra) { return list.length ? '<div class="grp"><span>' + title + '<span class="n">' + list.length + '</span></span>' + (extra || '') + '</div><div class="lc">' + list.map(row).join('') + '</div>' : ''; };
     var sent = by('sent');
-    var h = '<div class="top"><span class="sp">추천서</span><button class="tl" data-go="sheet">시트</button><button class="ib" data-go="reload" aria-label="새로고침"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button></div>'
+    var h = topList(false)
       + grp('안 간 것', by('fail')) + grp('보낼 것', by('ready')) + grp('PC에서 할 것', by('pc')) + grp('초안 쓰는 중', by('draft'))
       + (sent.length ? '<div class="grp"><span>최근 보낸 것<span class="n">' + sent.length + '</span></span><button data-go="sent">' + (showSent ? '접기' : '펼치기') + '</button></div>' + (showSent ? '<div class="lc">' + sent.slice().reverse().map(row).join('') + '</div>' : '') : '')
       + (es.length ? '' : '<div class="empty">지금은 할 일이 없어요</div>') + '<div style="height:40px"></div>';
@@ -179,17 +222,48 @@ button{font:inherit}
     if (by('draft').length) poll = setTimeout(function () { if (view === 'list') loadList(true); }, 20000);   // 쓰는 중이 있으면 20초마다
   }
   var LIST_KEY = 'rc-mb-list';
-  function loadList(quiet) {
-    var spin = app.querySelector('[data-go="reload"]'); if (spin) spin.classList.add('busy');
-    if (!quiet && !items.length) app.innerHTML = '<div class="load"><div class="spin"></div>불러오는 중</div>';
+  // bg=true: 보던 목록을 그대로 두고 뒤에서 새로 받는다(처음 열 때 기억한 목록·20초 자동 갱신).
+  // bg=false: 새로고침 버튼 = 목록을 뼈대로 바꾸고 못 누르게(유성 10-08) + §5.4 「대기가 길 때」 3초·12초·20초.
+  // 실패해도 상세 화면은 절대 덮지 않는다(10-08 유성: 보낸 아이를 열었는데 「불러오지 못했어요」로 바뀌고 다시 시도가 안 먹음)
+  var loadGen = 0, waitT = [];
+  function clearWait() { waitT.forEach(clearTimeout); waitT = []; var w = document.getElementById('skw'); if (w) w.remove(); }
+  function listErr(title) {
+    app.innerHTML = topList(false) + '<div class="errb"><b>' + title + '</b><button class="btn" data-go="retry">다시 불러오기</button></div>';
+  }
+  function loadList(bg) {
+    var my = ++loadGen;
+    clearWait(); clearTimeout(poll);
+    if (!bg) {
+      view = 'list'; cur = null;
+      app.innerHTML = topList(false) + skelList();   // 뼈대 위에 도는 아이콘을 또 얹지 않는다(§5.4 겹친 신호)
+      window.scrollTo(0, 0);
+      var say = function (t) {
+        if (my !== loadGen || view !== 'list') return;
+        var w = document.getElementById('skw');
+        if (!w) { w = document.createElement('div'); w.id = 'skw'; w.className = 'skw'; document.body.appendChild(w); }
+        w.textContent = t;
+      };
+      waitT.push(setTimeout(function () { say('목록을 불러오고 있어요'); }, 3000));
+      waitT.push(setTimeout(function () { say('인터넷이 느리면 조금 더 걸려요\n조금만 더 기다려 주세요'); }, 12000));
+      waitT.push(setTimeout(function () { if (my === loadGen && view === 'list') { clearWait(); listErr('목록을 아직 못 불러왔어요'); } }, 20000));
+    } else { var sp = app.querySelector('[data-go="reload"]'); if (sp) sp.classList.add('busy'); }
     return run('mbList', tok).then(function (r) {
+      if (my !== loadGen) return;
+      clearWait();
       ST = r.st; items = r.items; sheetUrl = r.sheet;
       try { localStorage.setItem(LIST_KEY, JSON.stringify(r)); } catch (e) {}
       if (view === 'list') renderList();
       docPrune(false);
       prefetchAll();
-      if (focusId) { var f = entries().filter(function (e) { return e.members.some(function (m) { return m.id === focusId; }); })[0]; if (f && f.g !== 'draft' && view === 'list' && !quiet) openDetail(f); }
-    }).catch(function (e) { if (needReg(e)) return renderFirst(); app.innerHTML = '<div class="empty">불러오지 못했어요\n<br><br><button class="btn" style="max-width:200px;margin:0 auto" data-go="reload">다시 시도</button></div>'; });
+      if (focusId) { var f = entries().filter(function (e) { return e.members.some(function (m) { return m.id === focusId; }); })[0]; if (f && f.g !== 'draft' && view === 'list') openDetail(f); }
+    }).catch(function (e) {
+      if (my !== loadGen) return;
+      clearWait();
+      if (needReg(e)) return renderFirst();
+      if (view !== 'list') return;
+      if (bg && items.length) { var sp2 = app.querySelector('[data-go="reload"]'); if (sp2) sp2.classList.remove('busy'); toast('목록을 새로 못 불러왔어요. 잠시 후 다시 눌러 주세요.'); return; }
+      listErr('목록을 못 불러왔어요');
+    });
   }
 
   // ── 상세 = 종이 그대로 ──
@@ -197,6 +271,7 @@ button{font:inherit}
   function openDetail(e) {
     if (view === 'list') listY = window.scrollY;
     view = 'detail'; cur = e; focusId = '';
+    e.members.forEach(function (m) { var d = docs[dk(m.id)]; if (d && d.err) delete docs[dk(m.id)]; });   // 미리 받다 실패한 종이는 뼈대부터 다시
     try { history.pushState({ d: e.id }, ''); } catch (x) {}
     renderDetail();
     window.scrollTo(0, 0);
@@ -270,9 +345,9 @@ button{font:inherit}
       app.innerHTML = head(e) + '<div class="load"><div class="spin"></div>초안을 쓰고 있어요<br>다 되면 목록에서 보낼 것으로 옮겨져요</div>';
       return;
     }
-    if (!ready) { app.innerHTML = head(e) + '<div class="load"><div class="spin"></div>종이를 그리는 중</div>'; return; }
-    var d0 = ds[0];
-    if (d0.err) { app.innerHTML = head(e) + '<div class="pad"><div class="note r"><b>못 불러왔어요</b>' + esc(d0.err) + '</div></div>'; return; }
+    if (!ready) { app.innerHTML = head(e) + skelPaper(); return; }
+    var d0 = ds.filter(function (d) { return d.err; })[0] || ds[0];
+    if (d0.err) { app.innerHTML = head(e) + '<div class="errb"><b>종이를 못 불러왔어요</b><button class="btn" data-go="redoc">다시 불러오기</button></div>'; return; }
     if (k === 'FAIL') {
       app.innerHTML = head(e) + '<div class="pad"><div class="note r"><b>AI가 초안을 못 썼어요</b>PC 시트 메뉴의 「AI 다시」로 다시 쓰거나 칸을 직접 채워요.\n다 되면 보낼 것으로 돌아와요.' + (d0.memo ? '\n\n' + esc(d0.memo) : '') + '</div></div>';
       return;
@@ -302,6 +377,10 @@ button{font:inherit}
     else if (k === 'FIX') bar = '<button class="btn gh" data-go="unhold">고칠 것 없음, 보낼 것으로</button>';
     app.innerHTML = head(e) + '<div class="pad">' + top + papers + '</div>' + (bar ? '<div class="bar">' + bar + '</div>' : '');
     ds.forEach(function (d, i) { mountPaper(app.querySelector('.pw[data-i="' + i + '"]'), d.html); });
+  }
+  function skelPaper() {
+    var b = function (w, h) { return '<span class="sk-b" style="width:' + w + '%;height:' + h + 'px;flex:none"></span>'; };
+    return '<div class="pad sk"><div class="skp">' + b(58, 16) + b(100, 10) + b(100, 10) + b(82, 10) + b(100, 56) + b(100, 10) + b(92, 10) + b(100, 56) + b(70, 10) + '</div></div>';
   }
   var PAGE_W = 794;   // 210mm @96dpi — 렌더러가 쪽을 mm로 그린다
   function mountPaper(w, html) {
@@ -396,7 +475,8 @@ button{font:inherit}
     if (r) { var e = entries().filter(function (x) { return x.id === r.dataset.id; })[0]; if (e) openDetail(e); return; }
     var t = ev.target.closest('[data-go]'); if (!t) return;
     var go = t.dataset.go;
-    if (go === 'reload') { loadList(true); }
+    if (go === 'reload' || go === 'retry') { loadList(false); }
+    else if (go === 'redoc') { var e3 = cur; if (!e3) return; e3.members.forEach(function (m) { delete docs[dk(m.id)]; }); renderDetail(); e3.members.forEach(function (m) { fetchDoc(m.id).then(function () { if (cur === e3) renderDetail(); }); }); }
     else if (go === 'sheet') { if (sheetUrl) window.open(sheetUrl, '_blank'); }
     else if (go === 'sent') { showSent = !showSent; renderList(); }
     else if (go === 'back') { renderList(); window.scrollTo(0, listY); }
@@ -429,7 +509,7 @@ button{font:inherit}
     var reg = q.get('reg');
     if (reg) { try { history.replaceState(null, '', location.pathname); } catch (x) {} return register(reg); }   // 등록 코드는 주소창에서 지운다
     if (!tok) return renderFirst();
-    try { var c = JSON.parse(localStorage.getItem(LIST_KEY) || 'null'); if (c && c.items) { ST = c.st; items = c.items; sheetUrl = c.sheet; renderList(); } } catch (e) {}
+    try { var c = JSON.parse(localStorage.getItem(LIST_KEY) || 'null'); if (c && c.items) { ST = c.st; items = c.items; sheetUrl = c.sheet; renderList(); var f = focusId && entries().filter(function (e) { return e.members.some(function (m) { return m.id === focusId; }); })[0]; if (f && f.g !== 'draft') openDetail(f); } } catch (e) {}
     loadList(!!items.length);
   })();
 })();
