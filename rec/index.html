@@ -114,11 +114,13 @@ button{font:inherit}
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   // 22 웹앱 doPost — text/plain이라 프리플라이트 없음(23·24와 같은 결). 서버 오류는 { ok:false, error } → reject
   var GAS_EXEC = 'https://script.google.com/macros/s/AKfycbxiaIfUdh0q1C_OF65xmk-4QQLUklWPjcq2ZKBVpnI5TYhHV9TXyKUUWqRxEkZk_WnR0A/exec';
-  var ACT = { mbImages: 'imgs', mbList: 'list', mbDoc: 'doc', mbSend: 'send', mbHold: 'hold', mbUnhold: 'unhold', mbRequestReg: 'reqreg', mbRegister: 'register' };
+  var ACT = { mbImages: 'imgs', mbList: 'list', mbDoc: 'doc', mbSend: 'send', mbHold: 'hold', mbUnhold: 'unhold', mbRequestReg: 'reqreg', mbRegister: 'register', mbSendResult: 'sendres' };
+  function isTransient(x) { return x instanceof TypeError || String(x && x.message) === 'BAD_REPLY'; }   // 응답을 못 받은 것(서버가 했는지 모름)
   function run(fn) {
     var a = [].slice.call(arguments, 1), body = { action: ACT[fn] };
     if (fn === 'mbRegister') { body.code = a[0]; body.ua = a[1]; }
-    else if (fn !== 'mbRequestReg') { body.tok = a[0]; body.id = a[1]; }
+    else if (fn === 'mbSendResult') { body.tok = a[0]; body.job = a[1]; }
+    else if (fn !== 'mbRequestReg') { body.tok = a[0]; body.id = a[1]; if (a[2]) body.job = a[2]; }
     var once = function () {
       return fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify(body) })
         .then(function (r) { return r.text(); })
@@ -127,13 +129,13 @@ button{font:inherit}
           if (o && o.error) throw new Error(o.error); return o ? o.data : null;
         });
     };
-    if (!{ mbList: 1, mbDoc: 1, mbImages: 1 }[fn]) return once();   // 보내기·등록은 두 번 가면 안 된다 = 한 번만
+    if (!{ mbList: 1, mbDoc: 1, mbImages: 1, mbSendResult: 1 }[fn]) return once();   // 보내기·등록은 두 번 가면 안 된다 = 한 번만
     // 읽기 = 4초 안에 안 오면 같은 요청을 하나 더 보내 먼저 온 것을 쓴다(HTML·끊김이면 바로 하나 더).
     // 10-08 실측: 빈 요청도 구글 쪽에서 가끔 8~43초(빈 1줄 프로젝트도 같이 느림 = 22 코드 탓 아님), 바로 다음 요청은 대개 2초
     //   → 실측 분포로 돌려 보면 10초 넘는 대기 9.8% → 1.6%
     return new Promise(function (res, rej) {
       var started = 0, inflight = 0, done = false, timer = 0;
-      var transient = function (x) { return x instanceof TypeError || String(x && x.message) === 'BAD_REPLY'; };
+      var transient = isTransient;
       var go = function () {
         started++; inflight++;
         once().then(function (d) { inflight--; if (done) return; done = true; clearTimeout(timer); res(d); },
@@ -419,32 +421,38 @@ button{font:inherit}
     };
   }
   // 발송은 한 번에 하나, 차례대로(예약 = 보내는 중에 다른 아이도 「보내기」 하면 줄을 선다).
-  // 폰이 화면을 내려놓으면 긴 요청 응답을 놓칠 수 있다 → 15초마다 시트 상태를 직접 보고, 그 아이가 보낼 것에서 빠졌으면 끝난 것으로(10-08 「아직도 보내는 중」)
+  // 끝 판정 = 서버가 발송 번호(job)로 남긴 결과뿐. 10-08 실사고: 25초 발송의 응답이 구글 HTML(BAD_REPLY)로 와서
+  // 화면이 「못 보냈어요」라 했는데 메일·알림톡은 다 나갔다 + 다시 보내기는 상태가 ✅→✅라 「상태가 바뀌면 끝」 판정이 영영 안 와 링이 계속 돌았다.
+  // ⇒ 응답을 받으면 그걸로, 못 받으면(HTML·끊김) 5초마다 sendres로 진짜 결과를 묻는다. 「못 보냈어요」는 서버가 실패라고 한 것만.
   function pump() {
     pillUpdate();
     if (sending || !queue.length) return;
-    var job = sending = queue.shift(), done = false, timer = 0;
+    var job = sending = queue.shift(), done = false, timer = 0, t0 = Date.now(), blank = 0;
+    job.key = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
     pillUpdate();
-    var startSt = {}; items.forEach(function (it) { if (job.ids.indexOf(it.id) >= 0) startSt[it.id] = it.st; });
-    function finish(r, x) {
+    function finish(ok, msg, unknown) {
       if (done) return; done = true; clearInterval(timer);
-      if (x) { if (needReg(x)) return renderFirst(); errs[job.id] = String(x && x.message || x); toast(job.name + ' 못 보냈어요', 4000); }
-      else if (r && !r.ok) { errs[job.id] = r.message || ''; toast(job.name + ' 못 보냈어요\n' + String(r.message || '').split('\n')[0], 5000); }
+      if (unknown) toast(job.name + ' 결과를 아직 못 받았어요\n목록에서 상태를 확인해 주세요', 6000);
+      else if (!ok) { errs[job.id] = msg || ''; toast(job.name + ' 못 보냈어요\n' + String(msg || '').split('\n')[0], 5000); }
       job.ids.forEach(function (id) { delete docs[dk(id)]; });
-      sending = null;
+      sending = null; pillUpdate();   // 링은 결과를 안 순간 멈춘다(목록 새로 받기를 기다리지 않음)
       run('mbList', tok).then(function (l) { ST = l.st; items = l.items; if (view === 'list') renderList(); }).catch(function () {})
-        .then(function () { pump(); if (!sending && !queue.length && view === 'list') toast('다 보냈어요. 안 간 게 있으면 맨 위에 떠요.'); });
+        .then(function () { pump(); if (ok && !sending && !queue.length && view === 'list') toast('다 보냈어요. 안 간 게 있으면 맨 위에 떠요.'); });
     }
-    run('mbSend', tok, job.id).then(function (r) { finish(r); }).catch(function (x) { finish(null, x); });
+    run('mbSend', tok, job.id, job.key).then(function (r) { finish(!!(r && r.ok), r && r.message); }).catch(function (x) {
+      if (needReg(x)) { done = true; clearInterval(timer); sending = null; pillUpdate(); return renderFirst(); }
+      if (!isTransient(x)) finish(false, String(x && x.message || x));
+      // 응답만 못 받은 것 — 서버는 하고 있을 수 있다. 아래 결과 묻기가 판정한다
+    });
     timer = setInterval(function () {
-      run('mbList', tok).then(function (l) {
+      run('mbSendResult', tok, job.key).then(function (r) {
         if (done) return;
-        var moved = l.items.filter(function (it) { return job.ids.indexOf(it.id) >= 0 && it.st !== startSt[it.id] && grpOfRaw(l.st, it.st) !== 'ready'; });
-        if (moved.length) { ST = l.st; items = l.items; finish({ ok: true }); }
+        if (r && r.st === 'done') return finish(r.ok, r.message);
+        blank = r ? 0 : blank + 1;
+        if (blank >= 12 || Date.now() - t0 > 240000) finish(false, '', true);   // 1분 동안 서버에 기록이 없거나 4분이 지나면 = 모른다고 말한다
       }).catch(function () {});
-    }, 15000);
+    }, 5000);
   }
-  function grpOfRaw(st, v) { return (v === st.DRAFT || v === st.RISK || v === st.ISSUED) ? 'ready' : 'other'; }
   function pillUpdate() {
     var p = document.getElementById('pill'), n = (sending ? 1 : 0) + queue.length;
     if (!n) { if (p) p.remove(); return; }
