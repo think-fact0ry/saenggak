@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
+<script>/* 카톡 안 브라우저면 바로 기본 브라우저로(뒤로가기·기기 기억이 카톡 안에선 안 맞음 — 유성 10-08). 등록 코드(?reg=)도 주소째 넘어간다 */
+if (/KAKAOTALK/i.test(navigator.userAgent)) location.replace('kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href));</script>
 <title>추천서 — 생각공작소</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
@@ -14,19 +16,20 @@
   --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db; --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968; --g800:#333d4b; --g900:#191f28;
   --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green600:#3a8a5f; --green700:#166841;
   --warn-weak-bg:#fef4e2; --warn-weak-fg:#8a5a00; --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b; --p-disabled:#b7e0c8;
+  --sh1:0 1px 2px rgba(47,111,77,.05), 0 4px 14px rgba(47,111,77,.06);   /* §3.4 그린틴트 2겹 — 흰 바탕 위 카드 */
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--g100);color:var(--g900);font-family:Pretendard,"Pretendard Variable",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:var(--fs-body);line-height:1.55;word-break:keep-all;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:#fff;color:var(--g900);font-family:Pretendard,"Pretendard Variable",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:var(--fs-body);line-height:1.55;word-break:keep-all;-webkit-font-smoothing:antialiased}
 button{font:inherit}
-.top{position:sticky;top:0;z-index:5;background:var(--g100);display:flex;align-items:center;gap:6px;padding:14px 16px 10px;font-weight:700;font-size:var(--fs-title)}
+.top{position:sticky;top:0;z-index:5;background:#fff;display:flex;align-items:center;gap:6px;padding:14px 16px 10px;font-weight:700;font-size:var(--fs-title)}
 .top .sp{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ib{border:0;background:none;padding:6px;margin:-6px;color:var(--g800);cursor:pointer;display:grid;place-items:center}
 .tl{border:0;background:none;color:var(--g600);font-size:var(--fs-sm);font-weight:600;cursor:pointer;padding:6px 4px}
 .grp{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--g500);padding:14px 20px 6px}
 .grp .n{color:var(--g400);margin-left:4px;font-variant-numeric:tabular-nums}
 .grp button{border:0;background:none;color:var(--g500);font-size:12.5px;cursor:pointer;padding:0}
-.lc{background:#fff;border-radius:16px;margin:0 12px;overflow:hidden}
+.lc{background:#fff;border-radius:16px;margin:0 12px;overflow:hidden;box-shadow:var(--sh1)}
 .row{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer}
 .row+.row{border-top:1px solid var(--g100)}
 .row:active{background:var(--g50)}
@@ -35,7 +38,7 @@ button{font:inherit}
 .row .t b{display:block;font-size:15.5px}
 .row .t span{display:block;font-size:12.5px;color:var(--g500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row .t span.err{color:var(--danger-weak-fg)}
-.row.dim .t b{color:var(--g500);font-weight:600}
+.row.past .t b{color:var(--g500);font-weight:600}
 .stc{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
 .st{font-size:12.5px;font-weight:700;border-radius:6px;padding:3px 8px;color:#202124;white-space:nowrap}
 .st.new{background:#e0e0e0}.st.draft{background:#d3e3fd}.st.risk,.st.aifail,.st.sfail{background:#f8d7da}
@@ -46,26 +49,26 @@ button{font:inherit}
 .note b{display:block;margin-bottom:2px}
 .note.w{background:var(--warn-weak-bg);color:var(--warn-weak-fg)}
 .note.r{background:var(--danger-weak-bg);color:var(--danger-weak-fg)}
-.note.n{background:#fff;color:var(--g700)}
+.note.n{background:var(--g50);color:var(--g700)}
 .note.g{background:var(--green100);color:var(--green700)}
-.fb{background:#fff;border-radius:14px;padding:4px 14px;margin:8px 0}
+.fb{background:#fff;border-radius:14px;padding:4px 14px;margin:8px 0;box-shadow:var(--sh1)}
 .kv{display:flex;justify-content:space-between;gap:10px;font-size:var(--fs-sm);padding:9px 0}
 .kv+.kv{border-top:1px solid var(--g100)}
 .kv span:first-child{color:var(--g500);flex:none}
 .kv span:last-child{font-weight:700;text-align:right;min-width:0;word-break:break-all}
 .call{display:inline-block;margin:2px 0 8px;font-size:13.5px;font-weight:700;color:var(--green700);text-decoration:none}
 .who{font-size:13px;font-weight:700;color:var(--g600);margin:14px 2px 6px}
-.pw{position:relative;overflow:hidden;background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.pw{position:relative;overflow:hidden;background:#fff;border-radius:6px;box-shadow:var(--sh1)}
 .pw.on{overflow-x:auto}
 .pw iframe{border:0;display:block;transform-origin:0 0;background:#fff}
 .pw .cap{position:absolute;left:0;top:0}
 .ph{font-size:12px;color:var(--g500);text-align:center;margin:6px 0 2px}
-.bar{position:sticky;bottom:0;z-index:5;padding:20px 14px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to bottom,rgba(242,244,246,0),var(--g100) 24%)}
+.bar{position:sticky;bottom:0;z-index:5;padding:20px 14px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to bottom,rgba(255,255,255,0),#fff 24%)}
 .bar .sub{text-align:center;color:var(--g500);font-size:12.5px;margin-top:8px}
 .btns{display:flex;gap:8px}
 .btn{flex:1;display:block;width:100%;border:0;border-radius:15px;background:var(--green600);color:#fff;font-weight:700;font-size:16px;padding:15px;cursor:pointer;transition:transform .08s}
 .btn:active{transform:scale(.985);background:var(--green700)}
-.btn.gh{background:#fff;color:var(--g800)}
+.btn.gh{background:var(--g100);color:var(--g800)}
 .btn.gh:active{background:var(--g200)}
 .btn[aria-disabled="true"]{background:var(--p-disabled)}
 .load{display:flex;flex-direction:column;align-items:center;gap:14px;padding:80px 20px;color:var(--g500);font-size:var(--fs-sm)}
@@ -162,7 +165,7 @@ button{font:inherit}
   function renderList() {
     view = 'list'; cur = null;
     var es = entries(), by = function (g) { return es.filter(function (e) { return e.g === g; }); };
-    var row = function (e) { return '<div class="row' + (e.g === 'sent' ? ' dim' : '') + (focusId && e.members.some(function (m) { return m.id === focusId; }) ? ' hl' : '') + '" data-id="' + esc(e.id) + '"><div class="t"><b>' + esc(e.name) + '</b>' + subOf(e) + '</div>' + chip(e) + '</div>'; };
+    var row = function (e) { return '<div class="row' + (e.g === 'sent' ? ' past' : '') + (focusId && e.members.some(function (m) { return m.id === focusId; }) ? ' hl' : '') + '" data-id="' + esc(e.id) + '"><div class="t"><b>' + esc(e.name) + '</b>' + subOf(e) + '</div>' + chip(e) + '</div>'; };
     var grp = function (title, list, extra) { return list.length ? '<div class="grp"><span>' + title + '<span class="n">' + list.length + '</span></span>' + (extra || '') + '</div><div class="lc">' + list.map(row).join('') + '</div>' : ''; };
     var sent = by('sent');
     var h = '<div class="top"><span class="sp">추천서</span><button class="tl" data-go="sheet">시트</button><button class="ib" data-go="reload" aria-label="새로고침"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button></div>'
@@ -184,10 +187,13 @@ button{font:inherit}
   }
 
   // ── 상세 = 종이 그대로 ──
+  var listY = 0;   // 목록 스크롤 자리 — 상세로 갈 때 맨 위로, 돌아오면 그 자리로(안 하면 아래쪽 아이를 열 때 종이 윗부분이 잘려 보였다, 10-08 실측)
   function openDetail(e) {
+    if (view === 'list') listY = window.scrollY;
     view = 'detail'; cur = e; focusId = '';
     try { history.pushState({ d: e.id }, ''); } catch (x) {}
     renderDetail();
+    window.scrollTo(0, 0);
     e.members.forEach(function (m) { if (!docs[m.id]) fetchDoc(m.id).then(function () { if (cur === e) renderDetail(); }); });
     prefetchNext(e);
   }
@@ -312,7 +318,7 @@ button{font:inherit}
     view = 'first';
     app.innerHTML = '<div class="full"><div class="ttl">이 기기는 처음이에요</div><div class="sub2">등록 링크를 대표님 카톡으로 보내 드릴게요.\n한 번만 하면 다음부터 바로 열려요.</div>'
       + (msg ? '<div class="note r" style="margin-bottom:16px">' + esc(msg) + '</div>' : '') + '<button class="btn" data-go="reqreg">등록 링크 받기</button>'
-      + '<div class="note n" style="margin-top:16px;background:var(--g100)">등록된 기기가 아니면 아이 정보는 보이지 않아요.</div></div>';
+      + '<div class="note n" style="margin-top:16px">등록된 기기가 아니면 아이 정보는 보이지 않아요.</div></div>';
   }
   function register(code) {
     app.innerHTML = '<div class="load"><div class="spin"></div>이 기기를 등록하는 중</div>';
@@ -332,7 +338,7 @@ button{font:inherit}
     if (go === 'reload') { docs = {}; loadList(); }
     else if (go === 'sheet') { if (sheetUrl) window.open(sheetUrl, '_blank'); }
     else if (go === 'sent') { showSent = !showSent; renderList(); }
-    else if (go === 'back') { renderList(); }
+    else if (go === 'back') { renderList(); window.scrollTo(0, listY); }
     else if (go === 'zoom') { var w = t.closest('.pw'); w.classList.toggle('on'); if (w._fit) w._fit(); }
     else if (go === 'send') { if (t.getAttribute('aria-disabled') === 'true') { toast('PC에서 고친 뒤 보낼 수 있어요'); return; } confirmSend(cur); }
     else if (go === 'hold' || go === 'unhold') {
@@ -352,7 +358,7 @@ button{font:inherit}
     }
   });
   window.addEventListener('resize', function () { [].forEach.call(document.querySelectorAll('.pw'), function (w) { if (w._fit) w._fit(); }); });
-  window.addEventListener('popstate', function (ev) { if (!ev.state || !ev.state.d) { if (view === 'detail') renderList(); } });
+  window.addEventListener('popstate', function (ev) { if (!ev.state || !ev.state.d) { if (view === 'detail') { renderList(); window.scrollTo(0, listY); } } });
 
   // ── 시작 ──
   (function () {
