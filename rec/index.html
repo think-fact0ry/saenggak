@@ -86,7 +86,7 @@ button{font:inherit}
 .cm .mr button{flex:1;border:0;border-radius:13px;padding:13px;font-weight:700;cursor:pointer}
 .cm .mr .c{background:var(--g100);color:var(--g700)}
 .cm .mr .o{background:var(--green600);color:#fff}
-.pill{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top,0px));z-index:15;background:var(--g800);color:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));z-index:15;background:var(--g800);color:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .pill .spin{width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.35);border-top-color:#fff}
 .toast{position:fixed;left:14px;right:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--g800);color:#fff;border-radius:12px;padding:12px 14px;font-size:var(--fs-sm);white-space:pre-line}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}}
@@ -339,21 +339,33 @@ button{font:inherit}
       else { renderList(); }
     };
   }
+  // 발송은 한 번에 하나, 차례대로(예약 = 보내는 중에 다른 아이도 「보내기」 하면 줄을 선다).
+  // 폰이 화면을 내려놓으면 긴 요청 응답을 놓칠 수 있다 → 15초마다 시트 상태를 직접 보고, 그 아이가 보낼 것에서 빠졌으면 끝난 것으로(10-08 「아직도 보내는 중」)
   function pump() {
     pillUpdate();
     if (sending || !queue.length) return;
-    sending = queue.shift(); pillUpdate();
-    run('mbSend', tok, sending.id).then(function (r) {
-      if (!r.ok) { errs[sending.id] = r.message || ''; toast(sending.name + ' 못 보냈어요\n' + String(r.message || '').split('\n')[0], 5000); }
-    }).catch(function (x) {
-      if (needReg(x)) { renderFirst(); return; }
-      errs[sending.id] = String(x && x.message || x); toast(sending.name + ' 못 보냈어요', 4000);
-    }).then(function () {
-      sending.ids.forEach(function (id) { delete docs[dk(id)]; });
+    var job = sending = queue.shift(), done = false, timer = 0;
+    pillUpdate();
+    var startSt = {}; items.forEach(function (it) { if (job.ids.indexOf(it.id) >= 0) startSt[it.id] = it.st; });
+    function finish(r, x) {
+      if (done) return; done = true; clearInterval(timer);
+      if (x) { if (needReg(x)) return renderFirst(); errs[job.id] = String(x && x.message || x); toast(job.name + ' 못 보냈어요', 4000); }
+      else if (r && !r.ok) { errs[job.id] = r.message || ''; toast(job.name + ' 못 보냈어요\n' + String(r.message || '').split('\n')[0], 5000); }
+      job.ids.forEach(function (id) { delete docs[dk(id)]; });
       sending = null;
-      return run('mbList', tok).then(function (r) { ST = r.st; items = r.items; if (view === 'list') renderList(); }).catch(function () {});
-    }).then(function () { pump(); if (!sending && !queue.length && view === 'list') toast('다 보냈어요. 안 간 게 있으면 맨 위에 떠요.'); });
+      run('mbList', tok).then(function (l) { ST = l.st; items = l.items; if (view === 'list') renderList(); }).catch(function () {})
+        .then(function () { pump(); if (!sending && !queue.length && view === 'list') toast('다 보냈어요. 안 간 게 있으면 맨 위에 떠요.'); });
+    }
+    run('mbSend', tok, job.id).then(function (r) { finish(r); }).catch(function (x) { finish(null, x); });
+    timer = setInterval(function () {
+      run('mbList', tok).then(function (l) {
+        if (done) return;
+        var moved = l.items.filter(function (it) { return job.ids.indexOf(it.id) >= 0 && it.st !== startSt[it.id] && grpOfRaw(l.st, it.st) !== 'ready'; });
+        if (moved.length) { ST = l.st; items = l.items; finish({ ok: true }); }
+      }).catch(function () {});
+    }, 15000);
   }
+  function grpOfRaw(st, v) { return (v === st.DRAFT || v === st.RISK || v === st.ISSUED) ? 'ready' : 'other'; }
   function pillUpdate() {
     var p = document.getElementById('pill'), n = (sending ? 1 : 0) + queue.length;
     if (!n) { if (p) p.remove(); return; }
