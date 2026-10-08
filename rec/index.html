@@ -74,6 +74,7 @@ button{font:inherit}
 .load{display:flex;flex-direction:column;align-items:center;gap:14px;padding:80px 20px;color:var(--g500);font-size:var(--fs-sm)}
 .spin{width:30px;height:30px;border-radius:50%;border:3px solid var(--green200);border-top-color:var(--green600);animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.ib.busy svg{animation:sp .8s linear infinite}
 .full{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 28px;background:#fff}
 .ttl{font-size:22px;font-weight:700;letter-spacing:-.5px}
 .sub2{color:var(--g500);font-size:var(--fs-sm);margin:6px 0 24px;white-space:pre-line}
@@ -85,7 +86,7 @@ button{font:inherit}
 .cm .mr button{flex:1;border:0;border-radius:13px;padding:13px;font-weight:700;cursor:pointer}
 .cm .mr .c{background:var(--g100);color:var(--g700)}
 .cm .mr .o{background:var(--green600);color:#fff}
-.pill{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:15;background:var(--g800);color:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.pill{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top,0px));z-index:15;background:var(--g800);color:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .pill .spin{width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.35);border-top-color:#fff}
 .toast{position:fixed;left:14px;right:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--g800);color:#fff;border-radius:12px;padding:12px 14px;font-size:var(--fs-sm);white-space:pre-line}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}}
@@ -104,7 +105,7 @@ button{font:inherit}
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   // 22 웹앱 doPost — text/plain이라 프리플라이트 없음(23·24와 같은 결). 서버 오류는 { ok:false, error } → reject
   var GAS_EXEC = 'https://script.google.com/macros/s/AKfycbxiaIfUdh0q1C_OF65xmk-4QQLUklWPjcq2ZKBVpnI5TYhHV9TXyKUUWqRxEkZk_WnR0A/exec';
-  var ACT = { mbList: 'list', mbDoc: 'doc', mbSend: 'send', mbHold: 'hold', mbUnhold: 'unhold', mbRequestReg: 'reqreg', mbRegister: 'register' };
+  var ACT = { mbImages: 'imgs', mbList: 'list', mbDoc: 'doc', mbSend: 'send', mbHold: 'hold', mbUnhold: 'unhold', mbRequestReg: 'reqreg', mbRegister: 'register' };
   function run(fn) {
     var a = [].slice.call(arguments, 1), body = { action: ACT[fn] };
     if (fn === 'mbRegister') { body.code = a[0]; body.ua = a[1]; }
@@ -138,7 +139,7 @@ button{font:inherit}
     var out = [], byKey = {};
     items.forEach(function (it) {
       if (queued(it.id)) return;
-      var g = grpOf(it.st), k = g + '|' + it.key;
+      var g = grpOf(it.st), k = g + '|' + (it.fam || it.id);
       if (byKey[k]) { byKey[k].members.push(it); return; }
       byKey[k] = { g: g, members: [it] }; out.push(byKey[k]);
     });
@@ -177,11 +178,16 @@ button{font:inherit}
     clearTimeout(poll);
     if (by('draft').length) poll = setTimeout(function () { if (view === 'list') loadList(true); }, 20000);   // 쓰는 중이 있으면 20초마다
   }
+  var LIST_KEY = 'rc-mb-list';
   function loadList(quiet) {
-    if (!quiet) app.innerHTML = '<div class="load"><div class="spin"></div>불러오는 중</div>';
+    var spin = app.querySelector('[data-go="reload"]'); if (spin) spin.classList.add('busy');
+    if (!quiet && !items.length) app.innerHTML = '<div class="load"><div class="spin"></div>불러오는 중</div>';
     return run('mbList', tok).then(function (r) {
       ST = r.st; items = r.items; sheetUrl = r.sheet;
+      try { localStorage.setItem(LIST_KEY, JSON.stringify(r)); } catch (e) {}
       if (view === 'list') renderList();
+      docPrune(false);
+      prefetchAll();
       if (focusId) { var f = entries().filter(function (e) { return e.members.some(function (m) { return m.id === focusId; }); })[0]; if (f && f.g !== 'draft' && view === 'list' && !quiet) openDetail(f); }
     }).catch(function (e) { if (needReg(e)) return renderFirst(); app.innerHTML = '<div class="empty">불러오지 못했어요\n<br><br><button class="btn" style="max-width:200px;margin:0 auto" data-go="reload">다시 시도</button></div>'; });
   }
@@ -194,15 +200,59 @@ button{font:inherit}
     try { history.pushState({ d: e.id }, ''); } catch (x) {}
     renderDetail();
     window.scrollTo(0, 0);
-    e.members.forEach(function (m) { if (!docs[m.id]) fetchDoc(m.id).then(function () { if (cur === e) renderDetail(); }); });
+    e.members.forEach(function (m) { var d = docs[dk(m.id)]; if (!d || d.then || d.err) fetchDoc(m.id).then(function () { if (cur === e) renderDetail(); }); });
     prefetchNext(e);
   }
-  function fetchDoc(id) {
-    if (docs[id] && docs[id].then) return docs[id];
-    var p = run('mbDoc', tok, id).then(function (d) { docs[id] = d; return d; }).catch(function (x) { docs[id] = { err: String(x && x.message || x) }; if (needReg(x)) renderFirst(); });
-    docs[id] = p; return p;
+  function dk(id) { var it = items.filter(function (x) { return x.id === id; })[0]; return id + '@' + (it ? it.v : ''); }
+  // 종이도 이 기기에 기억(다시 열어도 바로) — 접수ID@판 열쇠라 칸이 바뀌면 자동으로 새로 받는다. 목록에 없는 판은 지운다
+  var DOC_PRE = 'rc-mb-doc:';
+  function docLoad(k) { try { var j = localStorage.getItem(DOC_PRE + k); return j ? JSON.parse(j) : null; } catch (e) { return null; } }
+  function docSave(k, d) { try { localStorage.setItem(DOC_PRE + k, JSON.stringify(d)); } catch (e) { docPrune(true); } }
+  function docPrune(all) {
+    try {
+      var keep = {}; items.forEach(function (it) { keep[it.id + '@' + it.v] = 1; });
+      for (var i = localStorage.length - 1; i >= 0; i--) { var n = localStorage.key(i); if (n && n.indexOf(DOC_PRE) === 0 && (all || !keep[n.slice(DOC_PRE.length)])) localStorage.removeItem(n); }
+    } catch (e) {}
   }
-  function prefetchNext(e) { var n = nextReady(e); if (n) n.members.forEach(function (m) { if (!docs[m.id]) fetchDoc(m.id); }); }
+  function fetchDoc(id) {
+    var k = dk(id);
+    if (docs[k] && !docs[k].err) return docs[k].then ? docs[k] : Promise.resolve(docs[k]);
+    var saved = docLoad(k);
+    if (saved && saved.raw) return imgs().then(function (im) { docs[k] = fillImgs(saved, im); return docs[k]; });
+    var p = Promise.all([run('mbDoc', tok, id), imgs()]).then(function (a) {
+      var d = a[0];
+      if (d && d.html) { d.raw = d.html; docSave(k, { raw: d.raw, name: d.name, st: d.st, memo: d.memo, email: d.email, phone: d.phone, blank: d.blank, over: d.over, id: d.id }); }
+      docs[k] = fillImgs(d, a[1]); return docs[k];
+    }).catch(function (x) { if (needReg(x)) renderFirst(); docs[k] = { err: String(x && x.message || x) }; return docs[k]; });
+    docs[k] = p; return p;
+  }
+  function fillImgs(d, im) {
+    if (!d) return d;
+    var o = {}; for (var x in d) o[x] = d[x];
+    if (o.raw) o.html = im ? o.raw.split('__RC_SIGN__').join(im.sign).split('__RC_STAMP__').join(im.stamp) : o.raw;
+    return o;
+  }
+  // 서명·직인 그림 = 처음 한 번 받아 이 기기에 둔다(종이마다 380KB씩 받던 것, 10-08 실측)
+  var IMG_KEY = 'rc-mb-img', imgP = null;
+  function imgs() {
+    if (imgP) return imgP;
+    try { var c = JSON.parse(localStorage.getItem(IMG_KEY) || 'null'); if (c && c.sign) { imgP = Promise.resolve(c); return imgP; } } catch (e) {}
+    imgP = run('mbImages', tok).then(function (r) { try { localStorage.setItem(IMG_KEY, JSON.stringify(r)); } catch (e) {} return r; }).catch(function (e) { imgP = null; throw e; });
+    return imgP;
+  }
+  // 보낼 것 종이를 뒤에서 미리 받아 둔다(두 개씩) — 열면 바로 뜨게
+  var preQ = [], preN = 0;
+  function prefetchAll() {
+    preQ = [];
+    entries().forEach(function (e) { if (e.g === 'ready' || e.g === 'fail' || e.g === 'pc') e.members.forEach(function (m) { if (!docs[dk(m.id)]) preQ.push(m.id); }); });
+    preRun(); preRun(); preRun();
+  }
+  function preRun() {
+    if (preN >= 3 || !preQ.length) return;
+    var id = preQ.shift(); if (docs[dk(id)]) return preRun();
+    preN++; fetchDoc(id).then(function () { preN--; if (cur && cur.members.some(function (m) { return m.id === id; })) renderDetail(); preRun(); });
+  }
+  function prefetchNext(e) { var n = nextReady(e); if (n) n.members.forEach(function (m) { if (!docs[dk(m.id)]) fetchDoc(m.id); }); }
   function nextReady(after) {
     var r = entries().filter(function (x) { return x.g === 'ready' && (!after || x.id !== after.id); });
     return r[0] || null;
@@ -212,7 +262,7 @@ button{font:inherit}
   }
   function renderDetail() {
     var e = cur; if (!e) return;
-    var k = keyOf(e.st), ds = e.members.map(function (m) { return docs[m.id]; });
+    var k = keyOf(e.st), ds = e.members.map(function (m) { return docs[dk(m.id)]; });
     var ready = ds.every(function (d) { return d && !d.then; });
     var top = '', bar = '', papers = '';
     if (errs[e.id]) top += '<div class="note r"><b>못 보냈어요</b>' + esc(errs[e.id]) + '</div>';
@@ -244,10 +294,9 @@ button{font:inherit}
       if (e.members.length > 1) papers += '<div class="who">' + esc(m.name) + '</div>';
       papers += '<div class="pw" data-i="' + i + '"><iframe title="' + esc(m.name) + ' 추천서" scrolling="no"></iframe><div class="cap" data-go="zoom"></div></div>';
     });
-    papers += '<div class="ph">자격증 사본 1장은 보낼 때 같이 붙어요. 종이를 누르면 크게 보여요.</div>';
     var left = entries().filter(function (x) { return x.g === 'ready'; }).length;
     var blocked = over.length || blank.length;
-    if (k === 'DRAFT' || k === 'RISK' || k === 'ISSUED') bar = '<div class="btns"><button class="btn gh" data-go="hold">PC에서 고칠게요</button><button class="btn" data-go="send"' + (blocked ? ' aria-disabled="true"' : '') + '>보내기</button></div><div class="sub">보내면 다음 아이로 넘어가요. 남은 ' + left + '건</div>';
+    if (k === 'DRAFT' || k === 'RISK' || k === 'ISSUED') bar = '<div class="btns"><button class="btn gh" data-go="hold">PC에서 고칠게요</button><button class="btn" data-go="send"' + (blocked ? ' aria-disabled="true"' : '') + '>보내기</button></div>';
     else if (k === 'SENDFAIL') bar = '<button class="btn" data-go="send">다시 보내기</button>';
     else if (k === 'SENT') bar = '<button class="btn gh" data-go="send">고친 내용 다시 보내기</button>';
     else if (k === 'FIX') bar = '<button class="btn gh" data-go="unhold">고칠 것 없음, 보낼 것으로</button>';
@@ -295,12 +344,12 @@ button{font:inherit}
     if (sending || !queue.length) return;
     sending = queue.shift(); pillUpdate();
     run('mbSend', tok, sending.id).then(function (r) {
-      if (!r.ok) { errs[sending.id] = (r.title ? r.title + '\n' : '') + (r.message || ''); toast(sending.name + ' 못 보냈어요\n' + String(r.message || '').split('\n')[0], 5000); }
+      if (!r.ok) { errs[sending.id] = r.message || ''; toast(sending.name + ' 못 보냈어요\n' + String(r.message || '').split('\n')[0], 5000); }
     }).catch(function (x) {
       if (needReg(x)) { renderFirst(); return; }
       errs[sending.id] = String(x && x.message || x); toast(sending.name + ' 못 보냈어요', 4000);
     }).then(function () {
-      sending.ids.forEach(function (id) { delete docs[id]; });
+      sending.ids.forEach(function (id) { delete docs[dk(id)]; });
       sending = null;
       return run('mbList', tok).then(function (r) { ST = r.st; items = r.items; if (view === 'list') renderList(); }).catch(function () {});
     }).then(function () { pump(); if (!sending && !queue.length && view === 'list') toast('다 보냈어요. 안 간 게 있으면 맨 위에 떠요.'); });
@@ -335,7 +384,7 @@ button{font:inherit}
     if (r) { var e = entries().filter(function (x) { return x.id === r.dataset.id; })[0]; if (e) openDetail(e); return; }
     var t = ev.target.closest('[data-go]'); if (!t) return;
     var go = t.dataset.go;
-    if (go === 'reload') { docs = {}; loadList(); }
+    if (go === 'reload') { loadList(true); }
     else if (go === 'sheet') { if (sheetUrl) window.open(sheetUrl, '_blank'); }
     else if (go === 'sent') { showSent = !showSent; renderList(); }
     else if (go === 'back') { renderList(); window.scrollTo(0, listY); }
@@ -368,7 +417,8 @@ button{font:inherit}
     var reg = q.get('reg');
     if (reg) { try { history.replaceState(null, '', location.pathname); } catch (x) {} return register(reg); }   // 등록 코드는 주소창에서 지운다
     if (!tok) return renderFirst();
-    loadList();
+    try { var c = JSON.parse(localStorage.getItem(LIST_KEY) || 'null'); if (c && c.items) { ST = c.st; items = c.items; sheetUrl = c.sheet; renderList(); } } catch (e) {}
+    loadList(!!items.length);
   })();
 })();
 </script>
