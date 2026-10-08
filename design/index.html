@@ -507,6 +507,32 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 /* §2.1-10 이름 조사 — 입력해 보는 칸 */
 .josa-out{margin-top:12px;font-size:15px;color:var(--g700)}
 .josa-out b{color:var(--green-dark);font-weight:700}
+/* ── §4.9 제출 게이트 · §4.13-6 입력칸 · §5.3 목록 줄 · §4.18 채팅 (2026-10-08) ── */
+.g55 .inp{width:100%;box-sizing:border-box;border:1.5px solid var(--g200);border-radius:12px;padding:12px 14px;font:inherit;font-size:15px;outline:0;background:#fff}
+.g55 .inp:focus{border-color:var(--green600)}
+.g55 .inp.err{border-color:var(--red)}
+.g55 .sk{animation:shakeX .28s cubic-bezier(.36,.07,.19,.97)}
+.g55 .go{border:0;border-radius:12px;padding:13px;font:inherit;font-size:15px;font-weight:700;color:#fff;background:var(--p-disabled);cursor:pointer}
+.g55 .go.ok{background:var(--green700)}
+.taw56{position:relative}
+.taw56 textarea{display:block;width:100%;box-sizing:border-box;border:1px solid var(--g200);background:var(--g50);border-radius:12px;padding:12px 14px;font:inherit;font-size:15px;line-height:1.5;resize:none;outline:0;max-height:108px;overflow-y:auto;scrollbar-width:none}
+.taw56 textarea::-webkit-scrollbar{width:0}
+.taw56::before,.taw56::after{content:"";position:absolute;left:1px;right:1px;height:22px;pointer-events:none;opacity:0;transition:opacity .15s}
+.taw56::before{top:1px;background:var(--sf-top);border-radius:12px 12px 0 0}
+.taw56::after{bottom:1px;background:var(--sf-bot);border-radius:0 0 12px 12px}
+.taw56.t::before,.taw56.b::after{opacity:1}
+.l57 .it{display:flex;gap:11px;align-items:center;padding:11px 12px;border-radius:14px;cursor:pointer;overflow:hidden;transition:box-shadow .12s,background .12s}
+.l57 .it > *{transition:transform .12s}
+.l57 .it:active,.l57 .it.press{background:#fff;box-shadow:0 1px 4px rgba(25,31,40,.06),0 6px 18px rgba(25,31,40,.12)}
+.l57 .it:active > *,.l57 .it.press > *{transform:scale(.96)}
+.l57 .av{width:40px;height:40px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:var(--green600);color:var(--green100);font-size:12px;font-weight:800}
+.l57 .nm{font-size:14.5px;font-weight:700;color:var(--g900)}
+.l57 .ms{font-size:13px;color:var(--g600);margin-top:2px}
+.c58{display:flex;flex-direction:column}
+.c58 .b{max-width:78%;padding:9px 13px;border-radius:16px;font-size:14px;line-height:1.45}
+.c58 .them{align-self:flex-start;background:var(--g100);color:var(--g900)}
+.c58 .me{align-self:flex-end;background:var(--green600);color:#fff}
+.c58 .cont{margin-top:4px}.c58 .sw{margin-top:16px}
 </style>
 </head>
 <body>
@@ -563,17 +589,21 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec38"><i>§4.9</i><span>비활성 요소 = shake</span></a>
     <a href="#sec39"><i>§4.9</i><span>shake 세기 = 최대 3px 감쇠 · .28s</span></a>
     <a href="#sec40"><i>§4.9</i><span>비활성 1차 CTA는 숨기지 않는다</span></a>
+    <a href="#sec55"><i>§4.9</i><span>제출 게이트 = 버튼 + 빈 칸 shake + 빨간 테두리</span></a>
     <a href="#sec41"><i>§4.9</i><span>값이 바뀌어도 컨트롤은 안 움직인다</span></a>
     <a href="#sec42"><i>§4.9</i><span>눈금 슬라이더 = 손가락 즉시 추종 + 놓으면 스냅</span></a>
     <a href="#sec53"><i>§4.9</i><span>양극 7점 척도 = 알약 세그 + 양끝 글자 커짐</span></a>
     <a href="#sec54"><i>§4.13-7</i><span>카드 라벨 = 명사가 아니라 부탁하는 문장</span></a>
     <a href="#sec43"><i>§4.13-6</i><span>넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드</span></a>
     <a href="#sec44"><i>§4.13-6</i><span>그린 그라디언트로 “더 있다”를 말한다</span></a>
+    <a href="#sec56"><i>§4.13-6</i><span>자동 확장 입력칸도 스크롤바 대신 그라디언트</span></a>
     <a href="#sec45"><i>§4.9</i><span>다중 선택 그리드 = 드래그 + 이름 일괄토글 📱 실기기</span></a>
     <a href="#sec46"><i>§4.10</i><span>헤더 + 뒤로가기 · 역할 표시</span></a>
     <a href="#sec47"><i>§4.11</i><span>뒤로가기·스와이프 = 화면 단위로 📱 실기기</span></a>
+    <a href="#sec58"><i>§4.18</i><span>채팅·받은함 — 말풍선 간격 · 새 메시지는 맨 위로</span></a>
     <a href="#sec48"><i>§5.2</i><span>로딩 = 자리별 3층</span></a>
     <a href="#sec49"><i>§5.3</i><span>누름(press)</span></a>
+    <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
     <a href="#sec50"><i>§5.4</i><span>스켈레톤 — 로딩 구조 미리보기</span></a>
     <a href="#sec51"><i>§5.5</i><span>토스트 — 성공엔 초록 원+체크</span></a>
   </div></div>
@@ -1108,6 +1138,14 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     </div>
   </div>
 
+  <!-- 2026-10-08 · 경위·전문 = docs/1 §4.9 -->
+  <h3 class="sec" id="sec55"><span class="ref">§4.9</span>제출 게이트 = 버튼 + 빈 칸 shake + 빨간 테두리</h3>
+  <p class="desc">덜 찬 채로 누르면 버튼과 <b>빈 칸만</b> 흔들리고 그 칸이 빨개진다. 다시 적으면 바로 풀린다. 눌러 보세요 ↓</p>
+  <div class="demo g55" style="display:flex;flex-direction:column;gap:10px">
+    <input class="inp" id="g55p" inputmode="numeric" placeholder="010-0000-0000">
+    <button class="go" id="g55b">남기기</button>
+  </div>
+
   <!-- 2026-09-02 · 경위·전문 = docs/1 §4.9 -->
   <h3 class="sec" id="sec41"><span class="ref">§4.9</span>값이 바뀌어도 컨트롤은 안 움직인다</h3>
   <p class="desc">옆 글자가 줄어 컨트롤의 폭·위치가 밀리면 드래그 내내 버벅인다. 자리를 미리 잡아 둔다.</p>
@@ -1205,6 +1243,11 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     bd.addEventListener("scroll",sync,{passive:true}); sync();
   })();
   </script>
+  <!-- 2026-10-08 · 경위·전문 = docs/1 §4.13-6 -->
+  <h3 class="sec" id="sec56"><span class="ref">§4.13-6</span>자동 확장 입력칸도 스크롤바 대신 그라디언트</h3>
+  <p class="desc">최대 높이를 넘으면 칸 안이 스크롤된다. 막대는 숨기고 위·아래 그린 그라디언트로 알린다. 길게 적어 보세요 ↓</p>
+  <div class="demo"><div class="taw56" id="taw56"><textarea id="ta56" rows="1" placeholder="어떤 점이 궁금하세요?"></textarea></div></div>
+
   <!-- 2026-07-06 · 경위·전문 = docs/1 §4.9 -->
   <h3 class="sec" id="sec45"><span class="ref">§4.9</span>다중 선택 그리드 = 드래그 + 이름 일괄토글 <span class="rk">📱 실기기</span></h3>
   <p class="desc">격자는 쓸어서 고르고, 행·열 이름을 누르면 그 줄이 한 번에 토글된다. <b>카운터·게이지는 두지 않는다</b> — 완료감은 멈추게 한다.</p>
@@ -1232,6 +1275,15 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
       <span class="exithint" id="ehDemo" style="opacity:0;transition:opacity .25s"><span class="ck"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>한 번 더 뒤로 가면 나가요.</span>
     </div>
   </div>
+
+  <!-- 2026-10-08 · 경위·전문 = docs/1 §4.18 -->
+  <h3 class="sec" id="sec58"><span class="ref">§4.18</span>채팅·받은함 — 말풍선 간격 · 새 메시지는 맨 위로</h3>
+  <p class="desc">같은 사람이 이어 말하면 4px, 사람이 바뀌면 16px. 받은함은 마지막 메시지 순이라 새 메시지가 오간 대화가 맨 위로 간다.</p>
+  <div class="demo" style="display:flex;flex-direction:column;gap:16px">
+    <div class="c58"><div class="b them">오감쑥쑥 신청하고 싶어요</div><div class="b them cont">대기가 얼마나 걸려요?</div><div class="b me sw">지금 서구는 2주 정도예요</div><div class="b me cont">신청해 두시면 순서대로 연락드려요</div></div>
+    <div class="l57" id="l58"></div>
+    <button class="btn" id="b58" style="font-size:14px;padding:10px">맨 아래 대화에 새 메시지</button>
+  </div>
 </section>
 
 <!-- 5 인터랙션·모션 -->
@@ -1255,6 +1307,14 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <button class="btn" id="rbtn">동의하고 시작하기</button>
     <button class="lk">다음에 할게요</button>
   </div>
+  <!-- 2026-10-08 · 경위·전문 = docs/1 §5.3 -->
+  <h3 class="sec" id="sec57"><span class="ref">§5.3</span>목록 줄 누름 = 흰 라운드 박스로 떠오름</h3>
+  <p class="desc">회색으로 칠하지 않는다. 줄 자체에 그림자를 걸고 안의 내용만 .96. 눌러 보세요 ↓</p>
+  <div class="demo l57">
+    <div class="it"><div class="av">홈</div><div><div class="nm">홈페이지</div><div class="ms">오감쑥쑥 신청하고 싶은데 대기가 얼마나 걸려요?</div></div></div>
+    <div class="it"><div class="av">홈</div><div><div class="nm">홈페이지</div><div class="ms">주말에도 수업 되나요?</div></div></div>
+  </div>
+
   <!-- 2026-07-04 · 2026-10-01(링 제거+훑기·긴 대기 알약) · 경위·전문 = docs/1 §5.4 -->
   <h3 class="sec" id="sec50"><span class="ref">§5.4</span>스켈레톤 — 로딩 구조 미리보기</h3>
   <p class="desc">회색 바 위를 흰 띠가 훑는다. 링은 겹치지 않고, 오래 걸리면 말은 뼈대 정중앙 알약으로 띄운다.</p>
@@ -1749,6 +1809,37 @@ if(solo) solo.addEventListener('click',()=>solo.classList.toggle('solo'));
   widest(); draw();
   rng.addEventListener('input', draw); pin.addEventListener('change', draw);
   window.addEventListener('resize', function(){ widest(); draw(); });
+})();
+
+// ── §4.9 제출 게이트 (문의 창 남기기와 같은 규칙) ──
+(function(){
+  var p=document.getElementById('g55p'), b=document.getElementById('g55b'); if(!p||!b) return;
+  function sk(e){ e.classList.remove('sk'); void e.offsetWidth; e.classList.add('sk'); }
+  function full(){ return p.value.replace(/\D/g,'').length===11; }
+  p.addEventListener('input',function(){ var v=p.value.replace(/\D/g,'').slice(0,11); p.value=v.length<4?v:v.length<8?v.slice(0,3)+'-'+v.slice(3):v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7); p.classList.remove('err'); b.classList.toggle('ok',full()); });
+  b.addEventListener('click',function(){ if(full()){ b.textContent='남겼어요'; return; } sk(b); p.classList.add('err'); sk(p); p.focus(); });
+})();
+// ── §4.13-6 자동 확장 입력칸 그라디언트 ──
+(function(){
+  var w=document.getElementById('taw56'), t=document.getElementById('ta56'); if(!w||!t) return;
+  function fit(){ t.style.height='auto'; t.style.height=Math.min(t.scrollHeight+2,108)+'px';
+    var over=t.scrollHeight>t.clientHeight+1; w.classList.toggle('t',over&&t.scrollTop>2); w.classList.toggle('b',over&&t.scrollTop+t.clientHeight<t.scrollHeight-2); }
+  t.addEventListener('input',fit); t.addEventListener('scroll',fit);
+  t.value='안녕하세요. 첫째가 다섯 살이고 둘째가 세 살이에요.\n둘 다 오감쑥쑥을 받을 수 있는지 궁금해요.\n서구에 사는데 방문 수업이 되나요?\n주말에도 가능한지, 대기는 얼마나 걸리는지도 알려 주세요.'; fit();
+})();
+// ── §5.3 목록 줄 누름 = 누른 모양을 .17초 잡아 둔다 ──
+document.querySelectorAll('.l57').forEach(function(L){ L.addEventListener('click',function(e){ var it=e.target.closest('.it'); if(!it) return; it.classList.add('press'); setTimeout(function(){ it.classList.remove('press'); },170); }); });
+// ── §4.18 새 메시지 = 그 대화가 맨 위로 (FLIP .26s) ──
+(function(){
+  var L=document.getElementById('l58'), b=document.getElementById('b58'); if(!L||!b) return;
+  var d=[['서','톡톡 서구','안녕하세요 아이 상담 문의드려요'],['홈','홈페이지','본인부담금은 얼마인가요?'],['채','카카오 채널','주말에도 수업 되나요?']];
+  function draw(){ L.innerHTML=d.map(function(x){ return '<div class="it" data-k="'+x[1]+'"><div class="av">'+x[0]+'</div><div><div class="nm">'+x[1]+'</div><div class="ms">'+x[2]+'</div></div></div>'; }).join(''); }
+  draw();
+  b.addEventListener('click',function(){
+    var pre={}; L.querySelectorAll('.it').forEach(function(x){ pre[x.dataset.k]=x.getBoundingClientRect().top; });
+    var last=d.pop(); last[2]='방금 새 메시지가 왔어요'; d.unshift(last); draw();
+    L.querySelectorAll('.it').forEach(function(x){ var dy=pre[x.dataset.k]-x.getBoundingClientRect().top; if(dy) x.animate([{transform:'translateY('+dy+'px)'},{transform:'none'}],{duration:260,easing:'cubic-bezier(.22,.7,.25,1)'}); });
+  });
 })();
 
 // ── 절 목록 패널 (§번호로 바로 이동 — 카탈로그 용도) ──
