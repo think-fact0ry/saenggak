@@ -81,7 +81,7 @@ button{font:inherit}
 .dim{position:fixed;inset:0;background:rgba(0,0,0,.42);display:grid;place-items:center;z-index:20}
 .cm{width:calc(100% - 64px);max-width:320px;background:#fff;border-radius:20px;padding:22px 20px 16px;text-align:left}
 .cm .mt{font-size:18px;font-weight:700;letter-spacing:-.3px}
-.cm .ms{font-size:var(--fs-sm);color:var(--g600);margin-top:8px}
+.cm .ms{font-size:var(--fs-sm);color:var(--g600);margin-top:8px;white-space:pre-line}
 .cm .mr{display:flex;gap:8px;margin-top:16px}
 .cm .mr button{flex:1;border:0;border-radius:13px;padding:13px;font-weight:700;cursor:pointer}
 .cm .mr .c{background:var(--g100);color:var(--g700)}
@@ -114,7 +114,7 @@ button{font:inherit}
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   // 22 웹앱 doPost — text/plain이라 프리플라이트 없음(23·24와 같은 결). 서버 오류는 { ok:false, error } → reject
   var GAS_EXEC = 'https://script.google.com/macros/s/AKfycbxiaIfUdh0q1C_OF65xmk-4QQLUklWPjcq2ZKBVpnI5TYhHV9TXyKUUWqRxEkZk_WnR0A/exec';
-  var ACT = { mbImages: 'imgs', mbList: 'list', mbDoc: 'doc', mbSend: 'send', mbHold: 'hold', mbUnhold: 'unhold', mbRequestReg: 'reqreg', mbRegister: 'register', mbSendResult: 'sendres' };
+  var ACT = { mbImages: 'imgs', mbList: 'list', mbDoc: 'doc', mbSend: 'send', mbHold: 'hold', mbUnhold: 'unhold', mbRequestReg: 'reqreg', mbRegister: 'register', mbSendResult: 'sendres', mbBounceNotice: 'bnotice' };
   function isTransient(x) { return x instanceof TypeError || String(x && x.message) === 'BAD_REPLY'; }   // 응답을 못 받은 것(서버가 했는지 모름)
   function run(fn) {
     var a = [].slice.call(arguments, 1), body = { action: ACT[fn] };
@@ -363,9 +363,9 @@ button{font:inherit}
       top += '<div class="note r"><b>메일이 안 갔어요</b>' + esc(d0.memo || '') + '</div>'
         + '<div class="fb"><div class="kv"><span>보낸 메일 주소</span><span>' + esc(d0.email) + '</span></div><div class="kv"><span>보호자 전화</span><span>' + esc(d0.phone) + '</span></div></div>'
         + '<a class="call" href="tel:' + esc(String(d0.phone || '').replace(/\D/g, '')) + '">전화하기</a>'
-        + '<div class="note n">주소를 받으면 PC 시트의 이메일 칸을 고친 뒤 여기서 다시 보내요.</div>';
+        + '<div class="note n">보호자가 안내 링크에서 주소를 고치면 추천서가 저절로 다시 가요.\n전화로 주소를 받았으면 PC 시트의 이메일 칸을 고친 뒤 여기서 다시 보내요.</div>';
     }
-    if (k === 'SENT') top += '<div class="note g"><b>보냈어요</b>' + esc(e.members[0].sent) + '\n칸을 고쳤으면 아래 버튼으로 다시 보내요. 제목에 (수정)이 붙어요.</div>';
+    if (k === 'SENT') top += '<div class="note g"><b>보냈어요</b>' + esc(e.members[0].sent) + '\n칸을 고쳤으면 「고쳐서 다시 보내기」로 보내요. 제목에 (수정)이 붙어요.</div>';
     if (k === 'FIX') top += '<div class="note n">PC에서 고친 뒤 「발급」하면 보낼 것으로 돌아와요.</div>';
     e.members.forEach(function (m, i) {
       if (e.members.length > 1) papers += '<div class="who">' + esc(m.name) + '</div>';
@@ -375,7 +375,7 @@ button{font:inherit}
     var blocked = over.length || blank.length;
     if (k === 'DRAFT' || k === 'RISK' || k === 'ISSUED') bar = '<div class="btns"><button class="btn gh" data-go="hold">PC에서 고칠게요</button><button class="btn" data-go="send"' + (blocked ? ' aria-disabled="true"' : '') + '>보내기</button></div>';
     else if (k === 'SENDFAIL') bar = '<button class="btn" data-go="send">다시 보내기</button>';
-    else if (k === 'SENT') bar = '<button class="btn gh" data-go="send">고친 내용 다시 보내기</button>';
+    else if (k === 'SENT') bar = '<div class="btns"><button class="btn gh" data-go="bnotice">메일이 반송됐어요</button><button class="btn gh" data-go="send">고쳐서 다시 보내기</button></div>';
     else if (k === 'FIX') bar = '<button class="btn gh" data-go="unhold">고칠 것 없음, 보낼 것으로</button>';
     app.innerHTML = head(e) + '<div class="pad">' + top + papers + '</div>' + (bar ? '<div class="bar">' + bar + '</div>' : '');
     ds.forEach(function (d, i) { mountPaper(app.querySelector('.pw[data-i="' + i + '"]'), d.html); });
@@ -400,6 +400,25 @@ button{font:inherit}
     };
     f.onload = function () { fit(); setTimeout(fit, 600); };
     fit();
+  }
+
+  // ── 메일 반송 표시: 네이버로 나간 메일의 반송은 네이버 메일함으로 가서 코드가 못 본다 → 유성이 보고 여기서 누른다.
+  //    서버 mbBounceNotice = 같은 메일로 간 형제까지 ⛔발송실패 + 보호자에게 「메일 주소 고치기」 안내(한 번만 — 두 번째는 ✅가 아니라 거절).
+  function confirmBounce(e) {
+    var d = document.createElement('div'); d.className = 'dim';
+    d.innerHTML = '<div class="cm" role="dialog" aria-modal="true"><div class="mt">' + esc(e.name) + ' 메일이 반송됐나요?</div><div class="ms">보호자에게 메일 주소를 고치는 링크를 보내요.\n보호자가 고치면 추천서가 저절로 다시 가요.</div><div class="mr"><button class="c">닫기</button><button class="o">보내기</button></div></div>';
+    document.body.appendChild(d);
+    d.querySelector('.c').onclick = function () { d.remove(); };
+    d.querySelector('.o').onclick = function () {
+      d.remove();
+      var bt = app.querySelector('[data-go="bnotice"]'); if (bt) bt.setAttribute('aria-disabled', 'true');
+      run('mbBounceNotice', tok, e.id).then(function (r) { toast(r && r.message || '보냈어요', 5000); }, function (x) {
+        if (needReg(x)) return renderFirst();
+        toast('결과를 아직 못 받았어요\n목록에서 상태를 확인해 주세요', 6000);   // 쓰기는 다시 안 보낸다 — 두 번째는 서버가 거절하지만 목록이 진실
+      }).then(function () {
+        return run('mbList', tok).then(function (l) { ST = l.st; items = l.items; renderList(); });
+      }).catch(function () { renderList(); });
+    };
   }
 
   // ── 보내기: 화면은 바로 다음 아이로, 발송은 뒤에서 하나씩 ──
@@ -489,6 +508,7 @@ button{font:inherit}
     else if (go === 'sent') { showSent = !showSent; renderList(); }
     else if (go === 'back') { renderList(); window.scrollTo(0, listY); }
     else if (go === 'zoom') { var w = t.closest('.pw'); w.classList.toggle('on'); if (w._fit) w._fit(); }
+    else if (go === 'bnotice') { if (t.getAttribute('aria-disabled') !== 'true') confirmBounce(cur); }
     else if (go === 'send') { if (t.getAttribute('aria-disabled') === 'true') { toast('PC에서 고친 뒤 보낼 수 있어요'); return; } confirmSend(cur); }
     else if (go === 'hold' || go === 'unhold') {
       var e2 = cur; t.setAttribute('aria-disabled', 'true');
