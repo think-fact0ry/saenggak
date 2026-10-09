@@ -731,8 +731,8 @@ function fetchPrev(){
     const body={ action:"exam_prev", staffId:sess.staffId, session:sess.session,
       child:{ name:activeChild.name, birth:activeChild.birth8 },
       by:"보호자", tools:["SDQ-kr","K-ARS"] };
-    fetch(GAS_EXEC,{method:"POST",body:JSON.stringify(body)})
-      .then(r=>r.json())
+    const go=()=>fetch(GAS_EXEC,{method:"POST",body:JSON.stringify(body)}).then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); });
+    go().catch(()=>new Promise(res=>setTimeout(res,700)).then(go)).catch(()=>new Promise(res=>setTimeout(res,1600)).then(go))   // 읽기=재시도(구글 HTML·404)
       .then(d=>resolve(d&&d.ok&&d.prev&&Object.keys(d.prev).length?d.prev:null))
       .catch(()=>resolve(null));
   });
@@ -848,7 +848,9 @@ function hubPost(body){
   const sess=getStaffSess();
   body.staffId = sess && sess.staffId;
   body.session = sess && sess.session;
-  return fetch(GAS_EXEC,{method:"POST",body:JSON.stringify(body)}).then(r=>r.json());
+  const go=()=>fetch(GAS_EXEC,{method:"POST",body:JSON.stringify(body)}).then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); });
+  if(body.action!=="exam_clients"&&body.action!=="exam_history") return go();   // 쓰기(register)=단발
+  return go().catch(()=>new Promise(res=>setTimeout(res,700)).then(go)).catch(()=>new Promise(res=>setTimeout(res,1600)).then(go));   // 읽기=재시도(구글 HTML·404)
 }
 
 // ── ① 등록 아동 목록 ──────────────────────────────────────

@@ -900,8 +900,10 @@ window.sha256 = sha256;  // 콘솔에서 await sha256('PIN') 으로도 해시 �
   async function rpc(action, extra){
     var s = sess()||{};
     var body = Object.assign({ action:action, staffId:s.staffId, session:s.session }, extra||{});
-    var res = await fetch(GAS_EXEC, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) });
-    return res.json();
+    var go = function(){ return fetch(GAS_EXEC, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); };
+    if (action !== 'mypage_get') return go();   // 쓰기=단발. 읽기만 재시도(구글 HTML·404 = gas-webapp-echo-404-retry)
+    var wait = function(ms){ return new Promise(function(res){ setTimeout(res, ms); }); };
+    return go().catch(function(){ return wait(700).then(go); }).catch(function(){ return wait(1600).then(go); });
   }
   function fmtLive(v){ var d=String(v||'').replace(/\D/g,'').slice(0,11); if(d.length<4) return d; if(d.length<8) return d.slice(0,3)+'-'+d.slice(3); return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7); }
   function showScreen(id){ $(id).classList.add('on'); } function hideScreen(id){ $(id).classList.remove('on'); }

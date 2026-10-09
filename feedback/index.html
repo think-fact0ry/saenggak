@@ -53,8 +53,9 @@
   if (!key) { msg('이 컴퓨터에서는 처음이라 열 수 없어요. 대표님께 받은 링크로 한 번만 열어주세요. 그 다음부터는 이 주소로 바로 열려요.'); return; }
 
   function load() {
-    fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify({ action: 'send', k: key }) })
-      .then(function (r) { return r.json(); })
+    var go = function () { return fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify({ action: 'send', k: key }) }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); };
+    var wait = function (ms) { return new Promise(function (res) { setTimeout(res, ms); }); };
+    go().catch(function () { return wait(700).then(go); }).catch(function () { return wait(1600).then(go); })   // 읽기만 하는 화면=재시도(구글 HTML·404)
       .then(function (d) {
         if (!d.ok) {
           if (d.error === 'key') { try { localStorage.removeItem(KEY_STORE); } catch (e) {} msg('링크가 바뀌었어요. 대표님께 새 링크를 받아 한 번만 열어주세요.'); }

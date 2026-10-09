@@ -706,8 +706,9 @@ function thisMonth(){ var d = new Date(), p = function(n){ return ('0' + n).slic
 function todayYmd(){ var d = new Date(), p = function(n){ return ('0' + n).slice(-2); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
 function loadRoster(){
   var s = sess() || {};
-  fetch(EXEC_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'staff_clients', staffId:s.staffId, session:s.session }) })
-    .then(function(r){ return r.json(); })
+  var go = function(){ return fetch(EXEC_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'staff_clients', staffId:s.staffId, session:s.session }) }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); };
+  var wait = function(ms){ return new Promise(function(res){ setTimeout(res, ms); }); };
+  go().catch(function(){ return wait(700).then(go); }).catch(function(){ return wait(1600).then(go); })   // 읽기=재시도(구글 HTML·404)
     .then(function(res){
       if(res && res.code === 'auth'){ location.replace('상담일지.html?from=ai일지'); return; }
       if(res && res.ok){ roster = res.clients || []; renderList(); }
