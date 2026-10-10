@@ -528,6 +528,16 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .l57 .av{width:40px;height:40px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:var(--green600);color:var(--green100);font-size:12px;font-weight:800}
 .l57 .nm{font-size:14.5px;font-weight:700;color:var(--g900)}
 .l57 .ms{font-size:13px;color:var(--g600);margin-top:2px}
+/* §4.18 알약 하나 — attend widget #pill 실값(34px, 점 8, 14px 700, 게이지 green100, 문의 칸 g50+왼쪽 1px g200) */
+.p59{display:inline-flex;align-items:stretch;height:34px;background:#fff;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);overflow:hidden;cursor:pointer;user-select:none}
+.p59 .zl{position:relative;display:flex;align-items:center;gap:9px;padding:0 15px}
+.p59 .fl{position:absolute;left:0;top:0;bottom:0;background:var(--green100)}
+.p59 .dt{position:relative;width:8px;height:8px;border-radius:50%;background:var(--g400)}
+.p59 .tx{position:relative;font-size:14px;font-weight:700;letter-spacing:-.4px;color:var(--g600);font-variant-numeric:tabular-nums;white-space:nowrap}
+.p59.on .dt{background:var(--green600)} .p59.on .tx{color:var(--green700)}
+.p59 .iq{display:flex;align-items:center;gap:6px;padding:0 13px;background:var(--g50);border-left:1px solid var(--g200);font-size:14px;font-weight:700;letter-spacing:-.4px;color:var(--g900);white-space:nowrap;transition:background .15s}
+.p59 .iq:hover{background:var(--g100)} .p59 .iq:active{background:var(--g200)} .p59 .iq.z{color:var(--g700)}
+.p59 .iq b{min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:11.5px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box}
 .c58{display:flex;flex-direction:column}
 .c58 .b{max-width:78%;padding:9px 13px;border-radius:16px;font-size:14px;line-height:1.45}
 .c58 .them{align-self:flex-start;background:var(--g100);color:var(--g900)}
@@ -601,6 +611,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec46"><i>§4.10</i><span>헤더 + 뒤로가기 · 역할 표시</span></a>
     <a href="#sec47"><i>§4.11</i><span>뒤로가기·스와이프 = 화면 단위로 📱 실기기</span></a>
     <a href="#sec58"><i>§4.18</i><span>채팅·받은함 — 말풍선 간격 · 새 메시지는 맨 위로</span></a>
+    <a href="#sec59"><i>§4.18</i><span>알약은 하나 — 문의는 오른쪽 버튼 칸</span></a>
     <a href="#sec48"><i>§5.2</i><span>로딩 = 자리별 3층</span></a>
     <a href="#sec49"><i>§5.3</i><span>누름(press)</span></a>
     <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
@@ -1294,6 +1305,15 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="c58"><div class="b them">오감쑥쑥 신청하고 싶어요</div><div class="b them cont">대기가 얼마나 걸려요?</div><div class="b me sw">지금 서구는 2주 정도예요</div><div class="b me cont">신청해 두시면 순서대로 연락드려요</div></div>
     <div class="l57" id="l58"></div>
     <button class="btn" id="b58" style="font-size:14px;padding:10px">맨 아래 대화에 새 메시지</button>
+  </div>
+
+  <!-- 2026-10-10 유성 「알약은 하나로 해」 + 오른쪽 버튼 칸 + 바탕 g50 · 경위·전문 = docs/1 §4.18 -->
+  <h3 class="sec" id="sec59"><span class="ref">§4.18</span>알약은 하나 — 문의는 오른쪽 버튼 칸</h3>
+  <p class="desc">왼쪽은 키패드, 바탕이 다른 오른쪽 칸은 받은함. 근무 게이지는 왼쪽 칸 안에서만 차고, 로그인 전 이름은 「행정」.</p>
+  <div class="demo row" style="gap:14px;flex-wrap:wrap;background:#cfd9e4;border-radius:12px;padding:18px">
+    <span class="p59 on"><span class="zl"><span class="fl" style="width:67%"></span><span class="dt"></span><span class="tx">2시간 40분</span></span><span class="iq">문의<b>3</b></span></span>
+    <span class="p59"><span class="zl"><span class="dt"></span><span class="tx">행정</span></span><span class="iq z">문의</span></span>
+    <span class="p59"><span class="zl"><span class="dt"></span><span class="tx">행정</span></span></span>
   </div>
 </section>
 
