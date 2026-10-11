@@ -570,6 +570,33 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .f61 .tin{flex:1;position:relative;background:var(--g100);border-radius:16px;padding:9px 40px 9px 12px;font-size:13.5px;color:var(--g500)}
 .f61 .clip{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:var(--g600)}
 .f61 .snd{width:36px;height:36px;border-radius:50%;background:var(--green700);flex:none}
+/* §5.7 답해야 열리는 「다음」 — 깨우기 + 빛줄기와 화살표(안전교육 화면 실코드 축약) */
+.nx57{display:flex;flex-direction:column;gap:10px;max-width:384px;margin-left:auto;margin-right:auto}
+.nx57 .nx-ox{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nx57 .nx-ox button{height:64px;border:none;border-radius:16px;background:#fff;color:var(--g800);box-shadow:0 1px 2px rgba(47,111,77,.10),0 6px 16px rgba(47,111,77,.12);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s,background .2s,color .2s,opacity .2s}
+.nx57 .nx-ox button:active{transform:scale(.96)}
+.nx57 .nx-ox svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round}
+.nx57 .nx-ox button.right{background:var(--green500);color:#fff;box-shadow:none}
+.nx57 .nx-ox button.dim{opacity:.45}
+.nx57 .nx-idk{font-size:14px;color:var(--g600);text-decoration:underline;text-underline-offset:3px;align-self:center;padding:2px 8px}
+.nx57 .nx-idk:active{transform:scale(.93)}
+.nx57 .nx-idk.gone{visibility:hidden}
+.nx57 .nx-btn{position:relative;overflow:hidden;width:100%;padding:15px;border:none;border-radius:15px;background:var(--green600);color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:background .2s,transform .1s}
+.nx57 .nx-btn:disabled{background:var(--p-disabled);cursor:default}
+.nx57 .nx-btn:active:not(:disabled){transform:scale(.97);background:var(--green-dark,#166841)}
+.nx57 .nx-l{position:relative;z-index:1}
+.nx57 .nx-arr{display:inline-block;width:0;opacity:0;overflow:hidden;vertical-align:-3px;transition:width .25s,opacity .25s,margin .25s}
+.nx57 .nx-arr svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.nx57 .nx-btn.has-arr .nx-arr{width:18px;opacity:1;margin-left:6px}
+.nx57 .nx-btn.wake{background:var(--p-disabled)}
+.nx57 .nx-btn.wake::before{content:'';position:absolute;inset:0;z-index:0;background:var(--green600);transform-origin:left center;animation:nxWake .6s cubic-bezier(.3,.7,.25,1) both}
+@keyframes nxWake{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.nx57 .nx-btn.go::after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.5) 50%,transparent 75%);transform:translateX(-110%);animation:nxSheen 1.1s ease-in-out}
+@keyframes nxSheen{0%{transform:translateX(-110%)}70%,100%{transform:translateX(110%)}}
+.nx57 .nx-btn.go .nx-arr{animation:nxArrow .5s ease-in-out .25s 3}
+@keyframes nxArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+.nx57 .nx-re{font-size:13.5px;align-self:center}
+@media (prefers-reduced-motion:reduce){.nx57 .nx-btn.wake::before{animation:none}.nx57 .nx-btn.go::after{display:none}.nx57 .nx-btn.go .nx-arr{animation:none}.nx57 .nx-btn.go{box-shadow:0 0 0 3px var(--green200)}}
 </style>
 </head>
 <body>
@@ -646,6 +673,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
     <a href="#sec50"><i>§5.4</i><span>스켈레톤 — 로딩 구조 미리보기</span></a>
     <a href="#sec51"><i>§5.5</i><span>토스트 — 성공엔 초록 원+체크</span></a>
+    <a href="#sec62"><i>§5.7</i><span>답해야 열리는 「다음」 = 깨우기 + 빛줄기와 화살표</span></a>
   </div></div>
 </div>
 
@@ -1419,6 +1447,16 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   </div>
   <p class="note">바탕이 색 채움이면 원과 체크를 <b>뒤집는다</b> — 흰 원 + 그 바탕의 색. 초록 바탕에 초록 원은 면 대비 1.61로 녹아 사라진다.</p>
 
+  <!-- 2026-10-11 · 경위·전문 = docs/1 §5.7 (안전교육 카드 덱, 다섯 갈래 비교 뒤 2+3) -->
+  <h3 class="sec" id="sec62"><span class="ref">§5.7</span>답해야 열리는 「다음」 = 깨우기 + 빛줄기와 화살표</h3>
+  <p class="desc">고르면 「다음」이 왼쪽부터 차오르고, 가만히 있으면 빛이 지나가며 →가 민다. 두 번까지, 흔들림은 쓰지 않는다. O나 X를 눌러 보세요 ↓</p>
+  <div class="demo nx57">
+    <div class="nx-ox"><button type="button" data-v="o" aria-label="O"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15"/></svg></button><button type="button" data-v="x" aria-label="X"><svg viewBox="0 0 48 48"><line x1="12" y1="12" x2="36" y2="36"/><line x1="36" y1="12" x2="12" y2="36"/></svg></button></div>
+    <button type="button" class="lk nx-idk">잘 모르겠어요</button>
+    <button type="button" class="nx-btn" id="nxBtn" disabled><span class="nx-l">다음<span class="nx-arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span></span></button>
+    <button type="button" class="lk nx-re" id="nxRe">다시</button>
+  </div>
+
 </section>
 
 </div>
@@ -1968,6 +2006,26 @@ document.querySelectorAll('.l57').forEach(function(L){ L.addEventListener('click
 (function(){ document.querySelectorAll('textarea.ta').forEach(function(t){
   function grow(){ t.style.height='auto'; t.style.height=Math.max(92,t.scrollHeight)+'px'; }
   t.addEventListener('input',grow); grow(); }); })();
+
+// ── §5.7 답해야 열리는 「다음」 — 고르면 깨우기, 가만히 있으면 빛줄기 + 화살표 두 번(데모는 1.5초 기다림, 실제는 해설 길이) ──
+(function(){
+  var box=document.querySelector('.nx57'); if(!box) return;
+  var btn=document.getElementById('nxBtn'), idk=box.querySelector('.nx-idk'), oxs=box.querySelectorAll('.nx-ox button'), t=null, n=0, done=false;
+  function play(){ t=null; btn.classList.add('has-arr'); btn.classList.remove('go'); void btn.offsetWidth; btn.classList.add('go'); n++; if(n<2) t=setTimeout(play, 3000); }
+  function arm(){ clearTimeout(t); if(n<2) t=setTimeout(play, n?3000:1500); }
+  function answer(v){
+    if(done) return; done=true; idk.classList.add('gone');
+    oxs.forEach(function(b){ b.classList.add(b.getAttribute('data-v')==='x' ? 'right' : 'dim'); });
+    btn.classList.add('wake'); btn.disabled=false;
+    btn.addEventListener('animationend', function f(e){ if(e.animationName!=='nxWake') return; btn.removeEventListener('animationend', f); btn.style.transition='none'; btn.classList.remove('wake'); void btn.offsetWidth; btn.style.transition=''; });
+    arm();
+  }
+  oxs.forEach(function(b){ b.addEventListener('click', function(){ answer(b.getAttribute('data-v')); }); });
+  idk.addEventListener('click', function(){ answer(null); });
+  box.addEventListener('pointerdown', function(e){ if(!done || e.target.closest('.nx-ox,.nx-re')) return; btn.classList.remove('go'); arm(); });
+  btn.addEventListener('click', function(){ clearTimeout(t); t=null; n=2; btn.classList.remove('go'); });
+  document.getElementById('nxRe').addEventListener('click', function(){ clearTimeout(t); t=null; n=0; done=false; btn.disabled=true; btn.className='nx-btn'; idk.classList.remove('gone'); oxs.forEach(function(b){ b.classList.remove('right','dim'); }); });
+})();
 </script>
 </body>
 </html>
