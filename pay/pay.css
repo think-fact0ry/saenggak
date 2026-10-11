@@ -1,0 +1,276 @@
+/* 28 급여명세서 선생님 화면 — 정본 원칙 = docs/1_원칙_디자인UX.md
+   레퍼런스 실코드: 근태 attend/index.html(본인 확인 idOv·OTP otpOv·토스트·종료 안내) / 태블릿 상담일지 s-signup1·2(원조) /
+   보드게임 설문 games/survey.css(화면 겹 구조·폰 목업·스크롤 그라디언트) / 문서리더 reader/js/app.js(attachPinch).
+   굵기 사다리(§3.2) = 700 제목·금액 / 600 1차 버튼·카드 이름 / 500 누를 수 있는 글자 / 400 설명 */
+:root{
+  /* TOKENS:START (자동 주입 — 정본=docs/1 §3.1, node 디자인프리뷰/토큰동기.js. 손편집 금지) */
+
+  /* 회색 — §3.1 정본(중립 회색 스케일). 필요한 칸만 골라 써도 되나 이름·값은 이대로 */
+  --g50:#f9fafb; --g100:#f2f4f6; --g200:#e5e8eb; --g300:#d1d6db;
+  --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
+  --g800:#333d4b; --g900:#191f28;
+  /* 초록 — §3.1 OKLCH 스케일(회색 명도 사다리 고정, green600=브랜드 #3a8a5f 앵커).
+     밝은 50~400 = 토스 weak 실측 기반 재보정(2026-07-04 유성 #e9f8ee 확정 — ex43 실측 C.021·브랜드 H157,
+     100→500 수렴 가중 1/.85/.62/.40/.20으로 이음새 없음. 옛 A안 채도부스트 값 폐기) */
+  --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
+  --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
+  --green:var(--green600); --green-dark:var(--green700); --green-bg:var(--green100);  /* 별칭(기존 코드 호환) */
+  /* 시맨틱 */
+  --red:#f04452;           /* 에러·경고 상태(폼 오류·OTP 오류·알림) */
+  --warn:#f5a623;          /* 주의 신호(비오류) — 근태 지각 색 등(유성 확정 2026-07-14). red=오류/warn=주의 구분 */
+  --warn-weak-bg:#fef4e2; --warn-weak-fg:#8a5a00;   /* warn weak(연주황 채움+진한 갈색주황 폰트 — danger-weak 결). ⚠️fg는 2026-09-02 #c07f00→#8a5a00(유성 확정): 옛 값은 이 bg 위 대비 3.07(본문 4.5 미달, 정본에 실측 이력 없었음) → 5.43. 측정=WCAG 2.x 상대휘도 node 계산 2026-09-02 */
+  --ink-on-dark:#F9FBFA;   /* 어두운 배경 흰 글씨(§3.5 line125) */
+  /* 버튼·뱃지 시맨틱 (§4.14 버튼 체계 — 유성 2026-07-02) */
+  --dark:#525966;          /* dark variant(중립 짙은 회색 버튼/뱃지) + 흰 폰트 */
+  --danger:#D25357;        /* danger variant(파괴적 액션 버튼/뱃지) + 흰 폰트. ※--red(#f04452)와 구분: red=상태알림, danger=버튼 */
+  --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;   /* danger weak(연빨강 채움+진한빨강 폰트) */
+  --p-disabled:#b7e0c8; --dark-disabled:#c8ccd0; --danger-disabled:#f2cdce;   /* disabled = variant 흐린 버전+흰폰트(회색 아님) */
+  /* 라운드 — §3.3 */
+  --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
+  /* 타입 스케일 — §3.2 (큰 제목 clamp 유동 / 본문 고정) */
+  --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
+  --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
+  /* 스크롤 그라디언트 — §4.13-6 A안. 스크롤바를 숨기는 곳에 "더 있다"를 말하는 그린 2겹.
+     2026-09-05 정본 승격(유성) — 그전엔 provider-map·09가 각자 :root에 복붙한 이중 진실이었다. 값은 지도 원본 그대로 */
+  --sf-bot:linear-gradient(to bottom,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+           linear-gradient(to bottom,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%);
+  --sf-top:linear-gradient(to top,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
+           linear-gradient(to top,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%);
+  /* TOKENS:END */
+  --side:24px;   /* 글자 대비(§3.1-7): 흰 바탕 작은 글자 = g600 이상, 회색 면(g50·g100) 위 = g700 이상, g400은 글자 금지, g500은 큰 글자와 placeholder만 */   /* 좌우 여백 = 근태 .hd·.otpov와 같은 24 */
+}
+
+/* 공통 리셋 — §3.7: 탭 하이라이트 끔 · 읽는 글자는 선택 안 됨(입력칸만 예외) */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{font-family:'Pretendard Variable','Pretendard',-apple-system,sans-serif;background:#fff;color:var(--g900);word-break:keep-all;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none;overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:default;}
+input{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;cursor:text;}
+button{font:inherit;color:inherit;}
+[hidden]{display:none!important;}
+
+/* 앱 = 화면 겹(23 설문 구조). 화면마다 머리·몸통(스크롤)·바닥 버튼 */
+#app{position:fixed;inset:0;margin:0 auto;max-width:520px;background:#fff;overflow:hidden;transform:translateZ(0);}
+.pg{position:absolute;inset:0;display:flex;flex-direction:column;background:#fff;
+  transition:transform .36s cubic-bezier(.22,.85,.25,1),opacity .36s;}
+.pg.off-r{transform:translateX(100%);}
+.pg.off-l{transform:translateX(-30%);opacity:0;}
+.pg.gone{display:none;}
+
+/* 머리 — 근태 .hd 값(38×38·22px 아이콘·선 2·g900, 위 18) */
+.hd{flex-shrink:0;display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:4px;
+  min-height:calc(56px + env(safe-area-inset-top));padding:calc(10px + env(safe-area-inset-top)) 14px 0;}
+.hd .t{text-align:center;font-size:var(--fs-title);font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ic{width:40px;height:40px;border:0;background:none;color:var(--g900);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .16s cubic-bezier(.3,1.6,.5,1);}
+.ic:active{transform:scale(.82);}
+.ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+.hd .tx{justify-self:end;border:0;background:none;color:var(--g700);font-size:var(--fs-body);font-weight:600;padding:8px 4px;cursor:pointer;white-space:nowrap;transition:transform .12s;}
+.hd .tx:active{transform:scale(.93);}
+
+/* 몸통 = 스크롤. 막대는 숨기고 그린 그라디언트로 "더 있다"(§4.13-6 — 위치는 JS가 실측으로 넘김) */
+.body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px var(--side) 24px;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+.body::-webkit-scrollbar{display:none;}
+.pg::before,.pg::after{content:"";position:absolute;left:0;right:0;height:32px;z-index:5;pointer-events:none;opacity:0;transition:opacity .18s;}
+.pg::before{top:var(--sf-t,0px);background:var(--sf-top);}
+.pg::after{top:calc(var(--sf-t,0px) + var(--sf-h,0px) - 32px);background:var(--sf-bot);}
+.pg.moreTop::before,.pg.more::after{opacity:1;}
+
+/* 바닥 버튼 칸 — 흐름 안 맨 아래(§4.1-5). 키보드가 뜨면 resizes-content가 화면을 줄여 키보드 위에 앉는다 */
+.cta{flex-shrink:0;padding:10px var(--side) calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;background:#fff;}
+/* 입력 중(=키보드 떠 있음) = 좌우 여백·라운드 없이 꽉 차게(§4.1-5 ⓐ), 따라올 때 전환 없음(ⓑ) */
+.pg.kb .cta{padding:0;}
+.pg.kb .cta .btn{border-radius:0;padding:19px;transition:none;}
+
+/* 버튼 — §4.14 fill primary + §5.3-1 누름(어두워짐·물결·.97). 폰 CTA 라운드 15 고정(§4.14 radius) */
+.btn{width:100%;border:0;border-radius:15px;padding:17px;font-size:var(--fs-title);font-weight:700;letter-spacing:-.3px;cursor:pointer;
+  background:var(--green600);color:#fff;position:relative;overflow:hidden;transition:transform .12s,background-color .2s;}
+.btn:active{transform:scale(.97);background:var(--green700);}
+/* 게이팅(입력 전 못 누름) = 연초록 + 흰 글자, disabled 속성은 안 씀 — 누르면 흔들고 이유를 말한다(§4.9) */
+.btn.off{background:var(--p-disabled);}
+.btn.off:active{transform:none;background:var(--p-disabled);}
+.pg.kb .cta .btn.off{background:#fff;color:var(--g400);}   /* 키보드 위 꽉 찬 비활성 = 흰 바탕(회색 띠 방지, §4.2-10) */
+.btn.busy{background:var(--green600);pointer-events:none;}   /* 로딩 = 채운 초록 유지(§4.14 상태 분기) */
+.btn .bl{position:relative;z-index:1;}
+.rip{position:absolute;z-index:0;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.16);transform:translate(-50%,-50%) scale(0);pointer-events:none;}
+.rip.go{transform:translate(-50%,-50%) scale(var(--rs,16));transition:transform .46s cubic-bezier(.25,.6,.3,1);}
+.rip.fade{opacity:0;transition:opacity .3s;}
+/* 흔들림 표준 = 3px→1px 감쇠 .28s(§4.9) */
+@keyframes shakeX{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(1px)}}
+.shake{animation:shakeX .28s cubic-bezier(.36,.07,.19,.97);}
+/* 박스 없는 글자 버튼 = 누르면 살짝 작아짐만(§5.3-2, 색 안 바뀜) */
+.lk{border:0;background:none;font-size:var(--fs-body);font-weight:500;color:var(--g600);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--g400);padding:10px;cursor:pointer;transition:transform .12s;}
+.lk:active{transform:scale(.93);}
+
+/* 로딩 점(§5.2) */
+.ld{display:inline-flex;align-items:center;gap:9px;}
+.ld-dots{display:inline-flex;gap:5px;}
+.ld-dots i{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;animation:ldb 1.1s ease-in-out infinite;}
+.ld-dots i:nth-child(2){animation-delay:.16s;} .ld-dots i:nth-child(3){animation-delay:.32s;}
+@keyframes ldb{0%,75%,100%{transform:translateY(0);opacity:.4;}38%{transform:translateY(-6px);opacity:1;}}
+.note .ld-dots i{background:var(--green);}
+
+/* ── 본인 확인(휴대폰) — 태블릿 s-signup1·근태 idOv 문법: 위 64 · 제목 24/700 · 밑줄 입력 ── */
+.idwrap{padding-top:calc(64px + env(safe-area-inset-top));}
+.idwrap .body{padding-top:0;}
+h1{font-size:24px;font-weight:700;letter-spacing:-.6px;line-height:1.35;}
+.tfield{margin-top:26px;}
+.tfield label{display:block;font-size:var(--fs-sm);font-weight:600;color:var(--g600);margin:0 0 6px;transition:color .15s;}
+.tfield.focus label{color:var(--green);}
+.tin-wrap{position:relative;border-bottom:2px solid var(--g200);transition:border-color .15s;}
+.tfield.focus .tin-wrap{border-color:var(--green);}
+.tfield.bad .tin-wrap{border-color:var(--red);}
+.tfield.bad label{color:var(--red);}
+.tin-wrap input{width:100%;border:none;background:none;outline:none;font-family:inherit;font-size:22px;font-weight:600;color:var(--g900);padding:2px 40px 5px 0;caret-color:var(--green);font-variant-numeric:tabular-nums;}
+.tin-wrap input::placeholder{color:var(--g500);font-weight:500;}
+.tin-wrap .clr{position:absolute;right:0;top:11px;width:15px;height:15px;border-radius:50%;background:var(--g300);border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+.tfield.has-val .clr{display:flex;}
+.tin-wrap .clr svg{width:7px;height:7px;color:#fff;display:block;}
+.note{font-size:var(--fs-sm);font-weight:600;color:var(--g600);margin-top:14px;min-height:20px;line-height:1.55;}
+.note.err{color:var(--red);}
+.note .sub{display:block;color:var(--g600);font-weight:500;margin-top:2px;}
+.eic{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:800;margin-right:6px;vertical-align:-2px;flex:none;}
+.note .lk{padding:0 0 0 6px;font-size:inherit;font-weight:700;color:var(--green-dark);text-decoration-color:currentColor;}
+
+/* ── 문자 인증 6칸 — 근태 otpOv·상담일지 s-signup2 그대로(§4.2-10) ── */
+.osub{text-align:center;font-size:var(--fs-sm);font-weight:600;color:var(--g600);margin-top:8px;min-height:20px;font-variant-numeric:tabular-nums;}
+.obody{padding-top:26px;}
+.otp-box{position:relative;display:flex;gap:7px;justify-content:center;width:fit-content;margin:8px auto 4px;transition:transform .45s cubic-bezier(.4,0,.2,1);}
+.otp-cell{width:clamp(40px,12.8vw,50px);height:60px;border-radius:var(--r-md);background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:27px;font-weight:700;color:var(--green);transition:background .25s ease, box-shadow .25s ease;}
+.otp-cell.filled{background:#fff;box-shadow:inset 0 0 0 1px var(--g200);}
+.otp-cell:not(.filled){animation:otpWave 2.2s ease-in-out infinite;}
+.otp-cell:not(.filled):nth-child(2){animation-delay:.13s} .otp-cell:not(.filled):nth-child(3){animation-delay:.26s}
+.otp-cell:not(.filled):nth-child(4){animation-delay:.39s} .otp-cell:not(.filled):nth-child(5){animation-delay:.52s} .otp-cell:not(.filled):nth-child(6){animation-delay:.65s}
+@keyframes otpWave{0%{background:var(--g100)}28%{background:#fff}55%,100%{background:var(--g100)}}
+.otp-cell.active::after{content:"";width:2px;height:30px;background:var(--green);border-radius:1px;animation:otpCaret 1.06s step-end infinite;}
+@keyframes otpCaret{0%,49%{opacity:1}50%,100%{opacity:0}}
+.otp-cell.pop{animation:otpPop .2s ease-out;}
+@keyframes otpPop{0%{transform:scale(.8)}100%{transform:scale(1)}}
+.otp-box.err .otp-cell{background:#fdecee;box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red);animation:none;}
+.otp-box.done{transform:scale(.94);}
+.otp-box.done .otp-cell{background:transparent!important;box-shadow:none!important;}
+.otp-box.filling .otp-cell{opacity:0;transition:opacity .28s ease;}
+.otp-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
+.otp-frame rect{fill:none;stroke:var(--green);stroke-width:2.5;stroke-dasharray:100;stroke-dashoffset:100;rx:var(--r-sm);transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1);}
+.otp-box.done .otp-frame rect{stroke-dashoffset:0;}
+.otp-box.filling .otp-frame{opacity:0;transition:opacity .3s ease;}
+.otp-morph{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;border:none;background:transparent;border-radius:var(--r-sm);opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:width .45s cubic-bezier(.5,0,.2,1),height .45s cubic-bezier(.5,0,.2,1),border-radius .45s cubic-bezier(.5,0,.2,1),background-color .3s ease,opacity .22s ease;}
+.otp-box.done .otp-morph{opacity:1;}
+.otp-morph.fill{background:var(--green);}
+.otp-morph.circle{width:64px;height:64px;border-radius:50%;}
+.om-check{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;}
+.otp-morph.checked .om-check{stroke-dashoffset:0;transition:stroke-dashoffset .4s cubic-bezier(.5,0,.3,1);}
+.otp-done-text{text-align:center;font-size:19px;font-weight:700;color:var(--g900);margin-top:18px;opacity:0;}
+.pg.suc-done .otp-done-text{animation:odText .45s ease forwards;}
+@keyframes odText{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.pg.suc-textout h1,.pg.suc-textout .osub,.pg.suc-textout .hd,.pg.suc-textout .cta,.pg.suc-textout .note{opacity:0;transition:opacity .35s ease;pointer-events:none;}
+#otpIn{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;background:none;font-size:16px;cursor:pointer;color:transparent;caret-color:transparent;}
+#pOtp .note{text-align:center;margin-top:12px;}
+.lk-resend{align-self:center;border:0;background:none;font-size:14.5px;font-weight:600;color:var(--green);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:10px;transition:transform .12s;}
+.lk-resend:active{transform:scale(.93);}
+
+/* ── 이번 달 명세서 ── */
+.mh{padding-top:0;}   /* 제목 위 = 본인 확인·문자 화면과 같은 64 */
+.mh .who{font-size:var(--fs-body);font-weight:500;color:var(--g600);margin-top:4px;}
+/* 위계 1 = 실지급액(§4.13-1). 명세서 PDF 글자는 폰에서 7~8px이라 금액을 화면 글자로 다시 크게 보인다 */
+.sum{margin-top:28px;}
+.sum .k{font-size:var(--fs-sm);font-weight:600;color:var(--g600);}
+.sum .v{font-size:32px;font-weight:700;letter-spacing:-.8px;line-height:1.3;margin-top:2px;font-variant-numeric:tabular-nums;min-height:42px;}
+.sum .v .u{font-size:24px;margin-left:1px;}
+/* 명세서 카드 — 누르면 크게 보기. 회색 바탕 + 라운드(근태 일정 카드 결), 누르면 .96(§5.3-2) */
+.docs{margin-top:22px;display:flex;flex-direction:column;gap:10px;}
+.doc{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:var(--g50);border-radius:var(--r-lg);padding:16px 14px 16px 18px;cursor:pointer;transition:transform .08s;}
+.doc:active{transform:scale(.96);}
+.doc .l{flex:1;min-width:0;}
+.doc .n{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:600;color:var(--g900);}
+.doc .s{font-size:var(--fs-sm);font-weight:400;color:var(--g700);margin-top:2px;font-variant-numeric:tabular-nums;min-height:20px;}
+.doc .a{font-size:16px;font-weight:700;color:var(--g800);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.doc .chev{flex:none;width:18px;height:18px;color:var(--g400);}
+.doc .chev svg{width:18px;height:18px;display:block;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+/* 좁은 폰(320) = 회기 줄을 이름·금액 아래 한 줄로(「단가원 ×」/「N회기」로 꺾이지 않게) */
+@media (max-width:359px){
+  .doc{display:grid;grid-template-columns:minmax(0,1fr) auto 18px;column-gap:10px;row-gap:2px;}
+  .doc .l{display:contents;}
+  .doc .n{grid-column:1;grid-row:1;}
+  .doc .a{grid-column:2;grid-row:1;}
+  .doc .s{grid-column:1 / 3;grid-row:2;margin-top:0;}
+  .doc .chev{grid-column:3;grid-row:1 / 3;align-self:center;}
+}
+/* 뱃지 = §4.15 weak(테두리 없음) */
+.bdg{display:inline-block;font-size:var(--fs-caption);font-weight:700;color:var(--green-dark);background:var(--green100);border-radius:999px;padding:2px 8px;line-height:1.5;}
+/* 뼈대(§5.4 훑기) — 실물과 같은 자리·크기 */
+.sk-b{display:inline-block;vertical-align:middle;background:var(--g100);border-radius:7px;background-image:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.7) 50%,rgba(255,255,255,0) 70%);background-size:300% 100%;background-repeat:no-repeat;animation:sksh 1.5s ease-in-out infinite;}
+.doc .sk-b{background-color:var(--g200);}
+@keyframes sksh{0%{background-position:150% 0}70%,100%{background-position:-50% 0}}
+@media (prefers-reduced-motion:reduce){.sk-b{animation:none;}}
+.links{margin-top:24px;display:flex;flex-direction:column;align-items:center;}   /* ⚠️ .more는 스크롤 그라디언트 토글 이름(.pg.more) — 겹치면 화면에 margin이 붙는다 */
+.state{padding-top:64px;text-align:center;}   /* 명세서 없음, 못 불러옴 = 그림+제목+회색 한 줄(§4.5, 일시 실패라 빨강 없음) */
+.state .ill{width:64px;height:64px;border-radius:50%;background:var(--g100);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.state .ill svg{width:28px;height:28px;fill:none;stroke:var(--g500);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.state b{display:block;font-size:var(--fs-title);font-weight:700;color:var(--g800);letter-spacing:-.3px;}
+.state p{font-size:var(--fs-sm);color:var(--g600);margin-top:6px;}
+
+/* 확인 끝 = 버튼 자리에 조용한 한 줄(높이 같게 — 위 내용 안 움직임) */
+.acked{display:flex;align-items:center;justify-content:center;gap:8px;min-height:calc(var(--fs-title) * 1.5 + 34px);font-size:var(--fs-body);font-weight:600;color:var(--g600);font-variant-numeric:tabular-nums;animation:ackIn .32s ease both;}
+.acked .ck{width:20px;height:20px;border-radius:50%;background:var(--green);display:inline-flex;align-items:center;justify-content:center;flex:none;}
+.acked .ck svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+@keyframes ackIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── 지난 명세서 ── */
+.mlist{display:flex;flex-direction:column;}
+.mrow{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;text-align:left;padding:17px 0;cursor:pointer;transition:transform .08s;}
+.mrow:active{transform:scale(.96);}
+.mrow + .mrow{border-top:1px solid var(--g100);}   /* 같은 묶음 안 = 헤어라인(§4.7) */
+.mrow .n{flex:1;font-size:16px;font-weight:600;}
+.mrow .st{font-size:var(--fs-sm);color:var(--g600);font-variant-numeric:tabular-nums;}
+.mrow .st.no{color:var(--g700);font-weight:600;}   /* 확인 전 = 손이 필요한 쪽이 더 진하게 */
+.mrow .chev{flex:none;width:18px;height:18px;color:var(--g400);margin-left:-2px;}
+.mrow .chev svg{width:18px;height:18px;display:block;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── 명세서 크게 보기 ── 종이(흰) 위 회색 바탕, 두 손가락·두 번 탭 확대(문서리더 attachPinch) */
+#pDoc{background:var(--g100);}
+#pDoc .hd{background:#fff;}
+.vb{flex:1;min-height:0;overflow:auto;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+.vb::-webkit-scrollbar{display:none;}
+.pages{padding:12px 12px calc(20px + env(safe-area-inset-bottom));width:max-content;min-width:100%;}
+.paper{background:#fff;box-shadow:0 1px 3px rgba(25,31,40,.10);margin:0 auto;}
+.paper canvas{display:block;width:100%;height:100%;}
+.vhint{position:absolute;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:rgba(25,31,40,.82);color:#fff;font-size:var(--fs-sm);font-weight:600;padding:9px 16px;border-radius:999px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .3s;z-index:6;}
+.vhint.on{opacity:1;}
+.vmsg{padding:64px var(--side) 0;text-align:center;color:var(--g700);font-size:var(--fs-body);line-height:1.7;}
+
+/* ── 가운데 확인 창(§4.4) — 인증 시간 만료 ── */
+.mdim{position:absolute;inset:0;z-index:40;background:rgba(25,31,40,.4);opacity:0;pointer-events:none;transition:opacity .2s;}
+.mdim.on{opacity:1;pointer-events:auto;}
+.cmodal{position:absolute;left:50%;top:50%;z-index:41;width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:20px;padding:24px 22px 18px;text-align:left;opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.96);transition:opacity .2s,transform .2s;}
+.cmodal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+.cmodal h3{font-size:18px;font-weight:700;letter-spacing:-.4px;}
+.cmodal p{font-size:var(--fs-sm);color:var(--g600);margin-top:8px;}
+.cmodal .row{display:flex;gap:8px;margin-top:16px;}
+.cmodal .row .btn{padding:14px;font-size:var(--fs-body);}
+.btn.gray{background:var(--g100);color:var(--g700);}
+.btn.gray:active{background:var(--g200);transform:none;}
+
+/* ── 토스트(§5.5 — 성공엔 초록 원+체크, 바닥 버튼 위 12px은 JS가 잰다) ── */
+.toast{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));height:auto;transform:translateX(-50%) translateY(8px);display:flex;align-items:center;gap:8px;
+  background:var(--g800);color:#fff;font-size:var(--fs-sm);font-weight:600;line-height:1.5;border-radius:12px;padding:12px 18px;width:max-content;max-width:calc(100% - 48px);white-space:pre-line;text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:60;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast .tk{display:none;width:18px;height:18px;border-radius:50%;background:var(--green);flex:none;align-items:center;justify-content:center;}
+.toast.okk .tk{display:inline-flex;}
+.toast .tk svg{width:11px;height:11px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── 맨 처음 화면에서 뒤로 = 한 번 더(§4.11-4 ex18 — 근태 #exitHint와 같은 박스·문구) ── */
+#exitHint{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);z-index:70;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);background:#191f28;color:#F9FBFA;font-size:14.5px;font-weight:600;padding:9px 20px 9px 9px;border-radius:99px;box-shadow:0 6px 20px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;}
+#exitHint.on{opacity:1;transform:translateX(-50%) translateY(0);}
+#exitHint .ck{width:28px;height:28px;border-radius:50%;background:var(--green600);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#exitHint .ck svg{width:15px;height:15px;}
+
+/* ── §3.8 PC 폰 목업 — 넓은 창 + 마우스에서만 ── */
+@media (min-width:480px) and (hover:hover) and (pointer:fine){
+  html,body{background:var(--g200)!important;}
+  #app{top:19px;max-width:min(430px,calc(100% - 38px));border-radius:40px 40px 0 0;corner-shape:superellipse(2.3);box-shadow:0 8px 20px rgba(25,31,40,.15);}
+  #app > .pg{border-radius:40px 40px 0 0;corner-shape:superellipse(2.3);}
+  /* 딤이 뜨면 앱 배경을 미리 섞은 단일색으로(§3.8 ⑦ — 반투명이면 곡선 가장자리 1px 밝은 선) */
+  #app:has(> .mdim.on){background-color:rgb(163,165,169);box-shadow:inset 0 0 0 1px rgb(163,165,169),0 8px 20px rgba(25,31,40,.15);}
+}
