@@ -519,8 +519,17 @@
     if (!n.length || !pp.length) return null;
     var net = num(n[n.length - 1].k), pay = num(pp[pp.length - 1].k), ded = dd.length ? num(dd[dd.length - 1].k) : 0;
     if (pay - ded !== net) return null;
+    // 「단가 x N회기」는 12에서 세 칸(단가·x·N회기)이라 PDF 글자 조각이 명세서마다 다르게 끊긴다(10-12 실측:
+    // 「오감쑥쑥 서비스 19,000 x」+「4회기」 두 조각 / 「30,000 x 20회기」 한 조각). 그 줄 조각을 왼쪽부터 이어 붙여 찾는다
     var calc = null;
-    for (var j = 0; j < it.length; j++) { var mm = it[j].k.match(/^([\d,]+)x(\d+)회기$/); if (mm) { calc = { unit: num(mm[1]), n: +mm[2] }; break; } }
+    for (var j = 0; j < it.length && !calc; j++) {
+      if (it[j].k.indexOf('회기') < 0) continue;
+      var y0 = it[j].y;
+      var line = it.filter(function (i) { return Math.abs(i.y - y0) < 5; }).sort(function (a, b) { return a.x - b.x; })
+        .map(function (i) { return i.k; }).join('');
+      var mm = line.match(/([\d,]+)x(\d+)회기/);
+      if (mm && num(mm[1]) !== null) calc = { unit: num(mm[1]), n: +mm[2] };
+    }
     return { net: net, pay: pay, ded: ded, calc: calc };
   }
 
