@@ -1,4 +1,4 @@
-/* 28 급여명세서 선생님 화면 — 정본 원칙 = docs/1_원칙_디자인UX.md
+/* 급여명세서 선생님 화면(서버 = 12 급여 웹앱, 옛 28) — 정본 원칙 = docs/1_원칙_디자인UX.md
    레퍼런스 실코드: 근태 attend/index.html(본인 확인 idOv·OTP otpOv·토스트·종료 안내) / 태블릿 상담일지 s-signup1·2(원조) /
    보드게임 설문 games/survey.css(화면 겹 구조·폰 목업·스크롤 그라디언트) / 문서리더 reader/js/app.js(attachPinch).
    굵기 사다리(§3.2) = 700 제목·금액 / 600 1차 버튼·카드 이름 / 500 누를 수 있는 글자 / 400 설명 */
@@ -215,6 +215,19 @@ h1{font-size:24px;font-weight:700;letter-spacing:-.6px;line-height:1.35;}
 .acked .ck{width:20px;height:20px;border-radius:50%;background:var(--green);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .acked .ck svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
 @keyframes ackIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* 확인 버튼 위 안내(유성 10-12) = 물결 글자 + 아래 V 하나. 3초마다 되풀이(§5.7 되풀이 결), 흔들림 없음(§4.9 = 「못 눌러요」 뜻),
+   남기는 동안(.still)·동작 줄이기 = 가만히. 글자 g600 = 흰 바탕 작은 글자 통과선(§3.1-7) */
+.ahint{display:flex;flex-direction:column;align-items:center;padding-top:2px;}
+.ah-t{font-size:var(--fs-sm);font-weight:600;color:var(--g600);letter-spacing:-.2px;text-align:center;}
+.ah-t .w{white-space:nowrap;}
+.ah-t i{font-style:normal;display:inline-block;animation:ahWave 3s ease-in-out infinite;animation-delay:calc(var(--i) * 45ms);}
+.ahint svg{display:block;width:18px;height:9px;margin-top:4px;fill:none;stroke:var(--green600);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.45;animation:ahV 3s ease infinite;animation-delay:1.1s;}
+@keyframes ahWave{0%{transform:none;color:var(--g600)}7%{transform:translateY(-3px);color:var(--green700)}15%{transform:none;color:var(--g600)}100%{transform:none}}
+@keyframes ahV{0%{opacity:.45;transform:none}8%{opacity:1;transform:translateY(2px)}22%{opacity:.45;transform:none}100%{opacity:.45;transform:none}}
+.ahint.still .ah-t i,.ahint.still svg{animation:none;}
+@media (prefers-reduced-motion:reduce){.ah-t i,.ahint svg{animation:none;}.ahint svg{opacity:1;}}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
 /* ── 지난 명세서 ── */
 .mlist{display:flex;flex-direction:column;}

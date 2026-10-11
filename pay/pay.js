@@ -1,4 +1,4 @@
-/* 28 급여명세서 선생님 화면 — 서버 = scripts/28_급여명세서발송 doPost(text/plain JSON).
+/* 급여명세서 선생님 화면 — 서버 = 12 급여 웹앱(scripts/12_급여명세서/발송, 옛 28) doPost(text/plain JSON).
    액션: start(휴대폰 → 문자) / verify(6자리 → 열쇠) / my(이번 달·지난 달 목록) / file(명세서 PDF 하나) / ack(확인했어요)
    ⚠️ 이 레포는 공개다 — 화면 코드에 비밀 0, 예시(?demo=1) 자료는 전부 지어낸 값. */
 (function () {
@@ -324,6 +324,17 @@
   function mdText(iso) { var d = new Date(iso); return isNaN(d) ? '' : (d.getMonth() + 1) + '월 ' + d.getDate() + '일'; }
   var CHEV = '<span class="chev"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></span>';
   var CHECK = '<span class="ck"><svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg></span>';
+  // 확인 버튼 위 안내(유성 10-12 「위 명세서를 모두 확인하신 뒤 눌러 주세요」 + 아래 V 하나, 모션 = 물결 글자).
+  // 글자마다 순번(--i)을 줘 왼쪽부터 차례로 뜨고, 물결이 끝날 즈음 V가 켜진다. 낱말은 안 끊기게(.w). 읽는 글은 .sr 한 벌
+  function ackHint(m) {
+    var t = m.docs.length > 1 ? '위 명세서를 모두 확인하신 뒤 눌러 주세요' : '위 명세서를 확인하신 뒤 눌러 주세요', k = 0;
+    var wave = t.split(' ').map(function (w) {
+      var s = '<span class="w">' + w.split('').map(function (ch) { return '<i style="--i:' + (k++) + '">' + ch + '</i>'; }).join('') + '</span>';
+      k++; return s;
+    }).join(' ');
+    return '<div class="ahint"><span class="sr">' + t + '</span><p class="ah-t" aria-hidden="true">' + wave + '</p>' +
+      '<svg viewBox="0 0 18 9" aria-hidden="true"><polyline points="3 1.5 9 7 15 1.5"/></svg></div>';
+  }
 
   var ILL_DOC = '<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>';
   var ILL_RETRY = '<svg viewBox="0 0 24 24"><polyline points="21 4 21 10 15 10"/><path d="M20 14a8 8 0 1 1-2-6l3 2"/></svg>';
@@ -428,7 +439,7 @@
     var m = ME.months[i], c = p.querySelector('.m-cta');
     if (m.noack) { c.innerHTML = ''; return; }   // 카톡으로 이미 받은 달 = 보기만
     if (m.ack) { c.innerHTML = '<div class="acked">' + CHECK + '<span></span></div>'; c.querySelector('span:last-child').textContent = mdText(m.ack.at) + '에 확인했어요'; return; }
-    c.innerHTML = '<button class="btn" type="button">확인했어요</button>';
+    c.innerHTML = ackHint(m) + '<button class="btn" type="button">확인했어요</button>';
     var b = c.querySelector('.btn'); pressRipple(b);
     b.onclick = function () { doAck(p, i, b); };
   }
@@ -439,6 +450,7 @@
     var m = ME.months[i], s = sess(), g = p._gen, ym = m.ym;
     if (ackBusy[ym]) return; ackBusy[ym] = 1;
     btnLoad(b, '확인을 남기고 있어요');
+    var hint = p.querySelector('.ahint'); if (hint) hint.classList.add('still');   // 남기는 동안은 물결을 멈춘다
     call({ action: 'ack', t: s && s.t, ym: ym, ver: m.ver }).then(function (r) {
       delete ackBusy[ym];
       if (r && r.ok) {
@@ -447,11 +459,11 @@
         if (p.id === 'pMonth') drawPast();
         return;
       }
-      if (p._gen === g) btnDone(b);
+      if (p._gen === g) { btnDone(b); if (hint) hint.classList.remove('still'); }
       if (r && r.code === 'auth') { setSess(null); openId(); toast('본인 확인을 다시 할게요'); return; }
       if (r && r.code === 'stale') { toast('명세서가 새로 바뀌었어요\n다시 보고 눌러 주세요'); openHome(false); return; }
       toast('확인을 못 남겼어요\n다시 눌러 주세요');
-    }).catch(function () { delete ackBusy[ym]; if (p._gen === g) btnDone(b); toast('연결이 안 됐어요\n다시 눌러 주세요'); });
+    }).catch(function () { delete ackBusy[ym]; if (p._gen === g) { btnDone(b); if (hint) hint.classList.remove('still'); } toast('연결이 안 됐어요\n다시 눌러 주세요'); });
   }
 
   // 지난 명세서
@@ -690,8 +702,8 @@
       { id: 'a1', label: '미추홀 오감', fname: '급여명세서_생각미추오감_김하늘_26.10.pdf', fixed: SCENE === 'fixed' },
       { id: 'b1', label: '행복마음', fname: '(급여명세서_행복_김하늘_26.10.pdf', fixed: false }
     ], ack: SCENE === 'acked' ? { at: '2026-11-15T21:03:00+09:00' } : null };
-    var past = [   // 11월 15일 첫날 모습 = 9월분(카톡으로 이미 받은 달)만 지난 명세서에
-      { ym: '26.09', noack: true, docs: [{ id: 'a2', label: '미추홀 오감', fname: '급여명세서_생각미추오감_김하늘_26.09.pdf', fixed: false }], ack: null }
+    var past = [   // 11월 15일 모습 = 첫 달(9월분, 10-15 발송)이 지난 명세서에 「확인」으로
+      { ym: '26.09', ver: 1, docs: [{ id: 'a2', label: '미추홀 오감', fname: '급여명세서_생각미추오감_김하늘_26.09.pdf', fixed: false }], ack: { at: '2026-10-15T20:12:00+09:00' } }
     ];
     return { ok: true, t: 'demo', name: '김하늘', months: SCENE === 'empty' ? [] : [cur].concat(past) };
   }
