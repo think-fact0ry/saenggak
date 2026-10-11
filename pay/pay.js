@@ -3,7 +3,7 @@
    ⚠️ 이 레포는 공개다 — 화면 코드에 비밀 0, 예시(?demo=1) 자료는 전부 지어낸 값. */
 (function () {
   'use strict';
-  var GAS_EXEC = 'https://script.google.com/macros/s/AKfycbyFpMitFzpmQ0NZAwVOs8vvLPz1Ymx14ZXeVzSE_UEuGAP8ah8k9kfQauelD91NAyHEpQ/exec';   // 28 웹앱 배포 주소(clasp deploy 뒤 기입 — 새 배포 말고 deploy -i로 덮어쓸 것)
+  var GAS_EXEC = 'https://script.google.com/macros/s/AKfycbzIFRx1AxDRByNQB_KLG09nhdMd8LQwBLkglJlsrBgWB-Y0qfMB4FpcXfr7vQz0Ez7tIA/exec';   // 12 급여 웹앱 배포 주소(10-12 28을 12에 합침 — 새 배포 말고 deploy -i로 덮어쓸 것)
   var Q = new URLSearchParams(location.search);
   var DEMO = Q.get('demo') === '1';
   var SCENE = Q.get('scene') || '';
