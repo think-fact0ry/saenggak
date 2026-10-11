@@ -608,10 +608,34 @@
     if (seen && !DEMO) return;
     var h = $('vhint'); h.classList.add('on'); setTimeout(function () { h.classList.remove('on'); }, 2600);
   }
+  // 저장 = 그림(PNG)으로(유성 10-12 「pdf 말고 png로」 — 폰 갤러리에 바로 들어간다). 1쪽을 폭 1600px로 다시 그린다(화면 확대 배율과 무관).
+  // 그림을 못 만들면(pdf.js가 이 기기에서 못 뜸 — 「파일로 받기」 길도 여기로 온다) PDF 그대로 받는다
   function saveDoc() {
     if (!view) return; var f = FILES[view.d.id]; if (!f) return;
-    var url = URL.createObjectURL(new Blob([f.bytes], { type: 'application/pdf' }));
-    var a = document.createElement('a'); a.href = url; a.download = view.d.fname || '급여명세서.pdf';
+    var btn = $('docSave'); if (btn.dataset.busy) return; btn.dataset.busy = '1';
+    var name = (view.d.fname || '급여명세서.pdf').replace(/\.pdf$/i, '');
+    var late = new Promise(function (ok, no) { setTimeout(function () { no(new Error('late')); }, 10000); });   // 10초 안에 못 그리면 PDF로
+    Promise.race([pngOf(f.bytes), late]).then(function (blob) { download(blob, name + '.png'); })
+      .catch(function () { download(new Blob([f.bytes], { type: 'application/pdf' }), name + '.pdf'); })
+      .then(function () { delete btn.dataset.busy; });
+  }
+  function pngOf(bytes) {
+    return pdfjs().then(function (lib) { return lib.getDocument({ data: bytes.slice() }).promise; }).then(function (doc) {
+      return doc.getPage(1).then(function (page) {
+        var vp = page.getViewport({ scale: 1600 / page.getViewport({ scale: 1 }).width });
+        var cv = document.createElement('canvas'); cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+        var cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);   // 빈 곳이 투명하면 갤러리에서 검게 보인다
+        // intent print = 화면 갱신 신호(requestAnimationFrame)를 안 기다린다 — 기다리면 탭이 뒤로 가 있을 때 저장이 안 끝난다(10-12 실측)
+        return page.render({ canvasContext: cx, viewport: vp, intent: 'print' }).promise.then(function () {
+          doc.destroy();
+          return new Promise(function (ok, no) { cv.toBlob(function (b) { if (b) ok(b); else no(new Error('png')); }, 'image/png'); });
+        });
+      });
+    });
+  }
+  function download(blob, fname) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = fname;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
