@@ -553,6 +553,23 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .f60 .ask{position:absolute;left:14px;bottom:14px;height:44px;padding:0 14px;border-radius:99px;background:#fff;border:1px solid var(--g200);display:flex;align-items:center;font-size:13px;font-weight:600;color:var(--g600);opacity:0;translate:0 8px;transition:opacity .25s,translate .3s cubic-bezier(.22,.7,.25,1)}
 .f60.up .ask{opacity:1;translate:none}
 .f60 .cap{position:absolute;left:12px;top:10px;font-size:12px;color:var(--g600)}
+/* §4.18 첨부 — kr js/inquiry-pane.js .ti-img·.ti-pdf, attend inbox/index.html .chip·.clip 실값 */
+.f61{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.f61 .box{flex:1;min-width:230px;background:#fff;border:1px solid var(--g200);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.f61 .cap{font-size:12px;color:var(--g600)}
+.f61 .img{width:150px;aspect-ratio:2/3;max-height:200px;border-radius:18px;border-top-left-radius:6px;background:linear-gradient(135deg,#cfe8d9,#3a8a5f)}
+.f61 .pdf{display:flex;gap:10px;align-items:center;width:200px;background:#fff;border:1px solid var(--g200);border-radius:16px;padding:10px 12px;box-shadow:0 1px 3px rgba(25,31,40,.06)}
+.f61 .pi{width:34px;height:40px;border-radius:6px;background:var(--danger-weak-bg);color:var(--danger-weak-fg);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.f61 .nm{font-size:13.5px;font-weight:600;line-height:1.35}.f61 .sz{display:block;font-size:11.5px;color:var(--g600)}
+.f61 .bub{align-self:flex-start;background:var(--g100);border-radius:18px;padding:8px 12px;font-size:14px}
+.f61 .chips{display:flex;gap:8px}
+.f61 .chip{position:relative;display:flex;align-items:center;gap:8px;background:var(--g50);border:1px solid var(--g200);border-radius:12px;padding:6px 30px 6px 6px;font-size:12px}
+.f61 .chip .th{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#cfe8d9,#3a8a5f)}
+.f61 .chip .x{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--g200);color:var(--g700);font-size:11px;display:flex;align-items:center;justify-content:center}
+.f61 .line{display:flex;gap:8px;align-items:center}
+.f61 .tin{flex:1;position:relative;background:var(--g100);border-radius:16px;padding:9px 40px 9px 12px;font-size:13.5px;color:var(--g500)}
+.f61 .clip{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:var(--g600)}
+.f61 .snd{width:36px;height:36px;border-radius:50%;background:var(--green700);flex:none}
 </style>
 </head>
 <body>
@@ -623,6 +640,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec58"><i>§4.18</i><span>채팅·받은함 — 말풍선 간격 · 새 메시지는 맨 위로</span></a>
     <a href="#sec59"><i>§4.18</i><span>알약은 하나 — 문의는 오른쪽 버튼 칸</span></a>
     <a href="#sec60"><i>§4.18</i><span>홈페이지 떠 있는 버튼 — SNS가 맨 위로 자리에서 같이 올라감</span></a>
+    <a href="#sec61"><i>§4.18</i><span>첨부 — 바로 안 가고 칩, 사진은 그 비율 자리, PDF는 카드</span></a>
     <a href="#sec48"><i>§5.2</i><span>로딩 = 자리별 3층</span></a>
     <a href="#sec49"><i>§5.3</i><span>누름(press)</span></a>
     <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
@@ -1333,6 +1351,13 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <div class="demo" style="display:flex;flex-direction:column;gap:12px">
     <div class="f60" id="f60"><span class="cap">폰 · 맨 위</span><span class="ask">문의하기</span><div class="col"><span class="c sn">톡</span><span class="c sn">인</span><span class="c sn">N</span><span class="c tp">↑</span></div></div>
     <button class="btn" id="b60" style="font-size:14px;padding:10px">300px 내리기</button>
+  </div>
+  <!-- 2026-10-11 · 경위·전문 = docs/1 §4.18 -->
+  <h3 class="sec" id="sec61"><span class="ref">§4.18</span>첨부 — 바로 안 가고 칩, 사진은 그 비율 자리, PDF는 카드</h3>
+  <p class="desc">행정 → 학부모만. 클립, 붙여넣기, 끌어다 놓기는 칩으로 먼저. 사진은 받기 전에도 그 비율 자리, PDF는 흰 카드.</p>
+  <div class="demo f61">
+    <div class="box"><span class="cap">행정 앱 입력 줄</span><div class="chips"><span class="chip"><span class="th"></span>붙여넣은 사진<span class="x">✕</span></span><span class="chip"><span class="pi" style="width:28px;height:34px">PDF</span>안내문.pdf<span class="x">✕</span></span></div><div class="line"><span class="tin">답장 적기<svg class="clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span><span class="snd"></span></div></div>
+    <div class="box"><span class="cap">학부모 창</span><span class="img"></span><span class="pdf"><span class="pi">PDF</span><span><span class="nm">10월 안내문.pdf</span><span class="sz">320KB, 누르면 열려요</span></span></span><span class="bub">안내문이에요</span></div>
   </div>
 </section>
 
