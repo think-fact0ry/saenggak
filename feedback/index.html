@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>선생님별 피드백 안내</title>
+<title>제공인력별 피드백 안내</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <!--
   24_피드백전달 현아쌤 화면 (2026-10-01). 이 파일엔 데이터가 없다 — 아이 이름·부모 글은 GAS(24 doPost)가
@@ -28,7 +28,7 @@
 @keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
 .retry{margin-top:10px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 16px;font:inherit;cursor:pointer}
 </style></head><body><div class="wrap" id="app">
-<h1>선생님별 피드백 안내</h1>
+<h1>제공인력별 피드백 안내</h1>
 <p class="sub">불러오는 중이에요…</p>
 <div class="grid"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
 </div>
@@ -38,7 +38,7 @@
   var KEY_STORE = 'fb-key';
   var app = document.getElementById('app');
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function msg(t, retry) { app.innerHTML = '<h1>선생님별 피드백 안내</h1><p class="sub">' + t + '</p>' + (retry ? '<button class="retry" id="retry">다시 불러오기</button>' : ''); }
+  function msg(t, retry) { app.innerHTML = '<h1>제공인력별 피드백 안내</h1><p class="sub">' + t + '</p>' + (retry ? '<button class="retry" id="retry">다시 불러오기</button>' : ''); }
 
   // 열쇠: 주소 # 뒤 → 저장 → 주소창에서 지움
   var key = '';
@@ -72,8 +72,8 @@
     if (!cards.length) { msg('이번 달 보낼 피드백이 없어요.'); return; }
     var K = 'fb-sent-' + d.month, st = {};
     try { st = JSON.parse(localStorage.getItem(K) || '{}'); } catch (e) {}
-    app.innerHTML = '<h1>선생님별 피드백 안내</h1>' +
-      '<p class="sub">선생님마다 <b>복사</b>를 누르고, 사무실 카톡 1:1 대화방에 붙여넣어 보내주세요.</p>' +
+    app.innerHTML = '<h1>제공인력별 피드백 안내</h1>' +
+      '<p class="sub">제공인력마다 <b>복사</b>해서 개별 카톡으로 보내주세요.</p>' +
       '<p class="cnt" id="cnt"></p><div class="grid">' +
       cards.map(function (c, i) {
         return '<div class="tc' + (st[c.teacher] ? ' sent' : '') + '" id="c' + i + '"><div class="th"><b>' + esc(c.teacher) + ' 선생님</b>' +
