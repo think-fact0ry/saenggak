@@ -46,8 +46,10 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
 .later{margin:16px 0 0;font-size:14px;color:var(--sub)}
 .later button{border:0;background:none;padding:0;color:var(--g7);font-weight:700;text-decoration:underline}
 
-/* 공지방 예약 = 늘 펴진 회색 판. 노란 말풍선과 채운 버튼은 안 씀(지금 1:1로 보내는 일과 갈림) */
-.rsv{background:#eceff0;border-radius:16px;padding:14px}
+/* 공지방 예약 = 늘 펴진 회색 판, 예약 메시지 두 개(1 포스터와 안내문 / 2 공지 글 — 유성 10-12 업무 메모 3판). 노란 말풍선과 채운 버튼은 안 씀(지금 1:1로 보내는 일과 갈림) */
+.rsv{background:#eceff0;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:16px}
+.rgh{margin:0 0 8px;display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700}
+.rgh .no{width:22px;height:22px;border-radius:50%;background:var(--dark);color:#fff;display:grid;place-items:center;font-size:12.5px;flex:none}
 .rsv-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:10px;align-items:start}
 .ri{background:#fff;border-radius:12px;padding:10px;display:flex;gap:10px;align-items:flex-end}
 .ri img{width:56px;aspect-ratio:3/4;border-radius:6px;flex:none;display:block;object-fit:cover}
@@ -277,16 +279,19 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
 
   function renderList() {
     var M = D.month, n = D.notice || {};
-    var items = [{ img: true }, { text: n.text }, { text: n.pair }];
-    var rsv = '<div class="rsv"><div class="rsv-items">' + items.map(function (it, i) {
-      var d = SENT.notice[i];
+    var item = function (i) {      // 0 = 포스터, 1 = 안내문, 2 = 공지 글(SENT.notice 칸 번호는 옛 판 그대로 — 저장된 복사 표시 유지)
+      var d = SENT.notice[i], it = i === 0 ? { img: true } : { text: i === 1 ? n.text : n.pair };
       var has = it.img ? !!n.poster : !!it.text;
       var btn = '<button class="cb' + (d ? ' done' : '') + '" data-a="rsvCopy" data-i="' + i + '"' + (has ? '' : ' disabled') + '>' + (d ? ICON.check + '복사됨' : ICON.copy + '복사') + '</button>';
       var body = it.img
         ? (n.poster ? '<img src="' + esc(n.poster) + '" alt="' + M + '월 포스터"><span class="sp"></span>' : '<span class="ph"></span><div class="tx none">포스터는 대표님이 올리면 여기 떠요</div>')
         : (it.text ? '<div class="tx" data-a="rsvMore">' + esc(it.text) + '</div>' : '<div class="tx none">안내문은 대표님이 올리면 여기 떠요</div>');
       return '<div class="ri' + (d ? ' done' : '') + '">' + body + btn + '</div>';
-    }).join('') + '</div></div>';
+    };
+    // 업무 메모 3판(유성 10-12): 예약 메시지 두 개 — 1 포스터와 안내문을 한 메시지로 / 2 공지 글은 다음 메시지로
+    var rsv = '<div class="rsv">' +
+      '<div><p class="rgh"><span class="no">1</span>포스터와 안내문을 한 메시지로</p><div class="rsv-items">' + item(0) + item(1) + '</div></div>' +
+      '<div><p class="rgh"><span class="no">2</span>공지 글은 다음 메시지로</p><div class="rsv-items">' + item(2) + '</div></div></div>';
     var cards = D.teachers.map(function (t, ti) {
       var s = tSent(t), all = s.every(Boolean);
       return '<div class="tc' + (all ? ' sent' : '') + '" data-ti="' + ti + '"><div class="th"><b>' + esc(tname(t.name)) + ' 선생님</b>' +
@@ -297,10 +302,10 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     }).join('');
     var nDone = D.teachers.filter(function (t) { return tSent(t).every(Boolean); }).length;
     document.getElementById('vbody').innerHTML =
-      '<section class="sec"><h2>' + ICON.clock + '공지방 예약</h2><p class="how">' + esc(n.when || '') + '에 올라가게 예약 메시지로 걸어 주세요.</p>' + rsv + '</section>' +
-      '<section class="sec"><h2>' + M + '월 월 계획안 발송 명단</h2><p class="how">선생님마다 위에서부터 차례로 <b>복사</b>해서 카톡으로 붙여넣어 주세요.</p>' +
+      '<section class="sec"><h2>' + ICON.clock + '공지방 예약</h2><p class="how">' + esc(n.when || '') + '에 올라가게 예약 메시지 두 개로 걸어 주세요.</p>' + rsv + '</section>' +
+      '<section class="sec"><h2>' + M + '월 월 계획안 발송 명단</h2><p class="how">제공인력마다 위에서부터 차례로 <b>복사</b>해서 사무실 카톡 1:1로 붙여넣어 주세요.</p>' +
       '<p class="cnt">' + nDone + ' / ' + D.teachers.length + '명 복사함</p><div class="grid">' + cards + '</div>' +
-      '<p class="later">선생님이 빠진 아이나 그만둔 아이를 알려 주면 → <button data-a="view" data-v="ans">누락된 아이, 그만둔 아이</button> 화면에서 처리해요.</p></section>';
+      '<p class="later">제공인력분이 누락된 아이나 그만둔 아이를 알려 주시면 → <button data-a="view" data-v="ans">누락된 아이, 그만둔 아이</button> 화면에서 처리해요.</p></section>';
   }
 
   // ── 누락된 아이, 그만둔 아이 ──
@@ -317,7 +322,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     }).join('');
     var t = sel != null ? teacher(sel) : null;
     document.getElementById('vbody').innerHTML = '<div class="ans"><h2>누락된 아이, 그만둔 아이</h2>' +
-      '<p class="how">선생님이 알려 주면 그 선생님을 골라 처리해 주세요. ' + M + '월분은 ' + (last.getMonth() + 1) + '월 ' + last.getDate() + '일까지예요.</p>' +
+      '<p class="how">제공인력분이 알려 주시면 해당 제공인력 이름을 골라 처리해 주세요. ' + M + '월분은 ' + (last.getMonth() + 1) + '월 ' + last.getDate() + '일까지예요.</p>' +
       '<div class="pick">' + pick + '</div><div id="sel">' + (t ? cardHTML(t) : '') + '</div><div class="logw">' + logHTML() + '</div></div>';
   }
   function lastIdx() { var y = 2000 + parseInt(D.ym.slice(0, 2), 10), m = parseInt(D.ym.slice(2), 10) - 1; return y * 12 + m - 1; }   // 보낼 달의 앞 달 = 답 받는 달
@@ -330,7 +335,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     h += statusHTML(t);
     if (s.open === 'miss') h += missHTML(t);
     else if (s.open === 'quit') h += quitHTML(t);
-    else h += '<div class="ex"><div class="exh"><span>선생님이 알려 준 것</span><span class="info" tabindex="0" role="note" aria-label="중도포기 설명" data-tip="중도포기를 누르면 아동 서류철에 중도포기가 적히고, 지도 배정과 월 스케줄에서도 빠져요.">i</span></div>' +
+    else h += '<div class="ex"><div class="exh"><span>제공인력분이 알려 주신 것</span><span class="info" tabindex="0" role="note" aria-label="중도포기 설명" data-tip="중도포기를 누르면 아동 서류철에 중도포기가 적히고, 지도 배정과 월 스케줄에서도 빠져요.">i</span></div>' +
       '<button class="tab g" data-a="openMiss"><span>누락된 아이가 있다면</span><span class="go">이름 넣기' + ICON.chev + '</span></button>' +
       '<button class="tab r" data-a="openQuit"><span>그만둔 아이가 있다면</span><span class="go">중도포기' + ICON.chev + '</span></button></div>';
     return h + '</div>';
@@ -382,7 +387,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   }
   function lookNote(n, L, t) {
     var b = '<b>' + esc(jo(n, '은는')) + '</b> ';
-    if (L.k === 'self') return [b + '이미 이 선생님 명단에 있어요.', ''];
+    if (L.k === 'self') return [b + '이미 해당 제공인력 명단에 있어요.', ''];
     if (L.k === 'selfnp') return [b + '명단 글에 등록 링크가 이미 같이 갔어요.', ''];
     if (L.k === 'other') return [b + esc(tname(L.who)) + ' 선생님 명단에 있어요. 보호자님은 1일에 받아요. 담당이 바뀌었으면 지도에서 고쳐 주세요.', ''];
     if (L.k === 'othernp') return [b + esc(tname(L.who)) + ' 선생님 명단에 등록 기다림으로 있어요. 그 명단 글에 등록 링크가 같이 갔어요.', ''];
@@ -422,7 +427,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       else h += '<div class="rad off"><span class="dt"></span>' + lab0(k) + '</div>';
     });
     var off = all.filter(function (k) { return !k.t06; });
-    if (off.length) h += '<div class="offbox"><b>' + off.map(lab0).join(', ') + '</b><small>신청폼에 이 선생님 배정 기록이 없어 여기선 못 적어요. 서류철 종결 칸에 직접 적어 주세요.</small></div>';
+    if (off.length) h += '<div class="offbox"><b>' + off.map(lab0).join(', ') + '</b><small>신청폼에 해당 제공인력 배정 기록이 없어 여기선 못 적어요. 서류철 종결 칸에 직접 적어 주세요.</small></div>';
     h += '</div><p class="hint">이번 달만 쉬는 아이는 고르지 마세요. 쉬는 달에도 받아요.</p>';
     if (s.err) h += '<p class="look e">' + esc(s.err) + '</p>';
     var k = s.pick != null ? all[s.pick] : null, nm = k ? esc(k.n) + ' ' : '', dis = (!k || s.busy) ? ' disabled' : '';
