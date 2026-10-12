@@ -20,6 +20,20 @@
     if (DEMO) { memStore = v; return; }
     try { if (v) localStorage.setItem(KEY, JSON.stringify(v)); else localStorage.removeItem(KEY); } catch (e) { }
   }
+  // 문자 기다리는 중 = { phone, deadline }. 문자 앱에 다녀오면 브라우저가 페이지를 새로 열 수 있다 →
+  // 시간 안이면 휴대폰 번호 화면이 아니라 6칸으로 바로(유성 10-12 소장님 「인증번호 보고나면 앱이 닫혀」)
+  var PEND_KEY = 'tf_pay_otp';
+  function setPend(v) {
+    if (DEMO) return;
+    try { if (v) localStorage.setItem(PEND_KEY, JSON.stringify(v)); else localStorage.removeItem(PEND_KEY); } catch (e) { }
+  }
+  function getPend() {
+    if (DEMO) return null;
+    try {
+      var p = JSON.parse(localStorage.getItem(PEND_KEY) || 'null');
+      return p && /^01\d{8,9}$/.test(p.phone) && p.deadline - Date.now() > 5000 ? p : null;   // 5초도 안 남았으면 그냥 처음부터
+    } catch (e) { return null; }
+  }
 
   // ───────────── 서버 부르기 ─────────────
   // 읽기(my·file) = 4초 안에 안 오면 하나 더 보내 먼저 온 것(구글이 가끔 HTML·수십 초 — 22 rec 실측 10-08)
@@ -248,8 +262,24 @@
   }
   function openOtp(phone, ttl, msg) {
     otp.phone = phone; otpReset(); push('pOtp'); startTimer(ttl);
+    setPend({ phone: phone, deadline: otp.deadline }); otpListen();
     if (msg) { otpNote.className = 'note'; otpNote.textContent = msg; }
     setTimeout(function () { try { otpIn.focus(); } catch (e) { } }, 380);
+  }
+  // 안드로이드 크롬, 삼성 인터넷 = 문자가 오면 아래 「허용」 한 번으로 6칸이 찬다(WebOTP).
+  // 짝 = 서버 문자 끝 줄 「@think-fact0ry.github.io #번호」(12 발송/서버.js). 아이폰은 이 길이 없고 키보드 위 「메시지에서」가 대신한다(autocomplete=one-time-code)
+  var otpAc = null;
+  function otpAbort() { if (otpAc) { try { otpAc.abort(); } catch (e) { } otpAc = null; } }
+  function otpListen() {
+    if (DEMO || !('OTPCredential' in window) || !navigator.credentials || typeof AbortController !== 'function') return;
+    otpAbort();
+    var ac = otpAc = new AbortController();
+    navigator.credentials.get({ otp: { transport: ['sms'] }, signal: ac.signal }).then(function (c) {
+      if (otpAc !== ac) return; otpAc = null;
+      var v = String(c && c.code || '').replace(/\D/g, '').slice(0, 6);
+      if (v.length !== 6 || curId() !== 'pOtp' || otp.busy || otpIn.disabled) return;
+      clearOtpErr(); otpIn.value = v; otpIn.dispatchEvent(new Event('input'));   // 6자리 = 바로 확인(손으로 친 것과 같은 길)
+    }).catch(function () { if (otpAc === ac) otpAc = null; });
   }
   function stopTimer() { if (otp.timer) { clearInterval(otp.timer); otp.timer = 0; } }
   function tick() {   // 0:00이 돼도 자리 유지(칸이 위로 안 튐 — §4.2-10)
@@ -259,6 +289,7 @@
   }
   function startTimer(ttl) { stopTimer(); otp.deadline = Date.now() + (ttl || OTP_TTL) * 1000; tick(); otp.timer = setInterval(tick, 1000); }
   function otpExpired() {
+    setPend(null); otpAbort();
     clearOtpErr(); otpIn.value = ''; renderCells(); otpIn.disabled = true;
     confirmBox('입력할 수 있는 시간이 지났어요', '인증번호를 다시 받아 주세요', '다시 받기', function () { otpSend(); });
   }
@@ -275,8 +306,8 @@
     call({ action: 'start', phone: otp.phone }).then(function (r) {
       otp.sending = false;
       if (curId() !== 'pOtp') return;   // 보내는 동안 뒤로 나갔으면 무시(닫힌 화면의 타이머 유령 방지)
-      if (r && r.ok) { otpNote.textContent = '인증번호를 다시 보냈어요'; otpIn.value = ''; otpIn.disabled = false; renderCells(); startTimer(OTP_TTL); otpIn.focus(); return; }
-      if (r && r.code === 'cooldown') { otpNote.textContent = '방금 보냈어요. ' + (r.wait || 60) + '초 뒤에 다시 받을 수 있어요'; if (!otp.timer && r.left) { otpIn.disabled = false; startTimer(r.left); } return; }
+      if (r && r.ok) { otpNote.textContent = '인증번호를 다시 보냈어요'; otpIn.value = ''; otpIn.disabled = false; renderCells(); startTimer(OTP_TTL); setPend({ phone: otp.phone, deadline: otp.deadline }); otpListen(); otpIn.focus(); return; }
+      if (r && r.code === 'cooldown') { otpNote.textContent = '방금 보냈어요. ' + (r.wait || 60) + '초 뒤에 다시 받을 수 있어요'; if (!otp.timer && r.left) { otpIn.disabled = false; startTimer(r.left); setPend({ phone: otp.phone, deadline: otp.deadline }); } return; }
       otpFail((r && r.code === 'daycap') ? '오늘은 인증번호를 여러 번 받았어요' : '문자를 못 보냈어요');
     }).catch(function () { otp.sending = false; if (curId() === 'pOtp') otpFail('연결이 안 됐어요'); });
   }
@@ -292,11 +323,11 @@
     otpNote.className = 'note'; otpNote.innerHTML = loadingHTML('확인하고 있어요');
     call({ action: 'verify', phone: otp.phone, code: otpIn.value }).then(function (r) {
       otp.busy = false;
-      if (r && r.ok) { stopTimer(); otpNote.textContent = ''; setSess({ t: r.t, name: r.name }); PRE = r.my || null; otpSuccess(function () { openHome(true); }); return; }
+      if (r && r.ok) { stopTimer(); setPend(null); otpAbort(); otpNote.textContent = ''; setSess({ t: r.t, name: r.name }); PRE = r.my || null; otpSuccess(function () { openHome(true); }); return; }
       otpBox.classList.remove('done');   // 틀림 = 테두리가 거꾸로 사라지며 6칸 복구
       var c = r && r.code;
       if (c === 'expired' || !otp.timer) { otpNote.textContent = ''; otpExpired(); return; }
-      if (c === 'many') { otpIn.value = ''; renderCells(); otpFail('여러 번 틀렸어요. 인증번호를 다시 받아 주세요'); return; }
+      if (c === 'many') { setPend(null); otpIn.value = ''; renderCells(); otpFail('여러 번 틀렸어요. 인증번호를 다시 받아 주세요'); return; }
       otpNote.className = 'note err'; otpNote.innerHTML = '<span class="eic">!</span>인증번호가 달라요';
       otpBox.classList.add('err'); otp.err = true; renderCells();
     }).catch(function () {
@@ -680,7 +711,7 @@
   function goBack() {
     if ($('cmodal').classList.contains('on')) { closeBox(); return true; }
     var id = curId();
-    if (id === 'pOtp') { if (otp.busy || pg('pOtp').classList.contains('suc-textout')) return true; stopTimer(); return pop(); }
+    if (id === 'pOtp') { if (otp.busy || pg('pOtp').classList.contains('suc-textout')) return true; stopTimer(); setPend(null); otpAbort(); return pop(); }   // 스스로 뒤로 = 번호를 고치려는 것 → 기다림 기억도 지운다
     if (stack.length > 1) return pop();
     return false;
   }
@@ -741,5 +772,15 @@
 
   // ═════════════ 시작 ═════════════
   if (DEMO && SCENE && SCENE !== 'id') memStore = { t: 'demo', name: '김하늘' };
-  if (sess()) openHome(false); else openId();
+  if (sess()) { setPend(null); openHome(false); }
+  else {
+    openId();
+    var pend = getPend();   // 문자 앱에 다녀오느라 페이지가 새로 열렸다 → 6칸으로 바로(번호 칸엔 그 번호를 채워 둔다 = 뒤로 가도 그대로)
+    if (pend) {
+      var pd = pend.phone;
+      idIn.value = pd.slice(0, 3) + '-' + pd.slice(3, pd.length - 4) + '-' + pd.slice(-4);
+      idTf.classList.add('has-val'); idGate();
+      openOtp(pd, Math.round((pend.deadline - Date.now()) / 1000), '조금 전에 보낸 문자가 있어요. 그 인증번호를 적어 주세요');
+    }
+  }
 })();
