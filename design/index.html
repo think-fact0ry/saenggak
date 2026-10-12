@@ -592,17 +592,30 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .r64 .cm span{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--g800);padding:8px 10px;border-radius:8px;white-space:nowrap}
 .r64 .cm span:first-child{background:var(--g100)}
 .r64 .cm svg{width:16px;height:16px;color:var(--g600);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* §4.18 미리보기 창 — attend pc/widget.cs PEEK_HTML 실값(260 폭, 제목 12px g600 + 빨간 점 7, 글 14px 600) */
+.p65{display:flex;gap:12px;flex-wrap:wrap;background:#cfd9e4;border-radius:12px;padding:18px}
+.p65 .pk{width:260px;box-sizing:border-box;background:#fff;border-radius:12px;padding:11px 13px;box-shadow:0 1px 4px rgba(25,31,40,.06),0 6px 18px rgba(25,31,40,.12);cursor:pointer;transition:transform .12s}
+.p65 .pk:active{transform:scale(.97)}
+.p65 .s{font-size:12px;line-height:18px;color:var(--g600);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.p65 .s i{width:7px;height:7px;border-radius:50%;background:var(--red);flex:none}
+.p65 .m{font-size:14px;font-weight:600;line-height:20px;color:var(--g900);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* §5.7 답해야 열리는 「다음」 — 깨우기 + 빛줄기와 화살표(안전교육 화면 실코드 축약) */
 .nx57{display:flex;flex-direction:column;gap:10px;max-width:384px;margin-left:auto;margin-right:auto}
 .nx57 .nx-ox{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .nx57 .nx-ox button{height:64px;border:none;border-radius:16px;background:#fff;color:var(--g800);box-shadow:0 1px 2px rgba(47,111,77,.10),0 6px 16px rgba(47,111,77,.12);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s,background .2s,color .2s,opacity .2s}
 .nx57 .nx-ox button:active{transform:scale(.96)}
 .nx57 .nx-ox svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round}
-.nx57 .nx-ox button.right{background:var(--green500);color:#fff;box-shadow:none}
-.nx57 .nx-ox button.dim{opacity:.45}
-.nx57 .nx-idk{font-size:14px;color:var(--g600);text-decoration:underline;text-underline-offset:3px;align-self:center;padding:2px 8px}
-.nx57 .nx-idk:active{transform:scale(.93)}
-.nx57 .nx-idk.gone{visibility:hidden}
+.nx57 .nx-card{background:#fff;border-radius:18px;padding:20px;min-height:104px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 2px 8px rgba(47,111,77,.08),0 12px 30px rgba(47,111,77,.12);transition:box-shadow .25s}
+.nx57 .nx-card b{font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.4}
+.nx57 .nx-card span{font-size:14px;color:var(--g700);margin-top:4px}
+.nx57 .nx-card.ok{box-shadow:0 0 0 3px var(--green500),0 2px 8px rgba(47,111,77,.08),0 12px 30px rgba(47,111,77,.12)}
+.nx57 .nx-card.ng{box-shadow:0 0 0 3px var(--warn),0 2px 8px rgba(47,111,77,.08),0 12px 30px rgba(47,111,77,.12)}
+.nx57 .nx-card.shk{animation:nxCard .46s cubic-bezier(.36,.07,.19,.97)}
+@keyframes nxCard{15%{transform:translateX(-8px)}30%{transform:translateX(7px)}45%{transform:translateX(-5px)}60%{transform:translateX(4px)}75%{transform:translateX(-2px)}90%{transform:translateX(1px)}}
+.nx57 .nx-slot{display:grid}
+.nx57 .nx-slot>*{grid-area:1/1}
+.nx57 .nx-slot .nx-btn{align-self:end;z-index:2}
+.nx57 .nx-ox.gone{opacity:0;visibility:hidden;transition:opacity .2s,visibility 0s .2s}
 .nx57 .nx-btn{position:relative;overflow:hidden;width:100%;padding:15px;border:none;border-radius:15px;background:var(--green600);color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:background .2s,transform .1s}
 .nx57 .nx-btn:disabled{background:var(--p-disabled);cursor:default}
 .nx57 .nx-btn:active:not(:disabled){transform:scale(.97);background:var(--green-dark,#166841)}
@@ -707,12 +720,13 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec60"><i>§4.18</i><span>홈페이지 떠 있는 버튼 — SNS가 맨 위로 자리에서 같이 올라감</span></a>
     <a href="#sec61"><i>§4.18</i><span>첨부 — 바로 안 가고 칩, 사진은 그 비율 자리, PDF는 카드</span></a>
     <a href="#sec64"><i>§4.18</i><span>받은함 줄 — 이름 굵게 + 원래 이름 뱃지, 오른쪽 클릭 메뉴</span></a>
+    <a href="#sec65"><i>§4.18</i><span>미리보기 — 제목은 보낸 사람, 누르면 그 대화</span></a>
     <a href="#sec48"><i>§5.2</i><span>로딩 = 자리별 3층</span></a>
     <a href="#sec49"><i>§5.3</i><span>누름(press)</span></a>
     <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
     <a href="#sec50"><i>§5.4</i><span>스켈레톤 — 로딩 구조 미리보기</span></a>
     <a href="#sec51"><i>§5.5</i><span>토스트 — 성공엔 초록 원+체크</span></a>
-    <a href="#sec62"><i>§5.7</i><span>답해야 열리는 「다음」 = 반짝 나오고, 5초마다 빛줄기와 화살표</span></a>
+    <a href="#sec62"><i>§5.7</i><span>답해야 열리는 「다음」 = O/X 자리에서 반짝, 답은 카드 테두리</span></a>
     <a href="#sec63"><i>§5.8</i><span>카드 넘김 = 두 장이 같이 보인다</span></a>
   </div></div>
 </div>
@@ -1439,6 +1453,15 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     </div>
     <div class="cm"><span><svg viewBox="0 0 24 24"><path d="M9 4h6l-1 5 3 3H7l3-3z"/><path d="M12 12v8"/></svg>맨 위에 고정</span><span><svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>이름 붙이기</span><span><svg viewBox="0 0 24 24"><path d="M5 6.5h9.5a4.75 4.75 0 0 1 0 9.5H6"/><path d="M9.5 12.5 6 16l3.5 3.5"/></svg>대기로 돌려놓기</span></div>
   </div>
+
+  <!-- 2026-10-12 유성 인계 ①② + 「문의 다시 울림 3분 x, 2분으로」 · 경위·전문 = docs/1 §4.18 · 계획 = prototype/26_문의채팅_카톡기본기능_구현계획_프리뷰.html -->
+  <h3 class="sec" id="sec65"><span class="ref">§4.18</span>미리보기 — 제목은 보낸 사람, 누르면 그 대화</h3>
+  <p class="desc">제목은 받은함 이름 그대로, 길면 이름만 줄인다. 누르면 그 대화방, 카드는 그 줄을 짚는다. 다시 알림은 2분.</p>
+  <div class="demo p65">
+    <div class="pk"><div class="s"><i></i>김민지 (서해구 톡톡)</div><div class="m">주말에도 수업 되나요?</div></div>
+    <div class="pk"><div class="s"><i></i>아이사랑맘서윤이네… (카카오)</div><div class="m">상담 예약하고 싶어요</div></div>
+    <div class="pk"><div class="s"><i></i>홈페이지 문의</div><div class="m">오감쑥쑥 대기가 얼마나 걸려요?</div></div>
+  </div>
 </section>
 
 <!-- 5 인터랙션·모션 -->
@@ -1500,12 +1523,13 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <p class="note">바탕이 색 채움이면 원과 체크를 <b>뒤집는다</b> — 흰 원 + 그 바탕의 색. 초록 바탕에 초록 원은 면 대비 1.61로 녹아 사라진다.</p>
 
   <!-- 2026-10-11 · 경위·전문 = docs/1 §5.7 (안전교육 카드 덱, 다섯 갈래 비교 뒤 2+3 → 같은 날 2차: 답 전 숨김, 반짝, 5초마다 되풀이) -->
-  <h3 class="sec" id="sec62"><span class="ref">§5.7</span>답해야 열리는 「다음」 = 반짝 나오고, 5초마다 빛줄기와 화살표</h3>
-  <p class="desc">답하기 전엔 「다음」 자리만 비워 둔다. 고르면 반짝 나오고, 가만히 있으면 5초마다 빛이 지나가며 →가 민다. O나 X를 눌러 보세요 ↓</p>
+  <!-- 2026-10-12 · 소장님 실사용 뒤 개정(O/X와 다음 같은 칸, 카드 테두리, 잘 모르겠어요 없앰) · 경위·전문 = docs/1 §5.7 -->
+  <h3 class="sec" id="sec62"><span class="ref">§5.7</span>답해야 열리는 「다음」 = O/X 자리에서 반짝, 답은 카드 테두리</h3>
+  <p class="desc">O/X와 「다음」은 맨 아래 한 칸. 고르면 O/X가 사라지고 카드가 답한다(맞음 초록, 틀림 흔들림 + 주황). O나 X를 눌러 보세요 ↓</p>
   <div class="demo nx57">
-    <div class="nx-ox"><button type="button" data-v="o" aria-label="O"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15"/></svg></button><button type="button" data-v="x" aria-label="X"><svg viewBox="0 0 48 48"><line x1="12" y1="12" x2="36" y2="36"/><line x1="36" y1="12" x2="12" y2="36"/></svg></button></div>
-    <button type="button" class="lk nx-idk">잘 모르겠어요</button>
-    <button type="button" class="nx-btn pre" id="nxBtn"><span class="nx-l">다음<span class="nx-arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span></span></button>
+    <div class="nx-card" id="nxCard"><b>불이 나면 엘리베이터를 타고 빨리 내려가요.</b><span>맞으면 O, 아니면 X를 눌러 주세요</span></div>
+    <div class="nx-slot"><div class="nx-ox"><button type="button" data-v="o" aria-label="O"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15"/></svg></button><button type="button" data-v="x" aria-label="X"><svg viewBox="0 0 48 48"><line x1="12" y1="12" x2="36" y2="36"/><line x1="36" y1="12" x2="12" y2="36"/></svg></button></div>
+    <button type="button" class="nx-btn pre" id="nxBtn"><span class="nx-l">다음<span class="nx-arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span></span></button></div>
     <button type="button" class="lk nx-re" id="nxRe">다시</button>
   </div>
 
@@ -2070,19 +2094,19 @@ document.querySelectorAll('.l57').forEach(function(L){ L.addEventListener('click
 // ── §5.7 답해야 열리는 「다음」 — 답 전엔 숨김(자리 유지), 고르면 반짝, 가만히 있으면 5초마다 빛줄기 + 화살표(누를 때까지) ──
 (function(){
   var box=document.querySelector('.nx57'); if(!box) return;
-  var btn=document.getElementById('nxBtn'), idk=box.querySelector('.nx-idk'), oxs=box.querySelectorAll('.nx-ox button'), t=null, p=null, on=false, done=false;
+  var btn=document.getElementById('nxBtn'), card=document.getElementById('nxCard'), ox=box.querySelector('.nx-ox'), oxs=box.querySelectorAll('.nx-ox button'), t=null, p=null, on=false, done=false, q=card.innerHTML;
   function play(){ t=null; if(!on) return; btn.classList.add('has-arr'); btn.classList.remove('go'); void btn.offsetWidth; btn.classList.add('go'); t=setTimeout(play, 5000); }
   function arm(){ clearTimeout(t); t=setTimeout(play, 5000); }
   function answer(v){
-    if(done) return; done=true; idk.classList.add('gone');
-    oxs.forEach(function(b){ b.classList.add(b.getAttribute('data-v')==='x' ? 'right' : 'dim'); });
-    p=setTimeout(function(){ btn.classList.remove('pre'); btn.classList.add('pop'); setTimeout(function(){ btn.classList.remove('pop'); }, 1000); on=true; arm(); }, 400);
+    if(done) return; done=true; ox.classList.add('gone'); var ok=(v==='x');
+    card.classList.add(ok ? 'ok' : 'ng'); if(!ok){ card.classList.remove('shk'); void card.offsetWidth; card.classList.add('shk'); }
+    setTimeout(function(){ card.innerHTML = ok ? '<b>맞아요</b><span>엘리베이터 말고 계단으로 나가요.</span>' : '<b>정답은 X예요</b><span>엘리베이터 말고 계단으로 나가요.</span>'; }, 560);
+    p=setTimeout(function(){ btn.classList.remove('pre'); btn.classList.add('pop'); setTimeout(function(){ btn.classList.remove('pop'); }, 1000); on=true; arm(); }, 820);
   }
   oxs.forEach(function(b){ b.addEventListener('click', function(){ answer(b.getAttribute('data-v')); }); });
-  idk.addEventListener('click', function(){ answer(null); });
   box.addEventListener('pointerdown', function(e){ if(!on || e.target.closest('.nx-ox,.nx-re')) return; btn.classList.remove('go'); arm(); });
   btn.addEventListener('click', function(){ clearTimeout(t); t=null; on=false; btn.classList.remove('go'); });
-  document.getElementById('nxRe').addEventListener('click', function(){ clearTimeout(t); clearTimeout(p); t=p=null; on=false; done=false; btn.className='nx-btn pre'; idk.classList.remove('gone'); oxs.forEach(function(b){ b.classList.remove('right','dim'); }); });
+  document.getElementById('nxRe').addEventListener('click', function(){ clearTimeout(t); clearTimeout(p); t=p=null; on=false; done=false; btn.className='nx-btn pre'; ox.classList.remove('gone'); card.className='nx-card'; card.innerHTML=q; });
 })();
 
 // ── §5.8 카드 넘김 — 떠나는 카드와 새 카드가 한 칸에 겹쳐 동시에 보인다 ──
