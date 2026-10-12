@@ -47,7 +47,9 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
 .later button{border:0;background:none;padding:0;color:var(--g7);font-weight:700;text-decoration:underline}
 
 /* 공지방 예약 = 늘 펴진 회색 판, 예약 메시지 두 개(1 포스터와 안내문 / 2 공지 글 — 유성 10-12 업무 메모 3판). 노란 말풍선과 채운 버튼은 안 씀(지금 1:1로 보내는 일과 갈림) */
-.rsv{background:#eceff0;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:16px}
+.rsv{background:#eceff0;border-radius:16px;padding:14px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px 16px;align-items:start}
+/* 1 = 칸 둘이라 왼쪽 2몫, 2 = 칸 하나라 오른쪽 1몫(유성 10-12 「1을 왼쪽으로 2를 오른쪽으로 한 줄에」 — 세로로 쌓으면 오른쪽 여백이 남았다). 좁으면 위아래 */
+@media (max-width:860px){.rsv{grid-template-columns:minmax(0,1fr)}}
 .rgh{margin:0 0 8px;display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700}
 .rgh .no{width:22px;height:22px;border-radius:50%;background:var(--dark);color:#fff;display:grid;place-items:center;font-size:12.5px;flex:none}
 .rsv-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:10px;align-items:start}
@@ -303,7 +305,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     var nDone = D.teachers.filter(function (t) { return tSent(t).every(Boolean); }).length;
     document.getElementById('vbody').innerHTML =
       '<section class="sec"><h2>' + ICON.clock + '공지방 예약</h2><p class="how">' + esc(n.when || '') + '에 올라가게 예약 메시지 두 개로 걸어 주세요.</p>' + rsv + '</section>' +
-      '<section class="sec"><h2>' + M + '월 월 계획안 발송 명단</h2><p class="how">제공인력마다 위에서부터 차례로 <b>복사</b>해서 사무실 카톡 1:1로 붙여넣어 주세요.</p>' +
+      '<section class="sec"><h2>' + M + '월 월 계획안 발송 명단</h2><p class="how">제공인력마다 위에서부터 차례로 <b>복사</b>해서 개별 카톡으로 보내주세요.</p>' +
       '<p class="cnt">' + nDone + ' / ' + D.teachers.length + '명 복사함</p><div class="grid">' + cards + '</div>' +
       '<p class="later">제공인력분이 누락된 아이나 그만둔 아이를 알려 주시면 → <button data-a="view" data-v="ans">누락된 아이, 그만둔 아이</button> 화면에서 처리해요.</p></section>';
   }
@@ -315,17 +317,16 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   function quitSet(name) { var s = {}; answersOf(name).forEach(function (a) { if (a.kind !== '누락') s[norm(a.n)] = a.kind; }); return s; }
 
   function renderAns() {
-    var M = D.month, last = new Date(Math.floor(lastIdx() / 12), lastIdx() % 12 + 1, 0);
+    var M = D.month;
     var pick = D.teachers.map(function (t) {
       return '<button class="pk' + (sel === t.name ? ' on' : '') + '" data-a="pick" data-t="' + esc(t.name) + '">' + esc(tname(t.name)) +
         (answersOf(t.name).length ? '<span class="dot" aria-label="처리한 것 있음"></span>' : '') + '</button>';
     }).join('');
     var t = sel != null ? teacher(sel) : null;
     document.getElementById('vbody').innerHTML = '<div class="ans"><h2>누락된 아이, 그만둔 아이</h2>' +
-      '<p class="how">제공인력분이 알려 주시면 해당 제공인력 이름을 골라 처리해 주세요. ' + M + '월분은 ' + (last.getMonth() + 1) + '월 ' + last.getDate() + '일까지예요.</p>' +
+      '<p class="how">' + M + '월 1일 월 계획안 자동발송 명단에 누락되거나, 그만둔 아이가 있다면 해당 제공인력 이름을 골라 처리해 주세요.</p>' +   // 유성 10-12 문장(「익월」 = 보낼 달)
       '<div class="pick">' + pick + '</div><div id="sel">' + (t ? cardHTML(t) : '') + '</div><div class="logw">' + logHTML() + '</div></div>';
   }
-  function lastIdx() { var y = 2000 + parseInt(D.ym.slice(0, 2), 10), m = parseInt(D.ym.slice(2), 10) - 1; return y * 12 + m - 1; }   // 보낼 달의 앞 달 = 답 받는 달
 
   function cardHTML(t) {
     var s = st(t.name), q = quitSet(t.name);
@@ -348,7 +349,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     var np = uniqNames(t.np).filter(function (n) { return !pendN[norm(n)]; });
     if (!mine.length && !np.length) return '';
     var h = '<div class="sts">';
-    np.forEach(function (n) { h += '<div class="sl"><span class="bd b-wait">등록 기다림</span><b>' + esc(n) + '</b><span class="sm">명단 글에 등록 링크가 같이 갔어요</span></div>'; });
+    np.forEach(function (n) { h += '<div class="sl"><span class="bd b-wait">등록 기다림</span><b>' + esc(n) + '</b><span class="sm">아직 등록되지 않았어요</span></div>'; });
     mine.forEach(function (a) {
       if (a.kind === '누락') {
         if (a.st === 2) h += '<div class="sl"><span class="bd b-ok">1일에 받아요</span><b>' + esc(a.n) + '</b></div>';
@@ -388,9 +389,9 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   function lookNote(n, L, t) {
     var b = '<b>' + esc(jo(n, '은는')) + '</b> ';
     if (L.k === 'self') return [b + '이미 해당 제공인력 명단에 있어요.', ''];
-    if (L.k === 'selfnp') return [b + '명단 글에 등록 링크가 이미 같이 갔어요.', ''];
+    if (L.k === 'selfnp') return [b + '해당 제공인력 명단에 있고, 아직 등록되지 않았어요.', ''];
     if (L.k === 'other') return [b + esc(tname(L.who)) + ' 선생님 명단에 있어요. 보호자님은 1일에 받아요. 담당이 바뀌었으면 지도에서 고쳐 주세요.', ''];
-    if (L.k === 'othernp') return [b + esc(tname(L.who)) + ' 선생님 명단에 등록 기다림으로 있어요. 그 명단 글에 등록 링크가 같이 갔어요.', ''];
+    if (L.k === 'othernp') return [b + esc(tname(L.who)) + ' 선생님 명단에 있고, 아직 등록되지 않았어요.', ''];
     if (L.k === 'ex') return [b + '이번 달에 안 보내는 아이예요. ' + esc(L.why) + '.', 'w'];
     if (L.k === 'wait') return [b + '신청이 들어와 있어요' + (L.at ? '(' + esc(L.at) + ' 신청)' : '') + '. 지도에서 ' + esc(tname(t.name)) + ' 선생님께 배정하면 1일에 받아요. 링크는 안 보내도 돼요.', 'w'];
     if (L.sim && L.sim.length) return ['혹시 ' + L.sim.map(function (o) { return '<b>' + esc(o.k) + '</b>' + (o.who ? ' (' + esc(o.who) + ' 선생님 명단)' : ' (신청만 들어옴)'); }).join(', ') + '? 같은 아이면 빼 주세요.', 'w'];
@@ -433,7 +434,6 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     var k = s.pick != null ? all[s.pick] : null, nm = k ? esc(k.n) + ' ' : '', dis = (!k || s.busy) ? ' disabled' : '';
     var lab = function (kind) { return s.busy === kind ? '적고 있어요<span class="dots"><i></i><i></i><i></i></span>' : nm + kind; };
     h += '<div class="pact"><button class="weak" data-a="term" data-kind="계약종료"' + dis + '>' + lab('계약종료') + '</button><button class="danger" data-a="term" data-kind="중도포기"' + dis + '>' + lab('중도포기') + '</button></div>';
-    h += '<p class="hint">계약 기간이 끝났으면 계약종료, 중간에 그만뒀으면 중도포기예요.</p>';
     s._all = all;
     return h + '</div>';
   }
