@@ -610,7 +610,8 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .nx57 .nx-ox{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .nx57 .nx-ox button{height:64px;border:none;border-radius:16px;background:#fff;color:var(--g800);box-shadow:0 1px 2px rgba(47,111,77,.10),0 6px 16px rgba(47,111,77,.12);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s,background .2s,color .2s,opacity .2s}
 .nx57 .nx-ox button:active{transform:scale(.96)}
-.nx57 .nx-ox svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round}
+.nx57 .nx-ox svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:4.2;stroke-linecap:round}
+.nx57 .nx-ox button[data-v="o"]{color:#3b8ee0} .nx57 .nx-ox button[data-v="x"]{color:#ec6464}   /* §5.7-7 O/X 기호 색(--ox-o, --ox-x) */
 .nx57 .nx-card{background:#fff;border-radius:18px;padding:20px;min-height:104px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 2px 8px rgba(47,111,77,.08),0 12px 30px rgba(47,111,77,.12);transition:box-shadow .25s}
 .nx57 .nx-card b{font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.4}
 .nx57 .nx-card span{font-size:14px;color:var(--g700);margin-top:4px}
@@ -1538,9 +1539,9 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <p class="note">바탕이 색 채움이면 원과 체크를 <b>뒤집는다</b> — 흰 원 + 그 바탕의 색. 초록 바탕에 초록 원은 면 대비 1.61로 녹아 사라진다.</p>
 
   <!-- 2026-10-11 · 경위·전문 = docs/1 §5.7 (안전교육 카드 덱, 다섯 갈래 비교 뒤 2+3 → 같은 날 2차: 답 전 숨김, 반짝, 5초마다 되풀이) -->
-  <!-- 2026-10-12 · 소장님 실사용 뒤 개정(O/X와 다음 같은 칸, 카드 테두리, 잘 모르겠어요 없앰) · 경위·전문 = docs/1 §5.7 -->
+  <!-- 2026-10-12 · 소장님 실사용 뒤 개정(O/X와 다음 같은 칸, 카드 테두리, 잘 모르겠어요 없앰) · 2026-10-13 O/X 기호 색 + 굵기 4.2(§5.7-7) · 경위·전문 = docs/1 §5.7 -->
   <h3 class="sec" id="sec62"><span class="ref">§5.7</span>답해야 열리는 「다음」 = O/X 자리에서 반짝, 답은 카드 테두리</h3>
-  <p class="desc">O/X와 「다음」은 맨 아래 한 칸. 고르면 O/X가 사라지고 카드가 답한다(맞음 초록, 틀림 흔들림 + 주황). O나 X를 눌러 보세요 ↓</p>
+  <p class="desc">O/X와 「다음」은 맨 아래 한 칸, 기호는 O 하늘, X 살구빨강. 고르면 카드가 답한다(맞음 초록, 틀림 흔들림 + 주황). 눌러 보세요 ↓</p>
   <div class="demo nx57">
     <div class="nx-card" id="nxCard"><b>불이 나면 엘리베이터를 타고 빨리 내려가요.</b><span>맞으면 O, 아니면 X를 눌러 주세요</span></div>
     <div class="nx-slot"><div class="nx-ox"><button type="button" data-v="o" aria-label="O"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15"/></svg></button><button type="button" data-v="x" aria-label="X"><svg viewBox="0 0 48 48"><line x1="12" y1="12" x2="36" y2="36"/><line x1="36" y1="12" x2="12" y2="36"/></svg></button></div>
