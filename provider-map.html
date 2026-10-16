@@ -1519,6 +1519,7 @@ function initMap() {
   initScrollFade('cand',   document.getElementById('candBody'),      document.getElementById('candSheet'),  '--cd-h');
 
   boot();   // 3모드 분기(기본/제공인력/행정) — 행정만 loadProviders 경로
+  _findFromHash();   // 받은함 「지도에서 보기」(2026-10-15) — 주소 끝 #find=탭|이름
 }
 
 // ══ API ══
@@ -3951,6 +3952,27 @@ function setupLongPress(el) {
     });
   }
 })();
+
+/* ── 받은함 「지도에서 보기」(2026-10-15, 문의 채팅 아이 찾기 띠) ──
+   받은함이 이 지도를 새 창으로 연다: 주소 끝 #find=서비스탭|아이 이름. 행정 지도면 그 서비스로 바꾸고, 전체 목록이 오면
+   검색 칸에 이름을 넣어 찾아 둔다(하나만 맞으면 그 아이를 바로 연다). 이름은 # 뒤(서버로 안 가는 쪽)에만 있고 읽은 뒤 주소에서 지운다.
+   기본·제공인력 지도는 아무것도 안 한다(아이 목록이 행정 지도에만 있다). 20초 안에 목록이 안 오면 그만 */
+function _findFromHash() {
+  var m = /^#find=(.+)$/.exec(location.hash || ''); if (!m) return;
+  var raw = ''; try { raw = decodeURIComponent(m[1]); } catch (e) { return; }
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  var p = raw.split('|'), tab = p[0], name = String(p[1] || '').trim(), t0 = Date.now();
+  if (!name || MODE !== 'admin') return;
+  (function wait() {
+    if (Date.now() - t0 > 20000) return;
+    if (SVC_COLOR[tab] && currentService !== tab) { pickService(tab); setTimeout(wait, 400); return; }
+    if (!currentData || currentData !== _svcCache['__ALL__|' + currentService]) { setTimeout(wait, 300); return; }
+    var input = document.getElementById('searchInput');
+    input.value = name;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    setTimeout(function () { var it = document.querySelectorAll('#searchResults .sr-child'); if (it.length === 1) it[0].click(); else input.focus(); }, 450);
+  })();
+}
 
 // ══ 필터 ══
 function toggleFilter(t) {
