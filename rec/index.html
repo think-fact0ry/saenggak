@@ -98,6 +98,15 @@ button{font:inherit}
 .errb{text-align:center;color:var(--g600);padding:60px 24px;white-space:pre-line}
 .errb b{display:block;color:var(--g900);font-size:16px;margin-bottom:4px}
 .errb .btn{max-width:200px;margin:20px auto 0}
+/* 사진으로 받기(10-18) — 확인창 아래 한 줄 + 사진 준비 화면. 사진은 진짜 그림이라 길게 누르면 폰 메뉴로도 저장된다 */
+.cm .alt{display:block;width:100%;border:0;background:none;margin-top:6px;padding:12px 0 6px;color:var(--g600);font-size:var(--fs-sm);font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.thumbs figure{margin:0;display:flex;flex-direction:column;gap:5px;align-items:center;min-width:0}
+.thumbs img{display:block;width:100%;aspect-ratio:210/297;object-fit:contain;background:#fff;border-radius:4px;box-shadow:var(--sh1);-webkit-touch-callout:default}
+.thumbs .sk-b{width:100%;aspect-ratio:210/297;border-radius:4px}
+.thumbs figcaption{font-size:var(--fs-caption);color:var(--g500)}
+.phv{min-height:100vh;min-height:100svh;display:flex;flex-direction:column}
+.phv .bar{margin-top:auto}
 @media (prefers-reduced-motion:reduce){.spin,.sk-b,.ib.busy svg{animation:none}}
 </style>
 </head>
@@ -114,7 +123,8 @@ button{font:inherit}
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   // 22 웹앱 doPost — text/plain이라 프리플라이트 없음(23·24와 같은 결). 서버 오류는 { ok:false, error } → reject
   var GAS_EXEC = 'https://script.google.com/macros/s/AKfycbxiaIfUdh0q1C_OF65xmk-4QQLUklWPjcq2ZKBVpnI5TYhHV9TXyKUUWqRxEkZk_WnR0A/exec';
-  var ACT = { mbImages: 'imgs', mbList: 'list', mbDoc: 'doc', mbSend: 'send', mbHold: 'hold', mbUnhold: 'unhold', mbRequestReg: 'reqreg', mbRegister: 'register', mbSendResult: 'sendres', mbBounceNotice: 'bnotice' };
+  var ACT = { mbImages: 'imgs', mbList: 'list', mbDoc: 'doc', mbSend: 'send', mbHold: 'hold', mbUnhold: 'unhold', mbRequestReg: 'reqreg', mbRegister: 'register', mbSendResult: 'sendres', mbBounceNotice: 'bnotice',
+    mbIssue: 'issue', mbPdf: 'pdf', mbSaved: 'saved' };
   function isTransient(x) { return x instanceof TypeError || String(x && x.message) === 'BAD_REPLY'; }   // 응답을 못 받은 것(서버가 했는지 모름)
   function run(fn) {
     var a = [].slice.call(arguments, 1), body = { action: ACT[fn] };
@@ -129,7 +139,8 @@ button{font:inherit}
           if (o && o.error) throw new Error(o.error); return o ? o.data : null;
         });
     };
-    if (!{ mbList: 1, mbDoc: 1, mbImages: 1, mbSendResult: 1 }[fn]) return once();   // 보내기·등록은 두 번 가면 안 된다 = 한 번만
+    // 보내기·등록·발급(mbIssue)은 두 번 가면 안 된다 = 한 번만. mbSaved는 서버가 같은 job을 한 번만 적어서 읽기처럼 다시 보내도 된다
+    if (!{ mbList: 1, mbDoc: 1, mbImages: 1, mbSendResult: 1, mbPdf: 1, mbSaved: 1 }[fn]) return once();
     // 읽기 = 4초 안에 안 오면 같은 요청을 하나 더 보내 먼저 온 것을 쓴다(HTML·끊김이면 바로 하나 더).
     // 10-08 실측: 빈 요청도 구글 쪽에서 가끔 8~43초(빈 1줄 프로젝트도 같이 느림 = 22 코드 탓 아님), 바로 다음 요청은 대개 2초
     //   → 실측 분포로 돌려 보면 10초 넘는 대기 9.8% → 1.6%
@@ -365,7 +376,8 @@ button{font:inherit}
         + '<a class="call" href="tel:' + esc(String(d0.phone || '').replace(/\D/g, '')) + '">전화하기</a>'
         + '<div class="note n">보호자가 안내 링크에서 주소를 고치면 추천서가 저절로 다시 가요.\n전화로 주소를 받았으면 PC 시트의 이메일 칸을 고친 뒤 여기서 다시 보내요.</div>';
     }
-    if (k === 'SENT') top += '<div class="note g"><b>보냈어요</b>' + esc(e.members[0].sent) + '\n칸을 고쳤으면 「고쳐서 다시 보내기」로 보내요. 제목에 (수정)이 붙어요.</div>';
+    if (k === 'SENT' && isPhoto(e)) top += '<div class="note g"><b>사진으로 저장했어요</b>' + esc(String(e.members[0].sent).replace(' ' + PHOTO, '')) + '\n보호자에게는 메일과 카톡이 안 갔어요.</div>';
+    else if (k === 'SENT') top += '<div class="note g"><b>보냈어요</b>' + esc(e.members[0].sent) + '\n칸을 고쳤으면 「고쳐서 다시 보내기」로 보내요. 제목에 (수정)이 붙어요.</div>';
     if (k === 'FIX') top += '<div class="note n">PC에서 고친 뒤 「발급」하면 보낼 것으로 돌아와요.</div>';
     e.members.forEach(function (m, i) {
       if (e.members.length > 1) papers += '<div class="who">' + esc(m.name) + '</div>';
@@ -375,6 +387,7 @@ button{font:inherit}
     var blocked = over.length || blank.length;
     if (k === 'DRAFT' || k === 'RISK' || k === 'ISSUED') bar = '<div class="btns"><button class="btn gh" data-go="hold">PC에서 고칠게요</button><button class="btn" data-go="send"' + (blocked ? ' aria-disabled="true"' : '') + '>보내기</button></div>';
     else if (k === 'SENDFAIL') bar = '<button class="btn" data-go="send">다시 보내기</button>';
+    else if (k === 'SENT' && isPhoto(e)) bar = '<div class="btns"><button class="btn gh" data-go="photo">사진 다시 저장하기</button><button class="btn gh" data-go="send">보호자에게 보내기</button></div>';   // 메일이 안 갔으니 「반송됐어요」가 없다
     else if (k === 'SENT') bar = '<div class="btns"><button class="btn gh" data-go="bnotice">메일이 반송됐어요</button><button class="btn gh" data-go="send">고쳐서 다시 보내기</button></div>';
     else if (k === 'FIX') bar = '<button class="btn gh" data-go="unhold">고칠 것 없음, 보낼 것으로</button>';
     app.innerHTML = head(e) + '<div class="pad">' + top + papers + '</div>' + (bar ? '<div class="bar">' + bar + '</div>' : '');
@@ -423,12 +436,15 @@ button{font:inherit}
 
   // ── 보내기: 화면은 바로 다음 아이로, 발송은 뒤에서 하나씩 ──
   function confirmSend(e) {
-    var k = keyOf(e.st), again = k === 'SENT';
+    var k = keyOf(e.st), photo = k === 'SENT' && isPhoto(e), again = k === 'SENT' && !photo;   // 사진으로만 저장한 아이 = 보호자에게는 처음 보내는 것
     var sib = e.members.length > 1 ? '<div class="ms">두 아이 추천서가 메일 한 통으로 가요.</div>' : '';
     var d = document.createElement('div'); d.className = 'dim';
-    d.innerHTML = '<div class="cm" role="dialog" aria-modal="true"><div class="mt">' + esc(e.name) + ' 추천서를 ' + (again ? '다시 ' : '') + '보낼까요?</div>' + sib + (again ? '<div class="ms">제목에 (수정)이 붙어요.</div>' : '') + '<div class="mr"><button class="c">닫기</button><button class="o">보내기</button></div></div>';
+    d.innerHTML = '<div class="cm" role="dialog" aria-modal="true"><div class="mt">' + esc(e.name) + ' 추천서를 ' + (again ? '다시 ' : '') + '보낼까요?</div>' + sib + (again ? '<div class="ms">제목에 (수정)이 붙어요.</div>' : '') + '<div class="mr"><button class="c">닫기</button><button class="o">보내기</button></div>'
+      + (photo || k === 'SENDFAIL' ? '' : '<button class="alt">보호자에게 안 보내고 사진으로 받기</button>') + '</div>';   // 10-18 — 제공인력이 대신 제출할 때. 자주 쓰는 「보내기」 길은 그대로.
+    // 발송실패는 뺀다: 보호자 메일 고치기 창이 열려 있어 사진으로 넘긴 뒤 보호자가 주소를 고치면 메일과 카톡이 또 간다(프리뷰 §5)
     document.body.appendChild(d);
     d.querySelector('.c').onclick = function () { d.remove(); };
+    var alt = d.querySelector('.alt'); if (alt) alt.onclick = function () { d.remove(); openPhoto(e); };
     d.querySelector('.o').onclick = function () {
       d.remove();
       delete errs[e.id];
@@ -478,7 +494,142 @@ button{font:inherit}
     if (!p) { p = document.createElement('div'); p.id = 'pill'; p.className = 'pill'; document.body.appendChild(p); }
     p.innerHTML = '<span class="spin"></span>보내는 중 ' + n + '건';
   }
-  window.addEventListener('beforeunload', function (ev) { if (sending || queue.length) { ev.preventDefault(); ev.returnValue = ''; } });
+  window.addEventListener('beforeunload', function (ev) { if (sending || queue.length || (ph && ph.state === 'run')) { ev.preventDefault(); ev.returnValue = ''; } });
+
+  // ── 사진으로 받기(10-18 유성 「제공인력이 신분증을 받아 대신 제출할 수도」 → 「폰 갤러리 저장이 나아 — 카톡 2계정, 행정 단체방」) ──
+  // ① 발급(보내기와 같은 발급, 두 번 가면 안 되는 쓰기 = 결과 번호로 묻기) ② 발급본 3쪽 PDF를 받아 pdf.js로 쪽마다 사진
+  // ③ 「사진 저장하기」 = 다운로드(갤러리에 뜬다) → 서버에 「사진 저장」 기록 = 목록에서 빠짐. 저장 안 하고 나가면 기록 없음(📄 발급으로 남음).
+  // 미리보기 종이(iframe)는 초안일 수 있어 그 자리에서 저장하게 두지 않는다 — 발급 기록 없이 서명된 종이가 나가는 길(계획서 게이트 B).
+  var PHOTO = '사진 저장';   // 서버 MB_PHOTO와 같은 글자(발송 칸) — 이 글자로 「사진으로 저장한 아이」를 안다
+  var PDF_DPI = 200;         // pdfpng(사내 PDF 도구)와 같은 해상도
+  var ph = null, pdfP = null;
+  function isPhoto(e) { return String(e.members[0].sent || '').indexOf(PHOTO) >= 0; }
+  function pdfLib() {   // 처음 쓸 때만 받는다(1.7MB) — 발급을 기다리는 동안 같이 받는다
+    if (!pdfP) pdfP = import('./vendor/pdf.min.mjs').then(function (m) { m.GlobalWorkerOptions.workerSrc = new URL('vendor/pdf.worker.min.mjs', location.href).href; return m; })
+      .catch(function (x) { pdfP = null; throw x; });
+    return pdfP;
+  }
+  // 두 번 가면 안 되는 쓰기 — 응답을 못 받으면(구글 HTML·끊김) 5초마다 결과 번호로 묻는다(pump와 같은 규칙). 모르면 null
+  function writeOnce(fn, id, key) {
+    return new Promise(function (res) {
+      var done = false, blank = 0, t0 = Date.now(), timer = 0;
+      var fin = function (r) { if (done) return; done = true; clearInterval(timer); res(r); };
+      run(fn, tok, id, key).then(fin, function (x) {
+        if (needReg(x)) return fin({ ok: false, needReg: true });
+        if (!isTransient(x)) fin({ ok: false, message: String(x && x.message || x) });
+      });
+      timer = setInterval(function () {
+        run('mbSendResult', tok, key).then(function (r) {
+          if (done) return;
+          if (r && r.st === 'done') return fin({ ok: r.ok, message: r.message });
+          blank = r ? 0 : blank + 1;
+          if (blank >= 12 || Date.now() - t0 > 240000) fin(null);
+        }).catch(function () {});
+      }, 5000);
+    });
+  }
+  function b64Bytes(s) { var bin = atob(s), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+  function fileSafe(s) { return String(s || '').replace(/[\\/:*?"<>|\s]/g, ''); }
+  function openPhoto(e) {
+    if (view === 'detail') try { history.pushState({ ph: e.id }, ''); } catch (x) {}
+    dropPhoto();
+    view = 'photo'; cur = e;
+    ph = { e: e, key: Math.random().toString(36).slice(2, 10) + Date.now().toString(36), state: 'run', msg: '', pages: {}, mailed: keyOf(e.st) === 'SENT' };
+    renderPhoto(); window.scrollTo(0, 0);
+    photoRun(ph);
+  }
+  function dropPhoto() {   // 사진 그림 메모리 — 다운로드가 끝날 시간을 두고 놓는다
+    if (!ph) return;
+    var urls = []; for (var k in ph.pages) ph.pages[k].forEach(function (p) { urls.push(p.url); });
+    setTimeout(function () { urls.forEach(function (u) { URL.revokeObjectURL(u); }); }, 60000);
+    ph = null;
+  }
+  function photoRun(p) {
+    pdfLib().catch(function () {});   // 미리 받기
+    var issued = p.mailed ? Promise.resolve({ ok: true })   // 이미 메일로 보낸 아이 = 보낸 종이 그대로(다시 발급 안 함)
+      : writeOnce('mbIssue', p.e.id, p.key);
+    return issued.then(function (r) {
+      if (r && r.needReg) { p.state = 'reg'; return; }
+      if (!r) throw new Error('발급 결과를 아직 못 받았어요\n목록에서 상태를 확인해 주세요');
+      if (!r.ok) throw new Error(r.message || '발급을 못 했어요');
+      if (!p.mailed && ST.ISSUED) { p.e.st = ST.ISSUED; if (ph === p && view === 'photo') renderPhoto(); }   // 머리 딱지를 📄 발급으로(목록은 아래서 새로 받는다)
+      if (!p.mailed) run('mbList', tok).then(function (l) { ST = l.st; items = l.items; try { localStorage.setItem(LIST_KEY, JSON.stringify(l)); } catch (x) {} }).catch(function () {});
+      return pdfLib().then(function (lib) {
+        return p.e.members.reduce(function (chain, m) {
+          return chain.then(function () { return run('mbPdf', tok, m.id); }).then(function (d) {
+            return lib.getDocument({ data: b64Bytes(d.b64) }).promise.then(function (doc) {
+              var out = [], n = doc.numPages, nm = fileSafe(d.name || m.name);
+              var one = function (i) {
+                return doc.getPage(i).then(function (page) {
+                  var vp = page.getViewport({ scale: PDF_DPI / 72 }), c = document.createElement('canvas');
+                  c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+                  var ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+                  return page.render({ canvasContext: ctx, viewport: vp }).promise.then(function () { return new Promise(function (ok) { c.toBlob(ok, 'image/png'); }); });
+                }).then(function (blob) {
+                  out.push({ name: '추천서_' + nm + '_' + i + '.png', label: i === n ? '자격증' : '추천서 ' + i + '쪽', url: URL.createObjectURL(blob) });   // 발급본 마지막 쪽 = 자격증(sdPackageHtml_)
+                  return i < n ? one(i + 1) : null;
+                });
+              };
+              return one(1).then(function () { doc.destroy(); p.pages[m.id] = out; if (ph === p && view === 'photo') renderPhoto(); });
+            });
+          });
+        }, Promise.resolve());
+      }).then(function () { p.state = 'ready'; });
+    }).catch(function (x) {
+      if (needReg(x)) { p.state = 'reg'; return; }
+      p.state = 'err'; p.msg = String(x && x.message || x);
+    }).then(function () {
+      if (ph !== p || view !== 'photo') return;
+      if (p.state === 'reg') return renderFirst();
+      renderPhoto();
+    });
+  }
+  function renderPhoto() {
+    var p = ph; if (!p) return;
+    var e = p.e, many = e.members.length > 1, h = '';
+    clearWait();
+    h += '<div class="top"><button class="ib" data-go="pback" aria-label="뒤로"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><span class="sp">' + esc(e.name) + ' 사진</span>' + chip(e) + '</div><div class="pad">';
+    if (p.state === 'err') {
+      app.innerHTML = h + '</div><div class="errb"><b>사진을 못 만들었어요</b>' + esc(p.msg) + '<button class="btn" data-go="rephoto">다시 해 보기</button></div>';
+      return;
+    }
+    if (!p.mailed) h += '<div class="note n">보호자에게는 메일과 카톡이 가지 않아요.</div>';
+    e.members.forEach(function (m) {
+      if (many) h += '<div class="who">' + esc(m.name) + '</div>';
+      var pages = p.pages[m.id];
+      h += '<div class="thumbs' + (pages ? '' : ' sk') + '">' + (pages ? pages.map(function (g) { return '<figure><img src="' + g.url + '" alt="' + esc(m.name + ' ' + g.label) + '"><figcaption>' + esc(g.label) + '</figcaption></figure>'; }).join('')
+        : new Array(4).join('<figure><span class="sk-b"></span><figcaption>&nbsp;</figcaption></figure>')) + '</div>';
+    });
+    var ready = p.state === 'ready';
+    app.innerHTML = '<div class="phv">' + h + '<div style="height:16px"></div></div><div class="bar"><button class="btn" data-go="save"' + (ready ? '' : ' aria-disabled="true"') + '>사진 저장하기</button></div></div>';   // 사진이 짧아도 버튼은 화면 아래(.phv)
+    if (!ready) {   // §5.4 대기가 길 때 — 발급이 8초쯤(10-08 실측)
+      var say = function (t) { if (ph !== p || p.state !== 'run' || view !== 'photo') return; var w = document.getElementById('skw'); if (!w) { w = document.createElement('div'); w.id = 'skw'; w.className = 'skw'; document.body.appendChild(w); } w.textContent = t; };
+      waitT.push(setTimeout(function () { say(p.mailed ? '사진을 만들고 있어요' : '발급하고 사진을 만들고 있어요'); }, 3000));
+      waitT.push(setTimeout(function () { say('조금만 더 기다려 주세요'); }, 12000));
+    }
+  }
+  // 저장 = 사진마다 다운로드(안드로이드는 갤러리 Download에 뜬다). 처음 한 번 브라우저가 「여러 파일 다운로드」 허용을 물을 수 있다
+  function savePhotos() {
+    var p = ph; if (!p || p.state !== 'ready') { toast('사진을 만들고 있어요. 다 되면 저장할 수 있어요.'); return; }
+    var files = []; p.e.members.forEach(function (m) { (p.pages[m.id] || []).forEach(function (g) { files.push(g); }); });
+    var i = 0;
+    (function next() {
+      if (i >= files.length) return marked();
+      var a = document.createElement('a'); a.href = files[i].url; a.download = files[i].name; document.body.appendChild(a); a.click(); a.remove();
+      i++; setTimeout(next, 300);
+    })();
+    function marked() {
+      var e = p.e;
+      Promise.all(e.members.map(function (m) { return run('mbSaved', tok, m.id, p.key); })).then(function (rs) {
+        var bad = rs.filter(function (r) { return !r || !r.ok; })[0];
+        toast(bad ? '사진은 저장했어요\n목록 정리는 못 했어요: ' + (bad && bad.message || '') : e.name + ' 사진 ' + files.length + '장을 저장했어요' + (p.mailed ? '' : '\n보낸 것으로 옮겼어요'), 5000);
+      }, function (x) {
+        if (needReg(x)) return renderFirst();
+        toast('사진은 저장했어요\n목록 정리는 못 했어요. 목록에서 상태를 확인해 주세요', 6000);
+      }).then(function () { return run('mbList', tok).then(function (l) { ST = l.st; items = l.items; try { localStorage.setItem(LIST_KEY, JSON.stringify(l)); } catch (x) {} }); })
+        .catch(function () {}).then(function () { if (view === 'photo' && ph === p) { dropPhoto(); renderList(); window.scrollTo(0, 0); } });
+    }
+  }
 
   // ── 처음 쓰는 기기 ──
   function renderFirst(msg) {
@@ -508,6 +659,10 @@ button{font:inherit}
     else if (go === 'sent') { showSent = !showSent; renderList(); }
     else if (go === 'back') { renderList(); window.scrollTo(0, listY); }
     else if (go === 'zoom') { var w = t.closest('.pw'); w.classList.toggle('on'); if (w._fit) w._fit(); }
+    else if (go === 'photo') { if (cur) openPhoto(cur); }
+    else if (go === 'save') { savePhotos(); }
+    else if (go === 'rephoto') { if (ph) openPhoto(ph.e); }
+    else if (go === 'pback') { dropPhoto(); view = 'detail'; renderDetail(); window.scrollTo(0, 0); }
     else if (go === 'bnotice') { if (t.getAttribute('aria-disabled') !== 'true') confirmBounce(cur); }
     else if (go === 'send') { if (t.getAttribute('aria-disabled') === 'true') { toast('PC에서 고친 뒤 보낼 수 있어요'); return; } confirmSend(cur); }
     else if (go === 'hold' || go === 'unhold') {
@@ -527,7 +682,7 @@ button{font:inherit}
     }
   });
   window.addEventListener('resize', function () { [].forEach.call(document.querySelectorAll('.pw'), function (w) { if (w._fit) w._fit(); }); });
-  window.addEventListener('popstate', function (ev) { if (!ev.state || !ev.state.d) { if (view === 'detail') { renderList(); window.scrollTo(0, listY); } } });
+  window.addEventListener('popstate', function (ev) { if (view === 'photo') { dropPhoto(); view = 'detail'; renderDetail(); window.scrollTo(0, 0); return; } if (!ev.state || !ev.state.d) { if (view === 'detail') { renderList(); window.scrollTo(0, listY); } } });
 
   // ── 시작 ──
   (function () {
