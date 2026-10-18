@@ -100,6 +100,8 @@ button{font:inherit}
 .errb .btn{max-width:200px;margin:20px auto 0}
 /* 사진으로 저장(10-18) — 종이 꾹 누르기·확인창 아래 한 줄. 종이 위 덮개(.cap)가 꾹 누름을 받는다 = 폰 글자 선택·메뉴가 끼어들지 않게 */
 .pw .cap{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+/* 꾹 누른 손가락이 아직 화면에 있을 때 뜨는 창 = 이어 누르면 창 글자가 선택돼 끌렸다(유성 10-18) → 이 창만 글자 선택 막음 */
+.dim.nosel,.dim.nosel *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .cm .alt{display:block;width:100%;border:0;background:none;margin-top:6px;padding:12px 0 6px;color:var(--g600);font-size:var(--fs-sm);font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.spin,.sk-b,.ib.busy svg{animation:none}}
 </style>
@@ -539,7 +541,7 @@ button{font:inherit}
     if (preSend(k) && e._blocked) return toast('칸을 고친 뒤 저장할 수 있어요.');   // 발급이 막히는 종이(칸 넘침·빈 칸)
     try { if (navigator.vibrate) navigator.vibrate(12); } catch (x) {}
     var n = e.members.length * 3;   // 아이마다 추천서 2쪽 + 자격증 1쪽
-    var d = document.createElement('div'); d.className = 'dim';
+    var d = document.createElement('div'); d.className = 'dim nosel';   // 꾹 누름에서 뜨는 창 — 글자 선택 막음(.nosel)
     d.innerHTML = '<div class="cm" role="dialog" aria-modal="true"><div class="mt">' + esc(e.name) + ' 추천서를 사진으로 저장할까요?</div><div class="ms">'
       + (preSend(k) ? '보호자에게는 안 보내요.\n' : '') + '자격증까지 ' + n + '장을 갤러리에 저장해요.</div><div class="mr"><button class="c">닫기</button><button class="o">저장하기</button></div></div>';
     document.body.appendChild(d);
