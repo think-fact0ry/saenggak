@@ -605,6 +605,25 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .p65 .s{font-size:12px;line-height:18px;color:var(--g600);display:flex;align-items:center;gap:6px;white-space:nowrap}
 .p65 .s i{width:7px;height:7px;border-radius:50%;background:var(--red);flex:none}
 .p65 .m{font-size:14px;font-weight:600;line-height:20px;color:var(--g900);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* §4.18 거둔 답장 흔적·이용 중 칩 — attend inbox/index.html .me .bub.rc·.meta2 .bad·.tag.use 실값 */
+.r66{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.r68{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.r68 .pl{display:inline-flex;align-items:stretch;height:34px;background:#fff;border:1px solid var(--g200);border-radius:17px;overflow:hidden;box-shadow:0 1px 4px rgba(25,31,40,.08);font-size:14px;font-weight:700;letter-spacing:-.4px}
+.r68 .lf{display:flex;align-items:center;gap:7px;padding:0 13px;color:var(--g700)}
+.r68 .lf i{width:7px;height:7px;border-radius:50%;background:var(--g400)}
+.r68 .rt{display:flex;align-items:center;gap:6px;padding:0 13px;background:var(--g50);border-left:1px solid var(--g200);color:var(--g900)}
+.r68 .rt em{font-style:normal;min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:11.5px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.r68 .rt.hot{background:var(--red);color:#fff;border-left-color:var(--red)}
+.r68 .rt.hot em{background:#fff;color:var(--red)}
+.r66 .th{flex:1;min-width:260px;max-width:368px;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.r66 .rw{display:flex;align-items:flex-end;gap:6px;justify-content:flex-end}
+.r66 .bb{max-width:220px;padding:10px 13px;border-radius:18px;font-size:14px;line-height:1.5;background:var(--g800);color:#fff}
+.r66 .bb.rc{background:var(--g100);color:var(--g600)}
+.r66 .mt{font-size:11px;color:var(--g600);display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
+.r66 .mt .bad{color:var(--red);font-weight:600}
+.r66 .l1{display:flex;align-items:center;gap:6px;font-size:14.5px;font-weight:600;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:12px 14px;min-width:260px;max-width:368px;flex:1}
+.r66 .tag{font-size:11px;font-weight:600;color:var(--g700);background:var(--g100);border-radius:6px;padding:0 6px;white-space:nowrap}
+.r66 .tag.use{color:var(--green700);background:none;box-shadow:inset 0 0 0 1px var(--green200)}
 /* §5.7 답해야 열리는 「다음」 — 깨우기 + 빛줄기와 화살표(안전교육 화면 실코드 축약) */
 .nx57{display:flex;flex-direction:column;gap:10px;max-width:384px;margin-left:auto;margin-right:auto}
 .nx57 .nx-ox{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -674,6 +693,8 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec2"><i>§1.8</i><span>디자인 검토·제안 = 프리뷰 html로</span></a>
     <a href="#sec3"><i>§2.1</i><span>보이스 &amp; 톤</span></a>
     <a href="#sec4"><i>§2.1 예외</i><span>기본값을 의도적으로 어길 때</span></a>
+    <a href="#sec69"><i>§2.1 AI-투</i><span>감성 묘사는 빼고 정보는 남긴다</span></a>
+    <a href="#sec70"><i>§2.1 문의 답변</i><span>신청을 접게 하는 말을 빼고, 문단은 빈 줄로</span></a>
     <a href="#sec52"><i>§2.1-10</i><span>아이를 부를 때 = 인사는 성명, 질문은 「아이」</span></a>
     <a href="#sec5"><i>§2.2</i><span>정보 밀도는 맥락에 맞춘다</span></a>
     <a href="#sec6"><i>§2.2-4</i><span>반복 실무자 화면 = 미니멀 + 보조설명은 ? 시트</span></a>
@@ -729,6 +750,8 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec61"><i>§4.18</i><span>첨부 — 바로 안 가고 칩, 사진은 그 비율 자리, PDF는 카드</span></a>
     <a href="#sec64"><i>§4.18</i><span>받은함 줄 — 이름 굵게 + 원래 이름 뱃지, 오른쪽 클릭 메뉴</span></a>
     <a href="#sec65"><i>§4.18</i><span>미리보기 — 제목은 보낸 사람, 누르면 그 대화</span></a>
+    <a href="#sec66"><i>§4.18</i><span>거둔 답장은 받은함에만 회색, 이용 중은 테두리 칩</span></a>
+    <a href="#sec68"><i>§4.18</i><span>새 문의 = 알약 문의 칸만 빨강 3번</span></a>
     <a href="#sec48"><i>§5.2</i><span>로딩 = 자리별 3층</span></a>
     <a href="#sec49"><i>§5.3</i><span>누름(press)</span></a>
     <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
@@ -777,6 +800,22 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="col ok"><b>긍정형 → 부정 OK</b>정책 불가·일부 불가·안심: "수집하지 않아요"</div>
   </div>
   <p class="note">철자 — <code>되어요</code>가 아니라 <code>돼요</code>.</p>
+
+  <!-- 2026-10-13 유성 「테라피 센터 같아 … tmi」 · 경위·전문 = docs/1 §2.1 AI-투 금지 어휘 -->
+  <h3 class="sec" id="sec69"><span class="ref">§2.1 AI-투</span>감성 묘사는 빼고 정보는 남긴다</h3>
+  <p class="desc">답 + 사실 2~3개 + 다음 할 일. 어느 서비스 문의인지 모르면 서비스 이름을 붙여 나눈다.</p>
+  <div class="demo dd">
+    <div class="col ok"><b>✅ 이렇게</b>"오감쑥쑥과 정신건강 토탈케어는 선생님이 집으로 찾아가요. 둘 다 한 달에 4번이고, 한 번에 오감쑥쑥은 40분, 정신건강 토탈케어는 60분이에요. 다른 서비스는 알려 주시면 안내드릴게요."</div>
+    <div class="col no"><b>⛔ 이렇게 X</b>"아이가 늘 지내는 익숙한 공간에서, 선생님이 아이 한 명에게 온전히 집중해요."(감성 묘사) / "네, 선생님이 집으로 가요."(너무 짧고 한 서비스로 가정)</div>
+  </div>
+
+  <!-- 2026-10-15 유성 문의 창 답 고르기 · 경위·전문 = docs/1 §2.1 「문의 답변」 -->
+  <h3 class="sec" id="sec70"><span class="ref">§2.1 문의 답변</span>신청을 접게 하는 말을 빼고, 문단은 빈 줄로</h3>
+  <p class="desc">안 될 것 같은 범위, 그만두는 길, 못 하는 약속을 먼저 꺼내지 않는다. 문단 사이는 빈 줄 하나.</p>
+  <div class="demo dd">
+    <div class="col ok"><b>✅ 이렇게</b>"오감쑥쑥과 정신건강 토탈케어는 인천 전 지역으로 찾아가요.<br><br>동네와 가능한 요일, 시간을 신청폼에 적어 주시면 맞는 선생님을 찾아서 연락드려요."</div>
+    <div class="col no"><b>⛔ 이렇게 X</b>"인천 대부분 지역에 찾아가요. 동을 알려 주시면 바로 확인해 드릴게요."(안 될 것 같은 범위, 못 하는 약속) / "맞지 않으면 그만두실 수 있어요."(그만두는 길)</div>
+  </div>
 
   <!-- 2026-09-06 신설 → 2026-09-25 개정(성 떼기 폐기) · 경위·전문 = docs/1 §2.1-10 -->
   <h3 class="sec" id="sec52"><span class="ref">§2.1-10</span>아이를 부를 때 = 인사는 성명, 질문은 「아이」</h3>
@@ -1478,6 +1517,23 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="pk"><div class="s"><i></i>아이사랑맘서윤이네… (카카오)</div><div class="m">상담 예약하고 싶어요</div></div>
     <div class="pk"><div class="s"><i></i>홈페이지 문의</div><div class="m">오감쑥쑥 대기가 얼마나 걸려요?</div></div>
   </div>
+
+  <!-- 2026-10-12 유성 a1(거두기, 학부모 흔적 0) + a2(「이용 중. 오감 김하린」) · 경위·전문 = docs/1 §4.18 -->
+  <h3 class="sec" id="sec66"><span class="ref">§4.18</span>거둔 답장은 받은함에만 회색, 이용 중은 테두리 칩</h3>
+  <p class="desc">1분 안 내 답장은 오른쪽 클릭으로 거둔다. 학부모 화면엔 흔적이 없다. 이용 중 칩은 채운 칩과 갈리게 테두리만.</p>
+  <div class="demo r66">
+    <div class="th"><div class="rw"><span class="mt"><span>오후 3:01</span></span><span class="bb">네 확인해 볼게요</span></div><div class="rw"><span class="mt"><span class="bad">문자로는 이미 갔어요</span><span>오후 3:02</span></span><span class="bb rc">거둔 답장이에요</span></div></div>
+    <div class="l1"><span>홈페이지</span><span class="tag use">이용 중. 오감 김하린 외 1</span></div>
+  </div>
+
+  <!-- 2026-10-13 유성 4방향 A 「빨강/3번/보통/끔 … 문의 부분만」 · 경위·전문 = docs/1 §4.18 -->
+  <h3 class="sec" id="sec68"><span class="ref">§4.18</span>새 문의 = 알약 문의 칸만 빨강 3번</h3>
+  <p class="desc">흔들림과 같이, 문의 칸만 빨강으로 세 번 깜빡이고 원래 색으로. 왼쪽 근태 칸은 그대로.</p>
+  <div class="demo r68">
+    <span class="pl"><span class="lf"><i></i>이현아 2:41</span><span class="rt" id="r68rt">문의 <em>1</em></span></span>
+    <button class="btn" id="r68go">문의 오게 하기</button>
+  </div>
+  <script>(function(){var b=document.getElementById('r68go'),rt=document.getElementById('r68rt'),T=[];if(!b)return;b.addEventListener('click',function(){T.forEach(clearTimeout);T=[];rt.classList.remove('hot');for(var i=0;i<3;i++){T.push(setTimeout(function(){rt.classList.add('hot');},i*625));T.push(setTimeout(function(){rt.classList.remove('hot');},i*625+312));}});})();</script>
 </section>
 
 <!-- 5 인터랙션·모션 -->
