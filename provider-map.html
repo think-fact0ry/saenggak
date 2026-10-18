@@ -879,6 +879,18 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
   .nl-panel.moreTop::before{opacity:1}
   .nl-panel.more::after{opacity:1}
   .nl-item{padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:background .1s;border:1px solid transparent;-webkit-tap-highlight-color:transparent}
+  /* 줄 오른쪽 복사 버튼(유성 10-18 — 폰에서 신청폼 복사). 누르는 칸 44px, 보이는 칸 34px.
+     버튼이 있는 줄은 위아래 여백을 줄여 줄 높이를 옛 줄과 비슷하게 둔다(44 + 4×2). */
+  .nl-item.cp{display:flex;align-items:center;gap:2px;padding:4px 2px 4px 10px}
+  .nl-item.cp .nl-main{flex:1;min-width:0}
+  .nl-copy{width:44px;height:44px;flex-shrink:0;border:none;background:none;padding:0;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit}
+  .nl-copy i{width:34px;height:34px;border-radius:10px;background:var(--g100);display:flex;align-items:center;justify-content:center;
+    transition:transform .08s,background .15s}
+  .nl-copy svg{width:17px;height:17px;stroke:var(--g700);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nl-copy:active i{transform:scale(.96);background:var(--g200)}
+  .nl-copy.done i{background:var(--green100)}
+  .nl-copy.done svg{stroke:var(--green700)}
   .nl-item:hover{background:var(--g50);border-color:#e0dcd5}
   .nl-item-row1{display:flex;align-items:center;gap:6px;margin-bottom:2px}
   .nl-item-name{font-weight:700;font-size:13px;color:#1a1a1a}
@@ -3441,21 +3453,56 @@ function registerCopyData(c) {
 
 function doCopy(idx) {
   var c = _copyData[idx];
-  if (!c) { showToast('복사 실패'); return; }
-  var lines = ['신청폼-오감', c.name || ''];
-  if (c.address) lines.push(c.address);
-  if (c.times) lines.push(fmtTimes(c.times));
-  if (c.phone) lines.push(fmtPhone(c.phone));
-  if (c.notes) lines.push(c.notes);
-  if (c.voucher) lines.push('바우처: ' + c.voucher);
-  var text = lines.join('\n');
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(function(){ showToast('복사됨', true); });
-  } else {
-    var ta = document.createElement('textarea'); ta.value = text;
-    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-    document.body.removeChild(ta); showToast('복사됨', true);
+  if (!c) { showToast('복사하지 못했어요'); return; }
+  _copyApply(c);
+}
+
+// ── 신청폼 복사 글 = 시트 메뉴 「신청폼 복사」(06 OutputDialog.html go())와 글자 하나까지 같게 (유성 10-18) ──
+// 말풍선 복사와 신청폼 목록 줄 복사가 같이 쓴다. 옛 지도 복사는 첫 줄 「신청폼-오감」 고정, 성별·생년 없음,
+// [시간참고] 원문 그대로, 「바우처: 네」라 PC 복사와 달랐다.
+// ⚠️ 줄 규칙을 바꾸면 06 OutputDialog.html go()·splitNotes, Code.js getRowData·_splitApplyNotes_도(0-9).
+// 시험 = 스크래치 copy18.js(두 쪽 실소스를 떼어 시트 실물 전 줄 대조).
+function _splitApplyNotes(raw) {   // G열 「[시간참고] X(줄바꿈)Y」 → 시간 참고 / 메모 (06 Apply.html _splitNotes_와 같은 규칙)
+  raw = String(raw || '').trim();
+  var TAG = '[시간참고] ';
+  if (raw.indexOf(TAG) === 0) {
+    var rest = raw.slice(TAG.length), nl = rest.indexOf('\n');
+    return nl >= 0 ? { timeNote: rest.slice(0, nl).trim(), notes: rest.slice(nl + 1).trim() } : { timeNote: rest.trim(), notes: '' };
   }
+  return { timeNote: '', notes: raw };
+}
+function _applyCopyText(c) {
+  var raw = String(c.voucher || '').trim(), v;
+  if (raw === '네') v = 'o';
+  else if (raw === '아니오') v = 'x';
+  else if (raw.indexOf('신청은 했으나') > -1) v = 'x🍍(신청은 했으나 아직 선정 문자를 받지 않음)';
+  else v = raw;
+  // 주소 = 도로명 + 상세(앞뒤 공백 뺌). 서버 address는 상세를 안 다듬고 붙이므로 addr1 뒤를 다시 다듬는다(PC 복사와 같게).
+  var a1 = String(c.addr1 || ''), full = String(c.address || ''), addr = full;
+  if (full.indexOf(a1) === 0) { var det = full.slice(a1.length).trim(); addr = a1 + (det ? ' ' + det : ''); }
+  var pn = _splitApplyNotes(c.notes);
+  // 제목 = 이 아이를 실어 온 데이터의 서비스(서비스를 막 바꿔 새 데이터가 오기 전에도 옛 목록과 제목이 같게)
+  var svc = (currentData && currentData.service) || currentService;
+  var lines = ['신청폼-' + svc, String(c.name || ''), String(c.gender || ''), String(c.birth || ''), addr, fmtTimes(c.times)];
+  if (pn.timeNote) lines.push('시간 참고: ' + pn.timeNote);
+  if (pn.notes) lines.push('* ' + pn.notes);
+  // 전화 = 숫자 11자리(01로 시작)만 하이픈, 나머지는 적힌 그대로(PC 복사 fmtPhone과 같은 규칙 — 지도 fmtPhone과는 다르다)
+  var ph = String(c.phone || '').trim();
+  if (ph) lines.push(/^01\d{9}$/.test(ph) ? ph.slice(0, 3) + '-' + ph.slice(3, 7) + '-' + ph.slice(7) : String(c.phone));
+  lines.push('');
+  lines.push('바우처 선정 대상자:  ' + v);
+  return lines.join('\n');
+}
+function _copyApply(c, onOk) {
+  // 기기에 저장해 둔 옛 지도 데이터(10-18 전)엔 성별·생년이 없다 — 빈 줄로 복사하지 말고 새 데이터를 기다린다
+  // (배정취소 낙관 객체는 키가 있어도 값이 undefined일 수 있어 `in`이 아니라 형으로 본다)
+  if (typeof c.gender !== 'string') { showToast('새 정보를 불러오고 있어요. 잠시 뒤 다시 눌러 주세요'); return false; }
+  var t = _applyCopyText(c);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(function(){ showToast('복사했어요', true); if (onOk) onOk(); },
+                                          function(){ _planCopyFallback(t, onOk); });
+  } else _planCopyFallback(t, onOk);
+  return true;
 }
 
 function reloadCurrent(keepView) {
@@ -3593,7 +3640,8 @@ function _optimisticUnassign(row) {
         ② 배열 끝에 concat → 서버는 **행 번호 오름차순**이라 위치가 어긋남
         둘 다 2026-09-01에 맞췄다. 서버 순서 = Code.js getMapData가 formData를 행 순으로 한 번 훑는 것. */
   var _nw = {
-    row: Number(row), name: c.name, dob: c.dob, lat: c.lat, lng: c.lng, address: c.address,
+    row: Number(row), name: c.name, dob: c.dob, gender: c.gender, birth: c.birth,   // 성별·생년 표시값 = 10-18 서버 추가(복사 글)
+    lat: c.lat, lng: c.lng, address: c.address,
     times: c.times, phone: c.phone, notes: c.notes, voucher: c.voucher,
     status: '대기', sigungu: c.sigungu || '', bname: c.bname || '',
     addr1: c.addr1 || '', timestamp: c.timestamp, marked: !!c.marked   // 마크는 배정취소가 지우지 않음(직교)
@@ -4181,7 +4229,8 @@ function renderNewList() {
     return;
   }
 
-  var html = '';
+  var html = '', canCopy = isAdmin();   // 목록은 행정만 열리지만 복사(전화 포함)는 한 번 더 막는다
+  var CP_SVG = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
   filtered.forEach(function(item, idx) {
     var ts = parseTimestamp(item.timestamp);
     var dateStr = fmtRelativeDate(ts);
@@ -4189,7 +4238,8 @@ function renderNewList() {
     if (nlSort === 'near' && item._dist !== Infinity) {
       distStr = '<span class="nl-item-dist">' + fmtDist(item._dist) + '</span>';
     }
-    html += '<div class="nl-item" data-idx="' + idx + '">'
+    html += '<div class="nl-item' + (canCopy ? ' cp' : '') + '" data-idx="' + idx + '">'
+      + (canCopy ? '<div class="nl-main">' : '')
       + '<div class="nl-item-row1">'
       +   '<div class="nl-item-name">' + esc(item.name) + '</div>'
       +   '<span class="nl-item-badge ' + item.statusType + '">' + esc(item.status) + '</span>'
@@ -4201,9 +4251,23 @@ function renderNewList() {
       +   distStr
       +   '<span>' + esc(item.sigungu) + (item.bname ? ' ' + esc(item.bname) : '') + '</span>'
       + '</div>'
+      + (canCopy ? '</div><button class="nl-copy" type="button" title="신청폼 복사" aria-label="신청폼 복사"><i>' + CP_SVG + '</i></button>' : '')
       + '</div>';
   });
   list.innerHTML = html;
+
+  // 복사 버튼 — 줄 누름(지도로 이동)과 따로. 복사한 줄은 다시 그릴 때까지 초록으로 남겨 어느 아이를 복사했는지 보이게.
+  list.querySelectorAll('.nl-copy').forEach(function(b) {
+    b.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var btn = this, item = filtered[parseInt(btn.parentNode.getAttribute('data-idx'))];
+      if (!item) return;
+      _copyApply(item.data, function() {
+        list.querySelectorAll('.nl-copy.done').forEach(function(x){ x.classList.remove('done'); });
+        btn.classList.add('done');
+      });
+    });
+  });
 
   // 클릭 핸들러
   list.querySelectorAll('.nl-item').forEach(function(el) {
@@ -5189,11 +5253,11 @@ function planBriefCopy() {
                                           function(){ _planCopyFallback(t); });
   } else _planCopyFallback(t);
 }
-function _planCopyFallback(t) {
+function _planCopyFallback(t, onOk) {   // onOk = 복사가 된 뒤에만(신청폼 목록 줄 초록 표시, 10-18)
   var ta = document.createElement('textarea');
   ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
   document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); showToast('복사했어요', true); }
+  try { document.execCommand('copy'); showToast('복사했어요', true); if (onOk) onOk(); }
   catch (e) { showToast('복사하지 못했어요'); }
   document.body.removeChild(ta);
 }
