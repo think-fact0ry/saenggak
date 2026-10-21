@@ -102,6 +102,9 @@ button{font:inherit}
 .pw .cap{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 /* 꾹 누른 손가락이 아직 화면에 있을 때 뜨는 창 = 이어 누르면 창 글자가 선택돼 끌렸다(유성 10-18) → 이 창만 글자 선택 막음 */
 .dim.nosel,.dim.nosel *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.rw{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 18px;margin:2px 0 18px;font-size:var(--fs-sm)}
+.rw .lb{color:var(--g500)}
+.rw button{border:0;background:none;padding:8px 2px;color:var(--g600);font-size:var(--fs-sm);font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .cm .alt{display:block;width:100%;border:0;background:none;margin-top:6px;padding:12px 0 6px;color:var(--g600);font-size:var(--fs-sm);font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.spin,.sk-b,.ib.busy svg{animation:none}}
 </style>
@@ -120,13 +123,13 @@ button{font:inherit}
   // 22 웹앱 doPost — text/plain이라 프리플라이트 없음(23·24와 같은 결). 서버 오류는 { ok:false, error } → reject
   var GAS_EXEC = 'https://script.google.com/macros/s/AKfycbxiaIfUdh0q1C_OF65xmk-4QQLUklWPjcq2ZKBVpnI5TYhHV9TXyKUUWqRxEkZk_WnR0A/exec';
   var ACT = { mbImages: 'imgs', mbList: 'list', mbDoc: 'doc', mbSend: 'send', mbHold: 'hold', mbUnhold: 'unhold', mbRequestReg: 'reqreg', mbRegister: 'register', mbSendResult: 'sendres', mbBounceNotice: 'bnotice',
-    mbIssue: 'issue', mbPdf: 'pdf', mbSaved: 'saved' };
+    mbIssue: 'issue', mbPdf: 'pdf', mbSaved: 'saved', mbRewrite: 'rewrite', mbUndo: 'undo' };
   function isTransient(x) { return x instanceof TypeError || String(x && x.message) === 'BAD_REPLY'; }   // 응답을 못 받은 것(서버가 했는지 모름)
   function run(fn) {
     var a = [].slice.call(arguments, 1), body = { action: ACT[fn] };
     if (fn === 'mbRegister') { body.code = a[0]; body.ua = a[1]; }
     else if (fn === 'mbSendResult') { body.tok = a[0]; body.job = a[1]; }
-    else if (fn !== 'mbRequestReg') { body.tok = a[0]; body.id = a[1]; if (a[2]) body.job = a[2]; }
+    else if (fn !== 'mbRequestReg') { body.tok = a[0]; body.id = a[1]; if (a[2]) body.job = a[2]; if (a[3]) body.vs = a[3]; }   // vs = 화면이 본 판 { 접수ID: v } — 서버가 지금 줄과 다르면 안 쓴다(10-21)
     var once = function () {
       return fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify(body) })
         .then(function (r) { return r.text(); })
@@ -190,10 +193,14 @@ button{font:inherit}
     out.sort(function (a, b) { return a.at < b.at ? -1 : a.at > b.at ? 1 : 0; });
     return out;
   }
+  // 서버가 보내는 중(다른 화면·나갔다 다시 연 화면에서 누른 것 — 10-21 임예성 두 번 발송) = 이 화면에선 못 누른다
+  function isBusy(e) { return e.members.some(function (m) { return m.busy; }); }
+  function seen(e) { var o = {}; e.members.forEach(function (m) { o[m.id] = m.v; }); return o; }
   function queued(id) { return (sending && sending.ids.indexOf(id) >= 0) || queue.some(function (q) { return q.ids.indexOf(id) >= 0; }); }
   function subOf(e) {
     var m = e.members[0], k = keyOf(e.st);
     if (errs[e.id]) return '<span class="err">못 보냄: ' + esc(errs[e.id].split('\n')[0]) + '</span>';
+    if (isBusy(e)) return '<span>보내는 중</span>';
     if (k === 'NEW') return '<span>초안 쓰는 중, 1분쯤 걸려요</span>';
     if (k === 'SENT') return '<span>' + esc(m.sent) + '</span>';
     if (k === 'SENDFAIL') return '<span class="err">메일이 안 갔어요</span>';
@@ -229,6 +236,7 @@ button{font:inherit}
     pillUpdate();
     clearTimeout(poll);
     if (by('draft').length) poll = setTimeout(function () { if (view === 'list') loadList(true); }, 20000);   // 쓰는 중이 있으면 20초마다
+    if (es.some(isBusy)) poll = setTimeout(function () { if (view === 'list') loadList(true); }, 8000);
   }
   var LIST_KEY = 'rc-mb-list';
   // bg=true: 보던 목록을 그대로 두고 뒤에서 새로 받는다(처음 열 때 기억한 목록·20초 자동 갱신).
@@ -338,7 +346,7 @@ button{font:inherit}
   }
   function prefetchNext(e) { var n = nextReady(e); if (n) n.members.forEach(function (m) { if (!docs[dk(m.id)]) fetchDoc(m.id); }); }
   function nextReady(after) {
-    var r = entries().filter(function (x) { return x.g === 'ready' && (!after || x.id !== after.id); });
+    var r = entries().filter(function (x) { return x.g === 'ready' && !isBusy(x) && (!after || x.id !== after.id); });
     return r[0] || null;
   }
   function head(e) {
@@ -378,6 +386,7 @@ button{font:inherit}
     e.members.forEach(function (m, i) {
       if (e.members.length > 1) papers += '<div class="who">' + esc(m.name) + '</div>';
       papers += '<div class="pw" data-i="' + i + '"><iframe title="' + esc(m.name) + ' 추천서" scrolling="no"></iframe><div class="cap" data-go="zoom"></div></div>';
+      if (RW_OK[k] && !isBusy(e) && !rwBusy) papers += '<div class="rw">' + (m.lv ? '<span class="lb">세게 다시 쓴 판이에요</span><button data-go="rw" data-id="' + esc(m.id) + '">한 번 더 다시 쓰기</button><button data-go="undo" data-id="' + esc(m.id) + '">원래 판으로</button>' : '<button data-go="rw" data-id="' + esc(m.id) + '">더 세게 다시 쓰기</button>') + '</div>';
     });
     var left = entries().filter(function (x) { return x.g === 'ready'; }).length;
     var blocked = over.length || blank.length;
@@ -387,6 +396,8 @@ button{font:inherit}
     else if (k === 'SENT' && isPhoto(e)) bar = '<div class="btns"><button class="btn gh" data-go="photo">사진 다시 저장하기</button><button class="btn gh" data-go="send">보호자에게 보내기</button></div>';   // 메일이 안 갔으니 「반송됐어요」가 없다
     else if (k === 'SENT') bar = '<div class="btns"><button class="btn gh" data-go="bnotice">메일이 반송됐어요</button><button class="btn gh" data-go="send">고쳐서 다시 보내기</button></div>';
     else if (k === 'FIX') bar = '<button class="btn gh" data-go="unhold">고칠 것 없음, 보낼 것으로</button>';
+    if (isBusy(e)) { bar = '<button class="btn gh" aria-disabled="true">보내는 중이에요</button>'; clearTimeout(busyT); busyT = setTimeout(function () { if (cur === e) refreshAfterPhoto(e.members.map(function (m) { return m.id; })); }, 8000); }
+    else if (rwBusy && e.members.some(function (m) { return m.id === rwBusy.id; })) bar = '<button class="btn gh" aria-disabled="true">다시 쓰는 중이에요</button>';
     app.innerHTML = head(e) + '<div class="pad">' + top + papers + '</div>' + (bar ? '<div class="bar">' + bar + '</div>' : '');
     ds.forEach(function (d, i) { mountPaper(app.querySelector('.pw[data-i="' + i + '"]'), d.html); });
   }
@@ -444,7 +455,7 @@ button{font:inherit}
     d.querySelector('.o').onclick = function () {
       d.remove();
       delete errs[e.id];
-      queue.push({ id: e.id, name: e.name, ids: e.members.map(function (m) { return m.id; }) });
+      queue.push({ id: e.id, name: e.name, ids: e.members.map(function (m) { return m.id; }), vs: seen(e) });
       pump();
       var n = nextReady(e);
       if (n && (k === 'DRAFT' || k === 'RISK' || k === 'ISSUED')) openDetail(n);
@@ -461,16 +472,17 @@ button{font:inherit}
     var job = sending = queue.shift(), done = false, timer = 0, t0 = Date.now(), blank = 0;
     job.key = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
     pillUpdate();
-    function finish(ok, msg, unknown) {
+    function finish(ok, msg, unknown, stale) {
       if (done) return; done = true; clearInterval(timer);
-      if (unknown) toast(job.name + ' 결과를 아직 못 받았어요\n목록에서 상태를 확인해 주세요', 6000);
+      if (stale) toast(job.name + ' 안 보냈어요\n' + String(msg || ''), 6000);   // 그 사이 이미 보냈거나 바뀜 = 실패가 아니라 막은 것(줄에 「못 보냄」을 안 단다)
+      else if (unknown) toast(job.name + ' 결과를 아직 못 받았어요\n목록에서 상태를 확인해 주세요', 6000);
       else if (!ok) { errs[job.id] = msg || ''; toast(job.name + ' 못 보냈어요\n' + String(msg || '').split('\n')[0], 5000); }
       job.ids.forEach(function (id) { delete docs[dk(id)]; });
       sending = null; pillUpdate();   // 링은 결과를 안 순간 멈춘다(목록 새로 받기를 기다리지 않음)
       run('mbList', tok).then(function (l) { ST = l.st; items = l.items; if (view === 'list') renderList(); }).catch(function () {})
         .then(function () { pump(); if (ok && !sending && !queue.length && view === 'list') toast('다 보냈어요. 안 간 게 있으면 맨 위에 떠요.'); });
     }
-    run('mbSend', tok, job.id, job.key).then(function (r) { finish(!!(r && r.ok), r && r.message); }).catch(function (x) {
+    run('mbSend', tok, job.id, job.key, job.vs).then(function (r) { finish(!!(r && r.ok), r && r.message, false, r && r.stale); }).catch(function (x) {
       if (needReg(x)) { done = true; clearInterval(timer); sending = null; pillUpdate(); return renderFirst(); }
       if (!isTransient(x)) finish(false, String(x && x.message || x));
       // 응답만 못 받은 것 — 서버는 하고 있을 수 있다. 아래 결과 묻기가 판정한다
@@ -478,7 +490,7 @@ button{font:inherit}
     timer = setInterval(function () {
       run('mbSendResult', tok, job.key).then(function (r) {
         if (done) return;
-        if (r && r.st === 'done') return finish(r.ok, r.message);
+        if (r && r.st === 'done') return finish(r.ok, r.message, false, r.stale);
         blank = r ? 0 : blank + 1;
         if (blank >= 12 || Date.now() - t0 > 240000) finish(false, '', true);   // 1분 동안 서버에 기록이 없거나 4분이 지나면 = 모른다고 말한다
       }).catch(function () {});
@@ -488,11 +500,12 @@ button{font:inherit}
     var p = document.getElementById('pill'), n = (sending ? 1 : 0) + queue.length, t = [];
     if (n) t.push('보내는 중 ' + n + '건');
     if (photoBusy) t.push(photoBusy);
+    if (rwBusy) t.push(rwBusy.label);
     if (!t.length) { if (p) p.remove(); return; }
     if (!p) { p = document.createElement('div'); p.id = 'pill'; p.className = 'pill'; document.body.appendChild(p); }
     p.innerHTML = '<span class="spin"></span>' + esc(t.join(', '));
   }
-  window.addEventListener('beforeunload', function (ev) { if (sending || queue.length || photoBusy) { ev.preventDefault(); ev.returnValue = ''; } });
+  window.addEventListener('beforeunload', function (ev) { if (sending || queue.length || photoBusy || rwBusy) { ev.preventDefault(); ev.returnValue = ''; } });
 
   // ── 사진으로 저장(10-18) ──
   // 유성: 상세 화면 종이를 꾹 누르면 저장 — 보낸 아이도, 보내기 전 아이도(「내가 원하는 사진 저장은 여기서였어」 → 1차의 따로 된 사진 화면은 걷어냄).
@@ -510,18 +523,18 @@ button{font:inherit}
     return pdfP;
   }
   // 두 번 가면 안 되는 쓰기 — 응답을 못 받으면(구글 HTML·끊김) 5초마다 결과 번호로 묻는다(pump와 같은 규칙). 모르면 null
-  function writeOnce(fn, id, key) {
+  function writeOnce(fn, id, key, vs) {
     return new Promise(function (res) {
       var done = false, blank = 0, t0 = Date.now(), timer = 0;
       var fin = function (r) { if (done) return; done = true; clearInterval(timer); res(r); };
-      run(fn, tok, id, key).then(fin, function (x) {
+      run(fn, tok, id, key, vs).then(fin, function (x) {
         if (needReg(x)) return fin({ ok: false, needReg: true });
         if (!isTransient(x)) fin({ ok: false, message: String(x && x.message || x) });
       });
       timer = setInterval(function () {
         run('mbSendResult', tok, key).then(function (r) {
           if (done) return;
-          if (r && r.st === 'done') return fin({ ok: r.ok, message: r.message });
+          if (r && r.st === 'done') return fin({ ok: r.ok, message: r.message, stale: r.stale });
           blank = r ? 0 : blank + 1;
           if (blank >= 12 || Date.now() - t0 > 240000) fin(null);
         }).catch(function () {});
@@ -642,6 +655,47 @@ button{font:inherit}
     ['pointermove', 'pointerup', 'pointercancel'].forEach(function (t) { app.addEventListener(t, stop); });
   });
 
+  // ── 더 세게 다시 쓰기 · 원래 판으로(10-21 유성 「리롤권 — 보호자가 세게 써 달라고 할 때만」·「되돌리기는 있어야」) ──
+  // 서버 mbRewrite = AI가 정서·행동·가족·또래 중 하나를 「매우」로 다시 씀(30초쯤) → ✍️ 초안. 옛 칸은 서버 숨긴 탭에 남아 「원래 판으로」가 처음 판으로 돌린다.
+  var RW_OK = { DRAFT: 1, ISSUED: 1, SENT: 1 }, rwBusy = null, busyT = 0;
+  function memberOf(e, id) { return e.members.filter(function (m) { return m.id === id; })[0]; }
+  function askRewrite(e, id, undo) {
+    var m = memberOf(e, id); if (!m) return;
+    if (rwBusy || photoBusy) return toast('하던 일이 끝나면 다시 눌러 주세요.');
+    if (queued(id)) return toast('보내는 중이에요. 끝나면 다시 눌러 주세요.');
+    var sent = keyOf(m.st) === 'SENT';
+    var mt = undo ? m.name + ' 추천서를 처음 판으로 돌릴까요?' : m.name + (m.lv ? ' 추천서를 한 번 더 다시 쓸까요?' : ' 추천서를 더 세게 다시 쓸까요?');
+    var ms = undo ? '세게 다시 쓰기 전 글로 돌아가요.' : (m.lv ? '세기는 그대로, 문장만 새로 써요.' : '정서, 행동, 가족, 또래 중 한 가지를 「매우」로 바꿔 다시 써요.') + '\n30초쯤 걸려요.';
+    if (sent && !undo) ms += '\n다시 보낼 땐 제목에 (수정)이 붙어요.';
+    var d = document.createElement('div'); d.className = 'dim';
+    d.innerHTML = '<div class="cm" role="dialog" aria-modal="true"><div class="mt">' + esc(mt) + '</div><div class="ms">' + esc(ms) + '</div><div class="mr"><button class="c">닫기</button><button class="o">' + (undo ? '돌리기' : '다시 쓰기') + '</button></div></div>';
+    document.body.appendChild(d);
+    d.querySelector('.c').onclick = function () { d.remove(); };
+    d.querySelector('.o').onclick = function () { d.remove(); doRewrite(e, m, undo); };
+  }
+  function doRewrite(e, m, undo) {
+    rwBusy = { id: m.id, label: undo ? '되돌리는 중' : '다시 쓰는 중' }; pillUpdate();
+    if (cur === e) { var y = window.scrollY; renderDetail(); window.scrollTo(0, y); }
+    var vs = {}; vs[m.id] = m.v;
+    var key = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    writeOnce(undo ? 'mbUndo' : 'mbRewrite', m.id, undo ? '' : key, vs).then(function (r) {
+      if (r && r.needReg) { rwBusy = null; pillUpdate(); return renderFirst(); }
+      if (!r) toast(m.name + ' 결과를 아직 못 받았어요\n목록에서 확인해 주세요', 6000);
+      else if (!r.ok) toast(String(r.message || '못 했어요'), 7000);
+      else toast(m.name + ' ' + (r.message || '다 됐어요'));
+      delete docs[dk(m.id)];
+      return run('mbList', tok).then(function (l) {
+        ST = l.st; items = l.items; try { localStorage.setItem(LIST_KEY, JSON.stringify(l)); } catch (x) {}
+        rwBusy = null; pillUpdate();
+        if (view !== 'detail' || cur !== e) { if (view === 'list') renderList(); return; }
+        var ne = entries().filter(function (x) { return x.members.some(function (mm) { return mm.id === m.id; }); })[0];
+        if (!ne) return renderList();
+        cur = ne; renderDetail(); window.scrollTo(0, 0);
+        ne.members.forEach(function (mm) { var dd = docs[dk(mm.id)]; if (!dd || dd.then || dd.err) fetchDoc(mm.id).then(function () { if (cur === ne) renderDetail(); }); });
+      });
+    }).catch(function () { rwBusy = null; pillUpdate(); if (cur === e) renderDetail(); });
+  }
+
   // ── 처음 쓰는 기기 ──
   function renderFirst(msg) {
     view = 'first';
@@ -672,6 +726,7 @@ button{font:inherit}
     else if (go === 'zoom') { if (lpAt && lpAt >= lpDownAt) return; var w = t.closest('.pw');   // 꾹 누른 뒤 손을 떼며 오는 클릭은 크게 보기가 아니다
       w.classList.toggle('on'); if (w._fit) w._fit(); }
     else if (go === 'photo') { if (cur) photoSave(cur); }
+    else if (go === 'rw' || go === 'undo') { if (cur) askRewrite(cur, t.dataset.id, go === 'undo'); }
     else if (go === 'bnotice') { if (t.getAttribute('aria-disabled') !== 'true') confirmBounce(cur); }
     else if (go === 'send') { if (t.getAttribute('aria-disabled') === 'true') { toast('PC에서 고친 뒤 보낼 수 있어요'); return; } confirmSend(cur); }
     else if (go === 'hold' || go === 'unhold') {
