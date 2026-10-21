@@ -1069,6 +1069,7 @@ function renderElements(){
 var EXEC_URL = 'https://script.google.com/macros/s/AKfycbySwgDsPt1jily4WenVzoGNW9L0U3wh6AEJ4Leuo315H5_DLEBfg-f4DZ5mdJ9rkkFg/exec';
 function sess(){ try{ return JSON.parse(localStorage.getItem('tf_staff_v1')||'null'); }catch(e){ return null; } }
 var ERR_MSG = {
+  off:      '지금은 AI 정리를 쓰지 않아요. 메모는 상담일지에 바로 적어 주세요.',
   too_long: '메모가 너무 길어요. 2,000자 안으로 줄여주세요.',
   rate:     '요청이 잦아요. 잠깐 뒤에 다시 눌러주세요.',
   network:  '연결하지 못했어요. 인터넷을 확인하고 다시 눌러주세요.',
