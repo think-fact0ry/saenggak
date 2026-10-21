@@ -2849,6 +2849,7 @@ function getRecommendations(child) {
 
   providerList.forEach(function(p) {
     if (!p.lat || !p.lng) return;
+    if (noNewKids(p.avail)) return;   // 7요일 전부 「없음」 = 지금 아이만 하는 선생님(희망 시간을 안 적은 아이에게도 안 띄운다)
     var dist = haversine(child.lat, child.lng, p.lat, p.lng);
     var timeOverlap = calcTimeOverlap(child.times, p.avail);
     if (timeOverlap.count === 0 && child.times && /[월화수목금토일]-\d/.test(child.times)) return;
@@ -2887,6 +2888,15 @@ function earlyBadge(notes) {
   return e ? '<span class="iw-hint">' + e + '부터</span>' : '';
 }
 
+// 06 F~L 한 칸이 「없음」인가 = 그 요일 새 아이 안 받음. 서버 `_availNone_`(Code.js)과 같은 정규식.
+var AV_NONE = /^\s*없음\s*$/;
+// 7요일 전부 「없음」 = 새 아이를 안 받는 선생님(지금 결제하는 아이만 — 유성 2026-10-21 권선화).
+// 추천 3명엔 안 띄우고, 배정 다이얼로그 목록엔 남긴다(그 선생님 아이의 「배정·시간 수정」이 그 이름을 골라 둬야 하므로).
+function noNewKids(av) {
+  if (!av) return false;
+  return ['월','화','수','목','금','토','일'].every(function(d) { return AV_NONE.test(av[d] || ''); });
+}
+
 function calcTimeOverlap(childTimes, provAvail) {
   if (!childTimes || !provAvail || !/[월화수목금토일]-\d/.test(childTimes)) {
     return { count: -1, label: '시간 비교 불가' };
@@ -2905,6 +2915,8 @@ function calcTimeOverlap(childTimes, provAvail) {
   childSlots.forEach(function(slot) {
     var availRange = provAvail[slot.day];
     if (!availRange) return;
+    // 「없음」 = 그 요일 새 아이 안 받음(06 F~L, 2026-10-21 종이·유성) → 모름이 아니라 **아님**. 빈칸만 모름이다.
+    if (AV_NONE.test(availRange)) { knownDays++; return; }
     var m = availRange.match(/(\d{1,2}):?(\d{2})?\s*[-~]\s*(\d{1,2}):?(\d{2})?/);
     if (!m) return;
     knownDays++;
@@ -3060,6 +3072,8 @@ function _asgFillProviders(row, preferName, childName) {
   var scored = list.map(function(p) {
     var d = (child && child.lat && p.lat) ? haversine(child.lat, child.lng, p.lat, p.lng) : null;
     var t = (child && child.times) ? calcTimeOverlap(child.times, p.avail) : { count: -1, label: '' };
+    // 새 아이 안 받는 선생님은 맨 아래 + 그 말을 붙인다(목록에서 빼면 그 선생님 아이의 시간 수정이 다른 이름으로 열린다)
+    if (noNewKids(p.avail)) return { name: p.name, dist: d, tLabel: '새 아이 안 받음', tCount: 0, score: 1000 + (d == null ? 99 : d) };
     return { name: p.name, dist: d, tLabel: t.label, tCount: t.count,
              score: (d == null ? 99 : d) + (t.count > 0 ? 0 : 5) };
   });
@@ -5946,9 +5960,11 @@ var SCHED = { prov: null, openKey: null, openedAt: 0, route: false, folded: fals
     for(var t2=b.lo+60;t2<b.hi;t2+=60) h+='<i class="hr" style="top:'+Y(t2)+'px"></i>';
     h+='</div>';
 
+    // 그 요일 06 F~L이 「없음」 = 새 아이 안 받음 → 빈 자리를 안 그린다(수업 블록은 그대로 — 지금 아이는 계속 다닌다).
+    var pAv = ((providerList || []).filter(function(p){ return String(p.name||'').trim() === String(SCHED.prov||'').trim(); })[0] || {}).avail || {};
     ds.forEach(function(d,di){
       h+='<div class="lane">';
-      gaps(vs,d,b).forEach(function(g){
+      (AV_NONE.test(pAv[d] || '') ? [] : gaps(vs,d,b)).forEach(function(g){
         RL.push({free:1,d:d,g:g});
         var top=Y(g.s)+3, hgt=Y(g.e)-Y(g.s)-6;
         // ⛔"이동 N분 빼고" 문구는 안 쓴다(유성 08-16) — 값엔 이동 12분이 이미 빠져 있고 설명은 탭 토스트가 한다
