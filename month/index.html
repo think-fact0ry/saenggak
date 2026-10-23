@@ -138,6 +138,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
 .look{margin:0;font-size:13px;line-height:1.55;border-radius:10px;padding:8px 10px;background:var(--g100);color:var(--sub)}
 .look.w{background:var(--warnbg);color:var(--warn)}
 .look.e{background:var(--redbg);color:var(--red)}
+.badn{margin:0 0 12px;font-size:14px}
 .pn .chat{border-radius:12px}
 .pn .bub{max-width:300px}
 .pact{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
@@ -324,6 +325,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     document.getElementById('vbody').innerHTML =
       '<section class="sec"><h2>' + ICON.clock + '공지방 예약</h2><p class="how">' + esc(n.when || '') + '에 올라가게 예약 메시지 두 개로 걸어 주세요.</p>' + rsv + '</section>' +
       '<section class="sec"><h2>' + M + '월 월 계획안 발송 명단</h2><p class="how">제공인력마다 위에서부터 차례로 <b>복사</b>해서 개별 카톡으로 보내주세요.</p>' +
+      (D.bad || []).map(function (m) { return '<p class="look w badn">' + esc(m) + '</p>'; }).join('') +   // 07 _maBadNameMsg_ — 이름 칸에 글자 없는 줄(10-23)
       '<p class="cnt">' + nDone + ' / ' + D.teachers.length + '명 복사함</p><div class="grid">' + cards + '</div>' +
       '<p class="later">제공인력분이 누락된 아이나 그만둔 아이를 알려 주시면 → <button data-a="view" data-v="ans">누락된 아이, 그만둔 아이</button> 화면에서 처리해요.</p></section>';
   }
