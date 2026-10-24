@@ -748,6 +748,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec43"><i>§4.13-6</i><span>넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드</span></a>
     <a href="#sec44"><i>§4.13-6</i><span>그린 그라디언트로 “더 있다”를 말한다</span></a>
     <a href="#sec56"><i>§4.13-6</i><span>자동 확장 입력칸도 스크롤바 대신 그라디언트</span></a>
+    <a href="#sec72"><i>§4.13-6</i><span>홈페이지 문의 창 대화 칸만 회색, 더 연하게</span></a>
     <a href="#sec45"><i>§4.9</i><span>다중 선택 그리드 = 드래그 + 이름 일괄토글 📱 실기기</span></a>
     <a href="#sec46"><i>§4.10</i><span>헤더 + 뒤로가기 · 역할 표시</span></a>
     <a href="#sec47"><i>§4.11</i><span>뒤로가기·스와이프 = 화면 단위로 📱 실기기</span></a>
@@ -1445,6 +1446,29 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <h3 class="sec" id="sec56"><span class="ref">§4.13-6</span>자동 확장 입력칸도 스크롤바 대신 그라디언트</h3>
   <p class="desc">최대 높이를 넘으면 칸 안이 스크롤된다. 막대는 숨기고 위·아래 그린 그라디언트로 알린다. 길게 적어 보세요 ↓</p>
   <div class="demo"><div class="taw56" id="taw56"><textarea id="ta56" rows="1" placeholder="어떤 점이 궁금하세요?"></textarea></div></div>
+  <!-- 2026-10-24 · 경위·전문 = docs/1 §4.13-6 (값 = kr js/inquiry-pane.js .ti-thf) -->
+  <h3 class="sec" id="sec72"><span class="ref">§4.13-6</span>홈페이지 문의 창 대화 칸만 회색, 더 연하게</h3>
+  <p class="desc">모양과 켜는 규칙은 그대로, 색만 회색에 진하기 절반. 다른 화면과 창 안 입력 칸은 그린. 굴려 보세요 ↓</p>
+  <div class="demo" style="max-width:360px">
+    <div id="sfDemo72" style="position:relative;border:1px solid var(--g200);border-radius:11px;overflow:hidden;background:#fff">
+      <div id="sfBody72" style="height:150px;overflow-y:auto;scrollbar-width:none;padding:6px 10px"></div>
+    </div>
+  </div>
+  <style>
+    #sfBody72::-webkit-scrollbar{width:0;height:0}
+    #sfDemo72::before,#sfDemo72::after{content:"";position:absolute;left:1px;right:1px;height:24px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:2}
+    #sfDemo72::before{top:0;background:linear-gradient(to top,rgba(25,31,40,0) 0%,rgba(25,31,40,.028) 100%),linear-gradient(to top,rgba(25,31,40,0) 58%,rgba(25,31,40,.058) 100%)}
+    #sfDemo72::after{bottom:0;background:linear-gradient(to bottom,rgba(25,31,40,0) 0%,rgba(25,31,40,.028) 100%),linear-gradient(to bottom,rgba(25,31,40,0) 58%,rgba(25,31,40,.058) 100%)}
+    #sfDemo72.moreTop::before,#sfDemo72.more::after{opacity:1}
+  </style>
+  <script>
+  (function(){
+    var bd=document.getElementById("sfBody72"), host=document.getElementById("sfDemo72");
+    bd.innerHTML=["안녕하세요, 생각공작소예요","본인부담금은 얼마인가요?","선생님이 집으로 오는 건가요?","바우처가 처음인데 어떻게 신청하나요?","신청하면 어떻게 진행되나요?","형제도 같이 받을 수 있나요?","체험해볼 수 있나요?"].map(function(n){return '<div style="padding:12px 2px;border-bottom:1px solid var(--g100)">'+n+'</div>';}).join("");
+    function sync(){ var over=bd.scrollHeight-bd.clientHeight, can=over>6; host.classList.toggle("moreTop",can&&bd.scrollTop>6); host.classList.toggle("more",can&&over-bd.scrollTop>6); }
+    bd.addEventListener("scroll",sync,{passive:true}); sync();
+  })();
+  </script>
 
   <!-- 2026-07-06 · 경위·전문 = docs/1 §4.9 -->
   <h3 class="sec" id="sec45"><span class="ref">§4.9</span>다중 선택 그리드 = 드래그 + 이름 일괄토글 <span class="rk">📱 실기기</span></h3>
