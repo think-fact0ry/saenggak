@@ -363,7 +363,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     return h + '</div>';
   }
   function uniqNames(arr) { var s = {}, o = []; arr.forEach(function (k) { if (!s[k.n]) { s[k.n] = 1; o.push(k.n); } }); return o; }
-  function soonOf(arr, n) { var k = arr.filter(function (x) { return x.n === n && x.soon; })[0]; return k ? k.soon : ''; }   // 「11월 종결」 또는 ''
+  function soonOf(arr, n) { return arr.filter(function (x) { return x.n === n && x.soon; })[0] || null; }   // {soon: '11월 종결', past} 또는 null
 
   function statusHTML(t) {
     var mine = answersOf(t.name), pendN = {};
@@ -372,8 +372,8 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     if (!mine.length && !np.length) return '';
     var h = '<div class="sts">';
     np.forEach(function (n) {
-      var soon = soonOf(t.np, n);   // 곧 끝나는 아이(07 _maRoster_, 유성 10-24) = 등록 링크 글에서 빠짐, 번호는 대표님이 해당 제공인력께
-      h += soon ? '<div class="sl"><span class="bd b-wait">' + esc(soon) + '</span><b>' + esc(n) + '</b><span class="sm">번호는 대표님이 따로 받아요</span></div>'
+      var soon = soonOf(t.np, n);   // 곧 끝나는 아이(07 _maRoster_, 유성 10-24) = 등록 링크 글에서 빠짐. 번호는 대표님이 / past = 종료 칸이 이미 지남
+      h += soon ? '<div class="sl"><span class="bd b-wait">' + esc(soon.soon) + '</span><b>' + esc(n) + '</b><span class="sm">' + (soon.past ? '종료 칸이 지났어요' : '번호는 대표님이 따로 받아요') + '</span></div>'
                 : '<div class="sl"><span class="bd b-wait">등록 기다림</span><b>' + esc(n) + '</b><span class="sm">아직 등록되지 않았어요</span></div>';
     });
     mine.forEach(function (a) {
@@ -394,7 +394,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     var has = function (arr) { return arr.some(function (k) { return norm(k.n) === nn; }); };
     var me = teacher(tn);                              // 이 선생님 명단 먼저 — 같은 이름 다른 아이가 다른 선생님께 있을 수 있다(이나율)
     if (me && has(me.kids)) return { k: 'self' };
-    var soonN = function (arr) { var k = arr.filter(function (x) { return norm(x.n) === nn && x.soon; })[0]; return k ? k.soon : ''; };
+    var soonN = function (arr) { var k = arr.filter(function (x) { return norm(x.n) === nn && x.soon; })[0]; return k ? (k.past ? k.soon + '인데 종료 칸이 지났어요.' : k.soon + '이라 번호는 대표님이 따로 받아요.') : ''; };
     if (me && has(me.np)) return { k: 'selfnp', soon: soonN(me.np) };
     for (i = 0; i < D.teachers.length; i++) {
       t = D.teachers[i];
@@ -416,9 +416,9 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   function lookNote(n, L, t) {
     var b = '<b>' + esc(jo(n, '은는')) + '</b> ';
     if (L.k === 'self') return [b + '이미 해당 제공인력 명단에 있어요.', ''];
-    if (L.k === 'selfnp') return [b + '해당 제공인력 명단에 있고, ' + (L.soon ? esc(L.soon) + '이라 번호는 대표님이 따로 받아요.' : '아직 등록되지 않았어요.'), ''];
+    if (L.k === 'selfnp') return [b + '해당 제공인력 명단에 있고, ' + (L.soon ? esc(L.soon) : '아직 등록되지 않았어요.'), ''];
     if (L.k === 'other') return [b + esc(tname(L.who)) + ' 선생님 명단에 있어요. 보호자님은 1일에 받아요. 담당이 바뀌었으면 지도에서 고쳐 주세요.', ''];
-    if (L.k === 'othernp') return [b + esc(tname(L.who)) + ' 선생님 명단에 있고, ' + (L.soon ? esc(L.soon) + '이라 번호는 대표님이 따로 받아요.' : '아직 등록되지 않았어요.'), ''];
+    if (L.k === 'othernp') return [b + esc(tname(L.who)) + ' 선생님 명단에 있고, ' + (L.soon ? esc(L.soon) : '아직 등록되지 않았어요.'), ''];
     if (L.k === 'ex') return [b + '이번 달에 안 보내는 아이예요. ' + esc(L.why) + '.', 'w'];
     if (L.k === 'wait') return [b + '신청이 들어와 있어요' + (L.at ? '(' + esc(L.at) + ' 신청)' : '') + '. 지도에서 ' + esc(tname(t.name)) + ' 선생님께 배정하면 1일에 받아요. 링크는 안 보내도 돼요.', 'w'];
     if (L.sim && L.sim.length) return ['혹시 ' + L.sim.map(function (o) { return '<b>' + esc(o.k) + '</b>' + (o.who ? ' (' + esc(o.who) + ' 선생님 명단)' : ' (신청만 들어옴)'); }).join(', ') + '? 같은 아이면 빼 주세요.', 'w'];
