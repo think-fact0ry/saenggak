@@ -15,6 +15,8 @@
     06 terminate엔 되돌리기가 없다(06 종결.js) → 버튼에 아이 이름 + 창이 뜬 뒤 0.45초 누름 무시. 쓰기는 한 번만 보낸다(재시도 금지).
   화면 글 = 현아쌤이 아는 말만(공지방 문체 §8-6): 「06」 「H열」 같은 내부 이름 대신 「신청폼」 「지도」 「서류철 종결 칸」.
   열리는 날 = OPEN_FROM(첫 25일). 그 전엔 「준비됐어요」만. 미리 보려면 주소 끝에 ?rehearsal=1.
+  1일(2026-10-27 ⑤): 그 달분 발송이 시작된 뒤(1~15일) 07이 missed를 주면 셋째 탭 「못 받은 아이」가 생기고 첫 화면이 된다.
+    선생님 카드마다 복사 세 번 = 07이 준 안내 글 / 포스터 / 안내문(notice.fwd = kr /month와 같은 「[N월 계획안]」 + 본문). 복사 표시 = mp-sent-<달> m[선생님|아이들].
 -->
 <style>
 /* 현아쌤 화면 = 10-01 「선생님별 피드백 안내」 실물 값(카톡 흉내라 밝은 화면 고정이 의도) */
@@ -80,6 +82,16 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
 .cb:disabled{opacity:.45;cursor:default;transform:none}
 .ri .cb.done{background:var(--g100)}
 .msg.done .bub{opacity:.5}
+/* ── 1일: 못 받은 아이 (prototype/월계획안_데모.html 1일 판 그대로) — 안내 글, 포스터, 안내문 = 복사 세 번 ── */
+.th .kn{font-size:13.5px;color:var(--sub)}
+.msg .col{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:0}
+.bub.long{max-height:170px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 44px),transparent);cursor:pointer}
+.bub.long.open{max-height:none;-webkit-mask-image:none;mask-image:none}
+.more{border:0;background:none;padding:0 4px;font-size:12.5px;color:#2d3b48;text-decoration:underline}
+.pimg{width:150px;aspect-ratio:3/4;border-radius:8px;display:block;background:#F3B188;object-fit:cover;transition:opacity .2s}
+.msg.done .pimg{opacity:.5}
+.sum{margin:0 0 2px;font-size:15px;font-weight:700}
+.emptyc{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:16px;padding:36px 16px;text-align:center;font-size:16px;font-weight:600}
 .sk{height:220px;border-radius:16px;background:linear-gradient(90deg,#eceeed 25%,#f6f7f6 50%,#eceeed 75%);background-size:200% 100%;animation:sk 1.4s linear infinite}
 @keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
 
@@ -243,7 +255,8 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   }
 
   var D = null;                 // 서버 데이터
-  var view = '';                // 'list' | 'ans'
+  var view = '';                // 'list' | 'ans' | 'miss'(1일)
+  var MORE = {};                // 1일 카드 안내문 펼침
   var SENT = null, SENT_KEY = '';
   var sel = null;               // 고른 선생님 이름
   var S = {};                   // 선생님별 답 처리 창 상태
@@ -262,7 +275,8 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       SENT_KEY = 'mp-sent-' + d.ym;
       try { SENT = JSON.parse(lsGet(SENT_KEY) || 'null'); } catch (e) { SENT = null; }
       if (!SENT || !SENT.t) SENT = { notice: [false, false, false], t: {} };
-      if (!view) view = allSent() ? 'ans' : 'list';
+      if (!SENT.m) SENT.m = {};
+      if (!view || (view === 'miss' && !D.missed)) view = D.missed ? 'miss' : allSent() ? 'ans' : 'list';
       render();
       loadPoster();
       return true;
@@ -279,7 +293,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       posterBusy = false;
       if (!r || !r.ok || !r.src) return;
       POSTER = { id: r.id, src: r.src };
-      if (D.notice.posterId === r.id) { D.notice.poster = r.src; if (view === 'list') render(); }
+      if (D.notice.posterId === r.id) { D.notice.poster = r.src; if (view === 'list' || view === 'miss') render(); }
     }, function () { posterBusy = false; });
   }
   function saveSent() { lsSet(SENT_KEY, JSON.stringify(SENT)); }
@@ -293,9 +307,39 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     app.innerHTML = (rehearsal && ymd < OPEN_FROM ? '<span class="rh">미리보기 — 현아쌤 화면엔 ' + OPEN_FROM.slice(5).replace('-', '/') + '부터 떠요</span>' : '') +
       title(M + '월 월 계획안') +
       '<div class="tabs" role="tablist"><button role="tab" data-a="view" data-v="list" class="' + (view === 'list' ? 'on' : '') + '">발송 명단</button>' +
-      '<button role="tab" data-a="view" data-v="ans" class="' + (view === 'ans' ? 'on' : '') + '">누락된 아이, 그만둔 아이</button></div>' +
+      '<button role="tab" data-a="view" data-v="ans" class="' + (view === 'ans' ? 'on' : '') + '">누락된 아이, 그만둔 아이</button>' +
+      (D.missed ? '<button role="tab" data-a="view" data-v="miss" class="' + (view === 'miss' ? 'on' : '') + '">못 받은 아이</button>' : '') + '</div>' +
       '<div id="vbody"></div>';
-    if (view === 'list') renderList(); else renderAns();
+    if (view === 'list') renderList(); else if (view === 'miss' && D.missed) renderMissed(); else renderAns();
+  }
+
+  // ── 1일: 못 받은 아이 — 안내 글은 07이 만든다(_maMissedMsg_). 복사 표시 키 = 선생님 + 아이들(아이가 늘면 다시 안 누른 카드) ──
+  function mKey(c) { return c.name + '|' + c.kids.map(function (k) { return k.n; }).join(','); }
+  function mSent(c) { var s = SENT.m[mKey(c)]; return [0, 1, 2].map(function (i) { return !!(s && s[i]); }); }
+  function renderMissed() {
+    var M = D.month, n = D.notice || {}, X = D.missed, h = '<section class="sec"><h2>' + M + '월 월 계획안 못 받은 아이</h2>';
+    var vb = document.getElementById('vbody');
+    if (X.sending) { vb.innerHTML = h + '<div class="grid"><div class="emptyc">센터 발송이 아직 끝나지 않았어요. 잠시 뒤 다시 열어 주세요.</div></div></section>'; return; }
+    var varLine = X.varN ? '<p class="look w badn">다른 판 월 계획안을 받는 아이 ' + X.varN + '명은 여기 안 떠요.</p>' : '';
+    var C = X.cards || [];
+    if (!C.length) { vb.innerHTML = h + varLine + '<div class="grid"><div class="emptyc">' + M + '월은 모두 받았어요.</div></div></section>'; return; }
+    var kidsN = C.reduce(function (a, c) { return a + c.kids.length; }, 0);
+    var cards = C.map(function (c, ci) {
+      var s = mSent(c), all = s.every(Boolean), open = !!MORE[c.name];
+      var btn = function (i, off) { return '<button class="cb' + (s[i] ? ' done' : '') + '" data-a="mcopy" data-i="' + i + '"' + (off ? ' disabled' : '') + '>' + (s[i] ? ICON.check + '복사됨' : ICON.copy + '복사') + '</button>'; };
+      var pst = n.poster ? '<img class="pimg" src="' + esc(n.poster) + '" alt="' + M + '월 포스터">'
+        : '<div class="bub">' + (n.posterId ? '포스터를 불러오고 있어요' : '포스터는 대표님이 올리면 여기 떠요') + '</div>';
+      return '<div class="tc' + (all ? ' sent' : '') + '" data-ci="' + ci + '"><div class="th"><b>' + esc(tname(c.name)) + ' 선생님</b><span class="kn">' + c.kids.map(function (k) { return esc(k.n); }).join(', ') + '</span>' +
+        (all ? '<button class="undo" data-a="mundo">되돌리기</button>' : '') + '</div><div class="chat">' +
+        '<div class="msg' + (s[0] ? ' done' : '') + '">' + btn(0) + '<div class="bub">' + esc(c.text) + '</div></div>' +
+        '<div class="msg' + (s[1] ? ' done' : '') + '">' + btn(1, !n.poster) + pst + '</div>' +
+        '<div class="msg' + (s[2] ? ' done' : '') + '">' + btn(2, !n.fwd) + '<div class="col"><div class="bub long' + (open ? ' open' : '') + '" data-a="mmore">' + esc(n.fwd || '안내문은 대표님이 올리면 여기 떠요') + '</div>' +
+          (n.fwd ? '<button class="more" data-a="mmore">' + (open ? '접기' : '전체 보기') + '</button>' : '') + '</div></div>' +
+        '</div></div>';
+    }).join('');
+    var nDone = C.filter(function (c) { return mSent(c).every(Boolean); }).length;
+    vb.innerHTML = h + '<p class="how">제공인력마다 위에서부터 차례로 <b>복사</b>해서 개별 카톡으로 보내주세요.</p>' + varLine +
+      '<p class="sum">못 받은 아이 ' + kidsN + '명</p><p class="cnt">' + nDone + ' / ' + C.length + '명 복사함</p><div class="grid">' + cards + '</div></section>';
   }
 
   function renderList() {
@@ -617,6 +661,22 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
         SENT.notice[i] = true; saveSent(); render();
         toast(ok === 'file' ? '그림 파일을 내려받았어요' : '복사했어요');
       });
+      return;
+    }
+    var mc = b.closest('[data-ci]');
+    if (mc && D.missed && D.missed.cards) {
+      var c = D.missed.cards[+mc.dataset.ci]; if (!c) return;
+      var mk = mKey(c), ms = SENT.m[mk] || (SENT.m[mk] = []), n2 = D.notice || {};
+      if (a === 'mcopy') {
+        var ci = +b.dataset.i;
+        var pp = ci === 0 ? copyText(c.text) : ci === 1 ? copyImage(n2.poster) : copyText(n2.fwd);
+        pp.then(function (ok) {
+          if (!ok) { toast('복사하지 못했어요', true); return; }
+          ms[ci] = true; saveSent(); render();
+          toast(ok === 'file' ? '그림 파일을 내려받았어요' : '복사했어요');
+        });
+      } else if (a === 'mundo') { SENT.m[mk] = []; saveSent(); render(); }
+      else if (a === 'mmore') { MORE[c.name] = !MORE[c.name]; render(); }
       return;
     }
     var tc = b.closest('[data-ti]');
