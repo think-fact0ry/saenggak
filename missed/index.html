@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>부재중 안내 알림톡</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!-- 2026-10-27 현아쌤 안내용(유성 「html로 카톡 형식처럼 띄워서 보여주면」, 28일 현아쌤 확인 → 30일 자동 삭제 = .github/workflows/remove-missed.yml). 본문·버튼 = scripts/25_부재중회신/Code.js MC_TPL 글자 그대로, 사유 3 = MC_REASON_*·밤 경계 MC_NIGHT_FROM/TO(@17 18시~10시). 원본 = 레포 _archive/25_부재중알림톡_현아쌤안내_Pages게시본_2026-10-27.html. CSS = prototype/25_부재중회신_일반템플릿_재검수_프리뷰.html 말풍선 복제 -->
+<style>
+:root{--bg:#f4f5f3;--card:#fff;--ink:#191f28;--sub:#6b7280;--line:#e5e7eb;--acc:#3a8a5f;--accbg:#e8f4ec;--hl:#fff1c9;--hlink:#7a5a00;--kakao:#b2c7d9;--bub:#fff;--btn:#f2f3f5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141514;--card:#1f201e;--ink:#eceeea;--sub:#a3a7a0;--line:#33352f;--acc:#7cc89a;--accbg:#1d3326;--hl:#4a3d12;--hlink:#f5d77a;--kakao:#2b3a47;--bub:#262825;--btn:#30322e}}
+:root[data-theme="dark"]{--bg:#141514;--card:#1f201e;--ink:#eceeea;--sub:#a3a7a0;--line:#33352f;--acc:#7cc89a;--accbg:#1d3326;--hl:#4a3d12;--hlink:#f5d77a;--kakao:#2b3a47;--bub:#262825;--btn:#30322e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Pretendard Variable",Pretendard,system-ui,sans-serif;word-break:keep-all}
+main{max-width:860px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:23px;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 20px}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.seg button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:9px 14px;font:inherit;font-size:15px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accbg);border-color:var(--acc);color:var(--acc);font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.who{margin:0 0 8px}
+.who b{font-size:17px}
+.who span{display:block;font-size:14px;color:var(--sub)}
+.phone{background:var(--kakao);border-radius:18px;padding:14px 12px 16px}
+.phone .from{font-size:13px;font-weight:600;margin:0 0 6px 4px;opacity:.8}
+.bub{background:var(--bub);border-radius:12px;overflow:hidden;max-width:330px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.bub .top{background:#fee500;color:#191919;font-size:13px;font-weight:700;padding:8px 12px}
+.bub .body{padding:12px 14px;font-size:14.5px;line-height:1.55;white-space:pre-wrap}
+.v{background:var(--hl);color:var(--hlink);border-radius:4px;padding:0 2px}
+.bub .btns{padding:0 12px 12px;display:flex;flex-direction:column;gap:6px}
+.bub .btns span{display:block;text-align:center;background:var(--btn);border-radius:8px;padding:9px;font-size:14px;font-weight:600}
+.note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-top:20px;font-size:15px}
+.note p{margin:4px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>부재중 안내 알림톡</h1>
+<p class="lead">근무 시간이 아닐 때 행정폰이 울리지 않아요. 010 번호로 전화하신 보호자분들께 아래 알림톡이 자동으로 나가요.</p>
+
+<div class="seg" role="group" aria-label="전화가 온 때">
+<button type="button" data-r="현재 모든 선생님들께서 상담/수업 중으로" aria-pressed="true">평일 낮</button>
+<button type="button" data-r="지금은 상담 시간이 아니라" aria-pressed="false">평일 밤 6시 ~ 아침 10시</button>
+<button type="button" data-r="오늘은 휴일이라" aria-pressed="false">토, 일, 공휴일</button>
+</div>
+
+<div class="grid">
+<section>
+<p class="who"><b>처음 연락하신 분</b><span>신청폼 시트, 서류철에 번호가 없는 분</span></p>
+<div class="phone"><p class="from">생각공작소</p>
+<div class="bub"><div class="top">알림톡 도착</div>
+<div class="body">안녕하세요, 생각공작소입니다 😊
+
+<span class="v">현재 모든 선생님들께서 상담/수업 중으로</span> 전화 응대가 어렵습니다.
+
+서비스 신청 대기는 아래의 '신청폼 작성하기'를 이용해주세요. 선생님들의 스케줄을 확인한 후 공석 발생 시에 개별 연락드리겠습니다. :)
+
+그 밖의 문의는 홈페이지 문의로 남겨주세요.</div>
+<div class="btns"><span>신청폼 작성하기</span><span>홈페이지 문의</span></div></div></div>
+</section>
+
+<section>
+<p class="who"><b>이용 중이거나 신청하신 가정</b><span>신청폼 시트나 서류철에 번호가 있는 보호자분</span></p>
+<div class="phone"><p class="from">생각공작소</p>
+<div class="bub"><div class="top">알림톡 도착</div>
+<div class="body">안녕하세요, 생각공작소입니다 😊
+
+<span class="v">현재 모든 선생님들께서 상담/수업 중으로</span> 전화 응대가 어렵습니다.
+
+남기실 말씀은 아래 문의 창에 적어주세요. 확인하는 대로 안내 드리겠습니다. :)</div>
+<div class="btns"><span>문의 남기기</span></div></div></div>
+</section>
+</div>
+
+<div class="note">
+<p>카톡을 쓰지 않는 분들에게는 같은 내용이 032-277-2007 Web발신 문자로 나가요.</p>
+</div>
+</main>
+<script>
+document.querySelectorAll('.seg button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.seg button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    document.querySelectorAll('.v').forEach(function (v) { v.textContent = b.dataset.r; });
+  });
+});
+</script>
+</body>
+</html>
