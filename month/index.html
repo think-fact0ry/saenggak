@@ -17,7 +17,7 @@
   열리는 날 = OPEN_FROM(첫 25일). 그 전엔 「준비됐어요」만. 미리 보려면 주소 끝에 ?rehearsal=1.
   1일(2026-10-27 ⑤): 그 달분 발송이 시작된 뒤(1~15일) 07이 missed를 주면 셋째 탭 「못 받은 아이」가 생기고 첫 화면이 된다.
     선생님 카드마다 복사 세 번 = 07이 준 안내 글 / 포스터 / 안내문(notice.fwd = kr /month와 같은 「[N월 계획안]」 + 본문). 복사 표시 = mp-sent-<달> m[선생님|아이들].
-  사진 안내(2026-10-28, 07 사진안내.js): 07이 photo를 주면 넷째 탭. 홍보활용 x 아이 담당께 1:1 글(정본 = 07 _ptMsg_). 정기 달(6, 10, 2월)엔 모두,
+  촬영 비동의 안내(2026-10-28, 07 사진안내.js — 화면 이름은 10-28 밤 「사진 안내」에서 바꿈, 코드 이름 photo·사진안내.js는 그대로): 07이 photo를 주면 넷째 탭. 홍보활용 x 아이 담당께 1:1 글(정본 = 07 _ptMsg_). 정기 달(6, 10, 2월)엔 모두,
     그 사이 달엔 알린 적 없는 짝만(카드 「새로」). 복사 표시는 이 브라우저가 아니라 07 기록(photo_sent → `_사진안내_알림` 탭) — 다음 달엔 이름만 남는다.
 -->
 <style>
@@ -259,7 +259,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   }
 
   var D = null;                 // 서버 데이터
-  var view = '';                // 'list' | 'ans' | 'miss'(1일) | 'photo'(사진 안내)
+  var view = '';                // 'list' | 'ans' | 'miss'(1일) | 'photo'(촬영 비동의 안내)
   var MORE = {};                // 1일 카드 안내문 펼침
   var SENT = null, SENT_KEY = '';
   var sel = null;               // 고른 선생님 이름
@@ -313,20 +313,20 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       '<div class="tabs" role="tablist"><button role="tab" data-a="view" data-v="list" class="' + (view === 'list' ? 'on' : '') + '">발송 명단</button>' +
       '<button role="tab" data-a="view" data-v="ans" class="' + (view === 'ans' ? 'on' : '') + '">누락된 아이, 그만둔 아이</button>' +
       (D.missed ? '<button role="tab" data-a="view" data-v="miss" class="' + (view === 'miss' ? 'on' : '') + '">못 받은 아이</button>' : '') +
-      (D.photo ? '<button role="tab" data-a="view" data-v="photo" class="' + (view === 'photo' ? 'on' : '') + '">사진 안내' + (pLeft() ? '<span class="nb">' + pLeft() + '</span>' : '') + '</button>' : '') + '</div>' +
+      (D.photo ? '<button role="tab" data-a="view" data-v="photo" class="' + (view === 'photo' ? 'on' : '') + '">촬영 비동의 안내' + (pLeft() ? '<span class="nb">' + pLeft() + '</span>' : '') + '</button>' : '') + '</div>' +
       '<div id="vbody"></div>';
     if (view === 'list') renderList(); else if (view === 'miss' && D.missed) renderMissed(); else if (view === 'photo' && D.photo) renderPhoto(); else renderAns();
   }
 
-  // ── 사진 안내 — 글과 고를 짝은 07(_ptBuild_)이 정한다. 화면은 보여 주고 복사, 복사하면 07에 적는다(photo_sent) ──
+  // ── 촬영 비동의 안내(photo) — 글과 고를 짝은 07(_ptBuild_)이 정한다. 화면은 보여 주고 복사, 복사하면 07에 적는다(photo_sent) ──
   function pLeft() { return D.photo && D.photo.cards ? D.photo.cards.filter(function (c) { return c.msgs.some(function (m) { return !m.done; }); }).length : 0; }
   function renderPhoto() {
-    var P = D.photo, vb = document.getElementById('vbody'), h = '<section class="sec"><h2>사진 안내</h2>';
-    if (P.error) { vb.innerHTML = h + '<div class="grid"><div class="emptyc">사진 안내를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</div></div></section>'; return; }
+    var P = D.photo, vb = document.getElementById('vbody'), h = '<section class="sec"><h2>촬영 비동의 안내</h2>';
+    if (P.error) { vb.innerHTML = h + '<div class="grid"><div class="emptyc">촬영 비동의 안내를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</div></div></section>'; return; }
     var C = P.cards || [], R = P.rest || [];
     var wait = (P.wait || []).map(function (w) { return '<p class="look w badn">' + esc(w.text) + '</p>'; }).join('');
     var nextL = P.next ? '다음 안내는 ' + P.next + '월이에요.' : '';
-    if (!C.length) h += wait + '<div class="grid"><div class="emptyc">지금 보낼 사진 안내가 없어요. ' + nextL + '</div></div>';
+    if (!C.length) h += wait + '<div class="grid"><div class="emptyc">지금 보낼 안내가 없어요. ' + nextL + '</div></div>';
     else {
       var cards = C.map(function (c, ci) {
         var all = c.msgs.every(function (m) { return m.done; }), any = c.msgs.some(function (m) { return m.done && !m.busy; });   // 적는 중엔 되돌리기 안 띄움(적기와 지우기가 엇갈리지 않게)
