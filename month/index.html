@@ -308,7 +308,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   // ── 그리기 ──
   function render() {
     var M = D.month;
-    app.innerHTML = (rehearsal && ymd < OPEN_FROM ? '<span class="rh">미리보기 — 현아쌤 화면엔 ' + OPEN_FROM.slice(5).replace('-', '/') + '부터 떠요</span>' : '') +
+    app.innerHTML = (rehearsal && ymd < OPEN_FROM ? '<span class="rh">미리보기 — 현아쌤 화면엔 ' + OPEN_FROM.slice(5).replace('-', '/') + '부터 나와요</span>' : '') +
       title(M + '월 월 계획안') +
       '<div class="tabs" role="tablist"><button role="tab" data-a="view" data-v="list" class="' + (view === 'list' ? 'on' : '') + '">발송 명단</button>' +
       '<button role="tab" data-a="view" data-v="ans" class="' + (view === 'ans' ? 'on' : '') + '">누락된 아이, 그만둔 아이</button>' +
@@ -353,7 +353,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     var M = D.month, n = D.notice || {}, X = D.missed, h = '<section class="sec"><h2>' + M + '월 월 계획안 못 받은 아이</h2>';
     var vb = document.getElementById('vbody');
     if (X.sending) { vb.innerHTML = h + '<div class="grid"><div class="emptyc">센터 발송이 아직 끝나지 않았어요. 잠시 뒤 다시 열어 주세요.</div></div></section>'; return; }
-    var varLine = X.varN ? '<p class="look w badn">다른 판 월 계획안을 받는 아이 ' + X.varN + '명은 여기 안 떠요.</p>' : '';
+    var varLine = X.varN ? '<p class="look w badn">다른 판 월 계획안을 받는 아이 ' + X.varN + '명은 여기 안 나와요.</p>' : '';
     var C = X.cards || [];
     if (!C.length) { vb.innerHTML = h + varLine + '<div class="grid"><div class="emptyc">' + M + '월은 모두 받았어요.</div></div></section>'; return; }
     var kidsN = C.reduce(function (a, c) { return a + c.kids.length; }, 0);
@@ -361,12 +361,12 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       var s = mSent(c), all = s.every(Boolean), open = !!MORE[c.name];
       var btn = function (i, off) { return '<button class="cb' + (s[i] ? ' done' : '') + '" data-a="mcopy" data-i="' + i + '"' + (off ? ' disabled' : '') + '>' + (s[i] ? ICON.check + '복사됨' : ICON.copy + '복사') + '</button>'; };
       var pst = n.poster ? '<img class="pimg" src="' + esc(n.poster) + '" alt="' + M + '월 포스터">'
-        : '<div class="bub">' + (n.posterId ? '포스터를 불러오고 있어요' : '포스터는 대표님이 올리면 여기 떠요') + '</div>';
+        : '<div class="bub">' + (n.posterId ? '포스터를 불러오고 있어요' : '포스터는 대표님이 올리면 여기 나와요') + '</div>';
       return '<div class="tc' + (all ? ' sent' : '') + '" data-ci="' + ci + '"><div class="th"><b>' + esc(tname(c.name)) + ' 선생님</b><span class="kn">' + c.kids.map(function (k) { return esc(k.n); }).join(', ') + '</span>' +
         (all ? '<button class="undo" data-a="mundo">되돌리기</button>' : '') + '</div><div class="chat">' +
         '<div class="msg' + (s[0] ? ' done' : '') + '">' + btn(0) + '<div class="bub">' + esc(c.text) + '</div></div>' +
         '<div class="msg' + (s[1] ? ' done' : '') + '">' + btn(1, !n.poster) + pst + '</div>' +
-        '<div class="msg' + (s[2] ? ' done' : '') + '">' + btn(2, !n.fwd) + '<div class="col"><div class="bub long' + (open ? ' open' : '') + '" data-a="mmore">' + esc(n.fwd || '안내문은 대표님이 올리면 여기 떠요') + '</div>' +
+        '<div class="msg' + (s[2] ? ' done' : '') + '">' + btn(2, !n.fwd) + '<div class="col"><div class="bub long' + (open ? ' open' : '') + '" data-a="mmore">' + esc(n.fwd || '안내문은 대표님이 올리면 여기 나와요') + '</div>' +
           (n.fwd ? '<button class="more" data-a="mmore">' + (open ? '접기' : '전체 보기') + '</button>' : '') + '</div></div>' +
         '</div></div>';
     }).join('');
@@ -384,8 +384,8 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       var btn = '<button class="cb' + (d ? ' done' : '') + '" data-a="rsvCopy" data-i="' + i + '"' + (has ? '' : ' disabled') + '>' +
         (it.img ? (d ? ICON.check + '저장됨' : ICON.save + '저장') : (d ? ICON.check + '복사됨' : ICON.copy + '복사')) + '</button>';
       var body = it.img
-        ? (n.poster ? '<img src="' + esc(n.poster) + '" alt="' + M + '월 포스터"><span class="sp"></span>' : '<span class="ph"></span><div class="tx none">' + (n.posterId ? '포스터를 불러오고 있어요' : '포스터는 대표님이 올리면 여기 떠요') + '</div>')
-        : (it.text ? '<div class="tx" data-a="rsvMore">' + esc(it.text) + '</div>' : '<div class="tx none">안내문은 대표님이 올리면 여기 떠요</div>');
+        ? (n.poster ? '<img src="' + esc(n.poster) + '" alt="' + M + '월 포스터"><span class="sp"></span>' : '<span class="ph"></span><div class="tx none">' + (n.posterId ? '포스터를 불러오고 있어요' : '포스터는 대표님이 올리면 여기 나와요') + '</div>')
+        : (it.text ? '<div class="tx" data-a="rsvMore">' + esc(it.text) + '</div>' : '<div class="tx none">안내문은 대표님이 올리면 여기 나와요</div>');
       return '<div class="ri' + (d ? ' done' : '') + '">' + body + btn + '</div>';
     };
     // 업무 메모 3판(유성 10-12): 예약 메시지 두 개 — 1 포스터와 안내문을 한 메시지로 / 2 공지 글은 다음 메시지로
