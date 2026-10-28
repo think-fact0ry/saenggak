@@ -608,6 +608,15 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 /* §4.18 거둔 답장 흔적·이용 중 칩 — attend inbox/index.html .me .bub.rc·.meta2 .bad·.tag.use 실값 */
 .r66{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
 .r68{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+/* §4.18 상담 완료 — attend inbox/index.html .it .ub.ok·.it.dim·.day.dn 실값(체크 B, 줄 D) */
+.r73 .ub.ok{background:none;padding:0;width:18px}
+.r73 .ub.ok svg{width:15px;height:15px;fill:none;stroke:var(--green600);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.r73 .it.dim .src{background:var(--g100);color:var(--g600)}
+.r73 .it.dim .src.nv svg path,.r73 .it.dim .src.kk svg path{fill:var(--g600)}
+.r73 .it.dim .nm{font-weight:400;color:var(--g600)}
+.r73 .it.dim .l2{color:var(--g600)}
+.r73 .r71{flex:1;min-width:280px}
+.r73 .day.dn svg{width:14px;height:14px;color:var(--green600);stroke-width:2.6;margin-right:-4px}
 .r71{max-width:368px;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column}
 .r71 .rw{display:flex;align-items:flex-end;gap:6px}.r71 .rw.me{justify-content:flex-end}
 .r71 .bb{max-width:220px;padding:10px 13px;border-radius:18px;font-size:14px;line-height:1.5;background:var(--g100);color:var(--g900)}.r71 .me .bb{background:var(--g800);color:#fff}
@@ -761,6 +770,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec66"><i>§4.18</i><span>거둔 답장은 받은함에만 회색, 이용 중은 테두리 칩</span></a>
     <a href="#sec68"><i>§4.18</i><span>새 문의 = 알약 문의 칸만 빨강 3번</span></a>
     <a href="#sec71"><i>§4.18</i><span>날짜 줄 = 폭 전체 선 + 달력 + 연도</span></a>
+    <a href="#sec73"><i>§4.18</i><span>상담 완료 = 표시만, 숫자 자리에 초록 체크</span></a>
     <a href="#sec48"><i>§5.2</i><span>로딩 = 자리별 3층</span></a>
     <a href="#sec49"><i>§5.3</i><span>누름(press)</span></a>
     <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
@@ -1577,6 +1587,23 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="day"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><line x1="3.5" y1="10" x2="20.5" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg><span>2026년 10월 13일 화요일</span></div>
     <div class="rw me"><span class="mt">오전 10:02</span><span class="bb">네, 11시쯤 전화드릴게요</span></div>
   </div></div>
+
+  <!-- 2026-10-28 유성 「마우스 오른쪽 클릭한 뒤 상담 완료하기」 + 체크 5안 중 B + 줄 4안 중 D 「권장대로」 · 경위·전문 = docs/1 §4.18 · 검토 = prototype/26_문의채팅_상담완료_사전검토_프리뷰.html -->
+  <h3 class="sec" id="sec73"><span class="ref">§4.18</span>상담 완료 = 표시만, 숫자 자리에 초록 체크</h3>
+  <p class="desc">오른쪽 클릭으로 표시만 한다. 숫자 자리엔 원 없는 초록 체크, 줄은 회색 동그라미와 연한 글자. 학부모가 또 보내면 숫자로.</p>
+  <div class="demo r64 r73">
+    <div class="lst" id="l73">
+      <div class="it"><div class="src hp"><svg viewBox="0 0 24 24"><path d="M4.5 10.5 12 4.5l7.5 6V19a1 1 0 0 1-1 1h-4v-5.5h-5V20h-4a1 1 0 0 1-1-1z"/></svg></div><div class="bd"><div class="l1"><span class="nm">최민준</span><span class="tag">홈페이지</span></div><div class="l2">토요일 오전도 되나요?</div></div><div class="rt"><span class="el">답장 전</span><span class="ub">2</span></div></div>
+      <div class="it dim" id="i73"><div class="src nv"><svg viewBox="0 0 24 24"><path fill="#fff" d="M7.2 6.5h3.3l3.3 4.9V6.5h3v11h-3.3l-3.3-4.9v4.9h-3z"/></svg></div><div class="bd"><div class="l1"><span class="nm">김민지</span><span class="tag">서해구</span></div><div class="l2" id="m73">네 전화로 안내받았어요 감사합니다</div></div><div class="rt"><span class="el" id="e73">21분 전</span><span class="ub ok" id="u73"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></div></div>
+    </div>
+    <div class="r71">
+      <div class="rw"><span class="bb">네 전화로 안내받았어요 감사합니다</span><span class="mt">오후 2:10</span></div>
+      <div class="day dn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>한유성님이 상담 완료로 표시했어요</span></div>
+      <div class="rw" id="n73" style="display:none"><span class="bb">혹시 하나만 더 여쭤봐도 될까요?</span><span class="mt">방금</span></div>
+    </div>
+    <button class="btn" id="b73" style="font-size:14px;padding:10px">학부모가 또 보내기</button>
+  </div>
+  <script>(function(){var b=document.getElementById('b73'),it=document.getElementById('i73'),u=document.getElementById('u73'),m=document.getElementById('m73'),e=document.getElementById('e73'),n=document.getElementById('n73');if(!b||!u)return;var ck=u.innerHTML;b.addEventListener('click',function(){var on=!it.classList.contains('dim');n.style.display=on?'none':'flex';it.classList.toggle('dim',on);u.className=on?'ub ok':'ub';u.innerHTML=on?ck:'1';m.textContent=on?'네 전화로 안내받았어요 감사합니다':'혹시 하나만 더 여쭤봐도 될까요?';e.textContent=on?'21분 전':'방금';b.textContent=on?'학부모가 또 보내기':'상담 완료';});})();</script>
 </section>
 
 <!-- 5 인터랙션·모션 -->
