@@ -617,6 +617,22 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .r73 .it.dim .l2{color:var(--g600)}
 .r73 .r71{flex:1;min-width:280px}
 .r73 .day.dn svg{width:14px;height:14px;color:var(--green600);stroke-width:2.6;margin-right:-4px}
+/* §4.18 카드 방 = 복사해서 붙여 넣기 — attend inbox/index.html .rh·.cchip·.comp·.ta·.copy·.them .bub 실값 */
+.r74{max-width:368px;background:#fff;border:1px solid var(--g200);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.r74 .c4h{display:flex;align-items:center;gap:8px;padding:14px 12px 10px;border-bottom:1px solid var(--g100)}
+.r74 .c4n{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
+.r74 .c4n .c4t{font-size:11px;font-weight:600;color:var(--g700);background:var(--g100);border-radius:6px;padding:0 6px}
+.r74 .c4s{font-size:12px;color:var(--g600);display:flex;align-items:center;gap:5px}
+.r74 .c4s i{width:7px;height:7px;border-radius:50%;background:var(--g400)}
+.r74 .c4x{margin-left:auto;border:1px solid var(--g200);background:#fff;border-radius:99px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;color:var(--g700);box-shadow:0 1px 3px rgba(25,31,40,.08);cursor:pointer;white-space:nowrap}
+.r74 .c4b{padding:14px}
+.r74 .c4w{font-size:12px;color:var(--g600);margin:0 0 4px 2px}
+.r74 .c4m{display:inline-block;max-width:260px;padding:10px 13px;border-radius:18px;border-top-left-radius:6px;font-size:14px;line-height:1.5;background:var(--g100);color:var(--g900)}
+.r74 .c4c{border-top:1px solid var(--g100);padding:8px 10px 10px;display:flex;gap:8px;align-items:flex-end}
+.r74 .c4a{flex:1;min-width:0;height:38px;resize:none;background:var(--g100);border:1.5px solid transparent;border-radius:16px;padding:8px 12px;font:inherit;font-size:14px;line-height:1.45;color:var(--g900);outline:none}
+.r74 .c4p{height:38px;border-radius:19px;border:0;background:var(--green700);color:#fff;font:inherit;font-size:13.5px;font-weight:700;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap;transition:transform .1s,background .2s}
+.r74 .c4p:active{transform:scale(.95);background:var(--green800)}
+.r74 .c4o{font-size:12px;color:var(--g600);padding:0 14px 10px;min-height:18px}
 .r71{max-width:368px;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column}
 .r71 .rw{display:flex;align-items:flex-end;gap:6px}.r71 .rw.me{justify-content:flex-end}
 .r71 .bb{max-width:220px;padding:10px 13px;border-radius:18px;font-size:14px;line-height:1.5;background:var(--g100);color:var(--g900)}.r71 .me .bb{background:var(--g800);color:#fff}
@@ -771,6 +787,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec68"><i>§4.18</i><span>새 문의 = 알약 문의 칸만 빨강 3번</span></a>
     <a href="#sec71"><i>§4.18</i><span>날짜 줄 = 폭 전체 선 + 달력 + 연도</span></a>
     <a href="#sec73"><i>§4.18</i><span>상담 완료 = 표시만, 숫자 자리에 초록 체크</span></a>
+    <a href="#sec74"><i>§4.18</i><span>톡톡, 카카오 = 받은함 안 대화방 + 복사해서 붙여 넣기</span></a>
     <a href="#sec48"><i>§5.2</i><span>로딩 = 자리별 3층</span></a>
     <a href="#sec49"><i>§5.3</i><span>누름(press)</span></a>
     <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
@@ -1604,6 +1621,19 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <button class="btn" id="b73" style="font-size:14px;padding:10px">학부모가 또 보내기</button>
   </div>
   <script>(function(){var b=document.getElementById('b73'),it=document.getElementById('i73'),u=document.getElementById('u73'),m=document.getElementById('m73'),e=document.getElementById('e73'),n=document.getElementById('n73');if(!b||!u)return;var ck=u.innerHTML;b.addEventListener('click',function(){var on=!it.classList.contains('dim');n.style.display=on?'none':'flex';it.classList.toggle('dim',on);u.className=on?'ub ok':'ub';u.innerHTML=on?ck:'1';m.textContent=on?'네 전화로 안내받았어요 감사합니다':'혹시 하나만 더 여쭤봐도 될까요?';e.textContent=on?'21분 전':'방금';b.textContent=on?'학부모가 또 보내기':'상담 완료';});})();</script>
+
+  <!-- 2026-10-29 유성 Q1 a 「둘다 복사로 먼저」 + Q2 a 「그 카드 대화가 열리고」 · 경위·전문 = docs/1 §4.18 · 검토 = prototype/26_문의채팅_카드_자주쓰는답변_검토_프리뷰.html -->
+  <h3 class="sec" id="sec74"><span class="ref">§4.18</span>톡톡, 카카오 = 받은함 안 대화방 + 복사해서 붙여 넣기</h3>
+  <p class="desc">보낼 길이 없어 보내기 자리에 복사 단추. 처음엔 복사하고 파트너센터 창을 열고, 그 뒤엔 복사만.</p>
+  <div class="demo">
+    <div class="r74">
+      <div class="c4h"><div><div class="c4n">김민지<span class="c4t">서해구</span></div><div class="c4s"><i></i><span>답은 톡톡에서 보내요</span></div></div><button class="c4x" id="x74">톡톡 열기</button></div>
+      <div class="c4b"><div class="c4w">김민지</div><span class="c4m">안녕하세요 아이 상담 문의드려요</span></div>
+      <div class="c4c"><textarea class="c4a" id="t74" rows="1" placeholder="톡톡에 붙여 넣을 글">어떤 점이 궁금하세요?</textarea><button class="c4p" id="c74">복사하고 톡톡 열기</button></div>
+      <div class="c4o" id="n74"></div>
+    </div>
+  </div>
+  <script>(function(){var c=document.getElementById('c74'),x=document.getElementById('x74'),n=document.getElementById('n74');if(!c)return;var opened=false;c.addEventListener('click',function(){n.textContent=opened?'복사했어요. 톡톡 창에 붙여 넣어 주세요':'복사했어요. 톡톡 창에 붙여 넣어 주세요 (파트너센터 창이 열려요)';opened=true;c.textContent='복사하기';});x.addEventListener('click',function(){opened=true;c.textContent='복사하기';n.textContent='서해구 톡톡 채팅을 열었어요';});})();</script>
 </section>
 
 <!-- 5 인터랙션·모션 -->
