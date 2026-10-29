@@ -1,0 +1,58 @@
+name: 종료 안내 알림톡 화면 지우기
+
+# 2026-10-29 유성 「11월 1일에 없어지는 일회용 임베드 주소 깃헙으로 만들어서 넣을 것」 — 현아쌤이 10월 31일까지 보는 ending/ 화면.
+# 한국 11월 1일 0시부터 ending/ 폴더를 지우고 푸시 → GitHub Pages 재배포(remove-missed.yml과 같은 방식).
+# 예약 실행은 GitHub 부하로 늦거나 빠질 수 있어 한 시간마다 다시 본다. 이미 지웠으면 아무것도 안 하고, 지운 뒤엔 이 워크플로를 스스로 끈다.
+# 화면 자체도 11-01 0시(한국)부터 내용을 내린다(ending/index.html 끝 스크립트) — 이 워크플로가 늦어도 안 보이게.
+# 이 파일을 봇이 지우지 않는 이유 = GITHUB_TOKEN은 .github/workflows 파일을 바꾸는 푸시가 거부될 수 있어서(그러면 ending/ 삭제까지 같이 실패).
+on:
+  schedule:
+    - cron: '7 15-23 31 10 *'   # UTC 10-31 15:07~23:07 = 한국 11-01 0:07~8:07
+    - cron: '7 * 1-2 11 *'      # UTC 11-01~02 매시 = 한국 11-01 9:07 ~ 11-03 8:07
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: '시험(지우지 않고 지울 파일만 보기)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: remove-ending
+  cancel-in-progress: false
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ending/ 지우기
+        run: |
+          if [ ! -d ending ]; then
+            echo "ending/ 없음 — 이미 지움"
+            if [ "${{ inputs.dry }}" != "true" ]; then gh workflow disable remove-ending.yml || true; fi
+            exit 0
+          fi
+          if [ "${{ inputs.dry }}" = "true" ]; then
+            echo "시험 — 지울 파일:"
+            git ls-files ending
+            exit 0
+          fi
+          git config user.name "think-factory-bot"
+          git config user.email "noreply@think-factory.kr"
+          git rm -r --quiet ending
+          git commit -m "chore: 종료 안내 알림톡 안내 화면 지움 (11-01 자동, 유성 10-29)"
+          ok=0
+          for i in 1 2 3; do
+            if git pull --rebase origin main && git push; then ok=1; break; fi
+            sleep 10
+          done
+          [ "$ok" = 1 ] || exit 1
+          gh workflow disable remove-ending.yml || true

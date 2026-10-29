@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>종료 안내 알림톡</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!-- 2026-10-29 현아쌤 안내용(유성 「종료 안내 알림톡이 어떻게 나가는지 html 만들어서 현아선생님에게 보여주려고해. 11월 1일에 없어지는 일회용」 → 11-01 자동 삭제 = .github/workflows/remove-ending.yml). 사실 = 레포 docs/4_설계_2026-10-24_서비스종료안내_알림톡.md §1·§2·§3-2·§7 + 07 초기발송자동화.js _efAutoSendDay_(5일 이후 첫 평일). 말풍선 본문 = §3-2 버튼 없는 판 글자 그대로(버튼판 3-1은 유성 10-26 어색하다 한 줄이 있어 안 씀), 이름은 서류철에 없는 홍길동·홍길순. 원본 = 레포 _archive/07_종료안내알림톡_현아쌤안내_Pages게시본_2026-10-29.html. CSS = missed/index.html 복제 -->
+<style>
+:root{--bg:#f4f5f3;--card:#fff;--ink:#191f28;--sub:#6b7280;--line:#e5e7eb;--acc:#3a8a5f;--accbg:#e8f4ec;--hl:#fff1c9;--hlink:#7a5a00;--kakao:#b2c7d9;--bub:#fff;--btn:#f2f3f5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141514;--card:#1f201e;--ink:#eceeea;--sub:#a3a7a0;--line:#33352f;--acc:#7cc89a;--accbg:#1d3326;--hl:#4a3d12;--hlink:#f5d77a;--kakao:#2b3a47;--bub:#262825;--btn:#30322e}}
+:root[data-theme="dark"]{--bg:#141514;--card:#1f201e;--ink:#eceeea;--sub:#a3a7a0;--line:#33352f;--acc:#7cc89a;--accbg:#1d3326;--hl:#4a3d12;--hlink:#f5d77a;--kakao:#2b3a47;--bub:#262825;--btn:#30322e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Pretendard Variable",Pretendard,system-ui,sans-serif;word-break:keep-all}
+main{max-width:860px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:23px;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 20px}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.seg button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:9px 14px;font:inherit;font-size:15px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accbg);border-color:var(--acc);color:var(--acc);font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.who{margin:0 0 8px}
+.who b{font-size:17px}
+.who span{display:block;font-size:14px;color:var(--sub)}
+.phone{background:var(--kakao);border-radius:18px;padding:14px 12px 16px}
+.phone .from{font-size:13px;font-weight:600;margin:0 0 6px 4px;opacity:.8}
+.bub{background:var(--bub);border-radius:12px;overflow:hidden;max-width:330px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.bub .top{background:#fee500;color:#191919;font-size:13px;font-weight:700;padding:8px 12px}
+.bub .body{padding:12px 14px;font-size:14.5px;line-height:1.55;white-space:pre-wrap}
+.v{background:var(--hl);color:var(--hlink);border-radius:4px;padding:0 2px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.box p{margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:14px;color:var(--sub);font-weight:600}
+.note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-top:20px;font-size:15px}
+.note p{margin:4px 0}
+.sub{color:var(--sub);font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<h1>종료 안내 알림톡</h1>
+<p class="lead">27년 1월부터, 서비스가 끝나기 2개월 전에 보호자님께 아래 알림톡이 자동으로 나가요.</p>
+
+<div class="seg" role="group" aria-label="받는 가정">
+<button type="button" data-n="홍길동" aria-pressed="true">아동 한 명</button>
+<button type="button" data-n="홍길동, 홍길순" aria-pressed="false">형제 (같은 번호, 같은 달에 끝남)</button>
+</div>
+
+<div class="grid">
+<section>
+<p class="who"><b>보호자님이 받는 글</b><span>오감쑥쑥 예시예요. 노란 곳이 아동마다 바뀌어요.</span></p>
+<div class="phone"><p class="from">생각공작소</p>
+<div class="bub"><div class="top">알림톡 도착</div>
+<div class="body">[오감쑥쑥 종결예정 안내]
+안녕하세요, <span class="v" id="nm">홍길동</span> 보호자님. 생각공작소입니다😊
+
+그동안 저희와 함께했던 '오감쑥쑥 서비스'가 <span class="v">2027년 3월 31일</span>로 종결될 예정입니다. 소중한 아이의 성장 과정을 믿고 맡겨주셔서 진심으로 감사드립니다. 남은 기간도 아이들에게 좋은 기억이 되도록 최선을 다하겠습니다.
+
+남은 수업 동안 궁금하신 점은 담당 선생님께 편하게 말씀해 주세요.
+
+아이의 더 큰 성장을 생각공작소가 계속해서 응원하겠습니다. 🌱</div></div></div>
+</section>
+
+<section>
+<p class="who"><b>날짜는 서류철 g열에서 나와요</b><span>g열(서비스 종료 칸)에 적힌 달의 마지막 날이 글에 들어가요.</span></p>
+<div class="box">
+<table>
+<tr><th>g열</th><th>글 속 날짜</th><th>나가는 날</th></tr>
+<tr><td>27.3</td><td>2027년 3월 31일</td><td>1월 5일(화) 낮 12시</td></tr>
+<tr><td>27.4</td><td>2027년 4월 30일</td><td>2월 5일(금) 낮 12시</td></tr>
+</table>
+<p class="sub">끝나는 달 2개월 전 달 5일 낮 12시에 나가요. 5일이 주말이면 다음 평일에 나갑니다.</p>
+</div>
+</section>
+</div>
+
+<div class="note">
+<p><b>그래서 이 두 칸이 맞아야 해요</b></p>
+<p>g열(서비스 종료 칸) = 계약서 계약기간이 끝나는 달. 이 칸이 채워져 있어야 알림톡이 나가요. 늦게 채워도 끝나는 달 전이면 다음 달에 나갑니다.</p>
+<p>h열(종결 칸) = 중간에 그만둔 아동은 '중도포기'를 선택해 주세요. 그래야 이 알림톡이 가지 않아요.</p>
+</div>
+
+<div class="note">
+<p>아동청소년 심리지원도 같은 때에 비슷한 글로 나가요. 정신건강토탈케어, 성인심리상담은 알림톡 없이 담당 제공인력이 마지막 상담 때 안내해요.</p>
+<p class="sub">글은 12월에 다듬고 카카오 심사를 받아요. 조금 바뀔 수 있어요.</p>
+</div>
+</main>
+<script>
+// 11월 1일 0시(한국)부터는 내용을 내린다 — 자동 삭제(remove-ending.yml)가 늦을 때를 대비
+if (Date.now() >= Date.UTC(2026, 9, 31, 15)) {
+  document.querySelector('main').innerHTML = '<h1>종료 안내 알림톡</h1><p class="lead">10월 31일까지 보여 드린 안내라 내렸어요.</p>';
+} else {
+  document.querySelectorAll('.seg button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.seg button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      document.getElementById('nm').textContent = b.dataset.n;
+    });
+  });
+}
+</script>
+</body>
+</html>
