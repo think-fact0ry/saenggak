@@ -17,6 +17,7 @@
   열리는 날 = OPEN_FROM(첫 25일). 그 전엔 「준비됐어요」만. 미리 보려면 주소 끝에 ?rehearsal=1.
   1일(2026-10-27 ⑤): 그 달분 발송이 시작된 뒤(1~15일) 07이 missed를 주면 셋째 탭 「못 받은 아이」가 생기고 첫 화면이 된다.
     선생님 카드마다 복사 세 번 = 07이 준 안내 글 / 포스터 / 안내문(notice.fwd = kr /month와 같은 「[N월 계획안]」 + 본문). 복사 표시 = mp-sent-<달> m[선생님|아이들].
+    카드에 h가 있으면(2026-10-29, 07 _maMissedCards_ — 행복마음 아청 카드) 포스터 = 행복마음 판 그림(notice.posterHId → action poster h:true). 고르기와 글은 07이 한다.
   촬영 비동의 안내(2026-10-28, 07 사진안내.js — 화면 이름은 10-28 밤 「사진 안내」에서 바꿈, 코드 이름 photo·사진안내.js는 그대로): 07이 photo를 주면 넷째 탭. 홍보활용 x 아이 담당께 1:1 글(정본 = 07 _ptMsg_). 정기 달(6, 10, 2월)엔 모두,
     그 사이 달엔 알린 적 없는 짝만(카드 「새로」). 복사 표시는 이 브라우저가 아니라 07 기록(photo_sent → `_사진안내_알림` 탭) — 다음 달엔 이름만 남는다.
 -->
@@ -276,6 +277,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       }
       D = d;
       if (POSTER.id && D.notice && D.notice.posterId === POSTER.id) D.notice.poster = POSTER.src;   // 같은 그림이면 다시 안 받는다
+      if (POSTER_H.id && D.notice && D.notice.posterHId === POSTER_H.id) D.notice.posterH = POSTER_H.src;
       SENT_KEY = 'mp-sent-' + d.ym;
       try { SENT = JSON.parse(lsGet(SENT_KEY) || 'null'); } catch (e) { SENT = null; }
       if (!SENT || !SENT.t) SENT = { notice: [false, false, false], t: {} };
@@ -283,6 +285,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       if (!view || (view === 'miss' && !D.missed) || (view === 'photo' && !D.photo)) view = D.missed ? 'miss' : allSent() ? 'ans' : 'list';
       render();
       loadPoster();
+      loadPosterH();
       return true;
     }).catch(function () { msg('불러오지 못했어요. 인터넷 연결을 확인해주세요.', true); return false; });
   }
@@ -299,6 +302,20 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       POSTER = { id: r.id, src: r.src };
       if (D.notice.posterId === r.id) { D.notice.poster = r.src; if (view === 'list' || view === 'miss') render(); }
     }, function () { posterBusy = false; });
+  }
+  // 행복마음 판 그림 = 1일 카드에 행복 판(h)이 있을 때만 받는다(11월분만 — 12월부터 그림에 계좌가 없어 07이 h를 안 준다)
+  var POSTER_H = { id: '', src: '' }, posterHBusy = false;
+  function loadPosterH() {
+    var n = D && D.notice, C = D && D.missed && D.missed.cards;
+    if (!n || !n.posterHId || n.posterH || posterHBusy || !C || !C.some(function (c) { return c.h; })) return;
+    posterHBusy = true;
+    var go = function () { return post07({ action: 'poster', ym: D.ym, h: true }); };
+    go().catch(function () { return wait(1200).then(go); }).then(function (r) {
+      posterHBusy = false;
+      if (!r || !r.ok || !r.src) return;
+      POSTER_H = { id: r.id, src: r.src };
+      if (D.notice.posterHId === r.id) { D.notice.posterH = r.src; if (view === 'miss') render(); }
+    }, function () { posterHBusy = false; });
   }
   function saveSent() { lsSet(SENT_KEY, JSON.stringify(SENT)); }
   function tSent(t) { var s = SENT.t[t.name]; return t.msgs.map(function (_, i) { return !!(s && s[i]); }); }
@@ -358,21 +375,25 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     if (!C.length) { vb.innerHTML = h + varLine + '<div class="grid"><div class="emptyc">' + M + '월은 모두 받았어요.</div></div></section>'; return; }
     var kidsN = C.reduce(function (a, c) { return a + c.kids.length; }, 0);
     var cards = C.map(function (c, ci) {
-      var s = mSent(c), all = s.every(Boolean), open = !!MORE[c.name];
+      var s = mSent(c), all = s.every(Boolean), open = !!MORE[mKey(c)];
       var btn = function (i, off) { return '<button class="cb' + (s[i] ? ' done' : '') + '" data-a="mcopy" data-i="' + i + '"' + (off ? ' disabled' : '') + '>' + (s[i] ? ICON.check + '복사됨' : ICON.copy + '복사') + '</button>'; };
-      var pst = n.poster ? '<img class="pimg" src="' + esc(n.poster) + '" alt="' + M + '월 포스터">'
-        : '<div class="bub">' + (n.posterId ? '포스터를 불러오고 있어요' : '포스터는 대표님이 올리면 여기 나와요') + '</div>';
+      var ps = c.h ? n.posterH : n.poster, psId = c.h ? n.posterHId : n.posterId;   // h = 행복마음 판 그림
+      var pst = ps ? '<img class="pimg" src="' + esc(ps) + '" alt="' + M + '월 포스터">'
+        : '<div class="bub">' + (psId ? '포스터를 불러오고 있어요' : '포스터는 대표님이 올리면 여기 나와요') + '</div>';
       return '<div class="tc' + (all ? ' sent' : '') + '" data-ci="' + ci + '"><div class="th"><b>' + esc(tname(c.name)) + ' 선생님</b><span class="kn">' + c.kids.map(function (k) { return esc(k.n); }).join(', ') + '</span>' +
         (all ? '<button class="undo" data-a="mundo">되돌리기</button>' : '') + '</div><div class="chat">' +
         '<div class="msg' + (s[0] ? ' done' : '') + '">' + btn(0) + '<div class="bub">' + esc(c.text) + '</div></div>' +
-        '<div class="msg' + (s[1] ? ' done' : '') + '">' + btn(1, !n.poster) + pst + '</div>' +
+        '<div class="msg' + (s[1] ? ' done' : '') + '">' + btn(1, !ps) + pst + '</div>' +
         '<div class="msg' + (s[2] ? ' done' : '') + '">' + btn(2, !n.fwd) + '<div class="col"><div class="bub long' + (open ? ' open' : '') + '" data-a="mmore">' + esc(n.fwd || '안내문은 대표님이 올리면 여기 나와요') + '</div>' +
           (n.fwd ? '<button class="more" data-a="mmore">' + (open ? '접기' : '전체 보기') + '</button>' : '') + '</div></div>' +
         '</div></div>';
     }).join('');
-    var nDone = C.filter(function (c) { return mSent(c).every(Boolean); }).length;
+    // 복사 수 = 제공인력 수(행복 판으로 한 분이 카드 두 장일 수 있다 — 두 장 다 복사해야 1명)
+    var byName = {};
+    C.forEach(function (c) { (byName[c.name] = byName[c.name] || []).push(c); });
+    var tNames = Object.keys(byName), nDone = tNames.filter(function (t) { return byName[t].every(function (c) { return mSent(c).every(Boolean); }); }).length;
     vb.innerHTML = h + '<p class="how">제공인력마다 위에서부터 차례로 <b>복사</b>해서 개별 카톡으로 보내주세요.</p>' + varLine +
-      '<p class="sum">못 받은 아이 ' + kidsN + '명</p><p class="cnt">' + nDone + ' / ' + C.length + '명 복사함</p><div class="grid">' + cards + '</div></section>';
+      '<p class="sum">못 받은 아이 ' + kidsN + '명</p><p class="cnt">' + nDone + ' / ' + tNames.length + '명 복사함</p><div class="grid">' + cards + '</div></section>';
   }
 
   function renderList() {
@@ -709,14 +730,14 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       var mk = mKey(c), ms = SENT.m[mk] || (SENT.m[mk] = []), n2 = D.notice || {};
       if (a === 'mcopy') {
         var ci = +b.dataset.i;
-        var pp = ci === 0 ? copyText(c.text) : ci === 1 ? copyImage(n2.poster) : copyText(n2.fwd);
+        var pp = ci === 0 ? copyText(c.text) : ci === 1 ? copyImage(c.h ? n2.posterH : n2.poster) : copyText(n2.fwd);
         pp.then(function (ok) {
           if (!ok) { toast('복사하지 못했어요', true); return; }
           ms[ci] = true; saveSent(); render();
           toast(ok === 'file' ? '그림 파일을 내려받았어요' : '복사했어요');
         });
       } else if (a === 'mundo') { SENT.m[mk] = []; saveSent(); render(); }
-      else if (a === 'mmore') { MORE[c.name] = !MORE[c.name]; render(); }
+      else if (a === 'mmore') { MORE[mk] = !MORE[mk]; render(); }   // 카드 키(한 선생님이 두 장일 수 있다 — 행복 판)
       return;
     }
     var pc = b.closest('[data-pi]');
