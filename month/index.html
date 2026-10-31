@@ -277,6 +277,8 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
         return false;
       }
       D = d;
+      // 다른 판 카드(07 vcards, 10-31 — 선생님 판 「(권선화, 지미영)」 등) = 같은 목록에, 선생님 가나다(같은 선생님 카드는 이웃 — 기본 판이 먼저)
+      if (D.missed && D.missed.vcards && D.missed.vcards.length) D.missed.cards = (D.missed.cards || []).concat(D.missed.vcards).sort(function (a, b) { return String(a.name).localeCompare(String(b.name), 'ko'); });
       if (POSTER.id && D.notice && D.notice.posterId === POSTER.id) D.notice.poster = POSTER.src;   // 같은 그림이면 다시 안 받는다
       if (POSTER_H.id && D.notice && D.notice.posterHId === POSTER_H.id) D.notice.posterH = POSTER_H.src;
       SENT_KEY = 'mp-sent-' + d.ym;
@@ -287,6 +289,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       render();
       loadPoster();
       loadPosterH();
+      loadPosterV();
       return true;
     }).catch(function () { msg('불러오지 못했어요. 인터넷 연결을 확인해주세요.', true); return false; });
   }
@@ -314,7 +317,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   var POSTER_H = { id: '', src: '' }, posterHBusy = false;
   function loadPosterH() {
     var n = D && D.notice, C = D && D.missed && D.missed.cards;
-    if (!n || !n.posterHId || n.posterH || n.posterHErr || posterHBusy || !C || !C.some(function (c) { return c.h; })) return;
+    if (!n || !n.posterHId || n.posterH || n.posterHErr || posterHBusy || !C || !C.some(function (c) { return c.h && !c.v; })) return;   // 다른 판 행복 카드는 그 판 그림(loadPosterV)
     posterHBusy = true;
     posterGet({ action: 'poster', ym: D.ym, h: true }).then(function (r) {
       posterHBusy = false;
@@ -323,6 +326,34 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       else posterFail('posterHErr');
     }, function () { posterHBusy = false; posterFail('posterHErr'); });
   }
+  // 다른 판 카드 그림(10-31) = 판 + 행복마다 한 장, 07 action vposter {v, h}. pid(그림 id@고친 시각)가 같을 때만 그 그림을 쓴다
+  //  (받는 사이 판이 바뀌면 다시 받음 — 옆 카드 그림이나 기본 그림으로 넘어가지 않는다). 못 받으면 그 칸에 「불러오지 못했어요」 + 다시 불러오기.
+  var VPOST = {};   // 'v|h' → { id, src, busy, err }
+  function vpKey(c) { return c.v + (c.h ? '|h' : ''); }
+  function vpOf(c) { var p = VPOST[vpKey(c)]; return p && p.id === c.pid ? p : null; }
+  function loadPosterV() {
+    var C = D && D.missed && D.missed.cards;
+    if (!C) return;
+    C.forEach(function (c) {
+      if (!c.v || !c.pid) return;
+      var k = vpKey(c), p = VPOST[k];
+      if (p && (p.busy || (p.id === c.pid && (p.src || p.err)))) return;
+      VPOST[k] = { id: c.pid, src: '', busy: true, err: false };
+      posterGet({ action: 'vposter', ym: D.ym, v: c.v, h: !!c.h }).then(function (r) {
+        var q = VPOST[k]; q.busy = false;
+        if (r.id === q.id) q.src = r.src; else q.err = true;
+        if (view === 'miss') render();
+        loadPosterV();   // 받는 사이 새 명단(D)의 그림이 바뀌었으면 그것을 받는다
+      }, function () { VPOST[k].busy = false; VPOST[k].err = true; if (view === 'miss') render(); loadPosterV(); });   // 받는 사이 판이 바뀌었으면 새 판을 받는다(같은 판이면 err라 다시 안 감 — 다시 불러오기 단추)
+    });
+  }
+  // 카드 그림, 넘길 안내문 = 다른 판 카드는 그 판 것(c.pid, c.fwd), 아니면 기본 판(행복 카드는 행복 그림)
+  function mPoster(c) {
+    var n = D.notice || {};
+    if (c.v) { var vp = vpOf(c), q = VPOST[vpKey(c)]; return { src: vp && vp.src, id: c.pid, err: !!(q && q.id === c.pid && q.err), tag: '(' + c.v.slice(2) + ')' + (c.h ? '(행복)' : '') }; }
+    return c.h ? { src: n.posterH, id: n.posterHId, err: n.posterHErr, tag: '(행복)' } : { src: n.poster, id: n.posterId, err: n.posterErr, tag: '' };
+  }
+  function mFwd(c) { return c.v ? c.fwd : (D.notice || {}).fwd; }
   function saveSent() { lsSet(SENT_KEY, JSON.stringify(SENT)); }
   function tSent(t) { var s = SENT.t[t.name]; return t.msgs.map(function (_, i) { return !!(s && s[i]); }); }
   function allSent() { return D.teachers.length > 0 && D.teachers.every(function (t) { return tSent(t).every(Boolean); }); }
@@ -371,20 +402,21 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
 
   // ── 1일: 못 받은 아이 — 안내 글은 07이 만든다(_maMissedMsg_). 복사 표시 키 = 선생님 + 아이들(아이가 늘면 다시 안 누른 카드) ──
   //  + 행복 판이면 「|h」(같은 아이들 카드가 기본 판 ↔ 행복 판으로 바뀌면 다시 할 카드 — 10-31 리뷰. 기본 판 키는 옛 판 그대로)
-  function mKey(c) { return c.name + '|' + c.kids.map(function (k) { return k.n; }).join(',') + (c.h ? '|h' : ''); }
+  //  + 다른 판이면 「|판 표시」(10-31 — 같은 아이들 카드가 기본 판 ↔ 다른 판으로 바뀌면 다시 할 카드)
+  function mKey(c) { return c.name + '|' + c.kids.map(function (k) { return k.n; }).join(',') + (c.h ? '|h' : '') + (c.v ? '|' + c.v : ''); }
   function mSent(c) { var s = SENT.m[mKey(c)]; return [0, 1, 2].map(function (i) { return !!(s && s[i]); }); }
   function renderMissed() {
     var M = D.month, n = D.notice || {}, X = D.missed, h = '<section class="sec"><h2>' + M + '월 월 계획안 못 받은 아이</h2>';
     var vb = document.getElementById('vbody');
     if (X.sending) { vb.innerHTML = h + '<div class="grid"><div class="emptyc">센터 발송이 아직 끝나지 않았어요. 잠시 뒤 다시 열어 주세요.</div></div></section>'; return; }
-    var varLine = X.varN ? '<p class="look w badn">다른 판 월 계획안을 받는 아이 ' + X.varN + '명은 여기 안 나와요.</p>' : '';
+    var varLine = X.varN && !(X.vcards && X.vcards.length) ? '<p class="look w badn">다른 판 월 계획안을 받는 아이 ' + X.varN + '명은 여기 안 나와요.</p>' : '';   // vcards가 오면 그 아이들은 카드로 나온다(10-31)
     var C = X.cards || [];
     if (!C.length) { vb.innerHTML = h + varLine + '<div class="grid"><div class="emptyc">' + M + '월은 모두 받았어요.</div></div></section>'; return; }
     var kidsN = C.reduce(function (a, c) { return a + c.kids.length; }, 0);
     var cards = C.map(function (c, ci) {
       var s = mSent(c), all = s.every(Boolean), open = !!MORE[mKey(c)];
       var btn = function (i, off) { return '<button class="cb' + (s[i] ? ' done' : '') + '" data-a="mcopy" data-i="' + i + '"' + (off ? ' disabled' : '') + '>' + (s[i] ? ICON.check + '복사됨' : ICON.copy + '복사') + '</button>'; };
-      var ps = c.h ? n.posterH : n.poster, psId = c.h ? n.posterHId : n.posterId, psErr = c.h ? n.posterHErr : n.posterErr;   // h = 행복마음 판 그림
+      var mp = mPoster(c), ps = mp.src, psId = mp.id, psErr = mp.err, fwd = mFwd(c);   // h = 행복마음 판 그림, v = 다른 판(그 판 그림, 글 — 10-31)
       var pw = c.h ? '행복마음 포스터' : '포스터';   // 행복 카드는 그림 이름부터 다르게(옆 카드 기본 그림과 같은 것으로 보지 않게)
       var pst = ps ? '<img class="pimg" src="' + esc(ps) + '" alt="' + M + '월 ' + pw + '">'
         : !psId ? '<div class="bub">포스터는 대표님이 올리면 여기 나와요</div>'
@@ -394,8 +426,8 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
         (all ? '<button class="undo" data-a="mundo">되돌리기</button>' : '') + '</div><div class="chat">' +
         '<div class="msg' + (s[0] ? ' done' : '') + '">' + btn(0) + '<div class="bub">' + esc(c.text) + '</div></div>' +
         '<div class="msg' + (s[1] ? ' done' : '') + '">' + btn(1, !ps) + pst + '</div>' +
-        '<div class="msg' + (s[2] ? ' done' : '') + '">' + btn(2, !n.fwd) + '<div class="col"><div class="bub long' + (open ? ' open' : '') + '" data-a="mmore">' + esc(n.fwd || '안내문은 대표님이 올리면 여기 나와요') + '</div>' +
-          (n.fwd ? '<button class="more" data-a="mmore">' + (open ? '접기' : '전체 보기') + '</button>' : '') + '</div></div>' +
+        '<div class="msg' + (s[2] ? ' done' : '') + '">' + btn(2, !fwd) + '<div class="col"><div class="bub long' + (open ? ' open' : '') + '" data-a="mmore">' + esc(fwd || '안내문은 대표님이 올리면 여기 나와요') + '</div>' +
+          (fwd ? '<button class="more" data-a="mmore">' + (open ? '접기' : '전체 보기') + '</button>' : '') + '</div></div>' +
         '</div></div>';
     }).join('');
     // 복사 수 = 제공인력 수(행복 판으로 한 분이 카드 두 장일 수 있다 — 두 장 다 복사해야 1명)
@@ -723,7 +755,11 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
     if (a === 'retry') { msg('불러오는 중이에요…'); load(true); return; }
     if (!D) return;
     if (a === 'view') { view = b.dataset.v; render(); window.scrollTo({ top: 0 }); return; }
-    if (a === 'pretry') { var nr = D.notice || {}; nr.posterErr = nr.posterHErr = false; render(); loadPoster(); loadPosterH(); return; }   // 포스터 다시 불러오기(기본, 행복 둘 다 — 받은 그림은 안 다시 받음)
+    if (a === 'pretry') {   // 포스터 다시 불러오기(기본, 행복, 다른 판 다 — 받은 그림은 안 다시 받음)
+      var nr = D.notice || {}; nr.posterErr = nr.posterHErr = false;
+      Object.keys(VPOST).forEach(function (k) { if (VPOST[k].err) delete VPOST[k]; });
+      render(); loadPoster(); loadPosterH(); loadPosterV(); return;
+    }
     if (a === 'rsvMore') { b.classList.toggle('open'); return; }
     if (a === 'rsvCopy') {
       var i = +b.dataset.i, n = D.notice || {};
@@ -741,7 +777,8 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
       var mk = mKey(c), ms = SENT.m[mk] || (SENT.m[mk] = []), n2 = D.notice || {};
       if (a === 'mcopy') {
         var ci = +b.dataset.i;
-        var pp = ci === 0 ? copyText(c.text) : ci === 1 ? copyImage(c.h ? n2.posterH : n2.poster, c.h ? '(행복)' : '') : copyText(n2.fwd);
+        var mpc = mPoster(c);
+        var pp = ci === 0 ? copyText(c.text) : ci === 1 ? copyImage(mpc.src, mpc.tag) : copyText(mFwd(c));
         pp.then(function (ok) {
           if (!ok) { toast('복사하지 못했어요', true); return; }
           ms[ci] = true; saveSent(); render();
