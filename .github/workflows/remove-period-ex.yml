@@ -1,0 +1,58 @@
+name: 신청 기간 3월 예시 화면 지우기
+
+# 2026-11-01 유성 「11월 4일에 사라지는 일회용 깃헙 주소 만들어줘. 내용은 3월 러시타임때 예시 페이지 소장님께 보낼」 — period-ex/ 화면(kr period.html 복사, 날짜 2026-03-10 고정).
+# 한국 11월 4일 0시부터 period-ex/ 폴더를 지우고 푸시 → GitHub Pages 재배포(remove-period-ex.yml, remove-missed.yml과 같은 방식 — missed/는 10-30 05:14 자동 삭제 확인).
+# 예약 실행은 GitHub 부하로 늦거나 빠질 수 있어 한 시간마다 다시 본다. 이미 지웠으면 아무것도 안 하고, 지운 뒤엔 이 워크플로를 스스로 끈다.
+# 화면 자체도 11-04 0시(한국)부터 내용을 내린다(period-ex/index.html 머리, 끝 스크립트) — 이 워크플로가 늦어도 안 보이게.
+# 이 파일을 봇이 지우지 않는 이유 = GITHUB_TOKEN은 .github/workflows 파일을 바꾸는 푸시가 거부될 수 있어서(그러면 period-ex/ 삭제까지 같이 실패).
+on:
+  schedule:
+    - cron: '7 15-23 3 11 *'    # UTC 11-03 15:07~23:07 = 한국 11-04 0:07~8:07
+    - cron: '7 * 4-5 11 *'      # UTC 11-04~05 매시 = 한국 11-04 9:07 ~ 11-06 8:07
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: '시험(지우지 않고 지울 파일만 보기)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: remove-period-ex
+  cancel-in-progress: false
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: period-ex/ 지우기
+        run: |
+          if [ ! -d period-ex ]; then
+            echo "period-ex/ 없음 — 이미 지움"
+            if [ "${{ inputs.dry }}" != "true" ]; then gh workflow disable remove-period-ex.yml || true; fi
+            exit 0
+          fi
+          if [ "${{ inputs.dry }}" = "true" ]; then
+            echo "시험 — 지울 파일:"
+            git ls-files period-ex
+            exit 0
+          fi
+          git config user.name "think-factory-bot"
+          git config user.email "noreply@think-factory.kr"
+          git rm -r --quiet period-ex
+          git commit -m "chore: 신청 기간 3월 예시 화면 지움 (11-04 자동, 유성 11-01)"
+          ok=0
+          for i in 1 2 3; do
+            if git pull --rebase origin main && git push; then ok=1; break; fi
+            sleep 10
+          done
+          [ "$ok" = 1 ] || exit 1
+          gh workflow disable remove-period-ex.yml || true
