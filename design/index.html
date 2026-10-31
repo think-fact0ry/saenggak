@@ -593,6 +593,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .r64 .l2{font-size:13.5px;color:var(--g700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .r64 .rt{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
 .r64 .el{font-size:11.5px;color:var(--g600);white-space:nowrap}
+.r64 .it.late .el{color:var(--warn-weak-fg);font-weight:600}
 .r64 .ub{font-size:11.5px;font-weight:700;min-width:18px;height:18px;border-radius:9px;color:#fff;background:var(--red);display:inline-flex;align-items:center;justify-content:center;padding:0 5px;font-variant-numeric:tabular-nums}
 .r64 .cm{background:#fff;border-radius:12px;padding:5px;min-width:160px;box-shadow:0 1px 4px rgba(25,31,40,.06),0 6px 18px rgba(25,31,40,.14);align-self:center}
 .r64 .cm span{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--g800);padding:8px 10px;border-radius:8px;white-space:nowrap}
@@ -1560,13 +1561,14 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="box"><span class="cap">학부모 창</span><span class="img"></span><span class="pdf"><span class="pi">PDF</span><span><span class="nm">10월 안내문.pdf</span><span class="sz">320KB, 누르면 열려요</span></span></span><span class="bub">안내문이에요</span></div>
   </div>
 
-  <!-- 2026-10-11 유성 「B(+A)」 + 오른쪽 클릭으로 대기로 돌려놓기 + 고정과 이름 GO · 2026-10-12 카톡식 안 읽은 수(빨간 점 → 숫자) · 경위·전문 = docs/1 §4.18 · 정본 = prototype/26_문의알리미_카드이름_프리뷰.html, prototype/26_문의채팅_안읽은숫자_카톡식_프리뷰.html -->
+  <!-- 2026-10-11 유성 「B(+A)」 + 오른쪽 클릭으로 대기로 돌려놓기 + 고정과 이름 GO · 2026-10-12 카톡식 안 읽은 수(빨간 점 → 숫자) · 2026-10-31 늦음 글자 「2분 넘음」 → 「N분 기다림」(기다린 시간) · 경위·전문 = docs/1 §4.18 · 정본 = prototype/26_문의알리미_카드이름_프리뷰.html, prototype/26_문의채팅_안읽은숫자_카톡식_프리뷰.html -->
   <h3 class="sec" id="sec64"><span class="ref">§4.18</span>받은함 줄 — 이름 굵게 + 원래 이름 뱃지, 오른쪽 클릭 메뉴</h3>
-  <p class="desc">뱃지는 곳 이름만, 출처는 동그라미가 말한다. 시각 아래 안 읽은 수, 열면 지운다. 돌려놓기, 고정, 이름은 오른쪽 클릭.</p>
+  <p class="desc">뱃지는 곳 이름만, 출처는 동그라미가 말한다. 시각 아래 안 읽은 수, 열면 지운다. 답이 2분 늦으면 주황으로 기다린 시간. 돌려놓기, 고정, 이름은 오른쪽 클릭.</p>
   <div class="demo r64">
     <div class="lst">
       <div class="it press"><div class="src nv"><svg viewBox="0 0 24 24"><path fill="#fff" d="M7.2 6.5h3.3l3.3 4.9V6.5h3v11h-3.3l-3.3-4.9v4.9h-3z"/></svg></div><div class="bd"><div class="l1"><span class="nm">김민지</span><span class="tag">서해구</span><span class="tag pin"><svg viewBox="0 0 24 24"><path d="M8 2.5h8v2.2l-1.4 1.1v5.1l3.4 3.2v2.2h-5V22l-1 1.2-1-1.2v-5.7H6v-2.2l3.4-3.2V5.8L8 4.7z"/></svg>이현아</span></div><div class="l2">안녕하세요 아이 상담 문의드려요</div></div><div class="rt"><span class="el">방금</span><span class="ub">1</span></div></div>
       <div class="it"><div class="src hp"><svg viewBox="0 0 24 24"><path d="M4.5 10.5 12 4.5l7.5 6V19a1 1 0 0 1-1 1h-4v-5.5h-5V20h-4a1 1 0 0 1-1-1z"/></svg></div><div class="bd"><div class="l1"><span class="nm">최민준</span><span class="tag">홈페이지</span></div><div class="l2">토요일 오전도 되나요?</div></div><div class="rt"><span class="el">답장 전</span><span class="ub">2</span></div></div>
+      <div class="it late"><div class="src hp"><svg viewBox="0 0 24 24"><path d="M4.5 10.5 12 4.5l7.5 6V19a1 1 0 0 1-1 1h-4v-5.5h-5V20h-4a1 1 0 0 1-1-1z"/></svg></div><div class="bd"><div class="l1"><span class="nm">홈페이지</span></div><div class="l2">다음 주 수요일 가능한가요?</div></div><div class="rt"><span class="el">5분 기다림</span><span class="ub">1</span></div></div>
       <div class="it"><div class="src kk"><svg viewBox="0 0 24 24"><path fill="#3c1e1e" d="M12 6c-4 0-7.2 2.5-7.2 5.6 0 2 1.3 3.7 3.3 4.7l-.7 2.6c-.1.3.3.5.5.3l3.1-2.1c.3 0 .7.1 1 .1 4 0 7.2-2.5 7.2-5.6S16 6 12 6z"/></svg></div><div class="bd"><div class="l1"><span class="nm">아이사랑맘서윤이네엄마</span><span class="tag">카카오</span></div><div class="l2">주말에도 수업 되나요?</div></div><div class="rt"><span class="el">21분 전</span></div></div>
     </div>
     <div class="cm"><span><svg viewBox="0 0 24 24"><path d="M9 4h6l-1 5 3 3H7l3-3z"/><path d="M12 12v8"/></svg>맨 위에 고정</span><span><svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>이름 붙이기</span><span><svg viewBox="0 0 24 24"><path d="M5 6.5h9.5a4.75 4.75 0 0 1 0 9.5H6"/><path d="M9.5 12.5 6 16l3.5 3.5"/></svg>대기로 돌려놓기</span></div>
