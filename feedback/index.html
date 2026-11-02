@@ -40,31 +40,38 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function msg(t, retry) { app.innerHTML = '<h1>제공인력별 피드백 안내</h1><p class="sub">' + t + '</p>' + (retry ? '<button class="retry" id="retry">다시 불러오기</button>' : ''); }
 
-  // 열쇠: 주소 # 뒤 → 저장 → 주소창에서 지움
-  var key = '';
-  var h = location.hash.replace(/^#/, '');
-  if (/^[0-9a-f]{32}$/.test(h)) {
-    key = h;
-    try { localStorage.setItem(KEY_STORE, key); } catch (e) {}
-    try { history.replaceState(null, '', location.pathname); } catch (e) {}
-  } else {
-    try { key = localStorage.getItem(KEY_STORE) || ''; } catch (e) {}
-  }
-  if (!key) { msg('이 컴퓨터에서는 처음이라 열 수 없어요. 대표님께 받은 링크로 한 번만 열어주세요. 그 다음부터는 이 주소로 바로 열려요.'); return; }
+  // 열쇠: 주소 # 뒤 새 열쇠 → 서버가 받아 준 뒤에만 저장 → 주소창에서 지움. 저장된 열쇠는 지우지 않는다.
+  //  (2026-11-02) 옛 판은 # 열쇠를 먼저 덮어쓰고, 서버가 「열쇠 틀림」이면 저장값을 지웠다 → 다른 열쇠가 든 링크를 한 번 열거나
+  //  서버가 한 번 틀림이라 답하면, 멀쩡하던 열쇠까지 사라져 「처음이라」로 막혔다(유성 PC 크롬 — 10월에 쓰던 브라우저).
+  //  이제 새 열쇠가 안 맞으면 저장된 열쇠로 한 번 더 묻고, 둘 다 안 맞을 때만 「링크가 바뀌었어요」(저장값은 남겨 다음에 다시 묻는다).
+  var saved = '';
+  try { saved = localStorage.getItem(KEY_STORE) || ''; } catch (e) {}
+  var h = location.hash.replace(/^#/, ''), fresh = /^[0-9a-f]{32}$/.test(h) ? h : '';
+  if (fresh) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+  var keys = [];
+  if (fresh) keys.push(fresh);
+  if (saved && saved !== fresh) keys.push(saved);
+  if (!keys.length) { msg('이 컴퓨터에서는 처음이라 열 수 없어요. 대표님께 받은 링크로 한 번만 열어주세요. 그 다음부터는 이 주소로 바로 열려요.'); return; }
 
   function load() {
-    var go = function () { return fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify({ action: 'send', k: key }) }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); };
     var wait = function (ms) { return new Promise(function (res) { setTimeout(res, ms); }); };
-    go().catch(function () { return wait(700).then(go); }).catch(function () { return wait(1600).then(go); })   // 읽기만 하는 화면=재시도(구글 HTML·404)
-      .then(function (d) {
-        if (!d.ok) {
-          if (d.error === 'key') { try { localStorage.removeItem(KEY_STORE); } catch (e) {} msg('링크가 바뀌었어요. 대표님께 새 링크를 받아 한 번만 열어주세요.'); }
-          else msg('불러오지 못했어요.', true);
+    var ask = function (k) {
+      var go = function () { return fetch(GAS_EXEC, { method: 'POST', body: JSON.stringify({ action: 'send', k: k }) }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); };
+      return go().catch(function () { return wait(700).then(go); }).catch(function () { return wait(1600).then(go); });   // 읽기만 하는 화면=재시도(구글 HTML·404)
+    };
+    var tryAt = function (i) {
+      return ask(keys[i]).then(function (d) {
+        if (d.ok) {
+          if (keys[i] !== saved) { try { localStorage.setItem(KEY_STORE, keys[i]); } catch (e) {} saved = keys[i]; }
+          render(d);
           return;
         }
-        render(d);
-      })
-      .catch(function () { msg('불러오지 못했어요. 인터넷 연결을 확인해주세요.', true); });
+        if (d.error === 'key' && i + 1 < keys.length) return tryAt(i + 1);
+        if (d.error === 'key') msg('링크가 바뀌었어요. 대표님께 새 링크를 받아 한 번만 열어주세요.');
+        else msg('불러오지 못했어요.', true);
+      });
+    };
+    tryAt(0).catch(function () { msg('불러오지 못했어요. 인터넷 연결을 확인해주세요.', true); });
   }
 
   function render(d) {
