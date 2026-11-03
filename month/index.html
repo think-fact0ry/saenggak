@@ -410,6 +410,17 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   //  + 행복 판이면 「|h」(같은 아이들 카드가 기본 판 ↔ 행복 판으로 바뀌면 다시 할 카드 — 10-31 리뷰. 기본 판 키는 옛 판 그대로)
   //  + 다른 판이면 「|판 표시」(10-31 — 같은 아이들 카드가 기본 판 ↔ 다른 판으로 바뀌면 다시 할 카드)
   function mKey(c) { return c.name + '|' + c.kids.map(function (k) { return k.n; }).join(',') + (c.h ? '|h' : '') + (c.v ? '|' + c.v : ''); }
+  // 현아쌤만 보는 까닭 한 줄(복사되는 글엔 안 들어감 — 유성 11-04 현아쌤 메모 「모두 전화번호가 다르다는 게 이상해서」 → 다른 판이라 뺀 걸 화면이 말 안 해 줬다).
+  //  다른 판 카드 = 그 판이라 알림톡에서 뺌 / 기본 카드의 late 아이(번호 있는데 기록 없음) = 1일 발송 뒤에 명단에 들어옴. reg, num은 복사 글이 이미 까닭을 말한다
+  function mWhy(c) {
+    var t;
+    if (c.v) t = (String(c.v).indexOf('t:') === 0 ? tname(c.name) + ' 선생님 아이는' : '이 아이는') + ' 이번 달 다른 계획안이라, 센터 알림톡 대신 이 카드로 보내요.';
+    else {
+      var late = c.kids.filter(function (k) { return k.r === 'late'; }).map(function (k) { return k.n; });
+      if (late.length) t = late.join(', ') + ' 아이는 1일 센터 발송 뒤에 명단에 들어와서, 이 카드로 보내요.';
+    }
+    return t ? '<p class="look nt">' + esc(t) + '</p>' : '';
+  }
   function mSent(c) { var s = SENT.m[mKey(c)]; return [0, 1, 2].map(function (i) { return !!(s && s[i]); }); }
   function renderMissed() {
     var M = D.month, n = D.notice || {}, X = D.missed, h = '<section class="sec"><h2>' + M + '월 월 계획안 못 받은 아이</h2>';
@@ -429,7 +440,7 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
         : psErr ? '<div class="col"><div class="bub">' + pw + '를 불러오지 못했어요</div><button class="more" data-a="pretry">다시 불러오기</button></div>'
         : '<div class="bub">' + pw + '를 불러오고 있어요</div>';
       return '<div class="tc' + (all ? ' sent' : '') + '" data-ci="' + ci + '"><div class="th"><b>' + esc(tname(c.name)) + ' 선생님</b><span class="kn">' + c.kids.map(function (k) { return esc(k.n); }).join(', ') + '</span>' +
-        (all ? '<button class="undo" data-a="mundo">되돌리기</button>' : '') + '</div><div class="chat">' +
+        (all ? '<button class="undo" data-a="mundo">되돌리기</button>' : '') + '</div>' + mWhy(c) + '<div class="chat">' +
         '<div class="msg' + (s[0] ? ' done' : '') + '">' + btn(0) + '<div class="bub">' + esc(c.text) + '</div></div>' +
         '<div class="msg' + (s[1] ? ' done' : '') + '">' + btn(1, !ps) + pst + '</div>' +
         '<div class="msg' + (s[2] ? ' done' : '') + '">' + btn(2, !fwd) + '<div class="col"><div class="bub long' + (open ? ' open' : '') + '" data-a="mmore">' + esc(fwd || '안내문은 대표님이 올리면 여기 나와요') + '</div>' +
