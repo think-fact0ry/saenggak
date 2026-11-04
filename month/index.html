@@ -411,13 +411,16 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
   //  + 다른 판이면 「|판 표시」(10-31 — 같은 아이들 카드가 기본 판 ↔ 다른 판으로 바뀌면 다시 할 카드)
   function mKey(c) { return c.name + '|' + c.kids.map(function (k) { return k.n; }).join(',') + (c.h ? '|h' : '') + (c.v ? '|' + c.v : ''); }
   // 현아쌤만 보는 까닭 한 줄(복사되는 글엔 안 들어감 — 유성 11-04 현아쌤 메모 「모두 전화번호가 다르다는 게 이상해서」 → 다른 판이라 뺀 걸 화면이 말 안 해 줬다).
-  //  다른 판 카드 = 그 판이라 알림톡에서 뺌 / 기본 카드의 late 아이(번호 있는데 기록 없음) = 1일 발송 뒤에 명단에 들어옴. reg, num은 복사 글이 이미 까닭을 말한다
+  //  다른 판 카드 = 그 판을 이번 달 다른 계획안 알림톡(틀 C)으로 못 보냈을 때만 「다른 계획안이라」(c.cv 없음) / 틀 C로 보낸 판(c.cv)의 카드와 기본 카드 =
+  //  남은 아이의 까닭(nd = 알림톡이 보호자님께 안 감, late = 번호 있는데 기록 없음 = 1일 발송 뒤에 명단에 들어옴). reg, num은 복사 글이 이미 까닭을 말한다
   function mWhy(c) {
-    var t;
-    if (c.v) t = (String(c.v).indexOf('t:') === 0 ? tname(c.name) + ' 선생님 아이는' : '이 아이는') + ' 이번 달 다른 계획안이라, 센터 알림톡 대신 이 카드로 보내요.';
+    var t, of = function (f) { return c.kids.filter(f).map(function (k) { return k.n; }); };
+    if (c.v && !c.cv) t = (String(c.v).indexOf('t:') === 0 ? tname(c.name) + ' 선생님 아이는' : '이 아이는') + ' 이번 달 다른 계획안이라, 센터 알림톡 대신 이 카드로 보내요.';
     else {
-      var late = c.kids.filter(function (k) { return k.r === 'late'; }).map(function (k) { return k.n; });
-      if (late.length) t = late.join(', ') + ' 아이는 1일 센터 발송 뒤에 명단에 들어와서, 이 카드로 보내요.';
+      var nd = of(function (k) { return k.nd; }), late = of(function (k) { return k.r === 'late' && !k.nd; }), L = [];
+      if (nd.length) L.push(nd.join(', ') + ' 아이는 센터 알림톡이 보호자님께 가지 않아서, 이 카드로 보내요.');
+      if (late.length) L.push(late.join(', ') + ' 아이는 1일 센터 발송 뒤에 명단에 들어와서, 이 카드로 보내요.');
+      t = L.join(' ');
     }
     return t ? '<p class="look nt">' + esc(t) + '</p>' : '';
   }
