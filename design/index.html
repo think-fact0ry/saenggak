@@ -772,6 +772,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .d59-scr.drag{cursor:grabbing}
 .d59-rb p{margin:0;padding:15px 18px;border-top:1px solid var(--g100);font-size:15px;color:var(--g700)}
 .d59-rb p:first-child{border-top:0}
+.d59-ban{position:absolute;z-index:1;top:8px;right:8px;padding:6px 10px;border-radius:10px;background:var(--g100);font-size:13px;font-weight:700;color:var(--g900);pointer-events:none}   /* 떠 있는 상자 = .rb 밖, 스크롤 칸 안(§5.9-8) */
 @media (prefers-reduced-motion:reduce){.d19-seg i,.d19-ban,.d22-btn,.d22-toast,.d22-dim,.d22-m{transition:none}}
 </style>
 </head>
@@ -1858,10 +1859,10 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="cd-bar"><button type="button" class="lk" id="cdPrev">뒤로</button><button type="button" class="cd-next" id="cdNext">다음</button></div>
   </div>
 
-  <!-- 2026-11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §5.9 (A 22, 23차 — 아래 코드는 A 블록 글자 그대로) -->
+  <!-- 2026-11-02 · 11-04 굳힘 · 11-05 떠 있는 상자는 .rb 밖(A 26차) · 경위·전문 = docs/1 §5.9 (A 22, 23차 — 아래 코드는 A 블록 글자 그대로) -->
   <h3 class="sec" id="sec79"><span class="ref">§5.9</span>스크롤 끝 고무줄 튕김</h3>
-  <p class="desc">끝에서 더 당기면 저항을 받으며 밀렸다가 스프링으로 제자리. 손가락, 휠, 마우스 끌기 모두. 끝까지 내려 당겨 보세요 ↓</p>
-  <div class="demo"><div class="d59-box"><div class="d59-scr" id="d59scr"><div class="d59-rb" id="d59rb"><p>첫째 줄</p><p>둘째 줄</p><p>셋째 줄</p><p>넷째 줄</p><p>다섯째 줄</p><p>여섯째 줄</p><p>일곱째 줄</p><p>여덟째 줄</p></div></div></div></div>
+  <p class="desc">끝에서 더 당기면 저항을 받으며 밀렸다가 스프링으로 제자리. 떠 있는 상자는 안 밀림. 손가락, 휠, 마우스 끌기 모두. 위아래 끝에서 당겨 보세요 ↕</p>
+  <div class="demo"><div class="d59-box"><div class="d59-scr" id="d59scr"><div class="d59-rb" id="d59rb"><p>첫째 줄</p><p>둘째 줄</p><p>셋째 줄</p><p>넷째 줄</p><p>다섯째 줄</p><p>여섯째 줄</p><p>일곱째 줄</p><p>여덟째 줄</p></div><span class="d59-ban">떠 있는 상자</span></div></div></div>
   <script>(function(scr, rb){ if(!scr||!rb) return;
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   // 고무줄 튕김(22차 유성 「아래로 당기면 애플의 스프링처럼 내려갔다가 원상태로 오는」) — 스크롤 칸 맨 끝(또는 맨 위)에서 더 당기면
