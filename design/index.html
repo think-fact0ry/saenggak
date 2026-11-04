@@ -707,6 +707,72 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .cd58 .cd-next{padding:11px 26px;border:none;border-radius:13px;background:var(--green600);color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:transform .1s}
 .cd58 .cd-next:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.nx57 .nx-btn.pop,.nx57 .nx-btn.pop::after,.cd58 .cd-dk{animation:none !important}.nx57 .nx-btn.go::after{display:none}.nx57 .nx-btn.go .nx-arr{animation:none}.nx57 .nx-btn.go{box-shadow:0 0 0 3px var(--green200)}}
+/* §4.19~4.22, §5.9 (11-04) — 07 종료 안내 A, 아청심 안내 페이지 값. 예시 값만(공개 미러) */
+.d19-ph{position:relative;max-width:340px;margin:0 auto;border:1px solid var(--g100);border-radius:18px;overflow:hidden;background:#fff}
+.d19-top{position:relative;padding:36px 22px 20px}
+.d19-brand{font-size:13px;line-height:20px;font-weight:600;color:var(--g600);margin:0 0 24px}
+.d19-ban{position:absolute;z-index:1;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:7px;background:var(--g100);color:var(--g900);border-radius:14px;padding:11px 38px 11px 12px;font-size:14px;font-weight:700;transition:opacity .25s,transform .25s}
+.d19-ban svg.g{width:17px;height:17px;flex:none;color:var(--green600)}
+.d19-ban span{white-space:nowrap;overflow:hidden}
+.d19-ban button{all:unset;cursor:pointer;position:absolute;top:50%;right:2px;width:36px;height:36px;margin-top:-18px;display:flex;align-items:center;justify-content:center;color:var(--g600)}
+.d19-ban button svg{width:15px;height:15px}
+.d19-ban.gone{opacity:0;transform:translateY(-6px);pointer-events:none}
+.d19-h{font-size:24px;line-height:1.36;letter-spacing:-.5px;font-weight:700;margin:0 0 10px;color:var(--g900)}
+.d19-sub{font-size:15px;color:var(--g700);margin:0}
+.d19-band{background:var(--green50);padding:18px 22px}
+.d19-seg{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
+.d19-seg i{height:8px;border-radius:5px;background:var(--green200);transition:background .35s}
+.d19-seg i.a{background:var(--green600)}
+.d19-now{margin:14px 0 10px;font-size:38px;font-weight:800;letter-spacing:-1.2px;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--g900)}
+.d19-now small{font-size:18px;font-weight:700;margin-left:2px}
+.d19-th{text-align:right;font-size:12px;font-weight:600;color:var(--g700);margin:0 0 4px}
+.d19-rows{list-style:none;margin:0;padding:0}
+.d19-rows li{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;color:var(--g700);border-top:1px solid rgba(58,138,95,.14)}
+.d19-rows li b{font-weight:600;color:var(--g900);font-variant-numeric:tabular-nums}
+.d19-rows li.cur,.d19-rows li.cur b{color:var(--green700);font-weight:700}
+.d19-tot{font-size:13px;color:var(--g700);margin:10px 0 0}
+.d19-act{padding:18px 22px 0}
+.d19-btn{display:block;width:100%;border:0;border-radius:16px;padding:15px;background:var(--green600);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+.d19-alt{display:flex;justify-content:space-between;margin:16px 22px 0;padding:14px 0 18px;border-top:1px solid var(--g100);font-size:14.5px;color:var(--g700)}
+.d20{padding:22px 0 0;overflow:hidden;container-type:inline-size;max-width:390px;margin-left:auto;margin-right:auto}
+.d20-h{font-size:12px;line-height:1.45;font-weight:400;color:var(--g600);text-align:right;margin:0 0 4px;padding:0 22px}
+.d20-g{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(100cqw * 6 / 1080)}
+.d20-g i{aspect-ratio:3/4;background:linear-gradient(160deg,var(--g100),var(--g200))}
+.d20-g i:nth-child(3n+2){background:linear-gradient(160deg,var(--green50),var(--green200))}
+.d21-card{max-width:340px;margin:0 auto;background:#fff;border-radius:18px;padding:18px 16px 16px;box-shadow:0 1px 2px rgba(47,111,77,.05),0 4px 14px rgba(47,111,77,.06)}
+.d21-pt{display:grid;grid-template-columns:auto auto auto;justify-content:space-between;column-gap:12px;align-items:baseline}
+.d21-pt>span{padding:9px 0;font-variant-numeric:tabular-nums;white-space:nowrap}
+.d21-pt .ln{grid-column:1/-1;height:1px;background:var(--g100)}
+.d21-pt .h{font-size:12px;line-height:1.45;font-weight:600;color:var(--g600);padding-top:0}
+.d21-pt .g{font-size:15px;color:var(--g700)}
+.d21-pt .s{font-size:13.5px;color:var(--g600);text-align:right}
+.d21-pt .o{font-size:15px;font-weight:600;text-align:right;color:var(--g900)}
+.d21-note{max-width:340px;margin:4px auto 0;font-size:12px;line-height:1.45;color:var(--g600);text-align:right}
+.d22{position:relative;overflow:hidden;min-height:210px;display:flex;flex-direction:column;justify-content:flex-end}
+.d22-btn{display:block;width:100%;max-width:340px;margin:0 auto;border:0;border-radius:16px;padding:16px;font:inherit;font-size:16px;font-weight:700;cursor:pointer;background:var(--green600);color:#fff;transition:background .2s,color .2s}
+.d22-btn:active{transform:scale(.985)}
+.d22-btn.wait{background:var(--g100);color:var(--dark)}
+.d22-btn.wait:active{background:var(--dark);color:#fff}
+.d22-toast{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:var(--g800);color:#F9FBFA;font-size:13.5px;font-weight:600;line-height:1.5;white-space:pre-line;border-radius:12px;padding:12px 18px;opacity:0;transition:opacity .25s;pointer-events:none;width:max-content;max-width:calc(100% - 32px)}
+.d22-toast.on{opacity:1}
+.d22-toast i{width:18px;height:18px;border-radius:50%;background:var(--green600);flex:none;display:inline-flex;align-items:center;justify-content:center}
+.d22-toast i svg{width:11px;height:11px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.d22-dim{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+.d22-dim.on{opacity:1;pointer-events:auto}
+.d22-m{position:absolute;left:50%;top:50%;width:calc(100% - 84px);max-width:320px;background:#fff;border-radius:var(--r-lg);padding:24px 22px 18px;opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.96);transition:opacity .2s,transform .2s}
+.d22-m.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.d22-m b{display:block;font-size:17px;line-height:1.45;margin:0 0 8px;color:var(--g900)}
+.d22-m p{font-size:14px;line-height:1.5;color:var(--g600);margin:0 0 16px}
+.d22-m .row{display:flex;gap:8px}
+.d22-m button{flex:1;padding:13px;border:0;border-radius:var(--r-md);font:inherit;font-size:15px;font-weight:700;background:var(--g100);color:var(--g700);cursor:pointer}
+.d22-m button.p{background:var(--green600);color:#fff}
+.d59-box{position:relative;max-width:340px;height:240px;margin:0 auto;border:1px solid var(--g100);border-radius:16px;overflow:hidden;background:#fff}
+.d59-scr{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none}
+.d59-scr::-webkit-scrollbar{width:0;height:0}
+.d59-scr.drag{cursor:grabbing}
+.d59-rb p{margin:0;padding:15px 18px;border-top:1px solid var(--g100);font-size:15px;color:var(--g700)}
+.d59-rb p:first-child{border-top:0}
+@media (prefers-reduced-motion:reduce){.d19-seg i,.d19-ban,.d22-btn,.d22-toast,.d22-dim,.d22-m{transition:none}}
 </style>
 </head>
 <body>
@@ -789,6 +855,10 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec71"><i>§4.18</i><span>날짜 줄 = 폭 전체 선 + 달력 + 연도</span></a>
     <a href="#sec73"><i>§4.18</i><span>상담 완료 = 표시만, 숫자 자리에 초록 체크</span></a>
     <a href="#sec74"><i>§4.18</i><span>톡톡, 카카오 = 받은함 안 대화방 + 복사해서 붙여 넣기</span></a>
+    <a href="#sec75"><i>§4.19</i><span>보호자 설득 화면 = 한 장, 핵심만</span></a>
+    <a href="#sec76"><i>§4.20</i><span>활동 피드 격자 = 인스타 그대로</span></a>
+    <a href="#sec77"><i>§4.21</i><span>금액 카드 = 흰 카드, 같은 간격, 기준 줄</span></a>
+    <a href="#sec78"><i>§4.22</i><span>「여쭤보는 중」 버튼 + 멈추기 모달</span></a>
     <a href="#sec48"><i>§5.2</i><span>로딩 = 자리별 3층</span></a>
     <a href="#sec49"><i>§5.3</i><span>누름(press)</span></a>
     <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
@@ -796,6 +866,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec51"><i>§5.5</i><span>토스트 — 성공엔 초록 원+체크</span></a>
     <a href="#sec62"><i>§5.7</i><span>답해야 열리는 「다음」 = O/X 자리에서 반짝, 답은 카드 테두리</span></a>
     <a href="#sec63"><i>§5.8</i><span>카드 넘김 = 두 장이 같이 보인다</span></a>
+    <a href="#sec79"><i>§5.9</i><span>스크롤 끝 고무줄 튕김</span></a>
   </div></div>
 </div>
 
@@ -1639,6 +1710,75 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     </div>
   </div>
   <script>(function(){var c=document.getElementById('c74'),x=document.getElementById('x74'),n=document.getElementById('n74');if(!c)return;var opened=false;c.addEventListener('click',function(){n.textContent=opened?'복사했어요. 톡톡 창에 붙여 넣어 주세요':'복사했어요. 톡톡 창에 붙여 넣어 주세요 (파트너센터 창이 열려요)';opened=true;c.textContent='복사하기';});x.addEventListener('click',function(){opened=true;c.textContent='복사하기';n.textContent='서해구 톡톡 채팅을 열었어요';});})();</script>
+  <!-- 2026-10-31~11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §4.19 (07 종료 안내 버튼 뒤 화면 A — 공개 미러라 예시 값만) -->
+  <h3 class="sec" id="sec75"><span class="ref">§4.19</span>보호자 설득 화면 = 한 장, 핵심만</h3>
+  <p class="desc">폰 첫 화면에 버튼까지. 값은 저절로 바뀌고 기준은 같은 칸에, 혜택 배너는 맨 위 한 줄 닫는 상자. 예시 값이에요.</p>
+  <div class="demo">
+    <div class="d19-ph">
+      <div class="d19-top">
+        <div class="d19-ban" id="d19ban"><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M3 7h18v3H3z"/><path d="M12 7v13"/></svg><span>○○ 가정에게만 드리는 혜택</span><button type="button" id="d19x" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <p class="d19-brand">생각공작소</p>
+        <p class="d19-h">제목은 두 줄,<br>정할 것은 하나만</p>
+        <p class="d19-sub">부제는 한 줄로 짧게</p>
+      </div>
+      <div class="d19-band">
+        <div class="d19-seg" id="d19seg"></div>
+        <div class="d19-now" id="d19won">12,000<small>원</small></div>
+        <div class="d19-th">1회기 기준</div>
+        <ul class="d19-rows" id="d19rows"></ul>
+        <p class="d19-tot">한 달 값도 같은 화면에 한 줄로</p>
+      </div>
+      <div class="d19-act"><button type="button" class="d19-btn">이어 갈게요 →</button></div>
+      <div class="d19-alt"><span>다른 길은 한 줄로</span><span>›</span></div>
+    </div>
+  </div>
+  <script>(function(){var seg=document.getElementById('d19seg'),rows=document.getElementById('d19rows'),won=document.getElementById('d19won');if(!seg)return;
+    var P=[12000,11000,10000],W=['1단계','2단계','3단계'],R=[[0,3],[3,7],[7,12]],red=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function f(n){return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+    for(var i=0;i<12;i++)seg.appendChild(document.createElement('i'));
+    rows.innerHTML=W.map(function(w,i){return '<li><span>'+w+'</span><b>'+f(P[i])+'원</b></li>';}).join('');
+    function paint(i){Array.prototype.forEach.call(seg.children,function(b,k){b.className=(k>=R[i][0]&&k<R[i][1])?'a':'';});Array.prototype.forEach.call(rows.children,function(li,k){li.className=k===i?'cur':'';});won.innerHTML=f(P[i])+'<small>원</small>';}
+    paint(0);
+    if(!red){var k=0;setInterval(function(){k=(k+1)%4;paint(k===3?0:k);},1900);}
+    document.getElementById('d19x').addEventListener('click',function(){document.getElementById('d19ban').classList.add('gone');setTimeout(function(){document.getElementById('d19ban').classList.remove('gone');},2600);});
+  })();</script>
+
+  <!-- 2026-11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §4.20 (A 활동 피드 — 유성 인스타 캡처 실측, 사진 자리는 빈 칸) -->
+  <h3 class="sec" id="sec76"><span class="ref">§4.20</span>활동 피드 격자 = 인스타 그대로</h3>
+  <p class="desc">좌우 여백 0, 각진 3:4 칸, 틈은 화면 폭의 6/1080. 이름은 오른쪽 작은 회색 글, 눌러도 다른 데로 안 가요.</p>
+  <div class="demo d20"><p class="d20-h">생각공작소 활동 피드</p><div class="d20-g"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+
+  <!-- 2026-11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §4.21 (07 아청심 안내 페이지 — 예시 값, 실제 단가 아님) -->
+  <h3 class="sec" id="sec77"><span class="ref">§4.21</span>금액 카드 = 흰 카드, 같은 간격, 기준 줄</h3>
+  <p class="desc">붙은 덩어리는 바탕을 다르게. 세 칸 사이 같게, 내실 금액 칸이 가장 진하게, 기준(연도, 기간)은 표 오른쪽 아래. 예시 값이에요.</p>
+  <div class="demo" style="background:var(--g50)">
+    <div class="d21-card"><div class="d21-pt">
+      <span class="h">등급</span><span class="h s">지원금</span><span class="h">내실 금액</span>
+      <i class="ln"></i><span class="g">1등급</span><span class="s">90,000원</span><span class="o">30,000원</span>
+      <i class="ln"></i><span class="g">2등급</span><span class="s">80,000원</span><span class="o">40,000원</span>
+      <i class="ln"></i><span class="g">3등급</span><span class="s">70,000원</span><span class="o">50,000원</span>
+    </div></div>
+    <p class="d21-note">* 예시, 한 달(4회기) 기준</p>
+  </div>
+
+  <!-- 2026-11-01~02 · 11-04 굳힘 · 경위·전문 = docs/1 §4.22 (A 여쭤보는 중 버튼 18, 21, 23차) -->
+  <h3 class="sec" id="sec78"><span class="ref">§4.22</span>「여쭤보는 중」 버튼 + 멈추기 모달</h3>
+  <p class="desc">보내면 토스트와 함께 버튼이 「~하고 있어요」로 남고, 그 버튼을 누르면 가운데 모달로 멈출 수 있다. 눌러 보세요 ↓</p>
+  <div class="demo d22">
+    <div class="d22-toast" id="d22t"><i><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></i><span>잘 전해 드렸어요.
+확인 후 연락드릴게요.</span></div>
+    <button type="button" class="d22-btn" id="d22b">우리 선생님과 다시 이어 갈게요 →</button>
+    <div class="d22-dim" id="d22d"></div>
+    <div class="d22-m" id="d22m" role="alertdialog" aria-modal="true"><b>조금 더 생각해 볼까요?</b><p>언제든 다시 여쭤볼 수 있어요.</p><div class="row"><button type="button" id="d22no">아니요</button><button type="button" class="p" id="d22yes">멈출게요</button></div></div>
+  </div>
+  <script>(function(){var b=document.getElementById('d22b'),t=document.getElementById('d22t'),d=document.getElementById('d22d'),m=document.getElementById('d22m');if(!b)return;var tt=0;
+    function cl(){d.classList.remove('on');m.classList.remove('on');}
+    b.addEventListener('click',function(){if(b.classList.contains('wait')){d.classList.add('on');m.classList.add('on');return;}
+      b.classList.add('wait');b.textContent='선생님께 일정을 여쭤보고 있어요';clearTimeout(tt);t.classList.add('on');tt=setTimeout(function(){t.classList.remove('on');},2600);});
+    document.getElementById('d22no').addEventListener('click',cl);d.addEventListener('click',cl);
+    document.getElementById('d22yes').addEventListener('click',function(){cl();clearTimeout(tt);t.classList.remove('on');b.classList.remove('wait');b.textContent='우리 선생님과 다시 이어 갈게요 →';});
+  })();</script>
+
 </section>
 
 <!-- 5 인터랙션·모션 -->
@@ -1717,6 +1857,136 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="cd-stage" id="cdStage"><div class="cd-peek"></div><div class="cd-dk">1</div></div>
     <div class="cd-bar"><button type="button" class="lk" id="cdPrev">뒤로</button><button type="button" class="cd-next" id="cdNext">다음</button></div>
   </div>
+
+  <!-- 2026-11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §5.9 (A 22, 23차 — 아래 코드는 A 블록 글자 그대로) -->
+  <h3 class="sec" id="sec79"><span class="ref">§5.9</span>스크롤 끝 고무줄 튕김</h3>
+  <p class="desc">끝에서 더 당기면 저항을 받으며 밀렸다가 스프링으로 제자리. 손가락, 휠, 마우스 끌기 모두. 끝까지 내려 당겨 보세요 ↓</p>
+  <div class="demo"><div class="d59-box"><div class="d59-scr" id="d59scr"><div class="d59-rb" id="d59rb"><p>첫째 줄</p><p>둘째 줄</p><p>셋째 줄</p><p>넷째 줄</p><p>다섯째 줄</p><p>여섯째 줄</p><p>일곱째 줄</p><p>여덟째 줄</p></div></div></div></div>
+  <script>(function(scr, rb){ if(!scr||!rb) return;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // 고무줄 튕김(22차 유성 「아래로 당기면 애플의 스프링처럼 내려갔다가 원상태로 오는」) — 스크롤 칸 맨 끝(또는 맨 위)에서 더 당기면
+  // 내용(.rb)이 저항을 받으며 따라오고, 놓으면 스프링으로 제자리. 당긴 거리 x → 움직이는 거리 = (1 − 1/(x × 0.55 ÷ h + 1)) × h(h = 칸 높이,
+  // 애플 UIScrollView 고무줄 식 — 많이 당길수록 덜 따라옴). 손을 놓은 뒤 관성으로 끝에 부딪히면 그 속도로 한 번 튕김. PC 휠도 같은 식.
+  // 스프링 = 세기 260, 감쇠 26(감쇠비 0.81 → 제자리를 아주 살짝 지났다 돌아옴). 움직임 줄이기 설정이면 끔.
+  var rbOff = 0, rbRaf = 0, raw = 0, tY = null, RB_C = .55;
+  function rubber(x){ var h = scr.clientHeight, a = Math.abs(x); return (x < 0 ? -1 : 1) * (1 - 1 / (a * RB_C / h + 1)) * h; }
+  function unrubber(r){ var h = scr.clientHeight, a = Math.min(Math.abs(r), h * .98); return (r < 0 ? -1 : 1) * (h / RB_C) * (1 / (1 - a / h) - 1); }
+  function setOff(v){ rbOff = v; rb.style.transform = v ? 'translate3d(0,' + v.toFixed(2) + 'px,0)' : ''; }
+  function springBack(v0){
+    cancelAnimationFrame(rbRaf); var x = rbOff, v = v0 || 0, last = null;
+    function st(t){
+      if (last === null) last = t; var dt = Math.min(.032, (t - last) / 1000); last = t;
+      v += (-260 * x - 26 * v) * dt; x += v * dt;
+      if (Math.abs(x) < .3 && Math.abs(v) < 8){ setOff(0); rbRaf = 0; return; }
+      setOff(x); rbRaf = requestAnimationFrame(st);
+    }
+    rbRaf = requestAnimationFrame(st);
+  }
+  function grab(){ if (rbRaf){ cancelAnimationFrame(rbRaf); rbRaf = 0; raw = unrubber(rbOff); } }
+  function atTop(){ return scr.scrollTop <= 0; }
+  function atEnd(){ return scr.scrollTop >= scr.scrollHeight - scr.clientHeight - 1; }
+  // 손가락: 끝에서 더 미는 만큼만 가로채고(preventDefault), 되돌려 0을 지나면 보통 스크롤로 넘김
+  scr.addEventListener('touchstart', function(e){ if (e.touches.length !== 1 || reduce) return; tY = e.touches[0].clientY; raw = 0; grab(); }, { passive: true });
+  scr.addEventListener('touchmove', function(e){
+    if (tY === null || e.touches.length !== 1) return;
+    var y = e.touches[0].clientY, d = y - tY; tY = y;
+    if (raw === 0){
+      if (d > 0 && atTop()) raw = d; else if (d < 0 && atEnd()) raw = d; else return;
+    } else {
+      var n = raw + d;
+      if ((raw > 0 && n <= 0) || (raw < 0 && n >= 0)){ raw = 0; setOff(0); return; }
+      raw = n;
+    }
+    if (e.cancelable) e.preventDefault();
+    setOff(rubber(raw));
+  }, { passive: false });
+  function release(){ tY = null; if (raw !== 0 || rbOff !== 0){ raw = 0; springBack(0); } }
+  scr.addEventListener('touchend', release); scr.addEventListener('touchcancel', release);
+  // 관성으로 끝에 부딪힘 = 마지막 스크롤 속도(px/s)의 45%로 튕김(최대 1600 — 22차 실측: 35%·900이면 빠른 관성에도 13px라 약했음). 한 번에 400px 넘게 뛴 스크롤(「처음으로」 같은 코드 이동)은 뺌
+  var lastST = scr.scrollTop, lastT = performance.now(), vS = 0;
+  scr.addEventListener('scroll', function(){
+    var t = performance.now(), st = scr.scrollTop, dS = st - lastST, dt = t - lastT;
+    vS = (dt > 0 && Math.abs(dS) < 400) ? dS / dt * 1000 : 0;
+    if (!reduce && tY === null && !rbRaf && raw === 0 && Math.abs(vS) > 600 && ((vS > 0 && atEnd()) || (vS < 0 && atTop()))){
+      rbOff = 0; springBack(Math.max(-1600, Math.min(1600, -vS * .45))); vS = 0;
+    }
+    lastST = st; lastT = t;
+  }, { passive: true });
+  // PC 휠·터치패드: 끝에서 더 굴리면 같은 식으로 밀리고, 휠이 멈추고 0.14초 뒤 스프링
+  var wT = 0;
+  scr.addEventListener('wheel', function(e){
+    if (reduce) return; stopCoast(); var d = e.deltaY * (e.deltaMode === 1 ? 16 : 1);
+    if (raw === 0 && !rbRaf && !((d > 0 && atEnd()) || (d < 0 && atTop()))) return;
+    grab();
+    var n = raw - d * .5;
+    if ((raw > 0 && n <= 0) || (raw < 0 && n >= 0)){ raw = 0; setOff(0); return; }
+    raw = n; setOff(rubber(raw));
+    clearTimeout(wT); wT = setTimeout(function(){ raw = 0; springBack(0); }, 140);
+  }, { passive: true });
+  // 23차 PC 마우스 끌기 = 손가락과 같게(유성 「모바일이 아니라 확인이 안 되네. PC에서도」). 마우스는 브라우저가 끌어서 스크롤해 주지 않으니 직접:
+  // 4px 넘게 움직이면 끌기로 보고(그냥 누르기는 그대로 클릭) 손 따라 스크롤 → 끝을 넘는 만큼은 고무줄 → 놓으면 마지막 0.1초 속도로 관성
+  // (애플 감속 = 1ms마다 0.998배) → 그 관성으로 끝에 부딪히면 위 손가락 관성과 같은 규칙(600px/s 넘으면 45%로 튕김).
+  // 사진(img)은 브라우저 자체 「이미지 끌어 옮기기」가 먼저 잡아서 막음(메모리 드래그 함정 — 마우스 판).
+  var mId = null, mY0 = 0, mOn = false, mDragged = false, mHist = [], mRaf = 0;
+  function stopCoast(){ if (mRaf){ cancelAnimationFrame(mRaf); mRaf = 0; } }
+  function pull(d){   // d = 손 이동(아래로 +). 끝이 아니면 스크롤, 끝을 넘은 만큼은 고무줄, 고무줄을 되돌려 0을 지나면 남은 만큼 다시 스크롤
+    if (raw === 0){
+      var before = scr.scrollTop; scr.scrollTop = before - d;
+      var left = d + (scr.scrollTop - before);   // 스크롤로 못 간 만큼
+      if (Math.abs(left) < 1 || !((left > 0 && atTop()) || (left < 0 && atEnd()))) return;
+      raw = left;
+    } else {
+      var n = raw + d;
+      if ((raw > 0 && n <= 0) || (raw < 0 && n >= 0)){ raw = 0; setOff(0); scr.scrollTop -= n; return; }
+      raw = n;
+    }
+    setOff(rubber(raw));
+  }
+  function coast(v){   // v = 스크롤 속도(px/s, 아래로 +)
+    var last = null;
+    function st(t){
+      if (last === null) last = t; var dt = Math.min(32, t - last); last = t;
+      v *= Math.pow(.998, dt);
+      if (Math.abs(v) < 20){ mRaf = 0; return; }
+      scr.scrollTop += v * dt / 1000;
+      if ((v > 0 && atEnd()) || (v < 0 && atTop())){
+        mRaf = 0; if (Math.abs(v) > 600){ rbOff = 0; springBack(Math.max(-1600, Math.min(1600, -v * .45))); } return;
+      }
+      mRaf = requestAnimationFrame(st);
+    }
+    mRaf = requestAnimationFrame(st);
+  }
+  scr.addEventListener('dragstart', function(e){ e.preventDefault(); });
+  scr.addEventListener('pointerdown', function(e){
+    if (e.pointerType !== 'mouse' || e.button !== 0 || reduce) return;
+    stopCoast(); mId = e.pointerId; mY0 = tY = e.clientY; mOn = false; mDragged = false; raw = 0; grab();
+    mHist = [[performance.now(), e.clientY]];
+  });
+  scr.addEventListener('pointermove', function(e){
+    if (e.pointerId !== mId) return;
+    if (!mOn){
+      if (Math.abs(e.clientY - mY0) < 4) return;
+      mOn = mDragged = true; scr.classList.add('drag'); try { scr.setPointerCapture(mId); } catch (er) {}
+    }
+    var d = e.clientY - tY; tY = e.clientY;
+    mHist.push([performance.now(), e.clientY]); if (mHist.length > 8) mHist.shift();
+    pull(d);
+  });
+  function mEnd(e){
+    if (e.pointerId !== mId) return;
+    mId = null; scr.classList.remove('drag');
+    var on = mOn; mOn = false;
+    if (on) setTimeout(function(){ mDragged = false; }, 0);   // 클릭은 놓는 순간 같은 차례에 오니, 그 뒤엔 풀어 둠(나중 키보드 Enter 클릭까지 막지 않게)
+    if (!on || raw !== 0 || rbOff !== 0){ release(); return; }
+    tY = null;
+    var now = performance.now(), b = mHist[mHist.length - 1], a = null, v = 0;
+    for (var i = 0; i < mHist.length; i++){ if (now - mHist[i][0] <= 100){ a = mHist[i]; break; } }
+    if (a && now - b[0] < 80 && b[0] - a[0] > 8) v = (b[1] - a[1]) / (b[0] - a[0]) * 1000;   // 손 속도(아래로 +)
+    if (Math.abs(v) > 60) coast(-v);
+  }
+  scr.addEventListener('pointerup', mEnd); scr.addEventListener('pointercancel', mEnd);
+  scr.addEventListener('click', function(e){ if (mDragged){ mDragged = false; e.stopPropagation(); e.preventDefault(); } }, true);   // 끌고 놓은 자리의 클릭(배너 닫기 등)은 안 먹게
+})(document.getElementById('d59scr'), document.getElementById('d59rb'));</script>
 
 </section>
 
