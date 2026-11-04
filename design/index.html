@@ -707,6 +707,25 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .cd58 .cd-next{padding:11px 26px;border:none;border-radius:13px;background:var(--green600);color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:transform .1s}
 .cd58 .cd-next:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.nx57 .nx-btn.pop,.nx57 .nx-btn.pop::after,.cd58 .cd-dk{animation:none !important}.nx57 .nx-btn.go::after{display:none}.nx57 .nx-btn.go .nx-arr{animation:none}.nx57 .nx-btn.go{box-shadow:0 0 0 3px var(--green200)}}
+/* §5.10 (11-05) — 아래 섹션 등장 = 순서 단위 스태거(§4.3-6 값) + 낮은 값에만 초록 물결. 예시 값만 */
+.d510{max-width:340px;margin:0 auto}
+.d510-s{list-style:none;margin:0;padding:0;counter-reset:d510}
+.d510-s li{position:relative;padding:0 0 0 38px}
+.d510-s li+li{margin-top:18px}
+.d510-s li::before{counter-increment:d510;content:counter(d510);position:absolute;left:0;top:-1px;width:24px;height:24px;border-radius:50%;background:var(--green600);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.d510-s li:not(:last-child)::after{content:"";position:absolute;left:11.5px;top:27px;bottom:-15px;width:1px;background:rgba(58,138,95,.3)}
+.d510-s b{display:block;font-size:16px;line-height:1.5;font-weight:600;color:var(--g900)}
+.d510-s span{display:block;font-size:14px;line-height:1.6;color:var(--g600)}
+.d510:not(.go) .d510-s li::before,.d510:not(.go) .d510-s li::after,.d510:not(.go) .d510-s b,.d510:not(.go) .d510-s span{opacity:0}
+.d510.go .d510-s li::before,.d510.go .d510-s li::after,.d510.go .d510-s b,.d510.go .d510-s span{animation:d510up .6s cubic-bezier(.22,.7,.25,1) backwards}
+.d510.go .d510-s li:nth-child(1)::before{animation-delay:.06s}.d510.go .d510-s li:nth-child(1) b{animation-delay:.16s}.d510.go .d510-s li:nth-child(1) span{animation-delay:.26s}.d510.go .d510-s li:nth-child(1)::after,.d510.go .d510-s li:nth-child(2)::before{animation-delay:.36s}.d510.go .d510-s li:nth-child(2) b{animation-delay:.46s}.d510.go .d510-s li:nth-child(2) span{animation-delay:.56s}.d510.go .d510-s li:nth-child(2)::after,.d510.go .d510-s li:nth-child(3)::before{animation-delay:.66s}.d510.go .d510-s li:nth-child(3) b{animation-delay:.76s}
+@keyframes d510up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.d510-p{display:grid;grid-template-columns:1fr auto;row-gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--g100);font-size:15px;color:var(--g700)}
+.d510-p b{font-weight:600;color:var(--g900);text-align:right;font-variant-numeric:tabular-nums}
+.d510-p b.lo i{font-style:normal}
+.d510.go .d510-p b.lo i{animation:d510wv 2.55s ease-in-out infinite;animation-delay:calc(300ms + var(--i) * 55ms)}
+@keyframes d510wv{0%,23.53%,100%{color:var(--g900)}11.76%{color:var(--green700)}}
+@media (prefers-reduced-motion:reduce){.d510 .d510-s li::before,.d510 .d510-s li::after,.d510 .d510-s b,.d510 .d510-s span,.d510 .d510-p b.lo i{animation:none !important;opacity:1 !important}}
 /* §4.19~4.22, §5.9 (11-04) — 07 종료 안내 A, 아청심 안내 페이지 값. 예시 값만(공개 미러) */
 .d19-ph{position:relative;max-width:340px;margin:0 auto;border:1px solid var(--g100);border-radius:18px;overflow:hidden;background:#fff}
 .d19-top{position:relative;padding:36px 22px 20px}
@@ -735,7 +754,9 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .d19-btn{display:block;width:100%;border:0;border-radius:16px;padding:15px;background:var(--green600);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
 .d19-alt{display:flex;justify-content:space-between;margin:16px 22px 0;padding:14px 0 18px;border-top:1px solid var(--g100);font-size:14.5px;color:var(--g700)}
 .d20{padding:22px 0 0;overflow:hidden;container-type:inline-size;max-width:390px;margin-left:auto;margin-right:auto}
-.d20-t{display:grid;grid-template-columns:repeat(3,1fr);--u:calc(100cqw / 1080);margin:0 0 calc(var(--u) * 1);pointer-events:none}   /* 인스타 탭 줄 = 캡처 1080 기준 비율(§4.20-3) */
+.d20-t{display:grid;grid-template-columns:repeat(3,1fr);--u:calc(100cqw / 1080);margin:0 0 calc(var(--u) * 1)}
+.d20-t svg{transition:transform .12s}
+.d20-t span:active svg{transform:scale(.93)}   /* 갈 곳 없이 살짝 작아지기만(§4.20-3, §5.3-2) */   /* 인스타 탭 줄 = 캡처 1080 기준 비율(§4.20-3) */
 .d20-t span{position:relative;display:flex;justify-content:center;height:calc(var(--u) * 98)}
 .d20-t svg{width:calc(var(--u) * 60);height:calc(var(--u) * 60);color:var(--g600)}
 .d20-t .on svg{color:var(--g900)}
@@ -872,6 +893,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec62"><i>§5.7</i><span>답해야 열리는 「다음」 = O/X 자리에서 반짝, 답은 카드 테두리</span></a>
     <a href="#sec63"><i>§5.8</i><span>카드 넘김 = 두 장이 같이 보인다</span></a>
     <a href="#sec79"><i>§5.9</i><span>스크롤 끝 고무줄 튕김</span></a>
+    <a href="#sec80"><i>§5.10</i><span>아래 섹션 = 들어올 때 한 번</span></a>
   </div></div>
 </div>
 
@@ -1584,8 +1606,9 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <h3 class="sec" id="sec45"><span class="ref">§4.9</span>다중 선택 그리드 = 드래그 + 이름 일괄토글 <span class="rk">📱 실기기</span></h3>
   <p class="desc">격자는 쓸어서 고르고, 행·열 이름을 누르면 그 줄이 한 번에 토글된다. <b>카운터·게이지는 두지 않는다</b> — 완료감은 멈추게 한다.</p>
 
+  <!-- 2026-11-05 헤더 유형 4 = 링크로 들어온 안내 페이지의 ←는 고정 줄 없이 스크롤 칸 안(내리면 같이 사라짐, 튕길 때 제자리) · 07 아청심 30차 · 전문 = docs/1 §4.10-4 -->
   <h3 class="sec" id="sec46"><span class="ref">§4.10</span>헤더 + 뒤로가기 · 역할 표시</h3>
-  <p class="desc">뒤로가기는 라인 SVG ←. 역할이 갈리는 앱은 현재 역할을 보이고, 행정 게이트엔 자물쇠.</p>
+  <p class="desc">뒤로가기는 라인 SVG ←. 역할이 갈리는 앱은 현재 역할을 보이고, 행정 게이트엔 자물쇠. 링크로 들어온 안내 페이지의 ←는 내리면 같이 사라져요.</p>
   <div class="demo">
     <div class="hd-demo">
       <svg class="back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -1752,7 +1775,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 
   <!-- 2026-11-02 · 11-04 굳힘 · 11-05 이름 글 → 인스타 탭 줄(A 29차) · 경위·전문 = docs/1 §4.20 (A 활동 피드 — 유성 인스타 캡처 실측, 사진 자리는 빈 칸) -->
   <h3 class="sec" id="sec76"><span class="ref">§4.20</span>활동 피드 격자 = 인스타 그대로</h3>
-  <p class="desc">좌우 여백 0, 각진 3:4 칸, 틈은 화면 폭의 6/1080. 위엔 인스타 탭 줄(누를 수 없는 느낌만), 사진도 눌러도 다른 데로 안 가요.</p>
+  <p class="desc">좌우 여백 0, 각진 3:4 칸, 틈은 화면 폭의 6/1080. 위엔 인스타 탭 줄(누르면 살짝 작아지기만), 사진도 눌러도 다른 데로 안 가요.</p>
   <div class="demo d20"><div class="d20-t" aria-hidden="true"><span class="on"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="1.6" y="1.6" width="5.6" height="5.6" rx="1.4"/><rect x="9.2" y="1.6" width="5.6" height="5.6" rx="1.4"/><rect x="16.8" y="1.6" width="5.6" height="5.6" rx="1.4"/><rect x="1.6" y="9.2" width="5.6" height="5.6" rx="1.4"/><rect x="9.2" y="9.2" width="5.6" height="5.6" rx="1.4"/><rect x="16.8" y="9.2" width="5.6" height="5.6" rx="1.4"/><rect x="1.6" y="16.8" width="5.6" height="5.6" rx="1.4"/><rect x="9.2" y="16.8" width="5.6" height="5.6" rx="1.4"/><rect x="16.8" y="16.8" width="5.6" height="5.6" rx="1.4"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"><rect x="2.2" y="2.2" width="19.6" height="19.6" rx="5.6"/><path d="M9.6 8.2v7.6a.7.7 0 0 0 1.07.6l5.9-3.8a.7.7 0 0 0 0-1.2l-5.9-3.8a.7.7 0 0 0-1.07.6z"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M5 5.2h3l1.6-2.5h4.8l1.6 2.5h3a2.6 2.6 0 0 1 2.6 2.6v11.4a2.6 2.6 0 0 1-2.6 2.6H5a2.6 2.6 0 0 1-2.6-2.6V7.8A2.6 2.6 0 0 1 5 5.2z"/><circle cx="12" cy="11.4" r="3"/><path d="M6.6 19.6c.9-2.5 2.9-3.9 5.4-3.9s4.5 1.4 5.4 3.9"/></svg></span></div><div class="d20-g"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
 
   <!-- 2026-11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §4.21 (07 아청심 안내 페이지 — 예시 값, 실제 단가 아님) -->
@@ -1802,6 +1825,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   </div>
 
   <!-- 2026-07-27 · 경위·전문 = docs/1 §5.3 -->
+  <!-- 2026-11-05 바로 다른 데로 가거나 시트가 덮는 줄, 갈 곳 없는 아이콘 = .press로 .17초 잡아 축소가 보이게(07 A, 아청심 30차) = docs/1 §5.3-2 -->
   <h3 class="sec" id="sec49"><span class="ref">§5.3</span>누름(press)</h3>
   <p class="desc">메뉴·목록 행은 전폭 칠 대신 인셋 라운드 선택칸.</p>
   <p class="desc">솔리드 버튼은 어두워짐+ripple+scale, 흰 글자는 그대로. 텍스트형은 축소만. 눌러 보세요 ↓</p>
@@ -1994,6 +2018,23 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   scr.addEventListener('pointerup', mEnd); scr.addEventListener('pointercancel', mEnd);
   scr.addEventListener('click', function(e){ if (mDragged){ mDragged = false; e.stopPropagation(); e.preventDefault(); } }, true);   // 끌고 놓은 자리의 클릭(배너 닫기 등)은 안 먹게
 })(document.getElementById('d59scr'), document.getElementById('d59rb'));</script>
+
+  <!-- 2026-11-05 · 경위·전문 = docs/1 §5.10 (07 아청심 안내 페이지 29~30차 — 공개 미러라 예시 값만) -->
+  <h3 class="sec" id="sec80"><span class="ref">§5.10</span>아래 섹션 = 들어올 때 한 번</h3>
+  <p class="desc">단계는 원, 제목, 글 순서로 0.1초씩 떠오르고, 금액은 낮은 값에만 초록 물결. 화면에 들어올 때 한 번.</p>
+  <div class="demo">
+    <div class="d510" id="d510">
+      <ol class="d510-s"><li><b>첫째 할 일</b><span>짧은 설명 한 줄</span></li><li><b>둘째 할 일</b><span>짧은 설명 한 줄</span></li><li><b>셋째 할 일</b></li></ol>
+      <div class="d510-p"><span>가</span><b class="lo">12,000원</b><span>나</span><b>30,000원</b></div>
+    </div>
+    <div style="text-align:center;margin-top:14px"><button class="btn" id="d510go">다시 보기</button></div>
+  </div>
+  <script>(function(){ var d = document.getElementById('d510'), lo = d && d.querySelector('.lo'); if (!d) return;
+    lo.innerHTML = lo.textContent.split('').map(function(c, i){ return '<i style="--i:' + i + '">' + c + '</i>'; }).join('');
+    function play(){ d.classList.remove('go'); void d.offsetWidth; d.classList.add('go'); }
+    if ('IntersectionObserver' in window){ var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ play(); io.disconnect(); } }); }, { threshold: .35 }); io.observe(d); } else play();
+    document.getElementById('d510go').addEventListener('click', play);
+  })();</script>
 
 </section>
 
