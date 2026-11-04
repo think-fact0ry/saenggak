@@ -735,7 +735,11 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .d19-btn{display:block;width:100%;border:0;border-radius:16px;padding:15px;background:var(--green600);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
 .d19-alt{display:flex;justify-content:space-between;margin:16px 22px 0;padding:14px 0 18px;border-top:1px solid var(--g100);font-size:14.5px;color:var(--g700)}
 .d20{padding:22px 0 0;overflow:hidden;container-type:inline-size;max-width:390px;margin-left:auto;margin-right:auto}
-.d20-h{font-size:12px;line-height:1.45;font-weight:400;color:var(--g600);text-align:right;margin:0 0 4px;padding:0 22px}
+.d20-t{display:grid;grid-template-columns:repeat(3,1fr);--u:calc(100cqw / 1080);margin:0 0 calc(var(--u) * 1);pointer-events:none}   /* 인스타 탭 줄 = 캡처 1080 기준 비율(§4.20-3) */
+.d20-t span{position:relative;display:flex;justify-content:center;height:calc(var(--u) * 98)}
+.d20-t svg{width:calc(var(--u) * 60);height:calc(var(--u) * 60);color:var(--g600)}
+.d20-t .on svg{color:var(--g900)}
+.d20-t .on::after{content:"";position:absolute;left:25%;right:25%;bottom:0;height:calc(var(--u) * 6);background:var(--g900)}
 .d20-g{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(100cqw * 6 / 1080)}
 .d20-g i{aspect-ratio:3/4;background:linear-gradient(160deg,var(--g100),var(--g200))}
 .d20-g i:nth-child(3n+2){background:linear-gradient(160deg,var(--green50),var(--green200))}
@@ -1746,10 +1750,10 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     document.getElementById('d19x').addEventListener('click',function(){document.getElementById('d19ban').classList.add('gone');setTimeout(function(){document.getElementById('d19ban').classList.remove('gone');},2600);});
   })();</script>
 
-  <!-- 2026-11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §4.20 (A 활동 피드 — 유성 인스타 캡처 실측, 사진 자리는 빈 칸) -->
+  <!-- 2026-11-02 · 11-04 굳힘 · 11-05 이름 글 → 인스타 탭 줄(A 29차) · 경위·전문 = docs/1 §4.20 (A 활동 피드 — 유성 인스타 캡처 실측, 사진 자리는 빈 칸) -->
   <h3 class="sec" id="sec76"><span class="ref">§4.20</span>활동 피드 격자 = 인스타 그대로</h3>
-  <p class="desc">좌우 여백 0, 각진 3:4 칸, 틈은 화면 폭의 6/1080. 이름은 오른쪽 작은 회색 글, 눌러도 다른 데로 안 가요.</p>
-  <div class="demo d20"><p class="d20-h">생각공작소 활동 피드</p><div class="d20-g"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+  <p class="desc">좌우 여백 0, 각진 3:4 칸, 틈은 화면 폭의 6/1080. 위엔 인스타 탭 줄(누를 수 없는 느낌만), 사진도 눌러도 다른 데로 안 가요.</p>
+  <div class="demo d20"><div class="d20-t" aria-hidden="true"><span class="on"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="1.6" y="1.6" width="5.6" height="5.6" rx="1.4"/><rect x="9.2" y="1.6" width="5.6" height="5.6" rx="1.4"/><rect x="16.8" y="1.6" width="5.6" height="5.6" rx="1.4"/><rect x="1.6" y="9.2" width="5.6" height="5.6" rx="1.4"/><rect x="9.2" y="9.2" width="5.6" height="5.6" rx="1.4"/><rect x="16.8" y="9.2" width="5.6" height="5.6" rx="1.4"/><rect x="1.6" y="16.8" width="5.6" height="5.6" rx="1.4"/><rect x="9.2" y="16.8" width="5.6" height="5.6" rx="1.4"/><rect x="16.8" y="16.8" width="5.6" height="5.6" rx="1.4"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"><rect x="2.2" y="2.2" width="19.6" height="19.6" rx="5.6"/><path d="M9.6 8.2v7.6a.7.7 0 0 0 1.07.6l5.9-3.8a.7.7 0 0 0 0-1.2l-5.9-3.8a.7.7 0 0 0-1.07.6z"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M5 5.2h3l1.6-2.5h4.8l1.6 2.5h3a2.6 2.6 0 0 1 2.6 2.6v11.4a2.6 2.6 0 0 1-2.6 2.6H5a2.6 2.6 0 0 1-2.6-2.6V7.8A2.6 2.6 0 0 1 5 5.2z"/><circle cx="12" cy="11.4" r="3"/><path d="M6.6 19.6c.9-2.5 2.9-3.9 5.4-3.9s4.5 1.4 5.4 3.9"/></svg></span></div><div class="d20-g"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
 
   <!-- 2026-11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §4.21 (07 아청심 안내 페이지 — 예시 값, 실제 단가 아님) -->
   <h3 class="sec" id="sec77"><span class="ref">§4.21</span>금액 카드 = 흰 카드, 같은 간격, 기준 줄</h3>
