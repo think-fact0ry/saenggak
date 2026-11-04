@@ -866,7 +866,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec43"><i>§4.13-6</i><span>넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드</span></a>
     <a href="#sec44"><i>§4.13-6</i><span>그린 그라디언트로 “더 있다”를 말한다</span></a>
     <a href="#sec56"><i>§4.13-6</i><span>자동 확장 입력칸도 스크롤바 대신 그라디언트</span></a>
-    <a href="#sec72"><i>§4.13-6</i><span>홈페이지 문의 창 대화 칸만 회색, 더 연하게</span></a>
+    <a href="#sec72"><i>§4.13-6</i><span>문의 창 대화 칸, 아청심 안내만 회색, 더 연하게</span></a>
     <a href="#sec45"><i>§4.9</i><span>다중 선택 그리드 = 드래그 + 이름 일괄토글 📱 실기기</span></a>
     <a href="#sec46"><i>§4.10</i><span>헤더 + 뒤로가기 · 역할 표시</span></a>
     <a href="#sec47"><i>§4.11</i><span>뒤로가기·스와이프 = 화면 단위로 📱 실기기</span></a>
@@ -1579,7 +1579,8 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <p class="desc">최대 높이를 넘으면 칸 안이 스크롤된다. 막대는 숨기고 위·아래 그린 그라디언트로 알린다. 길게 적어 보세요 ↓</p>
   <div class="demo"><div class="taw56" id="taw56"><textarea id="ta56" rows="1" placeholder="어떤 점이 궁금하세요?"></textarea></div></div>
   <!-- 2026-10-24 · 경위·전문 = docs/1 §4.13-6 (값 = kr js/inquiry-pane.js .ti-thf) -->
-  <h3 class="sec" id="sec72"><span class="ref">§4.13-6</span>홈페이지 문의 창 대화 칸만 회색, 더 연하게</h3>
+  <!-- 2026-11-05 07 아청심 안내 페이지도 같은 값(유성 「그린 말고, 그레이만으로 … 세기를 참고」) · 전문 = docs/1 §4.13-6 -->
+  <h3 class="sec" id="sec72"><span class="ref">§4.13-6</span>문의 창 대화 칸, 아청심 안내만 회색, 더 연하게</h3>
   <p class="desc">모양과 켜는 규칙은 그대로, 색만 회색에 진하기 절반. 다른 화면과 창 안 입력 칸은 그린. 굴려 보세요 ↓</p>
   <div class="demo" style="max-width:360px">
     <div id="sfDemo72" style="position:relative;border:1px solid var(--g200);border-radius:11px;overflow:hidden;background:#fff">
@@ -1741,8 +1742,9 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   </div>
   <script>(function(){var c=document.getElementById('c74'),x=document.getElementById('x74'),n=document.getElementById('n74');if(!c)return;var opened=false;c.addEventListener('click',function(){n.textContent=opened?'복사했어요. 톡톡 창에 붙여 넣어 주세요':'복사했어요. 톡톡 창에 붙여 넣어 주세요 (파트너센터 창이 열려요)';opened=true;c.textContent='복사하기';});x.addEventListener('click',function(){opened=true;c.textContent='복사하기';n.textContent='서해구 톡톡 채팅을 열었어요';});})();</script>
   <!-- 2026-10-31~11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §4.19 (07 종료 안내 버튼 뒤 화면 A — 공개 미러라 예시 값만) -->
+  <!-- 2026-11-05 32차 「폰 첫 화면에 버튼까지」 → 「끝까지 내리면 묶음이 올라와 그대로」(§4.19-1, -7). 데모 폰은 끝까지 내린 모습 -->
   <h3 class="sec" id="sec75"><span class="ref">§4.19</span>보호자 설득 화면 = 한 장, 핵심만</h3>
-  <p class="desc">폰 첫 화면에 버튼까지. 값은 저절로 바뀌고 기준은 같은 칸에, 혜택 배너는 맨 위 한 줄 닫는 상자. 예시 값이에요.</p>
+  <p class="desc">버튼 묶음은 끝까지 내리면 올라와 그대로. 값은 저절로 바뀌고 기준은 같은 칸에, 혜택 배너는 맨 위 한 줄 닫는 상자. 예시 값이에요.</p>
   <div class="demo">
     <div class="d19-ph">
       <div class="d19-top">
