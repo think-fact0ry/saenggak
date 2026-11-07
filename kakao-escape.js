@@ -35,7 +35,7 @@
       'align-items:center;justify-content:center;text-align:center;padding:0 26px 40px;word-break:keep-all;' +
       'font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;color:var(--g900,#191f28)';
     d.innerHTML =
-      '<div style="width:64px;height:64px;border-radius:50%;background:var(--green-bg,#e9f8ee);display:flex;align-items:center;justify-content:center;margin-bottom:18px">' +
+      '<div style="width:64px;height:64px;border-radius:50%;background:var(--green-bg,#f0f8f3);display:flex;align-items:center;justify-content:center;margin-bottom:18px">' +
         '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#3a8a5f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12.5 10 17 19 7.5"/></svg>' +
       '</div>' +
       '<div style="font-size:21px;font-weight:700;margin-bottom:8px">인터넷 창에서 열렸어요</div>' +

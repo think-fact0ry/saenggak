@@ -41,7 +41,7 @@
     --g400:#b0b8c1; --g500:#8b95a1; --g600:#6b7684; --g700:#4e5968;
     --g800:#333d4b; --g900:#191f28;
     /* 초록 — §3.1 OKLCH 스케일(2026-07-04 재보정, green600=#3a8a5f 앵커) */
-    --green50:#f8fbf9; --green100:#e9f8ee; --green200:#cef2db; --green300:#a7e7c0; --green400:#7bcb9c;
+    --green50:#f8fbf9; --green100:#f0f8f3; --green200:#d5efde; --green300:#aee5c3; --green400:#7fca9e;
     --green500:#57a77a; --green600:#3a8a5f; --green700:#166841; --green800:#01492a; --green900:#002614;
     --green:var(--green600); --green-d:var(--green700); --green-l:var(--green100);
     /* 시맨틱 — §3.1 */
@@ -196,7 +196,7 @@
   .prov{color:var(--g400);font-size:15px;font-weight:600;letter-spacing:0;}   /* '(가제)' 연한 회색·작은 폰트(유성 2026-07-07) */
   /* 분류 뱃지(일반/오감/아청/성인) */
   .cbadge{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:7px;vertical-align:middle;line-height:1.5;}
-  .cb-오감{background:#e9f8ee;color:var(--green-d);} .cb-아청{background:#eef3fb;color:#2f6bb3;} .cb-성인{background:#f3eefb;color:#7a4fb3;} .cb-일반{background:var(--g100);color:var(--g600);}
+  .cb-오감{background:var(--green100);color:var(--green-d);} .cb-아청{background:#eef3fb;color:#2f6bb3;} .cb-성인{background:#f3eefb;color:#7a4fb3;} .cb-일반{background:var(--g100);color:var(--g600);}
   /* + 새 아이 버튼(top-row) */
   .top-row{display:flex;align-items:center;justify-content:space-between;}
   .addkid{display:inline-flex;align-items:center;gap:4px;font-family:inherit;font-size:14px;font-weight:700;color:var(--green-d);background:var(--green-l);border:none;border-radius:999px;padding:8px 14px 8px 11px;cursor:pointer;}
@@ -232,14 +232,14 @@
   /* ── 발달영역 관찰 (구조 씨앗 — develop 전용) ─────────────────────
      칩 = AI 추출 후보 확인·수정 탭(3층 수정안). 기본 켜짐(근거 있음), 탭=제외.
      §4.9 면 문법: 값 선택 컨트롤은 테두리 금지 — 켜짐=그린 틴트 채움+초록 볼드,
-     꺼짐=중립 채움(--g100)+회색 글자. (틴트 값 #e9f4ee=현행 유지, 색 탐색 확정 대기) */
+     꺼짐=중립 채움(--g100)+회색 글자. (틴트 = --green100, 2026-11-07 green100 전부 맞추기로 옛 #e9f4ee에서 바꿈) */
   .dom-box{margin-bottom:16px;border:1.5px solid var(--g200);border-radius:var(--r-lg);padding:16px;}
   .dom-title{font-size:15.5px;font-weight:700;margin-bottom:2px;}
   .dom-sub{font-size:12.5px;color:var(--g500);font-weight:500;margin-bottom:12px;}
   .dom-empty{font-size:13.5px;color:var(--g500);font-weight:500;line-height:1.6;background:var(--g50);border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px;}
   .dom-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;}
   .dom-item + .dom-item{border-top:1px solid var(--g100);}
-  .dchip{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;font-family:inherit;font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:99px;border:none;background:#e9f4ee;color:var(--green-d);cursor:pointer;transition:transform .12s,background .15s,color .15s;}
+  .dchip{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;font-family:inherit;font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:99px;border:none;background:var(--green100);color:var(--green-d);cursor:pointer;transition:transform .12s,background .15s,color .15s;}
   .dchip svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
   .dchip:active{transform:scale(.94);}
   .dom-item.off .dchip{background:var(--g100);color:var(--g500);font-weight:600;}
@@ -252,7 +252,7 @@
   .dom-add{display:flex;flex-wrap:wrap;gap:8px;}
   .achip{font-family:inherit;font-size:13.5px;font-weight:600;padding:8px 13px;border-radius:99px;border:none;background:var(--g100);color:var(--g600);cursor:pointer;transition:transform .12s,background .15s,color .15s;}
   .achip:active{transform:scale(.94);}
-  .achip.on{background:#e9f4ee;color:var(--green-d);font-weight:700;}
+  .achip.on{background:var(--green100);color:var(--green-d);font-weight:700;}
 
   /* 활동 유형 (단일 선택) */
   .act-row{display:flex;flex-wrap:wrap;gap:8px;}
