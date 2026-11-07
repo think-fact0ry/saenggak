@@ -890,7 +890,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec49"><i>§5.3</i><span>누름(press)</span></a>
     <a href="#sec57"><i>§5.3</i><span>목록 줄 누름 = 흰 라운드 박스로 떠오름</span></a>
     <a href="#sec50"><i>§5.4</i><span>스켈레톤 — 로딩 구조 미리보기</span></a>
-    <a href="#sec51"><i>§5.5</i><span>토스트 — 성공엔 초록 원+체크</span></a>
+    <a href="#sec51"><i>§5.5</i><span>토스트 — 알약, 성공엔 초록 원+체크</span></a>
     <a href="#sec62"><i>§5.7</i><span>답해야 열리는 「다음」 = O/X 자리에서 반짝, 답은 카드 테두리</span></a>
     <a href="#sec63"><i>§5.8</i><span>카드 넘김 = 두 장이 같이 보인다</span></a>
     <a href="#sec79"><i>§5.9</i><span>스크롤 끝 고무줄 튕김</span></a>
@@ -1856,15 +1856,15 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     </div><div class="pill">인터넷이 느리면 조금 더 걸려요<small>조금만 더 기다려 주세요</small></div></div>
   </div>
 
-  <!-- 2026-07-04 · 2026-07-26 · 2026-07-29 · 2026-08-04 · 2026-09-06 · 경위·전문 = docs/1 §5.5 -->
-  <h3 class="sec" id="sec51"><span class="ref">§5.5</span>토스트 — 성공엔 초록 원+체크</h3>
-  <p class="desc">성공 토스트에만 초록 원 안 흰 체크, 에러·안내는 글자만. 하단 고정 버튼과 열린 시트는 가리지 않게 그 위로 올린다.</p>
+  <!-- 2026-07-04 · 2026-07-26 · 2026-07-29 · 2026-08-04 · 2026-09-06 · 2026-11-07 알약(유성 「셋 다 기본값으로」, 두 줄 모양과 06 지도 초록 토스트는 아직 — 아래 셋째 데모는 옛 12px 그대로) · 경위·전문 = docs/1 §5.5 -->
+  <h3 class="sec" id="sec51"><span class="ref">§5.5</span>토스트 — 알약, 성공엔 초록 원+체크</h3>
+  <p class="desc">진회색 알약. 성공 토스트에만 초록 원 안 흰 체크, 에러와 안내는 글자만. 하단 고정 버튼과 열린 시트는 가리지 않게 그 위로 올린다.</p>
   <div class="demo" style="display:flex;flex-direction:column;gap:10px;align-items:center">
-    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--g800);color:#fff;font-size:13.5px;font-weight:600;border-radius:12px;padding:12px 18px">
+    <div style="display:inline-flex;align-items:center;gap:11px;background:var(--g800);color:#F9FBFA;font-size:14.5px;font-weight:600;line-height:1.5;border-radius:999px;padding:12px 19px 12px 15px">
       <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--green600);flex:none"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><polyline points="4 12 9 17 20 6"/></svg></span>
       7월 27일 연차가 확정됐어요
     </div>
-    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--g800);color:#fff;font-size:13.5px;font-weight:600;border-radius:12px;padding:12px 18px">연결이 안 돼요. 다시 시도해 주세요</div>
+    <div style="display:inline-flex;align-items:center;background:var(--g800);color:#F9FBFA;font-size:14.5px;font-weight:600;line-height:1.5;border-radius:999px;padding:12px 19px">연결이 안 돼요. 다시 시도해 주세요</div>
     <!-- 2026-09-04 · 경위·전문 = docs/1 §5.5 (06 지도 색 채움 토스트) -->
     <div style="display:inline-flex;align-items:center;gap:8px;background:var(--green700);color:#fff;font-size:13.5px;font-weight:600;border-radius:12px;padding:12px 18px">
       <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#fff;flex:none"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:var(--green700);stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><polyline points="4 12 9 17 20 6"/></svg></span>
