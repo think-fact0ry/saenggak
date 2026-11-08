@@ -40,6 +40,7 @@
     --green100:#f0f8f3; --green600:#3a8a5f; --green700:#166841;
     --red:#f04452; --warn-weak-bg:#fef4e2; --warn-weak-fg:#c07f00;
     --danger:#D25357; --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;
+    --toast-bg:var(--g800); --toast-fg:#F9FBFA; --toast-r:23px; --toast-ck:18px; /* §5.5 토스트 — docs/1 §3.1 정본 사본(이 파일은 토큰동기 마커 밖, 정본 바꿀 땐 같이) */
   }
   html,body{height:100%;overflow:hidden}
   body{font-family:'Pretendard Variable','Pretendard','Noto Sans KR',sans-serif;color:#1a1a1a;background:#f0ebe4}
@@ -127,8 +128,12 @@
   .loading-overlay.show{display:flex}
   .ld-spinner{width:32px;height:32px;border:3px solid #d4cfc6;border-top-color:#3a8a5f;border-radius:50%;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .toast{position:fixed;top:54px;left:50%;transform:translateX(-50%);z-index:60;background:#842029;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none}
-  .toast.show{display:block}
+  .toast{position:fixed;top:54px;left:50%;transform:translateX(-50%);z-index:60;background:var(--toast-bg);color:var(--toast-fg);padding:12px 19px;border-radius:var(--toast-r);font-size:14.5px;display:none;font-weight:600;line-height:1.5;width:max-content;max-width:calc(100% - 32px)}
+  .toast.show{display:flex;align-items:center;justify-content:center;gap:11px}
+  .toast.success{padding-left:15px}
+  .toast .tk{display:none;width:var(--toast-ck);height:var(--toast-ck);border-radius:50%;background:var(--green600);flex:none;align-items:center;justify-content:center}
+  .toast.success .tk{display:inline-flex}
+  .toast .tk svg{width:11px;height:11px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
   .empty-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#999;font-size:14px;z-index:10}
   .day-filter{position:fixed;top:44px;left:0;right:0;z-index:49;background:rgba(250,250,247,.95);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,0,0,.04);padding:5px 14px;display:none;gap:4px}
   .day-filter.show{display:flex}
@@ -532,7 +537,7 @@ function placeSearchMarker(lat,lng,iwContent){
 })();
 
 function showLoading(v){document.getElementById('loading').classList.toggle('show',v)}
-var _tt;function showToast(m,ok){var e=document.getElementById('toast');e.textContent=m;e.className='toast show'+(ok?' success':'');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show')},3000)}
+var _tt;function showToast(m,ok){var e=document.getElementById('toast');e.innerHTML='<span class="tk"><svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg></span><span></span>';e.lastChild.textContent=m;e.className='toast show'+(ok?' success':'');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show')},3000)}
 
 // ⛔ saveSchedule·clearSchedule 삭제됨 (2026-08-12) — S·T 쓰기 경로는 행정 배정 화면의 `_writeST_` 하나뿐이다.
 //    서버 `saveschedule` 액션도 같은 날 명시적 거절로 바뀌었다(폰에 캐시된 옛 화면이 불러도 이유를 말해준다).

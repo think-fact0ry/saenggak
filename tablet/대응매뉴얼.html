@@ -38,6 +38,8 @@
   --p-disabled:#b7e0c8; --dark-disabled:#c8ccd0; --danger-disabled:#f2cdce;   /* disabled = variant 흐린 버전+흰폰트(회색 아님) */
   /* 라운드 — §3.3 */
   --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
+  /* 토스트 — §5.5 (2026-11-07~08 유성: 알약, g800, 원 18px. 반지름 23 = 14.5px 글자 한 줄 높이 46의 절반 → 한 줄이면 알약, 여러 줄이면 같은 굽이) */
+  --toast-bg:var(--g800); --toast-fg:#F9FBFA; --toast-r:23px; --toast-ck:18px;
   /* 타입 스케일 — §3.2 (큰 제목 clamp 유동 / 본문 고정) */
   --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
@@ -197,15 +199,13 @@
   .copy-btn:active{color:#d2d8df;}
   .copy-btn svg{width:13px;height:13px;}
   .copy-toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));
-    transform:translateX(-50%) translateY(8px);background:var(--g900);color:#F9FBFA;font-size:13.5px;
-    padding:10px 16px;border-radius:var(--r-sm);opacity:0;pointer-events:none;z-index:200;
-    box-shadow:0 6px 20px rgba(0,0,0,.18);transition:opacity .18s,transform .18s;}
+    transform:translateX(-50%) translateY(8px);background:var(--toast-bg);color:var(--toast-fg);font-size:14.5px;
+    padding:12px 19px;border-radius:var(--toast-r);opacity:0;pointer-events:none;z-index:200;transition:opacity .18s,transform .18s;font-weight:600;line-height:1.5;width:max-content;max-width:calc(100% - 32px);}
   .copy-toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
   /* 점프하면 뜨는 «이전 위치로» — scrim(55)보다 아래라 목차·검색을 열면 자동으로 가려진다 */
   .back-toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));
     transform:translateX(-50%) translateY(10px);display:flex;align-items:center;gap:2px;
-    background:var(--g900);border-radius:99px;padding:4px 4px 4px 6px;z-index:50;
-    box-shadow:0 6px 20px rgba(0,0,0,.22);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;}
+    background:var(--toast-bg);border-radius:var(--toast-r);padding:4px 4px 4px 6px;z-index:50;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;}
   .back-toast.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
   .back-toast button{font-family:inherit;border:0;background:transparent;color:#F9FBFA;cursor:pointer;}
   .back-toast .bt-go{font-size:13.5px;font-weight:700;padding:8px 12px;border-radius:99px;}

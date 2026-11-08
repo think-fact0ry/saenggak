@@ -28,6 +28,8 @@
   --p-disabled:#b7e0c8; --dark-disabled:#c8ccd0; --danger-disabled:#f2cdce;   /* disabled = variant 흐린 버전+흰폰트(회색 아님) */
   /* 라운드 — §3.3 */
   --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
+  /* 토스트 — §5.5 (2026-11-07~08 유성: 알약, g800, 원 18px. 반지름 23 = 14.5px 글자 한 줄 높이 46의 절반 → 한 줄이면 알약, 여러 줄이면 같은 굽이) */
+  --toast-bg:var(--g800); --toast-fg:#F9FBFA; --toast-r:23px; --toast-ck:18px;
   /* 타입 스케일 — §3.2 (큰 제목 clamp 유동 / 본문 고정) */
   --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
@@ -267,19 +269,20 @@ h1{font-size:24px;font-weight:700;letter-spacing:-.6px;line-height:1.35;}
 .btn.gray:active{background:var(--g200);transform:none;}
 
 /* ── 토스트(§5.5 — 성공엔 초록 원+체크, 바닥 버튼 위 12px은 JS가 잰다) ── */
-.toast{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));height:auto;transform:translateX(-50%) translateY(8px);display:flex;align-items:center;gap:8px;
-  background:var(--g800);color:#fff;font-size:var(--fs-sm);font-weight:600;line-height:1.5;border-radius:12px;padding:12px 18px;width:max-content;max-width:calc(100% - 48px);white-space:pre-line;text-align:center;
+.toast{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));height:auto;transform:translateX(-50%) translateY(8px);display:flex;align-items:center;gap:11px;
+  background:var(--toast-bg);color:var(--toast-fg);font-size:14.5px;font-weight:600;line-height:1.5;border-radius:var(--toast-r);padding:12px 19px;width:max-content;max-width:calc(100% - 48px);white-space:pre-line;text-align:center;
   opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:60;}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
-.toast .tk{display:none;width:18px;height:18px;border-radius:50%;background:var(--green);flex:none;align-items:center;justify-content:center;}
+.toast .tk{display:none;width:var(--toast-ck);height:var(--toast-ck);border-radius:50%;background:var(--green);flex:none;align-items:center;justify-content:center;}
 .toast.okk .tk{display:inline-flex;}
+.toast.okk{padding-left:15px;}
 .toast .tk svg{width:11px;height:11px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
 
 /* ── 맨 처음 화면에서 뒤로 = 한 번 더(§4.11-4 ex18 — 근태 #exitHint와 같은 박스·문구) ── */
-#exitHint{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);z-index:70;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);background:#191f28;color:#F9FBFA;font-size:14.5px;font-weight:600;padding:9px 20px 9px 9px;border-radius:99px;box-shadow:0 6px 20px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;}
+#exitHint{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);z-index:70;display:flex;align-items:center;gap:11px;max-width:calc(100% - 32px);background:var(--toast-bg);color:var(--toast-fg);font-size:14.5px;font-weight:600;padding:12px 19px 12px 15px;border-radius:var(--toast-r);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;line-height:1.5;}
 #exitHint.on{opacity:1;transform:translateX(-50%) translateY(0);}
-#exitHint .ck{width:28px;height:28px;border-radius:50%;background:var(--green600);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-#exitHint .ck svg{width:15px;height:15px;}
+#exitHint .ck{width:var(--toast-ck);height:var(--toast-ck);border-radius:50%;background:var(--green600);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#exitHint .ck svg{width:11px;height:11px;}
 
 /* ── §3.8 PC 폰 목업 — 넓은 창 + 마우스에서만 ── */
 @media (min-width:480px) and (hover:hover) and (pointer:fine){

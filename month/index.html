@@ -23,7 +23,7 @@
 -->
 <style>
 /* 현아쌤 화면 = 10-01 「선생님별 피드백 안내」 실물 값(카톡 흉내라 밝은 화면 고정이 의도) */
-:root{--bg:#f6f7f6;--card:#fff;--ink:#1d2321;--sub:#5d6662;--line:#e3e7e5;--g:#3a8a5f;--g7:#166841;--gbg:#f0f8f3;--gw:#f0f8f3;--chat:#b2c7da;--bub:#fef01b;--red:#c0392b;--redbg:#fdecee;--rdis:#f2cdce;--warn:#8a5a00;--warnbg:#fef4e2;--dark:#525966;--g100:#f2f4f6}
+:root{--bg:#f6f7f6;--card:#fff;--ink:#1d2321;--sub:#5d6662;--line:#e3e7e5;--g:#3a8a5f;--g7:#166841;--gbg:#f0f8f3;--gw:#f0f8f3;--chat:#b2c7da;--bub:#fef01b;--red:#c0392b;--redbg:#fdecee;--rdis:#f2cdce;--warn:#8a5a00;--warnbg:#fef4e2;--dark:#525966;--g100:#f2f4f6; --toast-bg:#333d4b; --toast-fg:#F9FBFA; --toast-r:23px; --toast-ck:18px; /* §5.5 토스트 — docs/1 §3.1 정본 사본(이 파일은 토큰동기 마커 밖, 정본 바꿀 땐 같이) */ }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,"Malgun Gothic",system-ui,sans-serif;line-height:1.6;word-break:keep-all;overflow-wrap:anywhere}
 button{font:inherit;cursor:pointer;color:inherit}
@@ -193,10 +193,12 @@ h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
 .lr b{min-width:56px}
 
 /* 토스트 (§5.5) */
-.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);background:#2b2f33;color:#fff;border-radius:14px;padding:11px 16px 11px 12px;display:flex;gap:10px;align-items:center;opacity:0;transition:.22s;z-index:40;font-size:14.5px;font-weight:600;pointer-events:none;max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);background:var(--toast-bg);color:var(--toast-fg);border-radius:var(--toast-r);padding:12px 19px 12px 15px;display:flex;gap:11px;align-items:center;opacity:0;transition:.22s;z-index:40;font-size:14.5px;font-weight:600;pointer-events:none;max-width:calc(100% - 32px);line-height:1.5;width:max-content}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-.toast .okc{width:22px;height:22px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;flex:none}
+.toast .okc{width:var(--toast-ck);height:var(--toast-ck);border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;flex:none}
 .toast.bad .okc{display:none}
+.toast.bad{padding-left:19px}
+.toast .okc svg{width:11px;height:11px;stroke-width:3}
 @media (max-width:600px){.sec h2,.ans h2{font-size:20px}}
 </style></head><body><div class="wrap" id="app">
 <h1>월 계획안</h1>

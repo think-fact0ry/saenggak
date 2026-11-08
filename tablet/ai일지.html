@@ -49,6 +49,7 @@
     --p-disabled:#b7e0c8;
     /* 라운드 — §3.3 */
     --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
+    --toast-bg:var(--g800); --toast-fg:#F9FBFA; --toast-r:23px; --toast-ck:18px; /* §5.5 토스트 — docs/1 §3.1 정본 사본(이 파일은 토큰동기 마커 밖, 정본 바꿀 땐 같이) */
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}
   input,textarea{-webkit-user-select:text;user-select:text;}
@@ -223,10 +224,10 @@
   .velt .vt{font-size:13px;font-weight:700;color:var(--g500);margin-bottom:4px;}
   .velt .vb{font-size:15.5px;line-height:1.6;color:var(--g900);white-space:pre-wrap;-webkit-user-select:text;user-select:text;}
 
-  /* 되돌리기·복사 토스트 — ex18 알약 결(다크 #191f28 + 오프화이트 §3.5), 텍스트버튼=scale(§5.3-2) */
-  .utoast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);display:flex;align-items:center;gap:14px;background:#191f28;color:#F9FBFA;font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;box-shadow:0 6px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:1200;white-space:nowrap;}
+  /* 되돌리기·복사 토스트 — §5.5 토스트 알약(--toast-bg + --toast-fg, 11-08), 텍스트버튼=scale(§5.3-2) */
+  .utoast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);display:flex;align-items:center;gap:14px;background:var(--toast-bg);color:var(--toast-fg);font-size:14.5px;font-weight:600;padding:12px 19px;border-radius:var(--toast-r);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:1200;white-space:nowrap;}
   .utoast.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0);}
-  .utoast button{font-family:inherit;font-size:14px;font-weight:700;color:var(--green400);background:none;border:none;cursor:pointer;padding:0;transition:transform .12s;}
+  .utoast button{font-family:inherit;font-size:14.5px;font-weight:700;color:var(--green400);background:none;border:none;cursor:pointer;padding:0;transition:transform .12s;}
   .utoast button:active{transform:scale(.93);}
 
   /* ── 발달영역 관찰 (구조 씨앗 — develop 전용) ─────────────────────
@@ -316,10 +317,10 @@
   /* 더블백 종료 안내 (§4.11-4 ex18 알약 — 06 Apply .exithint 복제, 오프화이트 글자 §3.5).
      래퍼(ai일지.html)가 풀스크린 iframe이라 iframe 안 fixed = 실화면 하단 — 06 임베드와 달리 postMessage 브릿지 불필요.
      footbar(하단 고정 버튼) 위에 뜨도록 bottom을 올림. */
-  .exithint{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);background:#191f28;color:#F9FBFA;font-size:14.5px;font-weight:600;padding:9px 20px 9px 9px;border-radius:99px;box-shadow:0 6px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:1200;white-space:nowrap;}
+  .exithint{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);display:flex;align-items:center;gap:11px;max-width:calc(100% - 32px);background:var(--toast-bg);color:var(--toast-fg);font-size:14.5px;font-weight:600;padding:12px 19px 12px 15px;border-radius:var(--toast-r);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:1200;white-space:nowrap;line-height:1.5;}
   .exithint.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  .exithint .ck{width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .exithint .ck svg{width:15px;height:15px;}
+  .exithint .ck{width:var(--toast-ck);height:var(--toast-ck);border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .exithint .ck svg{width:11px;height:11px;}
 
   /* ? 도움말 바텀시트 — §4.3 규율 풀스펙(핸들·플로팅·순차 등장·드래그 닫기, 상담일지 레퍼런스 복제) */
   .sheet-dim{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .25s;}
