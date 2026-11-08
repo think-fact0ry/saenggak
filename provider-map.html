@@ -6531,7 +6531,7 @@ var SCHED = { prov: null, openKey: null, openedAt: 0, route: false, folded: fals
     });
     // 좌표를 모르는 아이는 조용히 빠지면 안 된다 — 06에 행이 없는 42%가 여기 걸린다(docs/4 §3)
     if (miss && !SCHED.missWarned) { SCHED.missWarned = true;
-      showToast(miss + '명은 주소·좌표가 없어 동선에 못 그렸어요 (06 신청폼에 행이 없는 아이)'); }
+      showToast(miss + '명은 주소나 좌표가 없어 동선에 못 그렸어요 (06 신청폼에 행이 없는 아이)'); }
   };
 
   // 핸들 드래그로 접기 (§4.3-5 — 아래로만·임계 80px. planSheet과 같은 패턴) + 탭해도 접힘
