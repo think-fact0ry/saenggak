@@ -14,7 +14,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Pretendard Variable",Pretendard,system-ui,sans-serif;word-break:keep-all}
 main{max-width:860px;margin:0 auto;padding:28px 16px 64px}
-h1{font-size:23px;margin:0 0 4px}
+h1{font-size:23px;margin:0 0 20px}
 .lead{color:var(--sub);margin:0 0 20px}
 .seg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
 .seg button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:9px 14px;font:inherit;font-size:15px;cursor:pointer}
@@ -34,12 +34,12 @@ h1{font-size:23px;margin:0 0 4px}
 .bub .btns span{display:block;text-align:center;background:var(--btn);border-radius:8px;padding:9px;font-size:14px;font-weight:600}
 .note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-top:20px;font-size:15px}
 .note p{margin:4px 0}
+.note a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}
 </style>
 </head>
 <body>
 <main>
 <h1>부재중 안내 알림톡</h1>
-<p class="lead">근무 시간이 아닐 때 행정폰이 울리지 않아요. 010 번호로 전화하신 보호자분들께 아래 알림톡이 자동으로 나가요.</p>
 
 <div class="seg" role="group" aria-label="전화가 온 때">
 <button type="button" data-r="현재 모든 선생님들께서 상담/수업 중으로" aria-pressed="true">평일 낮</button>
@@ -76,8 +76,9 @@ h1{font-size:23px;margin:0 0 4px}
 </div>
 
 <div class="note">
-<p>카톡을 쓰지 않는 분들에게는 같은 내용이 032-277-2007 Web발신 문자로 나가요.</p>
-<p>같은 번호로 여러 번 전화하셔도 처음 연락하신 분께는 30일에 한 번, 이용 중이거나 신청하신 가정에는 하루에 한 번만 나가요.</p>
+<p>카톡을 쓰지 않는 분들에게는 같은 내용이 032-277-2007 Web발신 문자로 발송됩니다.</p>
+<p>같은 번호로 여러 번 전화하셔도, 처음 연락하신 분께는 30일에 한 번, 이용 중이거나 신청하신 가정에는 하루에 한 번만 발송됩니다.</p>
+<p>홈페이지 문의, 문의 남기기 버튼을 누르면 <a href="https://think-factory.kr/ask" target="_blank" rel="noopener">think-factory.kr/ask</a> 페이지로 이동합니다. 이곳에 문의를 남기시면 행정 위젯 문의채팅으로 들어옵니다.</p>
 </div>
 </main>
 <script>
