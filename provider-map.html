@@ -898,6 +898,7 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
   .nl-item-badge.assigned{background:var(--green100);color:var(--green700)}
   .nl-item-badge.waiting{background:#fef3c7;color:var(--wait-s)}
   .nl-item-badge.absent{background:var(--warn-weak-bg);color:var(--warn-weak-fg)}
+  .nl-item-badge.cont{background:var(--green100);color:var(--green700)}   /* 이어 가기(07 종료 안내 → 06 비바우처재가) — 새 신청과 구분 */
   .nl-item-badge.mark{background:#fee2e2;color:#dc2626}   /* 마크(shortlist) — 지도 빨강 북마크와 결 맞춤 */
   .nl-item-date{color:#bbb;font-size:10px;margin-left:auto;flex-shrink:0}
   .nl-item-row2{font-size:11px;color:#888;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -4179,6 +4180,8 @@ function fmtRelativeDate(ts) {
   return (d.getMonth() + 1) + '/' + d.getDate();
 }
 
+// 이어 가기 줄 = 06 이어가기.js가 G 메모 맨 앞에 쓰는 글(서버를 안 늘리려고 메모로 가른다 — 글을 바꾸면 여기도)
+function _nlIsCont(c) { return /^오감쑥쑥 이어 가기/.test(String(c.notes || '')); }
 function renderNewList() {
   if (!currentData) return;
   var list = document.getElementById('nlList');
@@ -4208,7 +4211,7 @@ function renderNewList() {
       name: c.name, lat: c.lat, lng: c.lng, address: c.address,
       phone: c.phone, sigungu: c.sigungu || '', bname: c.bname || '',
       times: c.times, status: '대기', statusType: 'waiting',
-      absent: (st === '부재1' || st === '부재2') ? st : '', marked: !!c.marked,
+      absent: (st === '부재1' || st === '부재2') ? st : '', marked: !!c.marked, cont: _nlIsCont(c),
       row: c.row, timestamp: c.timestamp, data: c
     });
   });
@@ -4263,6 +4266,7 @@ function renderNewList() {
       +   '<div class="nl-item-name">' + esc(item.name) + '</div>'
       +   '<span class="nl-item-badge ' + item.statusType + '">' + esc(item.status) + '</span>'
       +   (item.absent ? '<span class="nl-item-badge absent">' + esc(item.absent) + '</span>' : '')
+      +   (item.cont ? '<span class="nl-item-badge cont">이어 가기</span>' : '')
       +   (item.marked ? '<span class="nl-item-badge mark">마크</span>' : '')
       +   (dateStr ? '<span class="nl-item-date">' + dateStr + '</span>' : '')
       + '</div>'
