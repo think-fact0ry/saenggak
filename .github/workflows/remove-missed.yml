@@ -1,13 +1,15 @@
 name: 부재중 알림톡 화면 지우기
 
-# 2026-10-27 유성 「이 주소는 30일이 되면 자동 삭제시킬 것. 28일에 현아선생님이 확인하기 때문」.
-# 한국 10월 30일 0시부터 missed/ 폴더를 지우고 푸시 → GitHub Pages 재배포(봇 푸시도 Pages가 다시 빌드 — kr month-plan.yml과 같은 결, 10-26 실측).
-# 예약 실행은 GitHub 부하로 늦거나 빠질 수 있어 한 시간마다 다시 본다. 이미 지웠으면 아무것도 안 하고, 지운 뒤엔 이 워크플로를 스스로 끈다.
+# 2026-10-27 유성 「이 주소는 30일이 되면 자동 삭제시킬 것. 28일에 현아선생님이 확인하기 때문」 → 10-30 지움.
+# 2026-11-09 유성 「11월 12일까지 지속되는 사이트 새로 만들어줘」 → 다시 올리고 날짜만 바꿈. ⚠️지난번 끝에 스스로 꺼져 있으므로 또 쓰려면 날짜를 고친 뒤 `gh workflow enable remove-missed.yml`도.
+# 한국 11월 13일 0시부터 missed/ 폴더를 지우고 푸시 → GitHub Pages 재배포(봇 푸시도 Pages가 다시 빌드 — kr month-plan.yml과 같은 결, 10-26 실측).
+# 예약 실행은 GitHub 부하로 늦거나 빠질 수 있어(10-30은 5시간 늦음) 한 시간마다 다시 본다. 이미 지웠으면 아무것도 안 하고, 지운 뒤엔 이 워크플로를 스스로 끈다.
+# 화면 자체도 11-13 0시(한국)부터 내용을 내린다(missed/index.html 끝 스크립트) — 이 워크플로가 늦어도 안 보이게.
 # 이 파일을 봇이 지우지 않는 이유 = GITHUB_TOKEN은 .github/workflows 파일을 바꾸는 푸시가 거부될 수 있어서(그러면 missed/ 삭제까지 같이 실패).
 on:
   schedule:
-    - cron: '7 15-23 29 10 *'   # UTC 10-29 15:07~23:07 = 한국 10-30 0:07~8:07
-    - cron: '7 * 30-31 10 *'    # UTC 10-30~31 매시 = 한국 10-30 9:07 ~ 11-01 8:07
+    - cron: '7 15-23 12 11 *'   # UTC 11-12 15:07~23:07 = 한국 11-13 0:07~8:07
+    - cron: '7 * 13-14 11 *'    # UTC 11-13~14 매시 = 한국 11-13 9:07 ~ 11-15 8:07
   workflow_dispatch:
     inputs:
       dry:
@@ -47,7 +49,7 @@ jobs:
           git config user.name "think-factory-bot"
           git config user.email "noreply@think-factory.kr"
           git rm -r --quiet missed
-          git commit -m "chore: 부재중 알림톡 안내 화면 지움 (10-30 자동, 유성 10-27)"
+          git commit -m "chore: 부재중 알림톡 안내 화면 지움 (11-13 자동, 유성 11-09)"
           ok=0
           for i in 1 2 3; do
             if git pull --rebase origin main && git push; then ok=1; break; fi
