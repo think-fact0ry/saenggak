@@ -1,0 +1,58 @@
+name: 최종시트 기재 방법 화면 지우기
+
+# 2026-11-09 유성 「깃헙 일회용 html로 만들어 설명드리는 건」 → 현아선생님이 12월 첫 주 캡처까지 보는 copay/ 화면. 12월 15일까지 연다(업무표 메모에 같은 날짜).
+# 한국 12월 16일 0시부터 copay/ 폴더를 지우고 푸시 → GitHub Pages 재배포(remove-missed.yml과 같은 방식).
+# 예약 실행은 GitHub 부하로 늦거나 빠질 수 있어 한 시간마다 다시 본다. 이미 지웠으면 아무것도 안 하고, 지운 뒤엔 이 워크플로를 스스로 끈다.
+# 화면 자체도 12-16 0시(한국)부터 내용을 내린다(copay/index.html 끝 스크립트) — 이 워크플로가 늦어도 안 보이게.
+# 이 파일을 봇이 지우지 않는 이유 = GITHUB_TOKEN은 .github/workflows 파일을 바꾸는 푸시가 거부될 수 있어서(그러면 copay/ 삭제까지 같이 실패).
+on:
+  schedule:
+    - cron: '7 15-23 15 12 *'   # UTC 12-15 15:07~23:07 = 한국 12-16 0:07~8:07
+    - cron: '7 * 16-17 12 *'    # UTC 12-16~17 매시 = 한국 12-16 9:07 ~ 12-18 8:07
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: '시험(지우지 않고 지울 파일만 보기)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: remove-copay
+  cancel-in-progress: false
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: copay/ 지우기
+        run: |
+          if [ ! -d copay ]; then
+            echo "copay/ 없음 — 이미 지움"
+            if [ "${{ inputs.dry }}" != "true" ]; then gh workflow disable remove-copay.yml || true; fi
+            exit 0
+          fi
+          if [ "${{ inputs.dry }}" = "true" ]; then
+            echo "시험 — 지울 파일:"
+            git ls-files copay
+            exit 0
+          fi
+          git config user.name "think-factory-bot"
+          git config user.email "noreply@think-factory.kr"
+          git rm -r --quiet copay
+          git commit -m "chore: 최종시트 기재 방법 화면 지움 (12-16 자동, 유성 11-09)"
+          ok=0
+          for i in 1 2 3; do
+            if git pull --rebase origin main && git push; then ok=1; break; fi
+            sleep 10
+          done
+          [ "$ok" = 1 ] || exit 1
+          gh workflow disable remove-copay.yml || true

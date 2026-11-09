@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>최종시트 기재 방법</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!-- 2026-11-09 현아선생님 설명용 일회용 화면(유성 「텍스트만 보면 이해가 잘 안가실 것 같아서 깃헙 일회용 html로」). 사실 = 레포 docs/6_백로그_인계프롬프트_2026-11-07_본인부담금최종시트_자동기입.md §4-10(유성, 소장님 11-09 규칙). 이름은 지어낸 홍길동, 공개 레포라 실제 아동 자료 넣지 말 것. 쉼표 뒤 한 칸 = 03 최종시트색칠.js splitPlainTokens(금액 안 쉼표와 구분). CSS 틀 = saenggak missed/, ending/. -->
+<style>
+:root{--bg:#f4f5f3;--card:#fff;--ink:#191f28;--sub:#6b7280;--line:#d9dde3;--head:#eef0f2;--hl:#fff1c9;--ok:#166841;--okbg:#f0f8f3;--bad:#c2413a;--badbg:#fbe9e7;--due1:#dfe3e8;--due2:#eceff2;--paid1:#aee5c3;--paid2:#d5efde;--over:#7fca9e;--blank:#f3f4f6;--blankline:#e1e4e8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141514;--card:#1f201e;--ink:#eceeea;--sub:#a3a7a0;--line:#3a3c36;--head:#2a2c28;--hl:#4a3d12;--ok:#7cc89a;--okbg:#1d3326;--bad:#f0928b;--badbg:#3d211f;--due1:#3b3e3a;--due2:#30332f;--paid1:#2c5a40;--paid2:#234a34;--over:#3f7d5a;--blank:#262825;--blankline:#333530}}
+:root[data-theme="dark"]{--bg:#141514;--card:#1f201e;--ink:#eceeea;--sub:#a3a7a0;--line:#3a3c36;--head:#2a2c28;--hl:#4a3d12;--ok:#7cc89a;--okbg:#1d3326;--bad:#f0928b;--badbg:#3d211f;--due1:#3b3e3a;--due2:#30332f;--paid1:#2c5a40;--paid2:#234a34;--over:#3f7d5a;--blank:#262825;--blankline:#333530}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Pretendard Variable",Pretendard,system-ui,sans-serif;word-break:keep-all}
+main{max-width:860px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:24px;line-height:1.35;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin:0 0 16px}
+h2{font-size:19px;line-height:1.4;margin:0 0 12px}
+p{margin:0}
+.sub{color:var(--sub);font-size:15px}
+
+/* 왜 바뀌나요 */
+.story p{margin:0 0 10px}
+.story .then{margin:14px 0 0;background:var(--okbg);border-radius:10px;padding:12px 14px;font-weight:600}
+
+/* 적는 방법 */
+.rules{margin:0;padding:0;list-style:none;counter-reset:r}
+.rules li{counter-increment:r;position:relative;padding:0 0 12px 34px}
+.rules li:last-child{padding-bottom:0}
+.rules li::before{content:counter(r);position:absolute;left:0;top:1px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--card);font-size:14px;font-weight:700;text-align:center;line-height:24px}
+.rules .sub{display:block;margin-top:2px}
+.chip{display:inline-block;width:30px;height:30px;line-height:29px;text-align:center;border-radius:8px;font-weight:700;font-size:19px}
+.chip.ok{background:var(--okbg);color:var(--ok)}
+.chip.bad{background:var(--badbg);color:var(--bad)}
+
+/* 경우별 카드 */
+.label{color:var(--sub);font-size:14px;font-weight:600;margin:0 0 2px}
+.case h2{font-size:18px;margin-bottom:14px}
+.bars{display:grid;gap:8px;margin:0 0 14px}
+.bar{display:grid;grid-template-columns:82px 1fr 82px;gap:10px;align-items:center}
+.bar .name{font-size:15px;font-weight:600}
+.bar .sum{font-size:15px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.track{display:flex;gap:2px;height:34px}
+.track span{display:flex;align-items:center;justify-content:center;font-size:13.5px;border-radius:4px;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+.due1{background:var(--due1)}
+.due2{background:var(--due2)}
+.paid1{background:var(--paid1)}
+.paid2{background:var(--paid2)}
+.short{border:2px dashed var(--bad);color:var(--bad);border-radius:4px;font-size:12px}
+.overrun{background:var(--over);margin-left:-2px;font-size:12px}
+.verdict{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin:0 0 14px}
+.verdict .chip{width:40px;height:40px;line-height:39px;font-size:24px;border-radius:10px}
+
+/* 시트 모양 */
+.sheets{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sheet{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px;line-height:1.4}
+.sheet th,.sheet td{border:1px solid var(--line);padding:7px 4px;text-align:center;vertical-align:middle;word-break:keep-all}
+.sheet thead tr:first-child th{background:var(--ink);color:var(--card);font-size:14px}
+.sheet thead tr+tr th{background:var(--head);font-weight:600;font-size:13px}
+.sheet .typed{background:var(--hl);font-weight:600}
+.sheet .blank{background:repeating-linear-gradient(135deg,var(--blank) 0 5px,var(--blankline) 5px 7px);color:var(--sub);font-size:12.5px}
+.sheet td b{font-size:18px}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--sub);margin:10px 0 0}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{width:18px;height:14px;border:1px solid var(--line);display:inline-block}
+.key .k1{background:var(--hl)}
+.key .k2{background:repeating-linear-gradient(135deg,var(--blank) 0 3px,var(--blankline) 3px 5px)}
+.do{margin:12px 0 0;border-left:3px solid var(--ink);padding:2px 0 2px 12px;font-size:15px}
+.final{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;font-size:18px;font-weight:700;text-align:center}
+.foot{color:var(--sub);font-size:14px;text-align:center;margin:20px 0 0}
+
+@media (max-width:640px){
+  .card{padding:16px}
+  .sheets{grid-template-columns:1fr}
+  .bar{grid-template-columns:1fr auto;gap:4px 10px}
+  .track{grid-column:1 / -1;grid-row:2}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>본인부담금 최종시트 기재 방법 변경</h1>
+<p class="lead">11월분부터 아래 방법으로 적어주세요.</p>
+
+<section class="card story">
+  <h2>배경</h2>
+  <p>행정에서 미납 이용자에게 납부 확인 안내를 계속 보내도 납부하지 않으시는 보호자님이 계세요.</p>
+  <p>이때 전월 본인부담금을 캡처해서 보내드리는 업무가 정상적으로 진행될 때, 미납인 아동이 있으면 x가 쳐진 채 보내지게 되고, 그러면 제공인력은 제공기록지에 본인부담금을 못 적고 제출하게 됩니다.</p>
+  <p>그런데 그 뒤에 10월 몫이 입금되면, 이미 제출한 10월 제공기록지를 찾아 다시 적어야 하는 문제가 생길 수 있어요.</p>
+  <p class="then">= 10월 제공기록지는 10월 본인부담분을 적지 않은 채 그대로 두고, 10월 몫과 11월 몫이 11월에 입금됐다면 두 금액을 같이 적기로 변경합니다.</p>
+</section>
+
+<section class="card">
+  <h2>적는 방법 정리</h2>
+  <ol class="rules">
+    <li><b>입금은 입금한 달 칸에 적어주세요.</b>
+      <span class="sub">10월 몫이 11월에 들어왔다면 11월 칸에 적어주세요.</span></li>
+    <li><b>같은 달에 두 번 들어오면 쉼표 뒤에 한 칸을 띄워 이어서 적어주세요.</b>
+      <span class="sub">금액 안에도 쉼표가 있어서, 띄어 적어야 두 번 입금한 것으로 구분됩니다. 납부일, 납부금액, 입금내역 칸 모두 입금한 순서대로 적어주세요.</span></li>
+    <li><b>들어온 돈이 앞 달 몫까지 채우면 앞 달 납부금액 칸에 o, 모자라면 x를 적어주세요.</b>
+      <span class="sub">아래 예시들로 이를 정리합니다.</span></li>
+  </ol>
+</section>
+
+<section class="card case">
+  <p class="label">예시 1</p>
+  <h2>10월 4회기, 11월 4회기를 진행했을 때, 11월에 39,000원이 두 번 들어왔다면</h2>
+  <div class="bars">
+    <div class="bar"><span class="name">내야 할 돈</span><div class="track"><span class="due1" style="flex:50 1 0">10월 몫 39,000</span><span class="due2" style="flex:50 1 0">11월 몫 39,000</span></div><span class="sum">78,000원</span></div>
+    <div class="bar"><span class="name">들어온 돈</span><div class="track"><span class="paid1" style="flex:50 1 0">11/3 39,000</span><span class="paid2" style="flex:50 1 0">11/10 39,000</span></div><span class="sum">78,000원</span></div>
+  </div>
+  <div class="verdict"><span class="chip ok">o</span><p>내야 할 돈이 다 들어왔으니, 10월 납부금액 칸에 o를 적어주세요.</p></div>
+  <div class="sheets">
+    <table class="sheet"><colgroup><col style="width:11%"><col style="width:22%"><col style="width:24%"><col></colgroup><thead><tr><th colspan="4">10월</th></tr><tr><th>회기</th><th>납부일</th><th>납부금액</th><th>입금내역</th></tr></thead>
+      <tbody><tr><td>4</td><td class="blank">비워둠</td><td class="typed"><b>o</b></td><td class="blank">비워둠</td></tr></tbody></table>
+    <table class="sheet"><colgroup><col style="width:11%"><col style="width:22%"><col style="width:24%"><col></colgroup><thead><tr><th colspan="4">11월</th></tr><tr><th>회기</th><th>납부일</th><th>납부금액</th><th>입금내역</th></tr></thead>
+      <tbody><tr><td>4</td><td class="typed">11/3, 11/10</td><td class="typed">39,000, 39,000</td><td class="typed">홍길동240315, 홍길동240315</td></tr></tbody></table>
+  </div>
+  <p class="key"><span><i class="k1"></i>선생님이 적는 칸</span><span><i class="k2"></i>비워두는 칸</span></p>
+  <p class="do">10월 납부금액 칸에 이미 x를 적어두셨다면 o로 바꿔주세요.</p>
+</section>
+
+<section class="card case">
+  <p class="label">예시 2</p>
+  <h2>10월 4회기, 11월 4회기를 진행했을 때, 11월에 39,000원과 29,250원이 들어왔다면</h2>
+  <div class="bars">
+    <div class="bar"><span class="name">내야 할 돈</span><div class="track"><span class="due1" style="flex:50 1 0">10월 몫 39,000</span><span class="due2" style="flex:50 1 0">11월 몫 39,000</span></div><span class="sum">78,000원</span></div>
+    <div class="bar"><span class="name">들어온 돈</span><div class="track"><span class="paid1" style="flex:50 1 0">11/3 39,000</span><span class="paid2" style="flex:37.5 1 0">11/10 29,250</span><span class="short" style="flex:12.5 1 0" aria-label="모자란 돈">9,750</span></div><span class="sum">68,250원</span></div>
+  </div>
+  <div class="verdict"><span class="chip bad">x</span><p>9,750원이 모자라니, 10월 납부금액 칸에 x를 적어주세요.</p></div>
+  <div class="sheets">
+    <table class="sheet"><colgroup><col style="width:11%"><col style="width:22%"><col style="width:24%"><col></colgroup><thead><tr><th colspan="4">10월</th></tr><tr><th>회기</th><th>납부일</th><th>납부금액</th><th>입금내역</th></tr></thead>
+      <tbody><tr><td>4</td><td class="blank">비워둠</td><td class="typed"><b>x</b></td><td class="blank">비워둠</td></tr></tbody></table>
+    <table class="sheet"><colgroup><col style="width:11%"><col style="width:22%"><col style="width:24%"><col></colgroup><thead><tr><th colspan="4">11월</th></tr><tr><th>회기</th><th>납부일</th><th>납부금액</th><th>입금내역</th></tr></thead>
+      <tbody><tr><td>4</td><td class="typed">11/3, 11/10</td><td class="typed">39,000, 29,250</td><td class="typed">홍길동240315, 홍길동240315</td></tr></tbody></table>
+  </div>
+  <p class="do">해당 제공인력께 9,750원이 미납이니 다음 달에 추가해달라고 전해주세요.</p>
+</section>
+
+<section class="card case">
+  <p class="label">예시 3</p>
+  <h2>10월 3회기, 11월 4회기를 진행했을 때, 11월에 39,000원이 두 번 들어왔다면</h2>
+  <div class="bars">
+    <div class="bar"><span class="name">내야 할 돈</span><div class="track"><span class="due1" style="flex:37.5 1 0">10월 몫 29,250</span><span class="due2" style="flex:50 1 0">11월 몫 39,000</span><span style="flex:12.5 1 0"></span></div><span class="sum">68,250원</span></div>
+    <div class="bar"><span class="name">들어온 돈</span><div class="track"><span class="paid1" style="flex:50 1 0">11/3 39,000</span><span class="paid2" style="flex:37.5 1 0">11/10 39,000</span><span class="overrun" style="flex:12.5 1 0" aria-label="더 들어온 돈">9,750</span></div><span class="sum">78,000원</span></div>
+  </div>
+  <div class="verdict"><span class="chip ok">o</span><p>내야 할 돈보다 9,750원이 더 들어와도, 10월 납부금액 칸에 o를 적어주세요.</p></div>
+  <div class="sheets">
+    <table class="sheet"><colgroup><col style="width:11%"><col style="width:22%"><col style="width:24%"><col></colgroup><thead><tr><th colspan="4">10월</th></tr><tr><th>회기</th><th>납부일</th><th>납부금액</th><th>입금내역</th></tr></thead>
+      <tbody><tr><td>3</td><td class="blank">비워둠</td><td class="typed"><b>o</b></td><td class="blank">비워둠</td></tr></tbody></table>
+    <table class="sheet"><colgroup><col style="width:11%"><col style="width:22%"><col style="width:24%"><col></colgroup><thead><tr><th colspan="4">11월</th></tr><tr><th>회기</th><th>납부일</th><th>납부금액</th><th>입금내역</th></tr></thead>
+      <tbody><tr><td>4</td><td class="typed">11/3, 11/10</td><td class="typed">39,000, 39,000</td><td class="typed">홍길동240315, 홍길동240315</td></tr></tbody></table>
+  </div>
+  <p class="do">더 들어온 9,750원은 나중에 정산해드리면 되기 때문입니다.</p>
+</section>
+
+<p class="final">모자랄 때만 x, 회기와 금액이 맞거나 더 들어왔더라도 o</p>
+
+<p class="foot">이 화면은 12월 15일까지 볼 수 있습니다.</p>
+</main>
+<script>
+// 12월 16일 0시(한국)부터는 내용을 내린다 — 자동 삭제가 늦을 때를 대비
+if (Date.now() >= Date.UTC(2026, 11, 15, 15)) {
+  document.querySelector('main').innerHTML = '<h1>본인부담금 최종시트 기재 방법 변경</h1><p class="lead">12월 15일까지 보여 드린 안내라 내렸어요.</p>';
+}
+</script>
+</body>
+</html>
