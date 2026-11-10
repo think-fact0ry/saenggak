@@ -96,6 +96,9 @@
 
   /* 다른 아동 경계 = 검정 구분선(같은 아동 내 월/서비스 전환은 기본 회색 간격) */
   .row-gap.big td{height:0;padding:0;border:none;border-top:2px solid var(--g900);}
+  /* 계약기간 줄(11-10) — 아이 묶음 맨 위 한 줄. 결제 줄보다 한 단계 약하게(흐린 바탕, 왼쪽 정렬) */
+  .ctr-row td{text-align:left;background:var(--g50);color:var(--g700);font-size:12.5px;padding:7px 12px;white-space:normal;}
+  .ctr-row b{color:var(--g900);font-weight:600;margin-right:6px;}
 
   /* 모바일: 표 그대로 + 폰트·패딩 축소로 좌우 한 화면에 (가로 스크롤 없음) */
   @media (max-width:640px){
@@ -104,6 +107,7 @@
     th,td{padding:6px 2px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;}
     thead th{font-size:9.5px;}
     td.amount{padding-right:3px;text-align:center;}
+    .ctr-row td{font-size:11px;padding:6px 8px;}
   }
   @media (max-width:400px){
     table{font-size:9px;}
@@ -183,16 +187,40 @@ function payClass(t){ if(t==='소급'||t==='취소') return 'pay-red'; if(t==='�
 function dispType(t){ return t==='보강'?'-보강':t; }
 function skelHTML(){ var h='<div class="sk-wrap"><div class="sk-b" style="width:38%;max-width:200px;height:18px;margin-bottom:16px;"></div>'; for(var i=0;i<6;i++) h+='<div class="sk-b" style="height:40px;margin-bottom:9px;"></div>'; return h+'</div>'; }   // §5.4 스켈레톤(제목바+행6) — 목록 로드는 점 대신 구조 미리보기
 
-function renderTable(records, titleText){
+// 계약기간(11-10, 유성 「이용내역에 계약기간을 같이」) — 서버 queryMyAllData.ctr = 07 서류철 → 02 `_계약기간` 사본(02 이미지 M열과 같은 값).
+//  키·고르는 규칙 = 06 `_cpKeyOf_`·02 `_cpPick_`과 같게(0-9): 센터(대장 L) × 서비스 × 이름 × 생년6, 그 달 끝까지 시작한 줄 중 가장 늦은 줄.
+let CTR = null;
+function ctrKey(center, svc, child, birth){
+  const c=String(center||''), s=String(svc||''), b=String(birth||'').replace(/\D/g,'');
+  const cc = c.indexOf('미추')>=0?'미추':c.indexOf('서구')>=0?'서구':c.indexOf('행복')>=0?'행복':c.indexOf('연수')>=0?'연수':'';
+  const ss = s.indexOf('오감')>=0?'오감':s.indexOf('정신')>=0?'정신':(s.indexOf('아동청소년')>=0||s.indexOf('아청')>=0)?'아청':s.indexOf('성인')>=0?'성인':'';
+  return [cc, ss, String(child||'').trim(), b.length>=6?b.slice(-6):b].join('|');
+}
+function ctrPick(key, monthEnd){
+  let best=null; ((CTR||{})[key]||[]).forEach(p=>{ if(p[0] && p[0]<=monthEnd && (!best||p[0]>best[0])) best=p; });
+  return best;
+}
+function ctrText(p){
+  const f=iso=>{ const a=iso.split('-'); return (+a[0])+'. '+(+a[1])+'. '+(+a[2])+'.'; };
+  return f(p[0])+' ~ '+(p[1]?f(p[1]):'끝 날짜는 보호자께');
+}
+
+function renderTable(records, titleText, monthEnd){
   const wrap=$('resultWrap');
   if(!records||records.length===0){ wrap.innerHTML='<div class="title-bar">'+titleText+'</div><div class="state">이용내역이 없어요.</div>'; return; }
   let seq=0; records.forEach(r=>{ if(r.paymentType==='취소') r._seq=''; else { seq++; r._seq=seq; } });
-  const rows=[]; let pt=null,pc=null,pm=null;
+  // 아이 묶음(서비스 × 이름 × 생년)마다 그 달 마지막 결제 센터 — 달 중간에 센터를 옮겼으면 새 센터 계약(02와 같음)
+  const lastCenter={}; if(monthEnd && CTR) records.forEach(r=>{ lastCenter[r.serviceType+'|'+r.childName+'|'+r.birth]=r.center; });
+  const rows=[]; let pt=null,pc=null,pm=null,pb=null;
   records.forEach(r=>{
     const ym=r.date.substring(0,7);
     if(pt!==null){
       if(r.childName!==pc) rows.push('<tr class="row-gap big"><td colspan="10"></td></tr>');           // 다른 아동 = 큰 간격
       else if(r.serviceType!==pt||ym!==pm) rows.push('<tr class="row-gap"><td colspan="10"></td></tr>'); // 같은 아동 내 = 기본
+    }
+    if(monthEnd && CTR && (pt===null||r.childName!==pc||r.serviceType!==pt||r.birth!==pb)){
+      const p=ctrPick(ctrKey(lastCenter[r.serviceType+'|'+r.childName+'|'+r.birth], r.serviceType, r.childName, r.birth), monthEnd);
+      if(p) rows.push('<tr class="ctr-row"><td colspan="10"><b>계약기간</b>'+ctrText(p)+'</td></tr>');
     }
     const cls=payClass(r.paymentType);
     rows.push('<tr>'+
@@ -207,7 +235,7 @@ function renderTable(records, titleText){
       '<td data-label="제공인력">'+r.paymentProvider+'</td>'+
       '<td data-label="센터">'+(r.center||'')+'</td>'+
     '</tr>');
-    pt=r.serviceType; pc=r.childName; pm=ym;
+    pt=r.serviceType; pc=r.childName; pm=ym; pb=r.birth;
   });
   wrap.innerHTML='<div class="title-bar">'+titleText+'</div>'+
     '<div class="meta"><span>'+(latestUpdate?'최신화 '+latestUpdate:'')+'</span><span>'+records.length+'건</span></div>'+
@@ -262,6 +290,7 @@ async function loadAllData(){
       $('resultWrap').innerHTML='<div class="state">'+res.error+'</div>'; return;
     }
     allRecords=res.records||[]; availableMonths=res.months||[]; latestUpdate=res.latestUpdate||'';
+    CTR=res.ctr||null;   // 계약기간(11-10) — 없으면(옛 서버, 사본 못 읽음) 계약기간 줄 없이 그대로
     if(res.providerName) $('who').textContent=res.providerName+' 선생님';
     if(availableMonths.length===0){ $('resultWrap').innerHTML='<div class="state">이용내역이 없어요.</div>'; return; }
     const years=[...new Set(availableMonths.map(m=>m.year))].sort((a,b)=>b-a);
@@ -292,7 +321,7 @@ function renderMonthView(){
   const year=Number($('yearSel').value), month=Number($('monthSel').value);
   if(!year||!month){ $('resultWrap').innerHTML='<div class="state">이용내역이 없어요.</div>'; return; }
   const mm=('0'+month).slice(-2), ymP=year+'-'+mm;
-  renderTable(allRecords.filter(r=>r.date.substring(0,7)===ymP), year+'년 '+month+'월 이용내역');
+  renderTable(allRecords.filter(r=>r.date.substring(0,7)===ymP), year+'년 '+month+'월 이용내역', ymP+'-31');
 }
 async function pSearchChild(){
   const name=$('childInput').value.trim();
