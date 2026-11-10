@@ -306,9 +306,14 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 /* 스켈레톤 (§5.4) — 훑기 하나(왼→오 흰 띠, 끝에서 쉼). 뼈대 위에 링 겹침 금지, 긴 대기 문구는 정중앙 알약 */
 .skel{display:flex;flex-direction:column;gap:11px;max-width:340px}
 .skel .bar{height:14px;border-radius:7px;background:var(--g100);background-image:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.7) 50%,rgba(255,255,255,0) 70%);background-size:300% 100%;background-repeat:no-repeat;animation:shim 1.5s ease-in-out infinite}
-.skel .bar.t{height:18px;width:55%}.skel .bar.s{width:88%}.skel .bar.s2{width:40%}
+.skel .bar.t{height:18px;width:55%}.skel .bar.t2{height:18px;width:72%}.skel .bar.s{width:88%}.skel .bar.s2{width:40%}
 @keyframes shim{0%{background-position:150% 0}70%,100%{background-position:-50% 0}}
-.skwait{position:relative;max-width:340px;padding:22px 20px;border-radius:16px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+/* 덩어리만(2026-11-10): 페이지 바탕 위 제목 막대 + 빈 흰 박스 + 큰 버튼 자리. 흰 박스 안엔 막대를 안 깐다 */
+.skel.pg{background:#f7f5f1;border-radius:12px;padding:16px}
+.skel.pg .bar{background-color:var(--g200)}
+.skel .box{height:46px;border-radius:12px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.skel .btn{height:40px;border-radius:12px;background:var(--g200);margin-top:6px}
+.skwait{position:relative;max-width:340px}
 .skwait .pill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max-content;max-width:86%;background:#fff;border-radius:14px;padding:12px 18px;box-shadow:0 4px 18px rgba(25,31,40,.12);text-align:center;font-size:14px;font-weight:600;line-height:1.45;color:var(--g800)}
 .skwait .pill small{display:block;font-size:12.5px;font-weight:500;color:var(--g600)}
 @media (prefers-reduced-motion:reduce){.skel .bar{animation:none}}
@@ -1851,15 +1856,15 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="it"><div class="av">홈</div><div><div class="nm">홈페이지</div><div class="ms">주말에도 수업 되나요?</div></div></div>
   </div>
 
-  <!-- 2026-07-04 · 2026-10-01(링 제거+훑기·긴 대기 알약) · 경위·전문 = docs/1 §5.4 -->
+  <!-- 2026-07-04 · 2026-10-01(링 제거+훑기·긴 대기 알약) · 2026-11-10 덩어리만(유성 「스켈레톤이 너무 과해. 흰색 박스 안에 텍스트당 스켈레톤이 들어가지 않아도돼. 나머지도 적당히」, 첫 적용 kr /selected) · 경위·전문 = docs/1 §5.4 -->
   <h3 class="sec" id="sec50"><span class="ref">§5.4</span>스켈레톤 — 로딩 구조 미리보기</h3>
-  <p class="desc">회색 바 위를 흰 띠가 훑는다. 링은 겹치지 않고, 오래 걸리면 말은 뼈대 정중앙 알약으로 띄운다.</p>
-  <div class="demo" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center">
-    <div class="skel" style="flex:1;min-width:220px">
-      <div class="bar t"></div><div class="bar s"></div><div class="bar s2"></div>
+  <p class="desc">제목 막대와 빈 흰 박스, 큰 버튼 자리만 그리고 흰 띠가 훑는다. 박스 안 글자마다 막대는 안 깐다. 오래 걸리면 말은 정중앙 알약으로.</p>
+  <div class="demo" style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
+    <div class="skel pg" style="flex:1;min-width:220px">
+      <div class="bar t"></div><div class="bar t2"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="btn"></div>
     </div>
-    <div class="skwait" style="flex:1;min-width:240px"><div class="skel">
-      <div class="bar t"></div><div class="bar s"></div><div class="bar s"></div><div class="bar s2"></div>
+    <div class="skwait" style="flex:1;min-width:240px"><div class="skel pg">
+      <div class="bar t"></div><div class="bar t2"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="btn"></div>
     </div><div class="pill">인터넷이 느리면 조금 더 걸려요<small>조금만 더 기다려 주세요</small></div></div>
   </div>
 
