@@ -1896,7 +1896,7 @@ function loadMapData(name, keepView) {
     if (_p) {
       done({ provider:_p,
              assigned:(_snap.assigned||[]).filter(function(c){ return c.assignedTo === name; }),
-             waiting:_snap.waiting || [], allProviders:null, service:_snap.service });
+             waiting:_snap.waiting || [], allProviders:null, service:_snap.service, selBlock:_snap.selBlock });
       painted = true;
     }
   }
@@ -3668,7 +3668,9 @@ function _optimisticUnassign(row) {
   };
   var _wa = prevW.slice(), _at = _wa.length;
   for (var _i = 0; _i < _wa.length; _i++) { if (Number(_wa[_i].row) > Number(row)) { _at = _i; break; } }
-  _wa.splice(_at, 0, _nw);
+  // 선정 전(H 「신청은 했으나」), 선정 안 됨은 막기가 켜지면(서버 selBlock — 첫 선정 소식 발송 뒤) 서버 getMapData가 대기에 안 싣는다(06 선정확인.js _selBlockKind_) — 여기도 안 넣는다
+  var _vh = String(c.voucher || '').trim();
+  if (!(currentData.selBlock && (_vh.indexOf('신청은 했으나') > -1 || _vh === '선정되지 않음'))) _wa.splice(_at, 0, _nw);
   currentData.waiting = _wa;
   _renderCurrent();
   return function undo() {

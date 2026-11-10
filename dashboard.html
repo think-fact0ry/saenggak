@@ -71,6 +71,8 @@
   .sb-rejected{background:#ef4444}
   .sb-term{background:var(--g600)}             /* 종결(다니다 끝남, 2026-09-06) — 거절(타 센터로 감)과 다른 칸·중립색 */
   .sb-nocoord{background:var(--g300)}          /* 좌표가 없어 지도에 못 뜨는 행 — 숨기지 않고 보여준다 */
+  .sb-presel{background:var(--g500)}           /* 선정 전(06 막기, 2026-11-11) — 지도엔 없지만 합계엔 그대로 */
+  .sb-notsel{background:var(--g700)}           /* 선정 안 됨(보호자가 알려 옴) */
 
   /* ══ 대기 기간 슬라이더 — provider-map.html의 확정 컴포넌트를 그대로 옮겨 온 것 ══
      확정(유성 08-31): 대기만 자른다 · 칸 5개 로그 간격 · 알약은 상자 밖 아래 · 원은 주황이고 누르면 작아진다
@@ -400,8 +402,9 @@ function paint() {
   var rejected = data.rejected || 0;
   var terminated = data.terminated || 0;    // 종결 — 서버(getDashboardData)가 같은 이름으로 준다. 옛 서버면 0
   var noCoord = data.noCoord || 0;
+  var preSel = data.preSel || 0, notSel = data.notSel || 0;   // 선정 전, 선정 안 됨 — 지도에 안 뜬다(06 막기, 2026-11-11). 옛 서버면 0
   var waiting = (data.waitingRows && data.waitingRows.length) ? _waLiveCount() : waitingAll;
-  var total = assigned + waiting + absent + rejected + terminated + noCoord;   // 합=전체 불변(종결 포함)
+  var total = assigned + waiting + absent + rejected + terminated + noCoord + preSel + notSel;   // 합=전체 불변
 
   document.getElementById('sTotal').textContent = total;
   document.getElementById('sAssigned').textContent = assigned;
@@ -418,6 +421,8 @@ function paint() {
   var notes = [];
   if (data.absent1) notes.push('부재1 ' + data.absent1 + '명 포함');
   if (noCoord) notes.push('좌표 없어 지도에 못 뜨는 신청 ' + noCoord + '건');
+  if (preSel) notes.push('선정 확인 전이라 지도에 안 뜨는 신청 ' + preSel + '건');
+  if (notSel) notes.push('선정 안 됨 ' + notSel + '건');
   document.getElementById('ageNote').textContent = notes.join(', ');
 
   // 상태 바
@@ -429,6 +434,8 @@ function paint() {
       ['sb-absent',   absent,   '부재2 '  + absent],
       ['sb-rejected', rejected, '거절 '   + rejected],
       ['sb-term',     terminated, '종결 ' + terminated],
+      ['sb-presel',   preSel,   '선정 전 ' + preSel],
+      ['sb-notsel',   notSel,   '선정 안 됨 ' + notSel],
       ['sb-nocoord',  noCoord,  '지도 밖 '+ noCoord]
     ]);
   }
