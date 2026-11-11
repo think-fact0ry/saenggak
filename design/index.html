@@ -40,12 +40,12 @@
   --danger:#D25357;        /* danger variant(파괴적 액션 버튼/뱃지) + 흰 폰트. ※--red(#f04452)와 구분: red=상태알림, danger=버튼 */
   --danger-weak-bg:#fdecee; --danger-weak-fg:#c0392b;   /* danger weak(연빨강 채움+진한빨강 폰트) */
   --p-disabled:#b7e0c8; --dark-disabled:#c8ccd0; --danger-disabled:#f2cdce;   /* disabled = variant 흐린 버전+흰폰트(회색 아님) */
-  /* 라운드 — §3.3 */
-  --r-sm:clamp(7px,1.8vw,10px); --r-md:clamp(10px,2.6vw,14px); --r-lg:clamp(13px,3.2vw,20px);
+  /* 라운드 — §3.3 (2026-11-11부터 폰에서도 안 줄임 = 폰과 PC 같은 값) */
+  --r-sm:10px; --r-md:14px; --r-lg:20px;
   /* 토스트 — §5.5 (2026-11-07~08 유성: 알약, g800, 원 18px. 반지름 23 = 14.5px 글자 한 줄 높이 46의 절반 → 한 줄이면 알약, 여러 줄이면 같은 굽이) */
   --toast-bg:var(--g800); --toast-fg:#F9FBFA; --toast-r:23px; --toast-ck:18px;
   /* 타입 스케일 — §3.2 (큰 제목 clamp 유동 / 본문 고정) */
-  --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(23px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-h3:20px;
+  --fs-display:clamp(28px,6vw,42px); --fs-h1:clamp(24px,3.4vw,30px); --fs-h2:clamp(20px,2.6vw,26px); --fs-sheet:21px; --fs-h3:20px;
   --fs-title:17px; --fs-body:15px; --fs-sm:13.5px; --fs-caption:12px;
   /* 스크롤 그라디언트 — §4.13-6 A안. 스크롤바를 숨기는 곳에 "더 있다"를 말하는 그린 2겹.
      2026-09-05 정본 승격(유성) — 그전엔 provider-map·09가 각자 :root에 복붙한 이중 진실이었다. 값은 지도 원본 그대로 */
@@ -63,7 +63,7 @@ body{margin:0;font-family:'Pretendard Variable','Pretendard',system-ui,sans-seri
 
 header{background:var(--green600);color:var(--ink-on-dark,#F9FBFA);padding:40px 20px 30px}
 header .in{max-width:940px;margin:0 auto}
-header h1{font-size:var(--fs-h1,clamp(23px,3.4vw,30px));margin:0 0 8px;font-weight:800;letter-spacing:-.5px}
+header h1{font-size:var(--fs-h1,clamp(24px,3.4vw,30px));margin:0 0 8px;font-weight:800;letter-spacing:-.5px}
 header p{margin:0;opacity:.92;font-size:var(--fs-sm,13.5px)}
 
 /* 절 목록 패널은 nav 밖에 둔다 — nav.toc는 overflow-x:auto라 안에 두면 세로로 잘린다 */
@@ -871,6 +871,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec42"><i>§4.9</i><span>눈금 슬라이더 = 손가락 즉시 추종 + 놓으면 스냅</span></a>
     <a href="#sec53"><i>§4.9</i><span>양극 7점 척도 = 알약 세그 + 양끝 글자 커짐</span></a>
     <a href="#sec54"><i>§4.13-7</i><span>카드 라벨 = 명사가 아니라 부탁하는 문장</span></a>
+    <a href="#sec81"><i>§4.13-8</i><span>이어지는 화면은 제목 자리가 같다</span></a>
     <a href="#sec43"><i>§4.13-6</i><span>넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드</span></a>
     <a href="#sec44"><i>§4.13-6</i><span>그린 그라디언트로 “더 있다”를 말한다</span></a>
     <a href="#sec56"><i>§4.13-6</i><span>자동 확장 입력칸도 스크롤바 대신 그라디언트</span></a>
@@ -1020,11 +1021,14 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <p class="desc">적어둔 수치는 근거가 아니다. 글자색과 배경을 <b>짝으로</b> 잰다 — 아래는 지금 토큰으로 계산한 값.</p>
   <div class="demo" id="crDemo"></div>
 
+  <!-- 2026-11-11 폰 h1 바닥 24, sheet 21 신설 · 경위 = docs/1 §3.2 -->
   <h3 class="sec" id="sec11"><span class="ref">§3.2</span>타입 스케일</h3>
+  <p class="desc">9단. 폰 화면 제목은 24, 시트와 끝 화면 제목은 21.</p>
   <div class="demo type"><ul style="margin:0;padding:0">
     <li><span class="lbl">display</span><span style="font-size:var(--fs-display,34px);font-weight:800">생각공작소</span></li>
     <li><span class="lbl">h1</span><span style="font-size:var(--fs-h1,27px);font-weight:700">페이지 제목</span></li>
     <li><span class="lbl">h2</span><span style="font-size:var(--fs-h2,22px);font-weight:700">섹션 제목</span></li>
+    <li><span class="lbl">sheet</span><span style="font-size:var(--fs-sheet,21px);font-weight:700">시트, 끝 화면 제목</span></li>
     <li><span class="lbl">title</span><span style="font-size:var(--fs-title,17px);font-weight:600">카드 제목</span></li>
     <li><span class="lbl">body</span><span style="font-size:var(--fs-body,15px)">본문 — 오감쑥쑥 생각쑥쑥</span></li>
     <li><span class="lbl">caption</span><span style="font-size:var(--fs-caption,12px);color:var(--g500)">캡션·라벨</span></li>
@@ -1061,9 +1065,9 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   </div>
   <p class="desc">통일할 땐 <b>가장 좁은 화면의 가로</b>부터 잰다.</p>
 
-  <!-- 2026-07-24 · 2026-07-25 · 경위·전문 = docs/1 §3.3 -->
+  <!-- 2026-07-24 · 2026-07-25 · 2026-11-11 폰에서도 안 줄임 · 경위·전문 = docs/1 §3.3 -->
   <h3 class="sec" id="sec13"><span class="ref">§3.3</span>라운드 토큰</h3>
-  <p class="desc">clamp 반응형으로 모바일서 자동 축소. 하드코딩 px 금지(알약·원 제외).</p>
+  <p class="desc">폰과 PC 같은 값 10, 14, 20. 하드코딩 px 금지(알약, 원 제외).</p>
   <div class="demo tiles">
     <div class="t" style="border-radius:var(--r-sm,10px)">--r-sm</div>
     <div class="t" style="border-radius:var(--r-md,14px)">--r-md</div>
@@ -1357,6 +1361,9 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <!-- 2026-11-10 유성(kr /selected 리허설 2차 — 「체크아이콘 없는 사라지지 않는 기본 토스트」, 5번처럼 부제에 이미 있으면 그대로) · 경위 = docs/1 §4.6 -->
   <p class="note"><span class="ref sub">§4.6</span>제목 아래 자리가 없는 끝 화면은 아래에 사라지지 않는 토스트(체크 없음). 앞 화면으로는 좌상단 ← + 글.</p>
   <div class="demo" style="display:flex;justify-content:center"><span style="display:inline-flex;align-items:center;background:var(--toast-bg);color:var(--toast-fg);font-size:14.5px;font-weight:600;line-height:1.5;border-radius:var(--toast-r);padding:12px 19px">이제 창을 닫아도 돼요.</span></div>
+  <!-- 2026-11-11 등재(11-09 유성 선정 소식 5번 「지시 사항이 많아서」) · 경위 = docs/1 §4.6 -->
+  <p class="note"><span class="ref sub">§4.6</span>기다리는 화면은 다음 일을 저희가 맡는다고 제목에 쓰고, 끝줄은 「이제 창을 닫아도 돼요.」 하나만.</p>
+  <div class="demo" style="display:flex;justify-content:center"><div style="background:#fff;border-radius:var(--r-lg);padding:22px 20px;width:280px;box-shadow:0 0 0 1px var(--g200)"><div style="font-size:var(--fs-h1);font-weight:700;line-height:1.3;color:var(--g900)">결과가 나올 때쯤<br>다시 여쭤볼게요</div><div style="font-size:15px;color:var(--g600);margin-top:6px">이제 창을 닫아도 돼요.</div></div></div>
   <div class="demo"><div class="rslide"><div class="result anim" id="doneCard">
     <div class="ill"><svg class="om-check" viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6" pathLength="1"/></svg></div>
     <h4>신청을 마쳤어요</h4>
@@ -1540,6 +1547,14 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="qt"><span class="num">1.</span>아이의 <span class="qk">기본 정보</span>를 적어주세요.</div>
     <div class="qt"><span class="num">2.</span>아이의 <span class="qk">주소</span>를 적어주세요.</div>
     <div class="qt" style="margin-bottom:0"><span class="num">3.</span><span class="qk">형제자매</span>가 있으면 적어주세요.</div>
+  </div>
+
+  <!-- 2026-11-11 등재(11-09 유성 선정 소식 「기준을 '등'으로 하자」) · 경위 = docs/1 §4.13-8 -->
+  <h3 class="sec" id="sec81"><span class="ref">§4.13-8</span>이어지는 화면은 제목 자리가 같다</h3>
+  <p class="desc">한 화면에만 있는 윗줄 때문에 제목이 오르내리면 넘길 때 튄다. 윗줄이 없는 화면도 그 높이를 비워 둔다.</p>
+  <div class="demo" style="display:flex;gap:28px;flex-wrap:wrap">
+    <div><div style="font-size:12px;font-weight:800;color:var(--danger);margin-bottom:6px">✗ 튄다</div><div style="display:flex;gap:8px"><div style="width:118px;height:120px;background:#fff;border-radius:var(--r-md);box-shadow:0 0 0 1px var(--g200);padding:12px 10px;position:relative"><span style="display:inline-block;font-size:11px;font-weight:600;color:#fff;background:var(--green600);border-radius:999px;padding:1px 8px">오감쑥쑥</span><div style="font-size:15px;font-weight:700;line-height:1.3;margin-top:6px;color:var(--g900)">제목 자리</div></div><div style="width:118px;height:120px;background:#fff;border-radius:var(--r-md);box-shadow:0 0 0 1px var(--g200);padding:12px 10px;position:relative"><div style="font-size:15px;font-weight:700;line-height:1.3;margin-top:6px;color:var(--g900)">제목 자리</div></div></div></div>
+    <div><div style="font-size:12px;font-weight:800;color:var(--green700);margin-bottom:6px">✓ 같은 높이</div><div style="display:flex;gap:8px"><div style="width:118px;height:120px;background:#fff;border-radius:var(--r-md);box-shadow:0 0 0 1px var(--g200);padding:12px 10px;position:relative"><span style="display:inline-block;font-size:11px;font-weight:600;color:#fff;background:var(--green600);border-radius:999px;padding:1px 8px">오감쑥쑥</span><div style="font-size:15px;font-weight:700;line-height:1.3;margin-top:6px;color:var(--g900)">제목 자리</div></div><div style="width:118px;height:120px;background:#fff;border-radius:var(--r-md);box-shadow:0 0 0 1px var(--g200);padding:12px 10px;position:relative"><span style="display:inline-block;font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;visibility:hidden">오감쑥쑥</span><div style="font-size:15px;font-weight:700;line-height:1.3;margin-top:6px;color:var(--g900)">제목 자리</div></div></div></div>
   </div>
 
   <h3 class="sec" id="sec43"><span class="ref">§4.13-6</span>넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드</h3>
