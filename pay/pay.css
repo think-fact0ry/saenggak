@@ -40,6 +40,11 @@
   --sf-top:linear-gradient(to top,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
            linear-gradient(to top,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%);
   /* TOKENS:END */
+  /* MOCK:START — §3.8 폰 목업 값. 직접 편집 금지: docs/1 §3.8 고치고 node 디자인프리뷰/토큰동기.js --mock */
+
+  --mock-w:430px; --mock-r:40px; --mock-gap:19px;
+  --mock-bezel:var(--g200,#e5e8eb); --mock-sh:0 8px 20px rgba(25,31,40,.15);
+  /* MOCK:END */
   --side:24px;   /* 글자 대비(§3.1-7): 흰 바탕 작은 글자 = g600 이상, 회색 면(g50·g100) 위 = g700 이상, g400은 글자 금지, g500은 큰 글자와 placeholder만 */   /* 좌우 여백 = 근태 .hd·.otpov와 같은 24 */
 }
 
@@ -286,11 +291,11 @@ h1{font-size:24px;font-weight:700;letter-spacing:-.6px;line-height:1.35;}
 
 /* ── §3.8 PC 폰 목업 — 넓은 창 + 마우스에서만 ── */
 @media (min-width:480px) and (hover:hover) and (pointer:fine){
-  html,body{background:var(--g200)!important;}
-  #app{top:19px;max-width:min(430px,calc(100% - 38px));border-radius:40px 40px 0 0;corner-shape:superellipse(2.3);box-shadow:0 8px 20px rgba(25,31,40,.15);}
-  #app > .pg{border-radius:40px 40px 0 0;corner-shape:superellipse(2.3);}
+  html,body{background:var(--mock-bezel)!important;}
+  #app{top:var(--mock-gap);max-width:min(var(--mock-w),calc(100% - 2*var(--mock-gap)));border-radius:var(--mock-r) var(--mock-r) 0 0;corner-shape:superellipse(2.3);box-shadow:var(--mock-sh);}
+  #app > .pg{border-radius:var(--mock-r) var(--mock-r) 0 0;corner-shape:superellipse(2.3);}
   /* 딤이 뜨면 앱 배경을 미리 섞은 단일색으로(§3.8 ⑦ — 반투명이면 곡선 가장자리 1px 밝은 선) */
-  #app:has(> .mdim.on){background-color:rgb(163,165,169);box-shadow:inset 0 0 0 1px rgb(163,165,169),0 8px 20px rgba(25,31,40,.15);}
+  #app:has(> .mdim.on){background-color:rgb(163,165,169);box-shadow:inset 0 0 0 1px rgb(163,165,169),var(--mock-sh);}
 }
 
 /* 이번 달 화면 글자 한 칸 크게 = §3.2 일회 예외(유성 10-13 「확인했어요 텍스트가 너무 작아」 → 프리뷰 1px 줄여 GO, 안전교육 카드 덱 선례).

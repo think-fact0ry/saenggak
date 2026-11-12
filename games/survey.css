@@ -2,6 +2,11 @@
    흐름: 이름 → 해 본 게임 고르기 → 고른 게임만 한 장씩(횟수 + 아이 반응) → 고칠 게임 → 형제 → 권하기 → 남긴 글 → 끝. 정본 원칙 = docs/1_원칙_디자인UX.md
    검토 판 = prototype/23_보드게임설문_A7판_프리뷰.html. 굵기 사다리(§3.2) = 700 제목 / 600 고른 값, 1차 버튼 / 500 누를 수 있는 글자 / 400 설명 */
 :root{
+  /* MOCK:START — §3.8 폰 목업 값. 직접 편집 금지: docs/1 §3.8 고치고 node 디자인프리뷰/토큰동기.js --mock */
+
+  --mock-w:430px; --mock-r:40px; --mock-gap:19px;
+  --mock-bezel:var(--g200,#e5e8eb); --mock-sh:0 8px 20px rgba(25,31,40,.15);
+  /* MOCK:END */
   /* 고른 답 채움(§4.9 설문 선택지 = 채움 + 흰 글자의 위계판). 흰 글자 대비 6.79 / 5.22 / 4.62 / 4.66 / 6.89 */
   --fill-p2:#166841; --fill-p1:#2e7a52; --fill-z:#6b7684; --fill-n1:#8a6f5c; --fill-n2:#6e5544;
   /* 고르기 전 바탕 — 부정 쪽은 오류색(빨강)을 피한 옅은 흙색 */
@@ -12,9 +17,10 @@
 body{overflow:hidden;}
 #sv{position:fixed; inset:0; margin:0 auto; max-width:520px; background:#fff; overflow:hidden; transform:translateZ(0);}
 /* §3.8 PC 폰 목업 — 넓은 창에서만 */
-@media (min-width:600px) and (hover:hover) and (pointer:fine){
-  html,body{background:var(--g200)!important;}
-  #sv{top:19px; max-width:430px; border-radius:40px 40px 0 0; corner-shape:superellipse(2.3); box-shadow:0 8px 20px rgba(25,31,40,.15);}
+@media (min-width:480px) and (hover:hover) and (pointer:fine){   /* 11-12 600 → 480(§3.8 트리거, 600의 이유 기록 없음) */
+  html,body{background:var(--mock-bezel)!important;}
+  #sv{top:var(--mock-gap); max-width:min(var(--mock-w),calc(100% - 2*var(--mock-gap))); border-radius:var(--mock-r) var(--mock-r) 0 0; corner-shape:superellipse(2.3); box-shadow:var(--mock-sh);}
+  #sv > .sv-pg{border-radius:var(--mock-r) var(--mock-r) 0 0; corner-shape:superellipse(2.3);}   /* ⓑ 화면 층 흰 바탕이 곡선 밖으로 1px 샌다(11-12 크롬 157 실측, docs/1 §3.8) */
 }
 
 .sv-pg{position:absolute; inset:0; display:flex; flex-direction:column; background:#fff; transition:transform .36s cubic-bezier(.22,.85,.25,1),opacity .36s;}
