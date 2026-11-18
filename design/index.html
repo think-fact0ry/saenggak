@@ -667,6 +667,19 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .r66 .bb.rc{background:var(--g100);color:var(--g600)}
 .r66 .mt{font-size:11px;color:var(--g600);display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
 .r66 .mt .bad{color:var(--red);font-weight:600}
+/* §4.18 못 나간 답장 — attend inbox/index.html .me .bub·.meta2·.rnote·.atoast.act 실값 */
+.r82{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.r82 .th{flex:1;min-width:260px;max-width:368px;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.r82 .rw{display:flex;align-items:flex-end;gap:6px;justify-content:flex-end}
+.r82 .cl{display:flex;flex-direction:column;align-items:flex-end}
+.r82 .bb{max-width:220px;padding:10px 13px;border-radius:18px;font-size:14px;line-height:1.5;background:var(--g800);color:#fff}
+.r82 .mt{font-size:11px;color:var(--g600);line-height:1.35;white-space:nowrap}
+.r82 .rn{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:5px 2px 0 0;font-size:12px;line-height:1.4;color:var(--g600);white-space:nowrap}
+.r82 .rn.no{color:var(--red);font-weight:600;white-space:normal;text-align:right;max-width:300px}
+.r82 .rn button{border:0;background:none;font:inherit;font-size:12.5px;font-weight:600;color:var(--green700);padding:4px 0;cursor:pointer;transition:transform .12s}
+.r82 .rn button:active{transform:scale(.94)}
+.r82 .ts{display:flex;align-items:center;gap:14px;background:var(--toast-bg);color:var(--toast-fg);font-size:14.5px;font-weight:600;line-height:1.5;padding:12px 19px;border-radius:var(--toast-r);max-width:340px}
+.r82 .ts button{flex:none;border:0;background:none;font:inherit;font-size:14.5px;font-weight:700;color:var(--green400);padding:0;cursor:pointer}
 .r66 .l1{display:flex;align-items:center;gap:6px;font-size:14.5px;font-weight:600;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:12px 14px;min-width:260px;max-width:368px;flex:1}
 .r66 .tag{font-size:11px;font-weight:600;color:var(--g700);background:var(--g100);border-radius:6px;padding:0 6px;white-space:nowrap}
 .r66 .tag.use{color:var(--green700);background:none;box-shadow:inset 0 0 0 1px var(--green200)}
@@ -895,6 +908,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec71"><i>§4.18</i><span>날짜 줄 = 폭 전체 선 + 달력 + 연도</span></a>
     <a href="#sec73"><i>§4.18</i><span>상담 완료 = 표시만, 숫자 자리에 초록 체크</span></a>
     <a href="#sec74"><i>§4.18</i><span>톡톡, 카카오 = 받은함 안 대화방 + 복사해서 붙여 넣기</span></a>
+    <a href="#sec82"><i>§4.18</i><span>못 나간 답장 = 말풍선 아래 줄, 「읽음」만</span></a>
     <a href="#sec75"><i>§4.19</i><span>보호자 설득 화면 = 한 장, 핵심만</span></a>
     <a href="#sec76"><i>§4.20</i><span>활동 피드 격자 = 인스타 그대로</span></a>
     <a href="#sec77"><i>§4.21</i><span>금액 카드 = 흰 카드, 같은 간격, 기준 줄</span></a>
@@ -1777,6 +1791,19 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     </div>
   </div>
   <script>(function(){var c=document.getElementById('c74'),x=document.getElementById('x74'),n=document.getElementById('n74');if(!c)return;var opened=false;c.addEventListener('click',function(){n.textContent=opened?'복사했어요. 톡톡 창에 붙여 넣어 주세요':'복사했어요. 톡톡 창에 붙여 넣어 주세요 (파트너센터 창이 열려요)';opened=true;c.textContent='복사하기';});x.addEventListener('click',function(){opened=true;c.textContent='복사하기';n.textContent='서해구 톡톡 채팅을 열었어요';});})();</script>
+
+  <!-- 2026-11-18 유성 「안 읽음은 애초에 없애는게?」 + 문의채팅 감사 D 「권장대로」 · 경위·전문 = docs/1 §4.18 -->
+  <h3 class="sec" id="sec82"><span class="ref">§4.18</span>못 나간 답장 = 말풍선 아래 줄, 「읽음」만</h3>
+  <p class="desc">들어간 답장엔 시각만, 「안 읽음」은 없다. 못 나간 답장은 시각 없이 말풍선 아래 줄과 「다시 보내기」, 닫힌 방이면 「열기」 토스트.</p>
+  <div class="demo r82">
+    <div class="th">
+      <div class="rw"><span class="mt">오후 3:01</span><div class="cl"><span class="bb">네 확인해 볼게요</span></div></div>
+      <div class="rw" id="w82"><div class="cl"><span class="bb">다음 주 화요일 가능해요</span><div class="rn" id="n82"><span>못 보냈어요</span><button type="button" id="b82">다시 보내기</button></div></div></div>
+      <div class="rw"><div class="cl"><span class="bb">제가 이어서 안내드릴게요</span><div class="rn no">못 보냈어요. 다른 선생님이 맡은 대화예요</div></div></div>
+    </div>
+    <div class="ts"><span>홈페이지 문의 대화에 답장을 못 보냈어요</span><button type="button">열기</button></div>
+  </div>
+  <script>(function(){var b=document.getElementById('b82'),n=document.getElementById('n82'),w=document.getElementById('w82');if(!b)return;b.addEventListener('click',function(){n.remove();var m=document.createElement('span');m.className='mt';m.textContent='오후 3:04';w.insertBefore(m,w.firstChild);});})();</script>
   <!-- 2026-10-31~11-02 · 11-04 굳힘 · 경위·전문 = docs/1 §4.19 (07 종료 안내 버튼 뒤 화면 A — 공개 미러라 예시 값만) -->
   <!-- 2026-11-05 32차 「폰 첫 화면에 버튼까지」 → 「끝까지 내리면 묶음이 올라와 그대로」(§4.19-1, -7). 데모 폰은 끝까지 내린 모습 -->
   <h3 class="sec" id="sec75"><span class="ref">§4.19</span>보호자 설득 화면 = 한 장, 핵심만</h3>
