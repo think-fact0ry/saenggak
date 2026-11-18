@@ -249,6 +249,13 @@
           border-radius:var(--mock-r) var(--mock-r) 0 0; corner-shape:superellipse(2.3);
           box-shadow:var(--mock-sh); transform:translateZ(0); overflow:hidden; overflow:clip; position:relative; }
     .screen.on{ height:100%; overflow-y:auto; overflow-x:hidden; }
+    /* §3.8 ⑤ 폰 바깥 어둡게(2026-11-18): 막(동의 시트, 인증 만료 창)이 켜지면 폰 바깥에도 같은 색 막 — 막 켜는 JS는 그대로, CSS가 막 상태를 직접 본다 */
+    body::before{ content:""; position:fixed; inset:0; background:rgba(0,0,0,.4); opacity:0; pointer-events:none; transition:opacity .25s; }
+    body:has(.sheet-dim.on)::before{ opacity:1; }
+    body:has(.doc-page.on)::before{ opacity:0; }     /* 흰 전문 화면(z 1100)이 시트 막(1000)을 덮으면 바깥도 밝게 */
+    body:has(.cmodal-dim.on)::before{ opacity:1; }   /* 인증 만료 창 막(1200)은 전문 화면 위 — 순서 = 위 층이 뒤 줄 */
+    /* §3.8 ⑧ 예방: 아래에 붙인 fixed 층 높이 = 내용(11-18 크롬 157은 이 줄 없이도 같음) */
+    .sheet, .toast, .exithint, .footbar{ height:auto; }
   }
 </style>
 </head>

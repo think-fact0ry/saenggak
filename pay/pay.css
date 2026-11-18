@@ -296,6 +296,9 @@ h1{font-size:24px;font-weight:700;letter-spacing:-.6px;line-height:1.35;}
   #app > .pg{border-radius:var(--mock-r) var(--mock-r) 0 0;corner-shape:superellipse(2.3);}
   /* 딤이 뜨면 앱 배경을 미리 섞은 단일색으로(§3.8 ⑦ — 반투명이면 곡선 가장자리 1px 밝은 선) */
   #app:has(> .mdim.on){background-color:rgb(163,165,169);box-shadow:inset 0 0 0 1px rgb(163,165,169),var(--mock-sh);}
+  /* §3.8 ⑤ 폰 바깥 어둡게(2026-11-18): 확인 창 막이 켜지면 폰 바깥에도 같은 색 막 — 막 켜는 JS는 그대로, CSS가 막 상태를 직접 본다 */
+  body::before{content:"";position:fixed;inset:0;background:rgba(25,31,40,.4);opacity:0;pointer-events:none;transition:opacity .2s;}
+  body:has(.mdim.on)::before{opacity:1;}
 }
 
 /* 이번 달 화면 글자 한 칸 크게 = §3.2 일회 예외(유성 10-13 「확인했어요 텍스트가 너무 작아」 → 프리뷰 1px 줄여 GO, 안전교육 카드 덱 선례).
