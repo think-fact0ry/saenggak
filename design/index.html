@@ -630,7 +630,24 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .r73 .it.dim .nm{font-weight:400;color:var(--g600)}
 .r73 .it.dim .l2{color:var(--g600)}
 .r73 .r71{flex:1;min-width:280px}
-.r73 .day.dn svg{width:14px;height:14px;color:var(--green600);stroke-width:2.6;margin-right:-4px}
+.r73 .day.dn,.r83 .day.dn{align-self:center;gap:6px;padding:6px 13px 6px 11px;border-radius:99px;font-weight:500;background:var(--g100);margin:18px 0 14px;white-space:normal;text-align:center}
+.r73 .day.dn::before,.r73 .day.dn::after,.r83 .day.dn::before,.r83 .day.dn::after{display:none}
+.r73 .day.dn svg,.r83 .day.dn svg{width:14px;height:14px;color:var(--green600);stroke-width:2.6;margin-right:0}
+/* §4.18 대화방 머리 ≡ 메뉴 — attend inbox/index.html .rh .mn·.cm.rm·.cm .mic 실값(11-18) */
+.r83{position:relative;max-width:368px;background:#fff;border:1px solid var(--g200);border-radius:14px;overflow:visible}
+.r83 .h3h{display:flex;align-items:center;gap:8px;padding:14px 12px 10px;border-bottom:1px solid var(--g100)}
+.r83 .h3b{width:34px;height:34px;border:0;background:none;color:var(--g700);display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;flex:none;transition:transform .16s}
+.r83 .h3b:active{transform:scale(.86)}
+.r83 .h3b svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.r83 .h3n{flex:1;min-width:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r83 .h3m{position:absolute;right:8px;top:56px;z-index:2;background:#fff;border-radius:12px;padding:5px;min-width:160px;box-shadow:0 1px 4px rgba(25,31,40,.06),0 6px 18px rgba(25,31,40,.14);display:none}
+.r83 .h3m.on{display:block}
+.r83 .h3m button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;text-align:left;font:inherit;font-size:14px;font-weight:500;color:var(--g800);padding:9px 12px 9px 9px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.r83 .h3m button:hover{background:var(--g100)}
+.r83 .mic{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.r83 .mic svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.r83 .mic.y{background:var(--warn)} .r83 .mic.g{background:var(--green600)} .r83 .mic.n{background:var(--g400)}
+.r83 .r71{border:0;border-radius:0 0 14px 14px;max-width:none;min-height:150px}
 /* §4.18 카드 방 = 복사해서 붙여 넣기 — attend inbox/index.html .rh·.cchip·.comp·.ta·.copy·.them .bub 실값 */
 .r74{max-width:368px;background:#fff;border:1px solid var(--g200);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
 .r74 .c4h{display:flex;align-items:center;gap:8px;padding:14px 12px 10px;border-bottom:1px solid var(--g100)}
@@ -908,6 +925,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec71"><i>§4.18</i><span>날짜 줄 = 폭 전체 선 + 달력 + 연도</span></a>
     <a href="#sec73"><i>§4.18</i><span>상담 완료 = 표시만, 숫자 자리에 초록 체크</span></a>
     <a href="#sec74"><i>§4.18</i><span>톡톡, 카카오 = 받은함 안 대화방 + 복사해서 붙여 넣기</span></a>
+    <a href="#sec83"><i>§4.18</i><span>대화방 머리 ≡ = 그 대화 메뉴, 줄 아이콘은 상태 색</span></a>
     <a href="#sec82"><i>§4.18</i><span>못 나간 답장 = 말풍선 아래 줄, 「읽음」만</span></a>
     <a href="#sec75"><i>§4.19</i><span>보호자 설득 화면 = 한 장, 핵심만</span></a>
     <a href="#sec76"><i>§4.20</i><span>활동 피드 격자 = 인스타 그대로</span></a>
@@ -1147,7 +1165,8 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   </div>
 
   <h3 class="sec" id="sec19"><span class="ref">§3.5</span>아이콘 = 라인 SVG</h3>
-  <p class="desc">컬러 이모지 금지. 24×24 라인 SVG, 색은 글자색을 상속.</p>
+  <!-- 2026-11-18 유성 「노란색 아이콘 … 초록색 아이콘」 → 메뉴 줄 아이콘만 상태 색 원 + 흰 선(docs/1 §3.5, 데모 = §4.18 대화방 머리 ≡) -->
+  <p class="desc">컬러 이모지 금지. 24×24 라인 SVG, 색은 글자색을 상속. 메뉴 줄 아이콘만 상태 색 원 + 흰 선 그림.</p>
   <div class="demo ico">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -1764,7 +1783,8 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 
   <!-- 2026-10-28 유성 「마우스 오른쪽 클릭한 뒤 상담 완료하기」 + 체크 5안 중 B + 줄 4안 중 D 「권장대로」 · 경위·전문 = docs/1 §4.18 · 검토 = prototype/26_문의채팅_상담완료_사전검토_프리뷰.html -->
   <h3 class="sec" id="sec73"><span class="ref">§4.18</span>상담 완료 = 표시만, 숫자 자리에 초록 체크</h3>
-  <p class="desc">오른쪽 클릭으로 표시만 한다. 숫자 자리엔 원 없는 초록 체크, 줄은 회색 동그라미와 연한 글자. 학부모가 또 보내면 숫자로.</p>
+  <!-- 2026-11-18 유성 「시각이 분리되는 문제가 있음 … 아주 연한 회색 투명도 높은 라운딩 박스」 → 대화방 완료 줄 = 연회색 둥근 상자(옛 판 = 날짜 줄 모양) -->
+  <p class="desc">표시만 한다. 숫자 자리엔 원 없는 초록 체크, 줄은 회색 동그라미와 연한 글자, 대화방엔 연회색 상자. 학부모가 또 보내면 숫자로.</p>
   <div class="demo r64 r73">
     <div class="lst" id="l73">
       <div class="it"><div class="src hp"><svg viewBox="0 0 24 24"><path d="M4.5 10.5 12 4.5l7.5 6V19a1 1 0 0 1-1 1h-4v-5.5h-5V20h-4a1 1 0 0 1-1-1z"/></svg></div><div class="bd"><div class="l1"><span class="nm">최민준</span><span class="tag">홈페이지</span></div><div class="l2">토요일 오전도 되나요?</div></div><div class="rt"><span class="el">답장 전</span><span class="ub">2</span></div></div>
@@ -1791,6 +1811,21 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     </div>
   </div>
   <script>(function(){var c=document.getElementById('c74'),x=document.getElementById('x74'),n=document.getElementById('n74');if(!c)return;var opened=false;c.addEventListener('click',function(){n.textContent=opened?'복사했어요. 톡톡 창에 붙여 넣어 주세요':'복사했어요. 톡톡 창에 붙여 넣어 주세요 (파트너센터 창이 열려요)';opened=true;c.textContent='복사하기';});x.addEventListener('click',function(){opened=true;c.textContent='복사하기';n.textContent='서해구 톡톡 채팅을 열었어요';});})();</script>
+
+  <!-- 2026-11-18 유성 「굳이 채팅 내에서 '상담완료로 표시' 버튼을 두는 게 좋지 않을 듯 … 상단바 우측에 햄버거 아이콘 … 노란색 아이콘 … 초록색 아이콘」 → 「e도」 · 경위·전문 = docs/1 §4.18 「대화방 머리 ≡」, §3.5 메뉴 줄 아이콘 · 고른 판 = prototype/26_문의채팅_상담완료찾기_프리뷰.html -->
+  <h3 class="sec" id="sec83"><span class="ref">§4.18</span>대화방 머리 ≡ = 그 대화 메뉴, 줄 아이콘은 상태 색</h3>
+  <p class="desc">채팅 칸엔 단추를 두지 않는다. ≡ 아래 작은 메뉴, 줄 아이콘은 그 줄이 만드는 상태 색(대기 노랑, 완료 초록).</p>
+  <div class="demo">
+    <div class="r83">
+      <div class="h3h"><button class="h3b" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><span class="h3n">최민준</span><button class="h3b" id="b83" aria-label="이 대화 메뉴"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button></div>
+      <div class="h3m on" id="m83"></div>
+      <div class="r71" id="t83"><div class="rw"><span class="bb">토요일 오전도 되나요?</span><span class="mt">오후 2:08</span></div><div class="rw me"><span class="mt">오후 2:10</span><span class="bb">네 가능해요. 전화로 자세히 안내드릴게요</span></div></div>
+    </div>
+  </div>
+  <script>(function(){var b=document.getElementById('b83'),m=document.getElementById('m83'),t=document.getElementById('t83');if(!b||!m)return;var done=false,BK='<svg viewBox="0 0 24 24"><path d="M5 6.5h9.5a4.75 4.75 0 0 1 0 9.5H6"/><path d="M9.5 12.5 6 16l3.5 3.5"/></svg>',CK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    function draw(){m.innerHTML='<button data-a="back"><span class="mic y">'+BK+'</span>대기로 돌려놓기</button><button data-a="done"><span class="mic '+(done?'n':'g')+'">'+CK+'</span>'+(done?'상담 완료 풀기':'상담 완료로 표시')+'</button>';}
+    draw();b.addEventListener('click',function(){m.classList.toggle('on');});
+    m.addEventListener('click',function(e){var x=e.target.closest('button');if(!x)return;m.classList.remove('on');if(x.dataset.a!=='done')return;done=!done;var d=t.querySelector('.day.dn');if(done&&!d){t.insertAdjacentHTML('beforeend','<div class="day dn">'+CK+'<span>이현아님이 상담 완료로 표시했어요</span></div>');}else if(!done&&d){d.remove();}draw();});})();</script>
 
   <!-- 2026-11-18 유성 「안 읽음은 애초에 없애는게?」 + 문의채팅 감사 D 「권장대로」 · 경위·전문 = docs/1 §4.18 -->
   <h3 class="sec" id="sec82"><span class="ref">§4.18</span>못 나간 답장 = 말풍선 아래 줄, 「읽음」만</h3>
