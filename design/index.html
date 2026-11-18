@@ -636,9 +636,9 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 /* §4.18 대화방 머리 ≡ 메뉴 — attend inbox/index.html .rh .mn·.cm.rm·.cm .mic 실값(11-18) */
 .r83{position:relative;max-width:368px;background:#fff;border:1px solid var(--g200);border-radius:14px;overflow:visible}
 .r83 .h3h{display:flex;align-items:center;gap:8px;padding:14px 12px 10px;border-bottom:1px solid var(--g100)}
-.r83 .h3b{width:34px;height:34px;border:0;background:none;color:var(--g700);display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;flex:none;transition:transform .16s}
-.r83 .h3b:active{transform:scale(.86)}
-.r83 .h3b svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.r83 .h3b,.r74 .h3b{width:34px;height:34px;border:0;background:none;color:var(--g700);display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;flex:none;transition:transform .16s}
+.r83 .h3b:active,.r74 .h3b:active{transform:scale(.86)}
+.r83 .h3b svg,.r74 .h3b svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .r83 .h3n{flex:1;min-width:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .r83 .h3m{position:absolute;right:8px;top:56px;z-index:2;background:#fff;border-radius:12px;padding:5px;min-width:160px;box-shadow:0 1px 4px rgba(25,31,40,.06),0 6px 18px rgba(25,31,40,.14);display:none}
 .r83 .h3m.on{display:block}
@@ -1804,7 +1804,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   <p class="desc">보낼 길이 없어 보내기 자리에 복사 단추. 처음엔 복사하고 파트너센터 창을 열고, 그 뒤엔 복사만.</p>
   <div class="demo">
     <div class="r74">
-      <div class="c4h"><div><div class="c4n">김민지<span class="c4t">서해구</span></div><div class="c4s"><i></i><span>답은 톡톡에서 보내요</span></div></div><button class="c4x" id="x74">톡톡 열기</button></div>
+      <div class="c4h"><div><div class="c4n">김민지<span class="c4t">서해구</span></div><div class="c4s"><i></i><span>답은 톡톡에서 보내요</span></div></div><button class="c4x" id="x74">톡톡 열기</button><button class="h3b" aria-label="이 대화 메뉴"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button></div>
       <div class="c4b"><div class="c4w">김민지</div><span class="c4m">안녕하세요 아이 상담 문의드려요</span></div>
       <div class="c4c"><textarea class="c4a" id="t74" rows="1" placeholder="톡톡에 붙여 넣을 글">어떤 점이 궁금하세요?</textarea><button class="c4p" id="c74">복사하고 톡톡 열기</button></div>
       <div class="c4o" id="n74"></div>
